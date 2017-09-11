@@ -1,0 +1,24 @@
+00-INDEX
+ - This file
+        - 이 파일
+gpio.txt
+ - Introduction to GPIOs and their kernel interfaces
+        - GPIO 와 이들의 Kernel 인터페이스 소개
+consumer.txt
+ - How to obtain and use GPIOs in a driver
+        - Driver 에서 GPIOs 를 얻고 사용하는 방법
+driver.txt
+ - How to write a GPIO driver
+        - GPIO Driver 를 작성하는 방법
+drivers-on-gpio.txt:
+ - Drivers in other subsystems that can use GPIO to provide more complex functionality.
+        - GPIO 를 사용하여 보다 복잡한 기능을 제공할 수 있는 다른 하위 시스템의 Driver
+board.txt
+ - How to assign GPIOs to a consumer device and a function
+ - 소비자 Device 및 기능에 GPIO 를 할당하는 방법
+sysfs.txt
+ - Information about the GPIO sysfs interface
+ - GPIO sysfs 인터페이스에 대한 정보
+gpio-legacy.txt
+ - Historical documentation of the deprecated GPIO integer interface
+ - 사용되지 않는 GPIO 정수 인터페이스의 내역 문서

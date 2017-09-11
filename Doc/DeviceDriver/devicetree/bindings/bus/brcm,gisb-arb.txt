@@ -1,0 +1,52 @@
+Broadcom GISB bus Arbiter controller
+
+Required properties:
+
+- compatible:
+    "brcm,gisb-arb" or "brcm,bcm7445-gisb-arb" for 28nm chips
+    "brcm,bcm7435-gisb-arb" for newer 40nm chips
+    "brcm,bcm7400-gisb-arb" for older 40nm chips and all 65nm chips
+    "brcm,bcm7038-gisb-arb" for 130nm chips
+- reg: specifies the base physical address and size of the registers
+- interrupt-parent: specifies the phandle to the parent interrupt controller
+  this arbiter gets interrupt line from
+- interrupts: specifies the two interrupts (timeout and TEA) to be used from
+  the parent interrupt controller
+
+Optional properties:
+
+- brcm,gisb-arb-master-mask: 32-bits wide bitmask used to specify which GISB
+  masters are valid at the system level
+- brcm,gisb-arb-master-names: string list of the litteral name of the GISB
+  masters. Should match the number of bits set in brcm,gisb-master-mask and
+  the order in which they appear
+
+필수 속성 :
+
+- compatible:
+     28nm 칩의 경우 "brcm, gisb-arb"또는 "brcm, bcm7445-gisb-arb"
+     최신 40nm 칩용 "brcm, bcm7435-gisb-arb"
+     구형 40nm 칩 및 모든 65nm 칩용 "brcm, bcm7400-gisb-arb"
+     130nm 칩의 경우 "brcm, bcm7038-gisb-arb"
+- reg : 레지스터의 기본 물리적 주소와 크기를 지정합니다.
+- interrupt-parent :이 중재자가 인터럽트 라인을 얻는 상위 인터럽트 컨트롤러에 대한 phandle을 지정합니다.
+- interrupts : 부모 인터럽트 컨트롤러에서 사용할 두 개의 인터럽트 (타임 아웃 및 TEA)를 지정합니다.
+
+선택적 속성 :
+
+- brcm, gisb-arb-master-mask : 시스템 레벨에서 어떤 GISB 마스터가 유효한지 지정하는 데 사용되는 32 비트 폭의 비트 마스크
+- brcm, gisb-arb-master-names : GISB 마스터의 litteral 이름의 문자열 목록. brcm, gisb-master-mask 및 표시된 순서의 비트 수와 일치해야합니다.
+
+
+
+Example:
+
+gisb-arb@f0400000 {
+	compatible = "brcm,gisb-arb";
+	reg = <0xf0400000 0x800>;
+	interrupts = <0>, <2>;
+	interrupt-parent = <&sun_l2_intc>;
+
+	brcm,gisb-arb-master-mask = <0x7>;
+	brcm,gisb-arb-master-names = "bsp_0", "scpu_0", "cpu_0";
+};

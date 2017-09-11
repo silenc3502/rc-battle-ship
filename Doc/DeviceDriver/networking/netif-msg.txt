@@ -1,0 +1,102 @@
+________________
+NETIF Msg Level
+
+The design of the network interface message level setting.
+네트워크 인터페이스 메시지 레벨 설정의 디자인.
+
+History
+
+ The design of the debugging message interface was guided and
+ constrained by backwards compatibility previous practice.  It is useful
+ to understand the history and evolution in order to understand current
+ practice and relate it to older driver source code.
+디버깅 메시지 인터페이스의 설계는 이전 버전과의 호환성을 통해 유도 및 제한되었습니다. 현재 실행을 이해하고 이전 드라이버 소스 코드와 관련시키기 위해 내역 및 진화를 이해하는 것이 유용합니다.
+
+ From the beginning of Linux, each network device driver has had a local
+ integer variable that controls the debug message level.  The message
+ level ranged from 0 to 7, and monotonically increased in verbosity.
+리눅스가 시작될 때부터 각 네트워크 장치 드라이버에는 디버그 메시지 level을 제어하는 로컬 정수 변수가있었습니다. 메시지 레벨의 범위는 0에서 7까지이며 단조 로움이 증가했습니다.
+
+ The message level was not precisely defined past level 3, but were
+ always implemented within +-1 of the specified level.  Drivers tended
+ to shed the more verbose level messages as they matured.
+    0  Minimal messages, only essential information on fatal errors.
+    1  Standard messages, initialization status.  No run-time messages
+    2  Special media selection messages, generally timer-driver.
+    3  Interface starts and stops, including normal status messages
+    4  Tx and Rx frame error messages, and abnormal driver operation
+    5  Tx packet queue information, interrupt events.
+    6  Status on each completed Tx packet and received Rx packets
+    7  Initial contents of Tx and Rx packets
+메시지 레벨은 레벨 3을 지나서 정확하게 정의되지 않았지만 항상 지정된 레벨의 + -1 이내에 구현되었습니다. Drivers는 성숙함에 따라 더 자세한 메시지를 줄이는 경향이있었습니다.
+     0 최소 메시지, 치명적인 오류에 대한 필수 정보.
+     1 표준 메시지, 초기화 상태. 런타임 메시지 없음
+     2 특수 미디어 선택 메시지, 일반적으로 타이머 드라이버.
+     3 정상 상태 메시지를 포함하여 인터페이스가 시작 및 중지됩니다.
+     4 Tx 및 Rx 프레임 오류 메시지 및 비정상적인 드라이버 작동
+     5 Tx 패킷 대기열 정보, 인터럽트 이벤트.
+     6 완료된 각 송신 패킷 및 수신 된 수신 패킷의 상태
+     7 Tx 및 Rx 패킷의 초기 내용
+
+ Initially this message level variable was uniquely named in each driver
+ e.g. "lance_debug", so that a kernel symbolic debugger could locate and
+ modify the setting.  When kernel modules became common, the variables
+ were consistently renamed to "debug" and allowed to be set as a module
+ parameter.
+처음에는이 메시지 레벨 변수가 각 드라이버 e.g. "lance_debug"에서 고유하게 명명되었으므로 커널 심볼릭 디버거가 설정을 찾아 수정할 수 있습니다. 커널 모듈이 공통화되면 변수는 일관되게 "디버그"로 이름이 바뀌었고 모듈 매개 변수로 설정 될 수있었습니다.
+
+ This approach worked well.  However there is always a demand for
+ additional features.  Over the years the following emerged as
+ reasonable and easily implemented enhancements
+   Using an ioctl() call to modify the level.
+   Per-interface rather than per-driver message level setting.
+   More selective control over the type of messages emitted.
+이 접근법은 잘 작동했습니다. 그러나 추가 기능에 대한 요구가 항상 있습니다. 수년 동안 다음은 합리적이고 쉽게 구현 된 개선 사항으로 등장하여 ioctl () 호출을 사용하여 수준을 수정했습니다.
+    드라이버 별 메시지 level 설정보다는 인터페이스 별.
+    방출되는 메시지의 유형을보다 선택적으로 제어합니다.
+
+ The netif_msg recommendation adds these features with only a minor
+ complexity and code size increase.
+netif_msg 권장 사항은 이러한 기능을 약간의 복잡성과 코드 크기 증가로 추가합니다.
+
+ The recommendation is the following points
+    Retaining the per-driver integer variable "debug" as a module
+    parameter with a default level of '1'.
+권고 사항은 다음과 같다.
+     드라이버 당 정수 변수 "debug"를 기본 매개 변수 '1'의 모듈 매개 변수로 유지합니다.
+
+    Adding a per-interface private variable named "msg_enable".  The
+    variable is a bit map rather than a level, and is initialized as
+    "msg_enable"이라는 인터페이스 별 개인 변수 추가. 변수는 레벨이 아닌 비트 맵이며, 다음과 같이 초기화됩니다.
+
+       1 << debug
+    Or more precisely( 또는 더 정확하게)
+        debug < 0 ? 0 : 1 << min(sizeof(int)-1, debug)
+
+    Messages should changes from
+    메시지는 다음과 같이 변경되어야합니다.
+
+      if (debug > 1)
+           printk(MSG_DEBUG "%s: ...
+    to
+      if (np->msg_enable & NETIF_MSG_LINK)
+           printk(MSG_DEBUG "%s: ...
+
+
+The set of message levels is named
+메시지 레벨 세트의 이름은 다음과 같습니다.
+
+  Old level   Name   Bit position
+    0    NETIF_MSG_DRV		0x0001
+    1    NETIF_MSG_PROBE	0x0002
+    2    NETIF_MSG_LINK		0x0004
+    2    NETIF_MSG_TIMER	0x0004
+    3    NETIF_MSG_IFDOWN	0x0008
+    3    NETIF_MSG_IFUP		0x0008
+    4    NETIF_MSG_RX_ERR	0x0010
+    4    NETIF_MSG_TX_ERR	0x0010
+    5    NETIF_MSG_TX_QUEUED	0x0020
+    5    NETIF_MSG_INTR		0x0020
+    6    NETIF_MSG_TX_DONE	0x0040
+    6    NETIF_MSG_RX_STATUS	0x0040
+    7    NETIF_MSG_PKTDATA	0x0080

@@ -1,0 +1,38 @@
+
+Exynos5440 cpufreq driver
+-------------------
+
+Exynos5440 SoC cpufreq driver for CPU frequency scaling.
+
+Required properties:
+- interrupts: Interrupt to know the completion of cpu frequency change.
+- operating-points: Table of frequencies and voltage CPU could be transitioned into,
+	in the decreasing order. Frequency should be in KHz units and voltage
+	should be in microvolts.
+
+Optional properties:
+- clock-latency: Clock monitor latency in microsecond.
+
+All the required listed above must be defined under node cpufreq.
+//CPU 주파수 조정을위한 Exynos5440 SoC cpufreq 드라이버
+
+필수 속성 :
+- interrupts : CPU 주파수 변경 완료를 알리는 인터럽트입니다.
+- 작동 점 : CPU가 감소 할 수있는 주파수 및 전압 표. 주파수는 KHz 단위이어야하며 전압은 마이크로 볼트 단위 여야합니다.
+
+선택적 속성 :
+- clock-latency : 마이크로 초 단위의 클럭 모니터 대기 시간.
+
+위에 나열된 모든 요구 사항은 노드 cpufreq에서 정의되어야합니다.
+
+Example:
+--------
+	cpufreq@160000 {
+		compatible = "samsung,exynos5440-cpufreq";
+		reg = <0x160000 0x1000>;
+		interrupts = <0 57 0>;
+		operating-points = <
+				1000000 975000
+				800000  925000>;
+		clock-latency = <100000>;
+	};

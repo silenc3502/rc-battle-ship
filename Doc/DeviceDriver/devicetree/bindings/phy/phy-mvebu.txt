@@ -1,0 +1,66 @@
+* Marvell MVEBU SATA PHY
+
+Power control for the SATA phy found on Marvell MVEBU SoCs.
+
+This document extends the binding described in phy-bindings.txt
+
+Required properties :
+
+ - reg		   : Offset and length of the register set for the SATA device
+ - compatible	   : Should be "marvell,mvebu-sata-phy"
+ - clocks	   : phandle of clock and specifier that supplies the device
+ - clock-names	   : Should be "sata"
+
+Example:
+		sata-phy@84000 {
+			compatible = "marvell,mvebu-sata-phy";
+			reg = <0x84000 0x0334>;
+			clocks = <&gate_clk 15>;
+			clock-names = "sata";
+			#phy-cells = <0>;
+			status = "ok";
+		};
+
+* Marvell MVEBU SATA PHY
+
+Marvell MVEBU SoC에서 발견 된 SATA PHY의 전원 제어.
+
+이 문서는 phy-bindings.txt에 설명 된 바인딩을 확장합니다.
+
+필수 속성 :
+
+  - reg : SATA 장치 용 레지스터 세트의 오프셋 및 길이
+  - compatible : "marvell, mvebu-sata-phy"여야합니다.
+  - clocks : 장치를 공급하는 clock과 specifier의 phandle
+  - clock-names : "sata"여야합니다.
+
+
+
+Armada 375 USB cluster
+----------------------
+
+Armada 375 comes with an USB2 host and device controller and an USB3
+controller. The USB cluster control register allows to manage common
+features of both USB controllers.
+
+Required properties:
+
+- compatible: "marvell,armada-375-usb-cluster"
+- reg: Should contain usb cluster register location and length.
+- #phy-cells : from the generic phy bindings, must be 1. Possible
+values are 1 (USB2), 2 (USB3).
+
+Armada 375에는 USB2 호스트 및 장치 컨트롤러와 USB3 컨트롤러가 함께 제공됩니다. USB 클러스터 제어 레지스터는 두 USB 컨트롤러의 공통 기능을 관리 할 수있게 해줍니다.
+
+필수 속성 :
+
+- 호환 : "marvell, armada-375-usb-cluster"
+- reg : usb 클러스터 레지스터 위치와 길이를 포함해야합니다.
+- # phy-cells : 일반 phy 바인딩에서 1이어야합니다. 가능한 값은 1 (USB2), 2 (USB3)입니다.
+
+Example:
+		usbcluster: usb-cluster@18400 {
+			compatible = "marvell,armada-375-usb-cluster";
+			reg = <0x18400 0x4>;
+			#phy-cells = <1>
+		};

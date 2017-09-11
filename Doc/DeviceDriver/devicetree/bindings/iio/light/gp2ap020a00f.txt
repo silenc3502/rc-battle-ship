@@ -1,0 +1,46 @@
+* Sharp GP2AP020A00F I2C Proximity/ALS sensor
+
+The proximity detector sensor requires power supply
+for its built-in led. It is also defined by this binding.
+
+Required properties:
+
+  - compatible : should be "sharp,gp2ap020a00f"
+  - reg : the I2C slave address of the light sensor
+  - interrupts : interrupt specifier for the sole interrupt generated
+		 by the device
+  - vled-supply : VLED power supply, as covered in ../regulator/regulator.txt
+
+Example:
+
+gp2ap020a00f@39 {
+	compatible = "sharp,gp2ap020a00f";
+	reg = <0x39>;
+	interrupts = <2 0>;
+	vled-supply = <...>;
+};
+
+/*
+
+* 샤프 GP2AP020A00F I2C 근접 / ALS 센서
+
+근접 감지기 센서는 내장 된 전원 공급 장치가 필요합니다. 또한이 바인딩에 의해 정의됩니다.
+
+필수 속성 :
+
+   - 호환 가능 : "sharp, gp2ap020a00f"여야합니다.
+   - reg : 광 센서의 I2C 슬레이브 주소
+   - 인터럽트 : 장치에 의해 생성 된 유일한 인터럽트에 대한 인터럽트 지정자
+   - vled-supply : ../regulator/regulator.txt에 명시된 VLED 전원 공급 장치
+
+
+Example:
+
+gp2ap020a00f@39 {
+	compatible = "sharp,gp2ap020a00f";
+	reg = <0x39>;
+	interrupts = <2 0>;
+	vled-supply = <...>;
+};
+
+*/

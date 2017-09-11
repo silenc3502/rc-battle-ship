@@ -1,0 +1,106 @@
+Texas Instruments OMAP compatible OPP domain description
+TI OMAP 호환 OPP 도메인 설명
+
+This binding uses the "<supply-name>-opp-domain" binding documented at [1]
+and describes the OPP domain devices typically used on Texas Instruments
+OMAP compatible SoC family of processors.
+이 바인딩은 [1]에 문서화 된 "<supply-name> -opp-domain"바인딩을 사용하고 Texas Instruments OMAP 호환 SoC 프로세서 제품군에서 일반적으로 사용되는 OPP 도메인 디바이스를 설명합니다.
+
+OMAP5, DRA7, and AM57 family of SoCs have Class0 AVS eFuse registers which
+contain data that can be used to adjust voltages programmed for some of their
+supplies for more efficient operation. These are provided to the OPP domain
+driver so that when a voltage transition is requested by the OPP core, we can
+make an adjustment to the voltage before setting the supply.
+SoC의 OMAP5, DRA7 및 AM57 제품군에는 Class0 AVS eFuse 레지스터가있어 보다 효율적인 작동을 위해 일부 전원에 대해 프로그래밍 된 전압을 조정하는 데 사용할 수있는 데이터가 포함되어 있습니다. OPP 도메인 드라이버에 제공되므로 OPP 코어에서 전압 전이를 요청할 때 전원을 설정하기 전에 전압을 조정할 수 있습니다.
+
+Also, some supplies may have an associated vbb-supply which is an Adaptive Body
+Bias regulator which much be transitioned in a specific sequence with regards
+to the vdd-supply and clk when making an OPP transition, and this driver handles
+that sequencing.
+또한, 일부 전원 공급 장치는 vdd 전원 공급 장치와 clk와 관련하여 특정 시퀀스에서 많이 전환되는  Adaptive Body
+Bias regulator 인 관련 vbb 공급 장치를 가질 수 있으며 OPP 전환시이 드라이버는 해당 시퀀싱을 처리합니다.
+
+[1] Documentation/devicetree/bindings/opp/opp.txt
+
+Required Properties:
+- compatible: Should be one of:
+	"ti,omap-oppdm" - basic OPP domain controlling VDD and VBB
+	"ti,omap5-oppdm" - OMAP5+ optimized voltages in efuse(class0)VDD
+			    along with VBB
+	"ti,omap5-core-oppdm" - OMAP5+ optimized voltages in efuse(class0) VDD
+			    but no VBB.
+- vdd-supply: phandle to regulator controlling VDD supply
+- vbb-supply: phandle to regulator controlling Body Bias supply (optional if
+  "ti,omap5-core-oppdm")
+  (Usually Adaptive Body Bias regulator)
+- #oppdm-cells: shall be <0>
+- reg: Address and length of the efuse register set for the device (mandatory
+	only for "ti,omap5-oppdm")
+- ti,efuse-settings: An array of u32 tuple items providing information about
+	optimized efuse configuration. Each item consists of the following:
+	volt: voltage in uV - reference voltage (OPP voltage)
+	efuse_offseet: efuse offset from reg where the optimized voltage is stored.
+- ti,absolute-max-voltage-uv: absolute maximum voltage for the OPP domain.
+
+필수 등록 정보 :
+- compatible : 다음 중 하나 여야합니다.
+"ti, omap-oppdm"- VDD 및 VBB를 제어하는 기본 OPP 도메인
+"ti, omap5-oppdm"- VBF와 함께 efuse (class0) VDD에서 OMAP5 + 최적화 전압
+"ti, omap5-core-oppdm"- OMAP5 +는 efuse (class0) VDD에서 최적화 된 전압이지만 VBB는 사용하지 않습니다.
+
+- vdd-supply : VDD 공급을 제어하는 레귤레이터에 대한 phandle
+
+- vbb-supply : 바디 바이어스 전원을 제어하는 레귤레이터에 대한 phandle ( "ti, omap5-core-oppdm"옵션 인 경우)
+   (보통 적응 형 바디 바이어스 레귤레이터)
+
+- # oppdm-cells : <0>이어야합니다.
+
+- reg : 장치에 설정된 efuse 레지스터의 주소와 길이 ( "ti, omap5-oppdm"에 대해서만 필수)
+
+- ti, efuse-settings : 최적화 된 efuse 구성에 대한 정보를 제공하는 u32 tuple 항목의 배열입니다. 각 항목은 다음으로 구성됩니다.
+volt : uV 단위의 전압 - 기준 전압 (OPP 전압) efuse_offseet : 최적화 된 전압이 저장된 reg에서 efuse 오프셋.
+
+- ti, absolute-max-voltage-uv : OPP 도메인의 절대 최대 전압.
+
+
+
+Example:
+
+/* Basic OMAP OPP Domain with no Class0 support */
+/ * Class0 지원이없는 기본 OMAP OPP 도메인 * /
+
+oppdm_mpu: oppdm@1 {
+	compatible = "ti,omap-oppdm";
+	#oppdm-cells = <0>;
+
+	vdd-supply = <&vcc>;
+	vbb-supply = <&abb_mpu>;
+};
+
+/* OMAP OPP Domain with Class0 registers */
+/ * Class0 레지스터가있는 OMAP OPP 도메인 * /
+oppdm_mpu: oppdm@4a003b20 {
+	compatible = "ti,omap5-oppdm";
+	#oppdm-cells = <0>;
+	vdd-supply = <&vcc>;
+	vbb-supply = <&abb_mpu>;
+	reg = <0x4a003b20 0x8>;
+	ti,efuse-settings = <
+	/* uV   offset */
+	1060000 0x0
+	1160000 0x4
+	1210000 0x8
+	>;
+	ti,absolute-max-voltage-uv = <1500000>;
+};
+
+oppdm_core: oppdm@4a003d20 {
+	compatible = "ti,omap5-core-oppdm";
+	#oppdm-cells = <0>;
+	vdd-supply = <&smps4>;
+	reg = <0x4a003b20 0x4>;
+	ti,efuse-settings = <
+	/* uV   offset */
+	1060000 0x0
+	>;
+};

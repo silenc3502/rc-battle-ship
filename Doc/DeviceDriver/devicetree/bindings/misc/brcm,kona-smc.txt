@@ -1,0 +1,24 @@
+Broadcom Secure Monitor Bounce buffer
+-----------------------------------------------------
+This binding defines the location of the bounce buffer
+used for non-secure to secure communications.
+
+Required properties:
+- compatible : "brcm,kona-smc"
+- DEPRECATED: compatible : "bcm,kona-smc"
+- reg : Location and size of bounce buffer
+
+Broadcom Secure Monitor 바운스 버퍼
+-------------------------------------------------- ---
+이 바인딩은 보안되지 않은 통신에 사용되는 바운스 버퍼의 위치를 정의합니다.
+
+필수 속성 :
+- 호환 : "brcm, kona-smc"
+- 사용 불능 : 호환 : "bcm, kona-smc"
+- reg : 바운스 버퍼의 위치와 크기
+
+Example:
+	smc@0x3404c000 {
+		compatible = "brcm,bcm11351-smc", "brcm,kona-smc";
+		reg = <0x3404c000 0x400>; //1 KiB in SRAM
+	};

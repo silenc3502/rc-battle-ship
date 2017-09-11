@@ -1,0 +1,64 @@
+TI Keystone Soc USB Controller
+
+DWC3 GLUE
+
+Required properties:
+ - compatible: should be "ti,keystone-dwc3".
+ - #address-cells, #size-cells : should be '1' if the device has sub-nodes
+   with 'reg' property.
+ - reg : Address and length of the register set for the USB subsystem on
+   the SOC.
+ - interrupts : The irq number of this device that is used to interrupt the
+   MPU.
+ - ranges: allows valid 1:1 translation between child's address space and
+   parent's address space.
+ - clocks: Clock IDs array as required by the controller.
+ - clock-names: names of clocks correseponding to IDs in the clock property.
+
+Sub-nodes:
+The dwc3 core should be added as subnode to Keystone DWC3 glue.
+- dwc3 :
+   The binding details of dwc3 can be found in:
+   Documentation/devicetree/bindings/usb/dwc3.txt
+
+
+필수 속성 :
+  - compatible : "ti, keystone-dwc3"이어야합니다.
+  - # address-cells, # size-cells : 장치에 'reg'속성이있는 하위 노드가있는 경우 '1'이어야합니다.
+  - reg : SOC에있는 USB 서브 시스템 용 레지스터 세트의 주소와 길이.
+  - interrupts : MPU를 인터럽트하는 데 사용되는 irq 번호입니다.
+  - 범위 : 하위 주소 공간과 상위 주소 공간 간의 유효한 1 : 1 변환을 허용합니다.
+  - clocks : 컨트롤러에서 요구하는대로 clocks ID 배열.
+  - clock-names : clock 속성의 ID와 일치하는 clocks의 이름입니다.
+
+하위 노드 :
+dwc3 코어는 Keystone DWC3 아교에 하위 노드로 추가해야합니다.
+- dwc3 :
+    dwc3의 바인딩 세부 사항은 다음에서 찾을 수 있습니다.
+    Documentation / devicetree / bindings / usb / dwc3.txt
+
+
+
+
+
+
+
+Example:
+	usb: usb@2680000 {
+		compatible = "ti,keystone-dwc3";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		reg = <0x2680000 0x10000>;
+		clocks = <&clkusb>;
+		clock-names = "usb";
+		interrupts = <GIC_SPI 393 IRQ_TYPE_EDGE_RISING>;
+		ranges;
+		status = "disabled";
+
+		dwc3@2690000 {
+			compatible = "synopsys,dwc3";
+			reg = <0x2690000 0x70000>;
+			interrupts = <GIC_SPI 393 IRQ_TYPE_EDGE_RISING>;
+			usb-phy = <&usb_phy>, <&usb_phy>;
+		};
+	};

@@ -1,0 +1,118 @@
+Qualcomm's APQ8016/MSM8916 USB transceiver controller
+
+- compatible:
+    Usage: required
+    Value type: <string>
+    Definition: Should contain "qcom,usb-8x16-phy".
+- compatible :
+     사용법 : 필수
+     값 유형 : <string>
+     정의 : "qcom, usb-8x16-phy"를 포함해야합니다.
+
+- reg:
+    Usage: required
+    Value type: <prop-encoded-array>
+    Definition: USB PHY base address and length of the register map
+- reg :
+     사용법 : 필수
+     값 유형 : <prop-encoded-array>
+     정의 : USB PHY 기본 주소 및 등록 맵의 길이
+
+- clocks:
+    Usage: required
+    Value type: <prop-encoded-array>
+    Definition: See clock-bindings.txt section "consumers". List of
+                two clock specifiers for interface and core controller
+                clocks.
+- clocks :
+     사용법 : 필수
+     값 유형 : <prop-encoded-array>
+     정의 : clock-bindings.txt 섹션 "consumers"를 참조하십시오. 인터페이스 및 코어 컨트롤러 클럭에 대한 두 개의 clock specifiers 목록입니다.
+
+- clock-names:
+    Usage: required
+    Value type: <string>
+    Definition: Must contain "iface" and "core" strings.
+- clock-names :
+     사용법 : 필수
+     값 유형 : <문자열>
+     정의 : "iface"및 "core"문자열을 포함해야합니다.
+
+- vddcx-supply:
+    Usage: required
+    Value type: <phandle>
+    Definition: phandle to the regulator VDCCX supply node.
+- vddcx-supply :
+     사용법 : 필수
+     값 유형 : <phandle>
+     정의 : 레귤레이터 VDCCX 공급 노드에 대한 팬들.
+
+- v1p8-supply:
+    Usage: required
+    Value type: <phandle>
+    Definition: phandle to the regulator 1.8V supply node.
+- v1p8-supply :
+     사용법 : 필수
+     값 유형 : <phandle>
+     정의 : 레귤레이터 1.8V 전원 노드와의 결합.
+
+- v3p3-supply:
+    Usage: required
+    Value type: <phandle>
+    Definition: phandle to the regulator 3.3V supply node.
+- v3p3-supply :
+     사용법 : 필수
+     값 유형 : <phandle>
+     정의 : 레귤레이터 3.3V 공급 노드에 대한 phandle.
+
+- resets:
+    Usage: required
+    Value type: <prop-encoded-array>
+    Definition: See reset.txt section "consumers". PHY reset specifier.
+- resets :
+     사용법 : 필수
+     값 유형 : <prop-encoded-array>
+     정의 : reset.txt 섹션 "소비자"를 참조하십시오. PHY reset specifier.
+
+- reset-names:
+    Usage: required
+    Value type: <string>
+    Definition: Must contain "phy" string.
+- reset-names :
+     사용법 : 필수
+     값 유형 : <문자열>
+     정의 : "phy"문자열을 포함해야합니다.
+
+- switch-gpio:
+    Usage: optional
+    Value type: <prop-encoded-array>
+    Definition: Some boards are using Dual SPDT USB Switch, witch is
+                controlled by GPIO to de/multiplex D+/D- USB lines
+                between connectors.
+- switch - gpio :
+     사용법 : 선택 사항
+     값 유형 : <prop-encoded-array>
+     정의 : 일부 보드는 Dual SPDT USB Switch를 사용하고 있으며, 커넥터 사이의 D + / D-USB 선을  de(분리)/multiplex(다중화) 하기 위해 GPIO 제어되고 있습니다.
+
+
+Example:
+	usb_phy: phy@78d9000 {
+		compatible = "qcom,usb-8x16-phy";
+		reg = <0x78d9000 0x400>;
+
+		vddcx-supply = <&pm8916_s1_corner>;
+		v1p8-supply = <&pm8916_l7>;
+		v3p3-supply = <&pm8916_l13>;
+
+		clocks = <&gcc GCC_USB_HS_AHB_CLK>,
+			     <&gcc GCC_USB_HS_SYSTEM_CLK>;
+		clock-names = "iface", "core";
+
+		resets = <&gcc GCC_USB2A_PHY_BCR>;
+		reset-names = "phy";
+
+		// D+/D- lines: 1 - Routed to HUB, 0 - Device connector
+		switch-gpio = <&pm8916_gpios 4 GPIO_ACTIVE_HIGH>;
+        // D + / D- lines : 1 - HUB에 연결, 0 - 장치 커넥터
+        switch-gpio = <& pm8916_gpios 4 GPIO_ACTIVE_HIGH>;
+	};

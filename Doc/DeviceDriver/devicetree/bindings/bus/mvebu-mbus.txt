@@ -1,0 +1,350 @@
+
+* Marvell MBus
+
+Required properties:
+
+- compatible:	 Should be set to one of the following:
+		 marvell,armada370-mbus
+		 marvell,armadaxp-mbus
+		 marvell,armada375-mbus
+		 marvell,armada380-mbus
+		 marvell,kirkwood-mbus
+		 marvell,dove-mbus
+		 marvell,orion5x-88f5281-mbus
+		 marvell,orion5x-88f5182-mbus
+		 marvell,orion5x-88f5181-mbus
+		 marvell,orion5x-88f6183-mbus
+		 marvell,mv78xx0-mbus
+
+- address-cells: Must be '2'. The first cell for the MBus ID encoding,
+                 the second cell for the address offset within the window.
+
+- size-cells:    Must be '1'.
+
+- ranges:        Must be set up to provide a proper translation for each child.
+	         See the examples below.
+
+- controller:    Contains a single phandle referring to the MBus controller
+                 node. This allows to specify the node that contains the
+		 registers that control the MBus, which is typically contained
+		 within the internal register window (see below).
+
+필수 속성 :
+
+- compatible : 다음 중 하나를 설정해야합니다.
+ marvell,armada370-mbus
+		 marvell,armadaxp-mbus
+		 marvell,armada375-mbus
+		 marvell,armada380-mbus
+		 marvell,kirkwood-mbus
+		 marvell,dove-mbus
+		 marvell,orion5x-88f5281-mbus
+		 marvell,orion5x-88f5182-mbus
+		 marvell,orion5x-88f5181-mbus
+		 marvell,orion5x-88f6183-mbus
+		 marvell,mv78xx0-mbus
+
+- address-cells : '2'여야합니다. MBus ID 인코딩의 첫 번째 셀로, the window 내의 주소 오프셋에 대한 두 번째 셀입니다.
+
+- 크기 - 셀 : '1'이어야합니다.
+
+- 범위 : 각 어린이에게 적절한 번역을 제공하도록 설정되어야합니다.
+아래 예를 참조하십시오.
+
+- 컨트롤러 : MBus 컨트롤러 노드를 나타내는 단일 phandle을 포함합니다. 이를 통해 MBus를 제어하는 레지스터를 포함하는 노드를 지정할 수 있습니다.이 노드는 일반적으로 내부 레지스터 창 (아래 참조)에 포함됩니다.
+
+
+
+Optional properties:
+
+- pcie-mem-aperture:	This optional property contains the aperture for
+			the memory region of the PCIe driver.
+			If it's defined, it must encode the base address and
+			size for the address decoding windows allocated for
+			the PCIe memory region.
+
+- pcie-io-aperture:	Just as explained for the above property, this
+			optional property contains the aperture for the
+			I/O region of the PCIe driver.
+
+* Marvell MBus controller
+
+Required properties:
+
+- compatible:	Should be set to "marvell,mbus-controller".
+
+
+
+- reg:          Device's register space.
+		Two or three entries are expected (see the examples below):
+		the first one controls the devices decoding window,
+		the second one controls the SDRAM decoding window and
+		the third controls the MBus bridge (only with the
+		marvell,armada370-mbus and marvell,armadaxp-mbus
+		compatible strings)
+
+선택적 속성 :
+
+- pcie-mem-aperture :이 선택적 속성에는 PCIe 드라이버의 메모리 영역에 대한 구경이 포함됩니다.
+정의 된 경우 PCIe 메모리 영역에 할당 된 주소 디코딩 윈도우의 기본 주소와 크기를 인코딩해야합니다.
+
+- pcie-io-aperture : 위의 속성에 대해 설명한 것과 마찬가지로이 선택적 속성에는 PCIe 드라이버의 I / O 영역에 대한 구경이 포함됩니다.
+
+* Marvell MBus 컨트롤러
+
+필수 속성 :
+
+- compatible : "marvell, mbus-controller"로 설정해야합니다.
+
+- reg : 장치의 레지스터 공간.
+2 ~ 3 가지 항목이 예상됩니다 (아래 예 참조).
+첫 번째 장치는 장치 디코딩 창을 제어하고 두 번째 장치는 SDRAM 디코딩 창을 제어하고 세 번째 장치는 MBus 브리지를 제어합니다 (marvell, armada370-mbus 및 marvell, armadaxp-mbus 호환 문자열 만 사용)
+
+
+
+Example:
+
+	soc {
+		compatible = "marvell,armada370-mbus", "simple-bus";
+		#address-cells = <2>;
+		#size-cells = <1>;
+		controller = <&mbusc>;
+		pcie-mem-aperture = <0xe0000000 0x8000000>;
+		pcie-io-aperture  = <0xe8000000 0x100000>;
+
+		internal-regs {
+			compatible = "simple-bus";
+
+			mbusc: mbus-controller@20000 {
+				compatible = "marvell,mbus-controller";
+				reg = <0x20000 0x100>, <0x20180 0x20>, <0x20250 0x8>;
+			};
+
+			/* more children ...*/
+		};
+	};
+
+** MBus address decoding window specification
+
+The MBus children address space is comprised of two cells: the first one for
+the window ID and the second one for the offset within the window.
+In order to allow to describe valid and non-valid window entries, the
+following encoding is used:
+MBus 하위 주소 공간은 두 개의 셀로 구성됩니다. 첫 번째는 창 ID이고 두 번째 셀은 창의 오프셋입니다. 유효한 및 유효하지 않은 창 항목을 설명 할 수 있도록 다음 인코딩이 사용됩니다.
+
+  0xSIAA0000 0x00oooooo
+
+Where:
+
+  S = 0x0 for a MBus valid window
+  S = 0xf for a non-valid window (see below)
+  MBus 유효한 창에 대해 S = 0x0
+   유효하지 않은 윈도우의 경우 S = 0xf (아래 참조)
+
+If S = 0x0, then:
+
+   I = 4-bit window target ID
+  AA = windpw attribute
+
+If S = 0xf, then:
+
+   I = don't care
+   AA = 1 for internal register
+
+Following the above encoding, for each ranges entry for a MBus valid window
+(S = 0x0), an address decoding window is allocated. On the other side,
+entries for translation that do not correspond to valid windows (S = 0xf)
+are skipped.
+상기 인코딩에이어서, MBus 유효 윈도우 (S = 0x0)에 대한 각각의 범위 엔트리에 대해, 어드레스 디코딩 윈도우가 할당된다. 반면, 유효한 window (S = 0xf)에 해당하지 않는 변환 항목은 건너 뜁니다.
+
+	soc {
+		compatible = "marvell,armada370-mbus", "simple-bus";
+		#address-cells = <2>;
+		#size-cells = <1>;
+		controller = <&mbusc>;
+
+		ranges = <0xf0010000 0 0 0xd0000000 0x100000
+			  0x01e00000 0 0 0xfff00000 0x100000>;
+
+		bootrom {
+			compatible = "marvell,bootrom";
+			reg = <0x01e00000 0 0x100000>;
+		};
+
+		/* other children */
+		...
+
+		internal-regs {
+			compatible = "simple-bus";
+			ranges = <0 0xf0010000 0 0x100000>;
+
+			mbusc: mbus-controller@20000 {
+				compatible = "marvell,mbus-controller";
+				reg = <0x20000 0x100>, <0x20180 0x20>, <0x20250 0x8>;
+			};
+
+			/* more children ...*/
+		};
+	};
+
+In the shown example, the translation entry in the 'ranges' property is what
+makes the MBus driver create a static decoding window for the corresponding
+given child device. Note that the binding does not require child nodes to be
+present. Of course, child nodes are needed to probe the devices.
+
+Since each window is identified by its target ID and attribute ID there's
+a special macro that can be use to simplify the translation entries:
+
+#define MBUS_ID(target,attributes) (((target) << 24) | ((attributes) << 16))
+
+위의 예에서 'ranges'속성의 변환 항목은 MBus 드라이버가 해당 하위 장치에 대한 정적 디코딩 창을 만드는 역할을합니다. 바인딩에서는 하위 노드가 필요하지 않습니다. 물론 장치를 검사하려면 자식 노드가 필요합니다.
+
+각 창은 대상 ID 및 속성 ID로 식별되기 때문에 변환 항목을 단순화하는 데 사용할 수있는 특수 매크로가 있습니다.
+
+#define MBUS_ID (target, attributes) (((target) << 24) | ((attributes) << 16))
+
+
+Using this macro, the above example would be:
+이 매크로를 사용하면 위의 예가됩니다.
+
+	soc {
+		compatible = "marvell,armada370-mbus", "simple-bus";
+		#address-cells = <2>;
+		#size-cells = <1>;
+		controller = <&mbusc>;
+
+		ranges = < MBUS_ID(0xf0, 0x01) 0 0 0xd0000000 0x100000
+			   MBUS_ID(0x01, 0xe0) 0 0 0xfff00000 0x100000>;
+
+		bootrom {
+			compatible = "marvell,bootrom";
+			reg = <MBUS_ID(0x01, 0xe0) 0 0x100000>;
+		};
+
+		/* other children */
+		...
+
+		internal-regs {
+			compatible = "simple-bus";
+			#address-cells = <1>;
+			#size-cells = <1>;
+			ranges = <0 MBUS_ID(0xf0, 0x01) 0 0x100000>;
+
+			mbusc: mbus-controller@20000 {
+				compatible = "marvell,mbus-controller";
+				reg = <0x20000 0x100>, <0x20180 0x20>, <0x20250 0x8>;
+			};
+
+			/* other children */
+			...
+		};
+	};
+
+
+** About the window base address
+
+Remember the MBus controller allows a great deal of flexibility for choosing
+the decoding window base address. When planning the device tree layout it's
+possible to choose any address as the base address, provided of course there's
+a region large enough available, and with the required alignment.
+
+Yet in other words: there's nothing preventing us from setting a base address
+of 0xf0000000, or 0xd0000000 for the NOR device shown above, if such region is
+unused.
+
+
+MBus 컨트롤러는 디코딩 윈도우 기본 주소 선택에 많은 유연성을 허용한다는 것을 기억하십시오. 장치 트리 레이아웃을 계획 할 때 모든 주소를 기본 주소로 선택할 수 있습니다. 물론 사용할 수있는 충분한 영역이 있고 필요한 정렬이 있습니다.
+
+그러나 다른 말로하면, 사용되지 않는 영역이 있다면 위에 표시된 NOR 디바이스에 대해 0xf0000000 또는 0xd0000000의 기본 주소를 설정하는 것을 막을 수있는 방법은 없습니다.
+
+** Window allocation policy
+
+The mbus-node ranges property defines a set of mbus windows that are expected
+to be set by the operating system and that are guaranteed to be free of overlaps
+with one another or with the system memory ranges.
+
+Each entry in the property refers to exactly one window. If the operating system
+chooses to use a different set of mbus windows, it must ensure that any address
+translations performed from downstream devices are adapted accordingly.
+
+The operating system may insert additional mbus windows that do not conflict
+with the ones listed in the ranges, e.g. for mapping PCIe devices.
+As a special case, the internal register window must be set up by the boot
+loader at the address listed in the ranges property, since access to that region
+is needed to set up the other windows.
+
+mbus-nodes ranges 속성은 운영 체제에 의해 설정되고 서로 또는 시스템 메모리 범위와 겹치지 않도록 보장되는 일련의 mbus 창을 정의합니다.
+
+속성의 각 항목은 정확히 하나의 창을 나타냅니다. 운영 체제가 다른 mbus 창 세트를 사용하기로 선택한 경우, 다운 스트림 장치에서 수행 된 주소 변환이 그에 따라 적절히 적용되도록해야합니다.
+
+운영 체제는 범위에 나열된 것과 충돌하지 않는 추가 mbus 창을 삽입 할 수 있습니다 (예 : PCIe 장치 매핑에 사용됩니다. 특별한 경우로, 범위 등록 정보에 나열된 주소의 부트 로더가 내부 등록 창을 설정해야합니다. 다른 windows을 설정하려면 해당 지역에 대한 액세스가 필요하기 때문입니다.
+
+** Example
+
+See the example below, where a more complete device tree is shown:
+보다 완벽한 장치 트리가 표시된 아래의 예를 참조하십시오.
+
+	soc {
+		compatible = "marvell,armadaxp-mbus", "simple-bus";
+		controller = <&mbusc>;
+
+		ranges = <MBUS_ID(0xf0, 0x01) 0 0 0xd0000000 0x100000   /* internal-regs */
+			  MBUS_ID(0x01, 0x1d) 0 0 0xfff00000 0x100000
+			  MBUS_ID(0x01, 0x2f) 0 0 0xf0000000 0x8000000>;
+
+		bootrom {
+			compatible = "marvell,bootrom";
+			reg = <MBUS_ID(0x01, 0x1d) 0 0x100000>;
+		};
+
+		devbus-bootcs {
+			status = "okay";
+			ranges = <0 MBUS_ID(0x01, 0x2f) 0 0x8000000>;
+
+			/* NOR */
+			nor {
+				compatible = "cfi-flash";
+				reg = <0 0x8000000>;
+				bank-width = <2>;
+			};
+		};
+
+		pcie-controller {
+			compatible = "marvell,armada-xp-pcie";
+			status = "okay";
+			device_type = "pci";
+
+			#address-cells = <3>;
+			#size-cells = <2>;
+
+			ranges =
+			       <0x82000000 0 0x40000 MBUS_ID(0xf0, 0x01) 0x40000 0 0x00002000   /* Port 0.0 registers */
+				0x82000000 0 0x42000 MBUS_ID(0xf0, 0x01) 0x42000 0 0x00002000   /* Port 2.0 registers */
+				0x82000000 0 0x44000 MBUS_ID(0xf0, 0x01) 0x44000 0 0x00002000   /* Port 0.1 registers */
+				0x82000000 0 0x48000 MBUS_ID(0xf0, 0x01) 0x48000 0 0x00002000   /* Port 0.2 registers */
+				0x82000000 0 0x4c000 MBUS_ID(0xf0, 0x01) 0x4c000 0 0x00002000   /* Port 0.3 registers */
+				0x82000800 0 0xe0000000 MBUS_ID(0x04, 0xe8) 0xe0000000 0 0x08000000 /* Port 0.0 MEM */
+				0x81000800 0 0          MBUS_ID(0x04, 0xe0) 0xe8000000 0 0x00100000 /* Port 0.0 IO */>;
+
+
+			pcie@1,0 {
+				/* Port 0, Lane 0 */
+				status = "okay";
+			};
+		};
+
+		internal-regs {
+			compatible = "simple-bus";
+			#address-cells = <1>;
+			#size-cells = <1>;
+			ranges = <0 MBUS_ID(0xf0, 0x01) 0 0x100000>;
+
+			mbusc: mbus-controller@20000 {
+				reg = <0x20000 0x100>, <0x20180 0x20>, <0x20250 0x8>;
+			};
+
+			interrupt-controller@20000 {
+			      reg = <0x20a00 0x2d0>, <0x21070 0x58>;
+			};
+		};
+	};

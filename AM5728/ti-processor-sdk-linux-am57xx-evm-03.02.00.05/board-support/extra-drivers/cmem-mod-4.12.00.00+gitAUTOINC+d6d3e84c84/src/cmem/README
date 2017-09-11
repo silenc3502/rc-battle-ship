@@ -1,0 +1,130 @@
+			Linux Utils CMEM module
+			-----------------------
+
+
+This package contains a Linux kernel loadable module as well as the user
+interface library.  It also contains a small set of tests.
+
+In order to build the source code you will need to edit products.mak, pointing
+it to your KERNEL_INSTALL_DIR and your codegen directories.
+
+Linux CMA (Contiguous Memory Allocator) support
+===============================================
+
+This implementation of CMEM's loadable kernel module supports the use of
+the Linux kernel's CMA framework, as well as the traditional "carveout"
+usage (a "carveout" is physical memory that is kept out of Linux's control).
+The CMA usage can include CMEM-specific CMA blocks, in addtion to the usage
+of the CMA global area that is always present when CMA is configured in the
+kernel configuration.  The CMEM-specific CMA block usage requires a small
+in-kernel stub that must be added to your Linux kernel source tree.
+
+Linux kernel stub
+=================
+
+The CMEM Linux kernel stub allows usage of CMEM-owned CMA areas.  Without
+the stub, one can still achieve CMA allocations through CMEM, although
+such allocations would come from the global CMA area (which can also be
+consumed by other kernel device drivers).
+
+To use the kernel stub there are a few files that must be placed in your
+kernel's source tree.  These files can be found in 'cmem/module/kernel'.
+
+The file cmemk_stub.c must be added to your Linux kernel source tree.  While
+it can reside anywhere, it is recommended to create a new 'drivers/cmem'
+directory and place the files cmemk_stub.c and Makefile in there.  Since a
+new directory is being added below 'drivers', you will need to modify the
+file 'drivers/Makefile' to point to the 'cmem' subdirectory.  This can be
+accomplished by adding the following line to the 'drivers/Makefile' file:
+        obj-y	+= cmem/
+
+The header file cmemk_stub.h must be added to your Linux kernel 'include'
+directory.  Place it in:
+        <linux_kernel>/include/linux/cmemk_stub.h
+
+You must also insert a call to a function defined in cmemk_stub.c to your
+machine's "early boot" code.  This function is named 'cmem_reserve_cma()'.
+The basic way to do this is to add a '.reserve' element to your machine's
+'MACHINE_START()' macro/struct.  There can be only one 'MACHINE_START()'
+defined for your particular board.  For instance, with OMAP-L138 there is a
+file named 'arch/arm/mach-davinci/board-da850-evm.c' that contains the
+following:
+MACHINE_START(DAVINCI_DA850_EVM, "DaVinci DA850/OMAP-L138/AM18x EVM")
+        .atag_offset    = 0x100,
+        .map_io         = da850_evm_map_io,
+        .init_irq       = cp_intc_init,
+        .timer          = &davinci_timer,
+        .init_machine   = da850_evm_init,
+        .init_late      = davinci_init_late,
+        .dma_zone_size  = SZ_128M,
+        .restart        = da8xx_restart,
+MACHINE_END
+You should add the following to this struct:
+        .reserve        = cmem_reserve_cma,
+If there is already a '.reserve' function defined then you will need to
+either add a call to 'cmem_reserve_cma()' to the function assigned to the
+'.reserve' element, or define a new function that calls the existing
+function in addition to calling 'cmem_reserve_cma()', and assign that new
+function to the '.reserve' struct element.
+
+Stub kernel command-line parameters
+-----------------------------------
+
+The CMEM kernel stub cmemk_stub.c supports two kernel parameters that control
+how much CMA memory to reserve.  These parameters are added to the u-boot
+'bootargs' variable.
+
+cmem_heapsize: specifies how much CMA memory to reserve for the CMEM heap.
+cmem_pools: specifies how many buffers of a specified size are allocated for
+        the specified number of pools.
+Each size-type parameter can be specified using the standard "KMG" formatting.
+
+For example, the following:
+        cmem_heapsize=100000 cmem_pools=10x4096,2x1M,4x256K
+says to allocate 3 pools:
+        pool 1 w/ 10 buffers of size 4096
+        pool 2 w/ 2 buffers of size 1 MB
+        pool 3 w/ 4 buffers of size 256 KB
+and a heap of size 100000.
+
+A separate CMA region will be allocated for the heap as well as for each pool.
+
+Building the code
+=================
+
+The file products.mak (at the top level of this tree) contains two
+definitions used by the build subsystem:
+        KERNEL_INSTALL_DIR - The base directory of your Linux kernel
+        source tree
+        TOOLCHAIN_PREFIX - the 'prefix' for the GNU ARM codegen tools
+The TOOLCHAIN_PREFIX can contain the full path of the codegen tools, ending
+with the tool prefix, i.e.:
+        TOOLCHAIN_PREFIX=/db/toolsrc/library/vendors2005/cs/arm/arm-2008q1-126/bin/arm-none-linux-gnueabi-
+
+or it can be just the tool prefix if your shell's $PATH contains your
+codegen's 'bin' directory:
+        TOOLCHAIN_PREFIX=arm-none-linux-gnueabi-
+where you $PATH contains:
+	/db/toolsrc/library/vendors2005/cs/arm/arm-2008q1-126/bin
+
+Installing the loadable kernel module
+=====================================
+
+The loadable kernel module 'cmemk.ko' can be installed into a running
+system with the command:
+        % insmod cmemk.ko
+The traditional non-CMA CMEM usage supports a number of module parameters
+to define block start/end and pool geometry (documented elsewhere).  These
+parameters can be used in addition to the CMA parameters, or by themselves
+without any CMA parameters (although the global CMA capability is always
+there when CMA is enabled in the Linux kernel).
+
+API test
+========
+
+There is an API test contained in 'cmem/tests/apitest.c'.  To run
+this test, suppy a buffer size as the only test parameter:
+        % apitest 10240
+If you have no heap space allocated (with 'heapsize=##' on the kernel
+command-line) then the heap portion of the test will fail.
+

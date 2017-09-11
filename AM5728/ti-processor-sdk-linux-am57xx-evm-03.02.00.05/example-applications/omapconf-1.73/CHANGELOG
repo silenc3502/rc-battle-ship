@@ -1,0 +1,281 @@
+v1.73:
+------
+	- [AM437X][PRM] Add register definitions for crypto IPs
+	- [AM437X][CM] Add register definitions for crypto IPs
+	- [AM335X][CM] Add register definitions for crypto IPs
+	- [I2CTOOLS] I2c-busses: Define _DEFAULT_SOURCE as well
+	- [AM437x][PRCM] Allow dump of prcm irq or prcm dpll raw registers
+	- [AM437x][PRCM] Add PRCM dump support
+	- [AM437x][PRM] Add register definitions and register access support
+	- [AM437x][CM] Add register definitions and register access support
+	- [AM437x][EMIF] Add support for dump EMIF
+	- [LIB][ANDROID] Separate wake_lock from Android
+	- [LIB][ANDROID] Check if OS is Android based on lowmemorykiller
+	- [CPUINFO][DRA72] Support SR2.0
+	- [AM335X][CTT] Add missing registers
+	- [LIB][ANDROID] Extend product name to include Marshmallow
+	- [Makefile] squash build error message when git is not available
+	- [COMMON][TRACE] Add debug print if chdir does not work
+	- [LINUX][MEM] Remove inline from global functions
+	- [COMMON / OMAP4/ OMAP5] dummy check fget to make gcc 5.2 happy
+	- [CPUINFO][DRA7] Support DRA74x SR2.0 samples
+	- [CPUINFO][DRA74x] Rename IDCODE MACROs to be closer to reality
+	- [COMMON / OMAP4/ OMAP5] cast fget result to void
+	- [COMMON][MEM] get rid of inline accessors for public functions
+	- [COMMON][LIB] Fix up inlines
+v1.72:
+------
+	- [PMIC][TPS659038]: Fix usage of smp_id in debug print
+	- [PMIC][TPS659038]: Introduce support to detect TPS65917 PMIC for DRA72x
+	- [gitignore] Update .gitignore to ignore all cscope generate files
+	- [Makefile] Add pretty print build sequence
+	- [Makefile] Silence builddate and version setting
+	- [CPUINFO] Add generic AM335X SoC if dev_feature detection fails
+	- [CPUINFO] Refactor cpu_detect for cleaner implementation
+	- [AM437x] Add support for AM437X SoC
+	- [AM437x] Add export CTT functionality for AM437X
+	- [LIB][ANDROID] Cleanup android pastry name array
+	- [LIB][ANDROID] Extend android product name to include new pastries
+	- [CPUINFO] Correct I2C bus number to fix cpuinfo for OMAP4/5
+	- [COMMON] fix up build warnings
+	- [LINUX] fix up build warnings
+	- [OMAP][COMMON] Fix build warnings
+	- [OMAP4] Fixup build warnings
+	- [OMAP5] Fix build warnings
+	- [DRA7] Fix up build warnings
+	- [Makefile] Add option for debug build
+	- [DRA7][STATCOL] disable optimization
+	- [DRA7][CTT] rd1: Fix for compatibility to latest CTT revision
+
+v1.71:
+------
+	- [DRA7][CROSSBAR] Add support for PRU-ICSS in crossbar dump and audit
+	- [DRA7][CROSSBAR] Add PRU-ICSS interrupt info to crossbar data
+	- [DRA7][CROSSBAR] Add couple of crypto interrupts to crossbar data
+	- [DRA7/COMMON][STATCOLL] Fix conflict between probe and master option selection for ma_m
+	- [AM335X][LIB] Add support for Register name based read/write
+
+v1.70:
+-------
+	- [DRA7][TRACE] Add Bandwidth trace 'trace bw' command support
+	- [DRA7][STATCOLL] Add DRA7 specific statistics collector library
+	- [AM335X][MODULE] Support for show pwst command
+	- [AM335X][OPP] Add support for show opp command
+	- [TPS65217X][PMIC] PMIC detection and support for TPS65217X
+	- [AM335X][DPLL] Add support for 'show dpll' command
+	- [AM335X][DPLL] Add support for 'dump dpll' command
+	- [AM335X][PRCM] Add prcm dump support
+	- [AM335X][EMIF] Add support for dump EMIF
+	- [AM335X][CTT] Export ctt implemented for AM335X
+	- [CPUINFO][AM335X] Add support for AM335X SoC
+	- [PMIC][TPS659038] Fix ES1.1 ID detection
+	- [CPUINFO] [DRA7] support DRA72x SoC
+	- [DRA7][PRCM] Use SYS_CLK1 rates based on CM_CLKSEL_SYS
+	- Makefile: add dirty tag if git repo was modified.
+
+v1.69:
+-------
+	- omapconf: get rid of macro based version information
+	- [DRA7] support ES1.1 samples as well
+	- [DRA7] add help for trace
+	- [DRA7] Add Adaptive Body Bias(ABB) support
+	- [OMAP4/5]: ABB: dont hardcode number of voltage domains
+	- Makefile: Fix generation of cscope DB
+	- OMAP5: DPLL Audit: Return non-zero if test fails
+	- support added for DRA7XX for EMIF load trace
+	- [DRA7][CROSSBAR] Add IRQ crossbar dump and audit support
+
+v1.68:
+-------
+	- [DRA7][McASP] Add initial support
+	- [COMMON][TABLE] Add support for tables with title
+	- [DRA7][VOLTAGE] omapconf set voltage <rail> <voltage>
+	- [DRA7][DPLL] add omapconf audit dpll
+	- [DRA7] [OPP] add omapconf show opp
+	- [DRA7] [TEMP] add omapconf show temp <sensor>
+	- [DRA7][TEMP] add omapconf show hwtemp <sensor>
+	- [DRA7][PRCM] Clocks dependencies and calculation
+	- [DRA7][MODULE] Add support for DRA7 modules
+	- [DRA7] Add support for voltage domains
+	- [DRA7][AUDIO] Add support for tlv320aic3x audioic
+	- [LIB/DRA7/AUDIO] No audioic revision to show for DRA7XX
+	- [PMIC][DRA7] PMIC detection for TPS659038
+	- [DRA7][PRCM/CTT] omapconf export ctt
+	- [DRA7][DPLL] add omapconf show dpll
+	- [DRA7][DPLL] add omapconf dump dpll [<dpll>]
+	- [DRA7][PRCM] add omapconf dump prcm [<pwrdm>]
+	- [CPUINFO] introduce DRA7x cpuID support
+	- [OMAP5][DPLL] Fix show dpll M2 divider
+	- [MODULE] change debug print to print clock ID
+	- [PMIC] use array index matching for PMIC matches
+	- [DPLL] Extract DPLL_BYP_CLKSEL bit data for all DPLL types
+	- OMAP5: add show hwtemp
+	- OMAP5: audit dpll should audit at the right OPP
+	- CPUINFO: Array index matching
+	- cpuinfo: OMAP5: fix cpu device type detection
+	- Makefile: allow to build tags and cscope
+	- OMAP5: SR: support reading VC registers on ES2.0
+
+
+v1.67:
+-------
+	- [OMAP4][SR] Always dump SR VP registers (always clocked) 
+	- [OMAP4][I2C] Use macro for I2C bus number instead of hard-coded value
+	- [OMAP4460][PMIC][TPS62361] Mask PFM flag to avoid potential weird voltage
+
+
+v1.66:
+-------
+	- [OMAP5432][AUDIT][DPLL][CLKSPEED] DPLL ABE running from 19.2M clock instead of 32K
+	- [OMAP5432][DPLL] update OMAP5432 DPLL CORE OPP_NOM golden settings
+	- [OMAP5432][MODULE] fix L3-derived expected clock rates
+	- [OMAP5432][OPP] fix OPP detection
+
+
+v1.65:
+-------
+	- [OMAPCONF] display product name in omapconf header
+	- [TRACE][PERF] create specific default trace configuration file per known architecture
+	- [TRACE][PERF] fixed default writable working directory for configuration file
+	- [OMAP5][DPLL] handled OMAP543x ES2.x DPLL_CORE H14 special divider (GPU clock)
+	- [OMAP4460][GALAXY NEXUS][TEMP] handled JOP40D specific file name for bandgap temperature sensor
+	- [OMAP4460][GALAXY NEXUS][AUDIT][SYSCONFIG][HACK] skip DSS modules when DSS domain is not ON
+	- [OMAP4460][KINDLE] removed twl603x_smps_offset_get() VDD_MPU error message
+	- [OMAP4460][KINDLE] no Phoenix Audio chip on Kindle Fire products
+	- [OMAP4][TRACE][OPP][PWRDM] do not run on HS device (not allowed)
+	- [OMAP4][SYSCONFIG][MODULE] fixed use L3 address instead of L4_PER address for DSS modules
+	- [OMAP4][MODULE] fixed DSI[1-2] doesn't have smart-idle wakeup mode
+
+
+v1.64:
+-------
+	- [OMAP4460][OPP][HACK] Hack for Samsung Galaxy Nexus to detect VDD_IVA OPP50
+	- [OMAP4460][OPP] Defined and added detected of OMAP4460 VDD_CORE OPP119
+	- [README] Updated README with static/dynamic build instructions
+	- [Makefile] Fixed builddate dependency
+	- [Makefile] Added STATIC_BUILD option
+
+
+v1.63:
+-------
+	- [OMAP4][OPP] Fix clock rates not displayed (always 0) in "show opp" command
+	- [OMAP4][MODULE] introduce module list for OMAP44[30-60-70]
+
+
+v1.62:
+-------
+	- [OMAP5][CPU] fix OMAP5 silicon type detection
+	- [OMAP5][CPU] add OMAP543x ES2.x max cpu speed
+	- [OMAP5][PRCM] move all *_dump() functions to prcm54xx.c
+	- [OMAP5][PRCM][DUMP] dump PMI/CMI/CMI_AON registers
+	- [OMAP5][PRCM] fix code check instrumentation status
+	- [OMAP5][PRCM] fix ES1.0 module pointer used with ES2.x devices
+	- [OMAP5][PRCM][EXPORT] fix do not export removed L4_PER domain on OMAP543x ES2.x
+	- [OMAP5][DPLL][AUDIT] avoid use of legacy APIs to retrieve current OPP
+	- [OMAP5][DPLL] fix DPLL CORE HS_DIV14 divider for OMAP5430 ES2.0 OPP_HI
+	- [OMAP5][DPLL] fix DPLL lock frequency and output rates when DCC is enabled
+	- [OMAP5][DPLL] update OMAP5430 ES2.0 DPLL golden settings
+	- [OMAP][SR] use generic functions to retrieve OPP and voltage in sr_convergence_status_show()
+	- [OMAP5][MODULE] fix OMAP5430 ES2.0 PoR clock rates for DSP, GPU, IVA, SL2, C2C modules
+	- [OMAP5][MODULE] handle ES1.0/ES2.0 differences in modules list
+	- [OMAP5][CLKDMDEP] fix incorrect register table used for ES2.0
+	- [OMAP5][OPP] add OMAP5430 ES2.0 OPP definitions
+	- [OPP] round clock rates to MHz during comparisons in opp_show
+	- [OPP] avoid cpufreq_interactive_input_connect message to be printed in OPP table
+
+
+v1.61:
+-------
+	- [OMAP5][CLKDM][PWRDM][MODULE] complete migration to generic layers and fix some ES2.0 bugs
+	- [OMAP5][EMIF][MODULE] call genric module_xyz() functions instead of OMAP5-specific mod54xx_xyz() ones
+	- [OMAP5][SR][MODULE] call generic module_xyz() functions instead of OMAP5-specific mod54xx_xyz() ones
+	- [DEBUG] better trace memory reads and writes
+	- [OMAP4][CLKDM][PWRDM] move xyz_config_show to respective libraries
+
+
+v1.60:
+-------
+	- [MODULE][SYSCONFIG][AUDIT] reworked sysconfig audit
+	- [MODULE][CLKSPEED][AUDIT] reworked clkspeed audit
+	- [OMAP5][MODULE] rework "show opp" and "show pwst" to use new generic frameworks
+	- [VOLTDM] handle new OMAP543x ES2.0 voltage domain status registers
+	- [TRACE][OMAP4470][OMAP5] add EMIF total read and write bandwidth item to trace perf
+	- [PWRDM][EMU] move EMU domain enable/disable functions to powerdomain lib
+	- [TRACE][PERF][SETUP] fix segfault when default setup file cannot be created
+	- [OMAP5][PRCM] handle ES2.0 module changes in CM_xyz_CLKCTRL registers
+	- [OMAP5][PRCM] handle ES2.0 changes in CM_xyz_CLKSTCTRL registers
+	- [OMAP5][MODULE] handle OMAP543x ES2.x PRCM registers changes in module info list
+	- [OMAP5][MODULE][OPP] handle OMAP543x ES2.0 MPU and GPU frequency changes
+	- [OMAP5][PRCM][CLOCK] handle OMAP543x ES2.0 clock tree changes
+	- [OMAP5][DPLL] handle OMAP543x ES2.0 DPLLs changes
+	- [OMAP5][CTRLMOD] handle OMAP543x ES2.0 Control Module changes
+	- [OMAP5][EMIF] handle OMAP543x ES2.0 EMIF changes
+	- [OMAP5][SYSCONFIG][MODULE] fix BB2D sysconfig register
+	- [OMAP5][PRCM] handle OMAP543x ES2.0 PRM changes
+	- [OMAP5][PRCM] handle OMAP543x ES2.0 CM changes
+	- [OMAP5][MODULE] handle added/removed modules in OMAP543x ES2.0
+	- [OMAP5][MODULE] fix missing PoR OPP rate for GPIO modules
+	- [OMAP5] handle no L4PER power domain in OMAP543x ES2.0
+	- [OMAP5][CPUDETECT] allow user to select forced OMAP543x ES1.0 or ES2.0
+	- [OMAP5] OMAP543x ES2.0 DIEID detection
+	- [REGRESSIONTESTSUITE] add EMIF test, remove kernel clock test, do not use register import
+	- [MODULE] introduce generic module layer
+	- [PWRDM] introduce generic power domain layer
+	- [CLKDM] introduce generic clock domain layer
+	- [I2C] update to I2C Tools library v3.1.0
+
+
+v1.52:
+-------
+	- [OMAP5][CLKSPEED][AUDIT] fix missing BANDGAPTS expected clock rate
+	- [OMAP5][HELP][TEMP] fix supported memory sensor names in help
+	- [OMAP5][MODULE] fix double rounding side effect with GPU DSP And IVA PoR rates
+	- [OMAP5][TEMP] fix PCB sensor and add CHARGER sensor support
+	- [OMAP5][TEMP] remove unused code
+	- [OMAP5][TEMP] MPU and GPU hotspot sensors support
+	- [OMAP4][TEMP] cleanup code and fix sensors path
+	- [OMAP4][TEMP] fix hotspot sensor file read
+	- [OMAP4][TEMP] use new generic temperature sensor abstracted layer
+	- [OMAP4][CLOCK] fix 2 bugs in debug code
+	- [OMAP4][CLKSPEED][AUDIT] do not skip TIMERs, MCBSP, MCASP modules
+	- [OMAP4][UC_AUDIT] fix Jelly Bean support
+	- [OMAP4460][OMAP4470][OPP] fix VDD_IVA OPP NITROSB expected clock rate
+	- [OMAP4470][OPP] OMAP4470 VDD_CORE OPP100_HIGH support
+	- [PMIC] add function to round voltage
+	- [LIB] add functions to convert clock rates and voltages
+	- [TEMP] introduce generic temperature sensor abstraction layer
+	- [VOLTDM] introduce voltage domain generic abstraction layer
+	- [OPP] introduce OPP generic abstraction layer
+	- [OMAPCONF] add user options to dynamically trace omapconf memory R/W access
+	- [REGRESSIONTESTSUITE][OMAP4][UC_AUDIT] add output files to audit
+	- [REGRESSIONTESTSUITE][TEMP][OMAP5] update script to support new temp options
+	- [REGRESSIONTESTSUITE][OMAP4470] fix OPP50 MPU clock rate
+
+
+v1.51:
+-------
+	- [AUDIT][PERF] fixed empty interrupt statistic when CPU1 is offline
+	- [AUDIT][PERF] fixed segmentation fault
+	- [OMAP4][OMAP5][OPP] fixed OPP-clock rates incoherency
+	- [OMAP4][OMAP5][OPP] highlight disabled modules
+	- [OMAP4][OMAP5][OPP] highlight disabled modules
+	- [OMAP4][OMAP5][OPP] added debug traces
+	- [OMAP4][MODULE] fixed missing arg in debug trace in mod44xx_get_autoidle_mode()
+	- [OMAP5][VOLTDM][OPP] use nominal voltage instead of frequencies to detect OPP
+	- [OMAP5][VC] added function to retrieve registers of a given VC module
+	- [OMAP5][MODULE] fixed incorrect number of arguments in debug trace
+	- [OMAP5][MODULE] fixed GPU/IVA/DSP OPP_[NOM-HI] clock rates
+	- [STATCOLL] Added --overflow_delay in "trace" module help
+	- [STATCOLL] Extended --overflow_delay to -a 2 mode (direct dump on terminal)
+	- [STATCOLL] Reset HW IP after a certain number of iterations in -a 1 mode instead of counter checking
+	- [STATCOLL] per-counter config, error checking, HW bug handling, overflow handling
+	- [STATCOLL] clarified that option is -m MA_MPU_1_2, not MA_MPU_1_2 alone
+	- [STATCOLL] 6 counters and better description of counters before first data output
+	- [STATCOLL] Add capability to track overflow on 2 thresholds (use twice -o and -t)
+	- [STATCOLL] rename trans_qaul to trans_qual in cTools lib
+	- [STATCOLL] Missing initiator, error check for -m option and capability to use initiator name
+
+
+v1.50:
+-------
+	- Initial release.

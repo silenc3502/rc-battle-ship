@@ -1,0 +1,136 @@
+Each CPU has a "base" scheduling domain (struct sched_domain). The domain
+hierarchy is built from these base domains via the ->parent pointer. ->parent
+MUST be NULL terminated, and domain structures should be per-CPU as they are
+locklessly updated.
+
+각 CPU에는 "기본"예약 도메인 (struct sched_domain)이 있습니다. 
+도메인 계층 구조는 이러한 기본 도메인에서 -> 부모 포인터를 통해 작성됩니다. 
+-> 부모는 NULL로 끝나야하고, 도메인 구조는 잠금없이 업데이트되므로 CPU마다 있어야합니다.
+
+Each scheduling domain spans a number of CPUs (stored in the ->span field).
+A domain's span MUST be a superset of it child's span (this restriction could
+be relaxed if the need arises), and a base domain for CPU i MUST span at least
+i. The top domain for each CPU will generally span all CPUs in the system
+although strictly it doesn't have to, but this could lead to a case where some
+CPUs will never be given tasks to run unless the CPUs allowed mask is
+explicitly set. A sched domain's span means "balance process load among these
+CPUs".
+
+각 스케줄링 도메인은 다수의 CPU에 걸쳐 있습니다 (-> span 필드에 저장 됨). 
+도메인의 스팬은 반드시 스팬의 상위 집합이어야한다 (필요하다면이 제한은 완화 될 수 있음). 
+그리고 CPU i의 기본 도메인은 적어도 i까지 확장되어야한다. 
+각 CPU의 최상위 도메인은 일반적으로 시스템의 모든 CPU에 걸쳐 있지만 엄격하게는 필요하지 않지만 
+CPU 허용 마스크가 명시 적으로 설정되어 있지 않으면 일부 CPU가 실행되지 않는 경우가 발생할 수 있습니다. 
+Sched 도메인의 범위는 "이러한 CPU 간의 균형 프로세스로드"를 의미합니다.
+
+Each scheduling domain must have one or more CPU groups (struct sched_group)
+which are organised as a circular one way linked list from the ->groups
+pointer. The union of cpumasks of these groups MUST be the same as the
+domain's span. The intersection of cpumasks from any two of these groups
+MUST be the empty set. The group pointed to by the ->groups pointer MUST
+contain the CPU to which the domain belongs. Groups may be shared among
+CPUs as they contain read only data after they have been set up.
+
+각 스케줄링 도메인에는 하나 이상의 CPU 그룹 (struct sched_group)이 있어야하며,
+이 그룹은 -> groups 포인터에서 순환 단방향 링크 목록으로 구성됩니다. 
+이러한 그룹의 cpumasks의 합집합은 도메인의 범위와 동일해야합니다 (MUST). 
+이 두 그룹의 cpumasks의 교차는 빈 세트 여야합니다 (MUST). 
+-> groups 포인터가 가리키는 그룹은 도메인이 속한 CPU를 포함해야합니다. 
+그룹은 CPU가 설정된 후에 읽기 전용 데이터를 포함하므로 CPU간에 공유 될 수 있습니다.
+
+Balancing within a sched domain occurs between groups. That is, each group
+is treated as one entity. The load of a group is defined as the sum of the
+load of each of its member CPUs, and only when the load of a group becomes
+out of balance are tasks moved between groups.
+
+그룹간에 sched 도메인 내에서 균형이 발생합니다. 즉, 각 그룹은 하나의 엔티티로 취급됩니다.
+그룹의로드는 각 구성원 CPU의로드 합계로 정의되며 그룹로드가 균형을 잃을 때만 그룹간에 태스크가 이동합니다.
+
+In kernel/sched/core.c, trigger_load_balance() is run periodically on each CPU
+through scheduler_tick(). It raises a softirq after the next regularly scheduled
+rebalancing event for the current runqueue has arrived. The actual load
+balancing workhorse, run_rebalance_domains()->rebalance_domains(), is then run
+in softirq context (SCHED_SOFTIRQ).
+
+kernel / sched / core.c에서 trigger_load_balance ()는 scheduler_tick ()을 통해 각 CPU에서 주기적으로 실행됩니다. 
+현재 실행 대기열에 대해 다음에 정기적으로 예정된 재조정 이벤트가 완료되면 softirq가 발생합니다. 
+run_rebalance_domains () -> rebalance_domains ()와 같은 실제로드 균형 조정 작업은 softirq 컨텍스트 (SCHED_SOFTIRQ)에서 실행됩니다.
+
+The latter function takes two arguments: the current CPU and whether it was idle
+at the time the scheduler_tick() happened and iterates over all sched domains
+our CPU is on, starting from its base domain and going up the ->parent chain.
+While doing that, it checks to see if the current domain has exhausted its
+rebalance interval. If so, it runs load_balance() on that domain. It then checks
+the parent sched_domain (if it exists), and the parent of the parent and so
+forth.
+
+후자의 함수는 현재 CPU와 scheduler_tick ()이 일어 났을 때 유휴 상태 였는지 여부와 
+기본 도메인에서부터 시작하여 -> 부모 체인으로 올라가는 우리의 CPU가있는 모든 sched 도메인을 반복하는지의 두 인수를 취합니다. 
+이를 수행하는 동안 현재 도메인에서 재 균형 간격을 모두 소모했는지 확인합니다. 그렇다면, 해당 도메인에서 load_balance ()를 실행합니다. 
+그런 다음 부모 sched_domain (있는 경우)과 부모의 부모 등을 확인합니다.
+
+Initially, load_balance() finds the busiest group in the current sched domain.
+If it succeeds, it looks for the busiest runqueue of all the CPUs' runqueues in
+that group. If it manages to find such a runqueue, it locks both our initial
+CPU's runqueue and the newly found busiest one and starts moving tasks from it
+to our runqueue. The exact number of tasks amounts to an imbalance previously
+computed while iterating over this sched domain's groups.
+
+처음에 load_balance ()는 현재 sched 도메인에서 가장 바쁜 그룹을 찾습니다.
+성공하면 해당 그룹의 모든 CPU 실행 대기열 중 가장 바쁜 실행 대기열을 찾습니다. 
+그런 runqueue를 찾으면 초기 CPU의 runqueue와 새로 발견 된 가장 바쁜 runqueue를 잠그고 작업을 runqueue로 이동하기 시작합니다. 
+작업의 정확한 수는이 sched 도메인의 그룹을 반복하면서 이전에 계산 된 불균형에 해당합니다.
+
+*** Implementing sched domains ***
+
+*** sched 도메인 구현하기 ***
+
+The "base" domain will "span" the first level of the hierarchy. In the case
+of SMT, you'll span all siblings of the physical CPU, with each group being
+a single virtual CPU.
+
+"기본"도메인은 계층 구조의 첫 번째 수준을 "확장"합니다. SMT의 경우, 물리적 CPU의 모든 형제에 걸쳐, 각 그룹은 단일 가상 CPU가됩니다.
+
+In SMP, the parent of the base domain will span all physical CPUs in the
+node. Each group being a single physical CPU. Then with NUMA, the parent
+of the SMP domain will span the entire machine, with each group having the
+cpumask of a node. Or, you could do multi-level NUMA or Opteron, for example,
+might have just one domain covering its one NUMA level.
+
+SMP에서 기본 도메인의 상위 노드는 노드의 모든 실제 CPU를 스팬합니다. 
+각 그룹은 단일 실제 CPU입니다. 그런 다음 NUMA를 사용하면 SMP 도메인의 상위 노드가 전체 시스템으로 확장되며 각 그룹에는 노드의 cpumask가 있습니다. 
+또는 다중 레벨 NUMA 또는 Opteron을 수행 할 수 있습니다 (예 : 하나의 NUMA 레벨을 다루는 하나의 도메인 만있을 수 있음).
+
+The implementor should read comments in include/linux/sched.h:
+struct sched_domain fields, SD_FLAG_*, SD_*_INIT to get an idea of
+the specifics and what to tune.
+
+구현자는 include / linux / sched.h의 주석을 읽어야합니다:
+구조체 sched_domain 필드, SD_FLAG_ *, SD _ * _ INIT를 사용하여 세부 사항과 조정 대상을 얻습니다.
+
+Architectures may retain the regular override the default SD_*_INIT flags
+while using the generic domain builder in kernel/sched/core.c if they wish to
+retain the traditional SMT->SMP->NUMA topology (or some subset of that). This
+can be done by #define'ing ARCH_HASH_SCHED_TUNE.
+
+전통적인 SMT-> SMP-> NUMA 토폴로지 (또는 그 일부 서브 세트)를 유지하려면 
+kernel / sched / core.c의 일반 도메인 빌더를 사용하면서 아키텍처는 기본 SD _ * _ INIT 플래그를 일반 무시로 유지할 수 있습니다. 
+이것은 #define ARCH_HASH_SCHED_TUNE 명령으로 할 수 있습니다.
+
+Alternatively, the architecture may completely override the generic domain
+builder by #define'ing ARCH_HASH_SCHED_DOMAIN, and exporting your
+arch_init_sched_domains function. This function will attach domains to all
+CPUs using cpu_attach_domain.
+
+또는 아키 텍처가 ARCH_HASH_SCHED_DOMAIN을 정의하고 arch_init_sched_domains 함수를 내 보내어 일반 도메인 빌더를 완전히 무시할 수 있습니다. 
+이 함수는 cpu_attach_domain을 사용하여 모든 CPU에 도메인을 연결합니다.
+
+The sched-domains debugging infrastructure can be enabled by enabling
+CONFIG_SCHED_DEBUG. This enables an error checking parse of the sched domains
+which should catch most possible errors (described above). It also prints out
+the domain structure in a visual format.
+
+CONFIG_SCHED_DEBUG를 활성화하면 sched-domains 디버깅 인프라를 활성화 할 수 있습니다. 
+이것은 대부분의 가능한 오류 (위에서 설명)를 잡아야하는 sched 도메인의 오류 검사 구문 분석을 가능하게합니다. 
+또한 도메인 구조를 시각적 형식으로 인쇄합니다.
+

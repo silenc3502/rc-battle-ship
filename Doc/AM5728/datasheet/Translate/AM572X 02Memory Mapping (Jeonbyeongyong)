@@ -1,0 +1,373 @@
+
+
+The microprocessor unit (MPU) has a 32-bit address port, which allows it to handle a 4-GiB space divided into several regions, depending on the target type.
+
+The memory map has the following features that are shared among the initiators, such as the MPU
+
+subsystem:
+• Memory space: General-purpose memory controller (GPMC)
+• Dynamic memory management (DMM) controller
+• Register spaces: Level 3 (L3) and level 4 (L4) interconnects
+• Dedicated spaces: EVE/IPU/DSP subsystem.
+
+The GPMC and DMM are dedicated to memory connection.The GPMC is used for NOR and NAND flashand static random access memories (SRAMs).
+The DMM is used for synchronous dynamic random access memories (SDRAMs), such as DDR.
+For more information, see Section 15.2, Dynamic Memory
+Manager, and Section 15.3, EMIF Controller.
+The L3 interconnect allows the sharing of resources, such as peripherals and external or on-chip
+memories, among all the initiators of the platform .
+The L4 interconnects control access to the peripherals.
+Transfers across the platform between initiators and targets are physically conditioned by the chip
+interconnect and can be logically conditioned by firewalls.
+For more information about the intercommunication (L3 and L4 interconnects) and protection mechanisms implemented in the device, see Section 14.2, L3 Interconnect, and Section 14.3, L4 Interconnect.
+Figure 2-1 shows the interconnect of the device and the main modules and subsystems in the platform.
+2.2
+L3_MAIN Memory Map
+The memory space system is hierarchical: level 1 (L1), level 2 (L2), L3_MAIN, and L4. L1 and L2 are
+memories in the MPU, IPU, and digital signal processor (DSP) subsystems. L3_MAIN handles many types
+of data transfers, including data exchange with system on-chip/external memories. The chip-level
+interconnect, which consists of one L3_MAIN and five L4s, enables communication among all modules
+and subsystems.
+This section provides a global view of the memory mapping of the device at the L3_MAIN interconnect
+and describes the boot, GPMC, and SDRAM controller (SDRC) (EMIF/DMM) spaces.
+The system memory mapping is flexible, with two levels of granularity for target address space allocation:
+• L1: The four quarters are labeled Q0, Q1, Q2, and Q3. Each quarter corresponds to a 1-GiB address
+space (the total low-address space is 4 GiB, 32-bit). The CPU extended address range is labeled as
+high memory (Q8 – Q15) and provides a total of 8 GiB.
+• L2: Each quarter is divided into eight blocks of 32 MiB, with target spaces mapped in the blocks.
+This organization allows the decoding of all target spaces based on the 7 most-significant bits (MSBs) of
+the 32-bit address ([31:25]).
+• Boot space:
+When booting from the on-chip ROM with the appropriate external sys_boot pin configuration, the
+lowest 1-MiB memory space [0x0000 0000–0x000F FFFF] is redirected to the on-chip boot ROM
+address space [0x4000 0000–0x400F FFFF].
+When booting from the GPMC, the memory space is part of the GPMC address space. At reset, the
+0x0000 0000 address is available on chip-select 0 (CS0) for a memory size of 16 MiB.
+For more information about the sys_boot pins configuration, see Section 15.4, General-Purpose
+Memory Controller, and Chapter 33, Initialization.
+• GPMC space:
+Eight independent GPMC chip-selects (CS0 to CS7) are available in the first quarter (Q0) of the
+addressing space to access NOR/NAND flash and SRAM. The chip-selects have a programmable start
+address and programmable size (up to 128 MiB) in a total memory space of (Q0) 1GiB, but limited now
+to 512 MiB.
+• EMIF1/EMIF2 CS0 space:
+Q2 addressing space is interleaved on two DDR-memory controllers (EMIF1 and EMIF2), each
+activating its CS0 line. These chip-selects can be programmed to 64, 128, 256, 512, 1024, and 2048
+MiB. Interleaving occurs at 128-byte granularity.
+The EMIF1-CS0 base address is always 0x8000 0000 at reset, and occupies a 1-GiB address space at
+reset (interleaving is disabled at reset).
+Q3 addressing space is interleaved on two SDRAM controllers (EMIF1 and EMIF2), each activating its
+CS0 line. These chip-selects can be programmed to 64, 128, 256, 512, and 1024 MiB. Interleaving
+occurs at 128-byte granularity.
+EMIF1-CS0 and EMIF2-CS0 in Q3 space are disabled at reset. Their base address is programmable
+to achieve a continuous address space with the respective CS0 in Q2 space, regardless of the address
+range programmed.
+• TILER space:
+Q3 addressing space is also used to access the TILER system. This space is visible only for the
+Display Subsystem (DSS). See Table 2-12.
+• 8 GiB of SDRAM virtualization (only 4 GiB are physically available; the other 4 GiB are reserved):
+This is a high address range (Q8 – Q15) that requires an address greater than 32 bits. This space is
+visible only for the MPU Subsystem. See Table 2-8.
+Boot space location depends on the external sys_boot [5:0] pins.
+Ex = Executable
+ATL, VCP, EVE, MLB, USB3 (ULPI) and USB4 (ULPI) are not supported in this family of devices.
+IPU2 subsystem is dedicated to IVA-HD support and is not available for other processing.
+
+1)Boot space location depends on the external sys_boot [5:0] pins.
+2)Ex = Executable
+3)ATL, VCP, EVE, MLB, USB3 (ULPI) and USB4 (ULPI) are not supported in this family of devices.
+4)IPU2 subsystem is dedicated to IVA-HD support and is not available for other processing.
+5)Depending on the DMM_LISA_MAP_i settings the Q2 address space can be configured in the following ways:
+•Allocated only to EMIF1_SDRAM_CS0
+•Allocated only to EMIF2_SDRAM_CS0
+•Shared between EMIF1_SDRAM_CS0 and EMIF2_SDRAM_CS0 but not interleaved
+•Interleaved between EMIF1_SDRAM_CS0 and EMIF2_SDRAM_CS0 The same applies to the Q3 address space.
+6)Depending on the DMM_LISA_MAP_i settings the Q2 address space can be configured in the following ways:
+•Allocated only to EMIF1_SDRAM_CS0
+•Allocated only to EMIF2_SDRAM_CS0
+•Shared between EMIF1_SDRAM_CS0 and EMIF2_SDRAM_CS0 but not interleaved
+•Interleaved between EMIF1_SDRAM_CS0 and EMIF2_SDRAM_CS0 The same applies to the Q3 address space
+2.2.1 L3_INSTR Memory Map
+The L3_INSTR interconnect is a 8-MiB space composed of the L3_INSTR interconnect configuration
+registers and module registers.
+Table 2-2 describes the mapping of the registers for the L3_INSTR interconnect.
+2.3 L4 Memory Map
+The L4 interconnects handle transfers with peripherals. The L4 interconnect comprises the following
+interconnects:
+• L4_CFG
+• L4_WKUP
+• L4_PER1
+• L4_PER2
+• L4_PER3
+The L4 interconnect can be configured to tune the access according to the characteristics of each module.
+The following sections describe the register mapping of the L4 interconnect. Software configures these
+registers.
+2.3.1 L4_CFG Memory Map
+The L4_CFG interconnect is a 12-MiB space composed of the L4_CFG interconnect configuration
+registers and the module registers.
+Table 2-3 describes the mapping of the registers for the L4_CFG interconnect.
+NOTE: All memory spaces described as modules provide direct access to module registers outside
+the L4_CFG interconnect. All other accesses are internal to the L4_CFG interconnect.
+
+2.3.2 L4_WKUP Memory Map
+The L4_WKUP interconnect is a 256-KiB space composed of the L4_WKUP interconnect configuration
+registers and the module registers.
+Table 2-4 describes the mapping of the registers for the L4_WKUP interconnect.
+NOTE: All memory spaces described as modules provide direct access to module registers outside
+the L4_WKUP interconnect. All other accesses are internal to the L4_WKUP interconnect.
+
+2.3.3 L4_PER Memory Map
+The L4_PER interconnect has three memory spaces:
+• L4_PER1 memory space (Table 2-5)
+• L4_PER2 memory space (Table 2-6)
+• L4_PER3 memory space (Table 2-7)
+The L4_PER interconnects are composed of the L4_PER interconnect confguration registers and the
+module registers.
+NOTE: All memory spaces described as modules provide direct access to the module registers
+outside the L4_PER interconnects. All other accesses are internal to the L4_PER
+interconnects.
+
+
+마이크로 프로세서 유닛 (MPU)는 32 비트 주소 포트가 목표 유형에 따라 몇 가지 영역으로 분할 된 4-GiB(비트단위) 공간을 처리 할 수 ​​있습니다.
+메모리 맵은 MPU와 같은 기능을가진 프로그램들과 공유하는 기능을 가지고있다.
+
+마이크로 프로세서 유닛(MPU)는 32 비트 주소 포트를 가지고 있으며 각 유형에 따라 분할 된 영역을 4-GIB크기로 처리 할 수있다.
+
+subsystem:
+메모리 공간 : 범용 메모리 컨트롤러 (GPMC)
+동적 메모리 관리 (DMM) 컨트롤러
+레지스터 공간 : 레벨 3 (L3) 및 레벨 4 (L4) 상호 연결
+전용 공간 : EVE / IPU / DSP 서브 시스템.
+
+
+GPMC와 DMM은 메모리 연결 전용입니다.
+GPMC는 NOR 및 NAND 플래시 및 정적 랜덤 액세스 메모리 (SRAM)에 사용됩니다.
+DMM은 DDR 등과 같은 동기식 동적 임의 접근 메모리 (SDRAM)에 사용됩니다.
+자세한 내용은 15.2 절 "동적 메모리"를 참조하십시오.
+
+관리자 및 섹션 15.3, EMIF 컨트롤러를 참조하십시오.
+
+ 
+
+ L3 상호연결은 플랫폼의 모든 이니시에이터들에게 주변장치 와 외부메모리 혹은 onchip 메모리같은 자원을 공유하는것을 가능하게합니다
+
+L4 상호 연결 주변 장치에 대한 액세스를 제어합니다.
+
+
+이니시 에이터와 타겟 사이의 플랫폼 전송 칩 상호연결로부터물리적조건은  방화벽에 의해 논리적으로 조절될 수 있다.
+상호통신(L3 그리고 L4 상호연결) 그리고   기기에서 구현하는 보호 메커니즘 에 관한 자세한 정보는 14.2 L3상호연결 그리고 14.3 L4 상호연결   봐라 
+
+그림 2-1은  장비의 상호연결 그리고 메인 모듈 그리고 플랫폼의 서브시스템을 보여준다.
+
+2.2 L-3 메모리맵
+
+메모리 공간 시스템은 계층 레벨 1(L1), 레벨 2(L2), L3_MAIN 및 L4이다. L1및 L2는 MPU, IPU 및 디지털 신호 프로세서(DSP)서브 시스템의 기억 장치이다.
+
+L3는 데이터 교환 온칩/외부메모리 시스템을 포함하여 많은 종류의 데이터를 처리한다.
+L3그리고 5개의 L4층 으로 구성된 칩레벨 상호작용은 모든 모듈과 서브시스템 사이에서 모든 통신이 가능하다.
+이세션에서는 L3층 장치의 메모리 맵핑에관한 글로벌 뷰를 제공하고 그리고 부팅, GPMC 및 SDRAM( SDRC)( EMIF/DMM)공간을 대해서도 기술 되어있다.
+시스템 메모리 매핑은 두 단계로 구성되며,  대상 주소 공간 할당을 위한 두 단계 로 세분화해서 사용합니다.
+L1 : 4개로 나누어지는데 나누어진곳을 Q0, Q1, Q2, Q3 으로 표시한다.
+각 분기 는 1-GiB 주소공간 에 해당한다. 공간 간격(총 low-address  4GiB 32 비트입니다).
+
+CPU확장 주소 범위는high memory (Q8 – Q15)로 표시된다.그리고총 8TB를 제공합니다. 
+
+L2:각각의 쿼터는 블럭안에 맵핑된 대상 공간과 함께 32블럭의 8블럭 구역으로 나뉘어 져진다.
+
+이 조직은 32비트 주소의 최상 7비트(MSBs)를 기준으로 모든 대상 공간의 디코딩을 허용합니다.
+
+Boot space:
+적합한 외부/외부 핀 포인트 구성을 사용하여 on-chip ROM에서 부팅할 때 가장 낮은 위치에 있는 1-MIB 메모리 공간 [0x0000 0000–0x000F FFFF] 이 on-chip boot ROM주소 공간으로 전환이 됩니다. [0x4000 0000–0x400F FFFF].
+GPMC에서 부팅할 때 메모리 공간은 GPMC 주소 공간의 일부이다.
+0x0000 0000주소는 16MIB의 메모리 크기로 chip-select 0( CS0)에서 사용할 수 있습니다.
+sys_boot 핀 배열에 대한 자세한 내용은 다음 제15.4절, 제15.4절 참조하십시오.메모리 컨트롤러, 제33장, 초기화.
+
+GPMC space:
+8개의 독립된 gpmc 칩셀렉트는 NOR/NAMD flash and SRAM으로 접속할수있는 주소공간인 첫번째 쿼터(Q0)에서 사용할수있다.1GIB(Q0)의 총메모리 공간 안에서  The chip-selects는 프로그램 가능한 시작주소 그리고프로그램 가능한 크기(128MIB) 를 가지고있다.  하지만 현재는 512MIB로 제한되있다.
+
+• EMIF1/EMIF2 CS0 space:
+Q2주소 지정 공간은 2개의 DDR-memory 콘트롤러( EMIF1 and EMIF2)로 구분되고,각각 CS0 라인을 활성화합니다.
+cheip-select는 64,128,256,1024,1024,2048MIB로 프로그래밍될 수 있고,interleaving 는 128바이트 단위로 발생한다.
+
+EMIF1-CS0의베이스 주소는 리셋시에는 항상 0x8000 0000이며, 리셋시에는 1-GiB 주소 공간을 차지합니다 (리셋시에 인터리브가 비활성화됩니다).
+어드레스 지정 공간은 2개의 SDRAM 콘트롤러( EMIF1 and EMIF2)로 인터리브 되며   각각 CS0 라인을 활성화합니다.
+
+cheip-select는 64,128,256,1024,1024,2048MIB로 프로그래밍될 수 있고,interleaving 는 128바이트 단위로 발생한다.
+Q3안에 있는 EMIF1-CS0 and EMIF2-CS0 는 재설정시 공간이 비활성화됩
+그들의 기본주소 는 Q2 공간의 각 CS0과 연속적인 주소 공간 에서 프로그래밍 된 주소 범위에 관계없이 프로그램이 가능하다.
+•TILER space:
+Q3 어드레스 지정 공간은  TILER 시스템에 접속하는 데 사용된다.
+이 공간은 Display Subsystem(DSS)에만 표시된다.
+TABLE 2-12 를 봐라
+
+이 주소는 32비트 이상의 주소를 필요로 하는 높은 주소 범위( Q8 – Q15)입니다.다
+8GB용량의 SDRAM 가상화(물리적으로 이용할 수있는 것은 4 GiB뿐입니다. 나머지 4 GiB은 예약되어 있다)가상화 가능 :
+이것은 32 비트보다 큰 주소가 필요한 높은 주소 범위 (Q8 - Q15)입니다.
+
+이 공간은 MPU Subsystem에만 표시된다. See Table 2-8.
+표 2-2는 글로벌 메모리 맵을 설명한다.
+1)부트 스페이스 위치는 외부 sys_boot[ 5:0]핀에 따라 달라집니다.
+2) EX=실행파일일
+3)ATL, VCP, EVE, MLB, USB3( ULPI)및 USB4( ULPI)는 이 장치에서 지원되지 않는다.
+4)IPU2 서브 시스템은 IVA-HD 지원에 전용이며 다른 처리 과정에서는 사용할 수 없다.
+5)DMM_LISA_MAP_i 설정에 따라 다음과 같은 방법으로 Q2주소 공간을 구성할 수 있습니다.
+   EMIF1_SDRAM_CS0에만 할당했습니다
+   EMIF2_SDRAM_CS0에만 할당했습니다
+  EMIF1_SDRAM_CS0과 EMIF2_SDRAM_CS0 사이에서 공유되지만 인터리브되지 않습니다
+  동일한 내용이 Q3 주소 공간에도 적용됩니다.
+6)DMM_LISA_MAP_i 설정에 따라 다음과 같은 방법으로 Q2주소 공간을 구성할 수 있습니다.
+EMIF1_SDRAM_CS0에만 할당했습니다
+   EMIF2_SDRAM_CS0에만 할당했습니다
+  EMIF1_SDRAM_CS0과 EMIF2_SDRAM_CS0 사이에서 공유되지만 인터리브되지 않습니다
+  동일한 내용이 Q3 주소 공간에도 적용됩니다.
+
+L3_INSTR Memory Map
+L3_INSTR 상호 연결은 L3_INSTR 상호 연결 구성 레지스터와 모듈 레지스터로 구성된 8M 바이트의 공간입니다.
+표 2-2는 L3_INSTR 상호 연결에 대한 레지스터의 매핑을 설명한다.
+L4 Memory Map
+L4들은 주변 장치들과 상호 작용을 한다. 상호 연결된 상호 연결은 다음과 같은 상호 연결을 구성합니다:
+• L4_CFG
+• L4_WKUP
+• L4_PER1
+• L4_PER2
+• L4_PER3
+L4 상호 연결은 각 모듈의 특성에 따라 접근을 제어하도록 구성 할 수 있습니다.
+
+다음 섹션에서는 L4 상호 연결 레지스터 매핑에 대해 설명합니다. 소프트웨어는 이러한 레지스터를 구성합니다.
+
+L4_CFG Memory Map
+L4_CFG 상호 연결은 L4_CFG 상호 연결 구성 레지스터와 모듈 레지스터로 구성 된 12Mib 바이트의 공간입니다.
+
+표 2-3에는 L4_CFG 상호 레지스터의 매핑을 나타냅니다.
+
+모듈로 작성된 모든 메모리 공간은 L4_CFG 상호 연결의 외부 모듈 레지스터에 직접 액세스를 제공합니다.
+
+
+Table 2-3. L4_CFG Memory Map
+1)ATL, VCP, EVE, MLB, USB3( ULPI)및 USB4( ULPI)는 이 장치에서 지원되지 않는다.
+2)IPU2 서브 시스템은 IVA-HD 지원에 전용이며 다른 처리 과정에서는 사용할 수 없다.
+
+2.3.2 L4_WKUP Memory Map
+L4_WKUP 상호 연결은 L4_WKUP 상호 연결 구성 레지스터와 모듈 레지스터로 구성 256Kib 바이트의 공간입니다.
+표 4-2는 L4_WKUP 상호 연결에 대한 레지스터의 매핑을 설명한다.
+알림: 모듈로 작성된 모든 메모리 공간은 L4_WKUP 상호 연결의 외부 모듈 레지스터에 직접 액세스를 제공합니다. 다른 모든 액세스는 L4_WKUP 상호 연결의 내부에 있습니다.
+
+
+Table 2-4. L4_WKUP Memory Map (continued)
+참고:8비트 및 16비트 주변 장치는 32비트 주소 경계에 정렬되어 있습니다.
+
+
+2.3.3 L4_PER Memory Map
+
+L4_PER 상호 연결에는 3 개의 메모리 공간이 있습니다:
+
+L4_PER1 메모리 공간 (표 2-5)
+L4_PER2 메모리 공간 (표 2-6)
+L4_PER3 메모리 공간 (표 2-7)
+
+L4_PER 상호 연결은 L4_PER 상호 연결 구성 레지스터와 모듈 레지스터로 구성되어 있습니다.
+
+
+알림 : 모듈로 작성되는 모든 메모리 공간은 L4_PER 인터커넥트 이외의 모듈 레지스터에 직접 액세스를 제공합니다. 
+다른 모든 액세스는 L4_PER 인터커넥트의 내부에 있습니다.
+
+2.3.3.1 L4_PER1 Memory Map
+
+표 2-5에는 L4_PER1 상호 연결 레지스터의 매핑을 나타냅니다.
+
+
+2.4 MPU Memory Map
+
+부팅 공간의 위치는 외부 sys_boot [5 : 0] 핀 따라 다릅니다.
+
+Ex = Executable
+이 8-GiB 주소 범위 내에서 실제로 사용할 수있는 것은 4 GiB뿐입니다.
+
+인터리브는 모든 8 GiB SDRAM 높은 메모리에 대해 MPU 메모리 어댑터 (MPU_MA)의 한 설정으로 구성 할 수 있습니다.
+interleaving에 대한 자세한 내용은 섹션 412-01, 메모리 어댑터를 참조하십시오.
+
+Q10은 Q2의 별칭이기 때문에 DMM_LISA_MAP_i 설정에 따라 Q10 주소 공간은 다음과 같이 설정할 수 있습니다
+
+EMIF1_SDRAM_CS0에만 할당했습니다
+
+EMIF2_SDRAM_CS0에만 할당했습니다
+
+EMIF1_SDRAM_CS0과 EMIF2_SDRAM_CS0 사이에서 공유되지만 인터리브되지 않습니다
+
+Interleaved 는 EMIF1_SDRAM_CS0 와 EMIF2_SDRAM_CS0 사이이다.
+
+Q3의 별칭이므로 Q11 주소 공간에도 동일하게 적용됩니다.
+
+EMIF1_SDRAM_CS0하여이 주소 공간의 512MiB 만 활성화 된 고위 인터리브를 사용하여 고정 MPU-EMIF 주소 매핑이 사용됩니다. 
+다른 512MiB는 MIF2_SDRAM_CS0 의해 사용됩니다.
+
+
+
+
+
+2.5 IPU Memory Map
+
+이 장치는 두개의 서브 프레임 서브 시스템( IPU1, IPU2)을 구현한다. IPU에 대한 자세한 내용은 챕터7 을 참조하십시오.
+참고 : IPU2 서브 시스템은 IVA-HD를 지원하지 않습니다.
+
+2.6DSP Memory Map
+
+1)이 장치는 2 개의 DSP 서브 시스템 (DSP1, DSP2)을 구현하고 있습니다. DSP에 대한 자세한 내용은 5 장을 참조하십시오.
+
+DSP 서브 시스템 내부 자원. 0x0080_0000~0x01D1_7FFF 범위의 DSP 액세스 및 0x0800_0000~0x0801_FFFF]은 DSP 서브 시스템에서 
+로컬로 실행됩니다.
+
+2)ATL, VCP, EVE, MLB, USB3( ULPI)및 USB4( ULPI)는 이 장치에서 지원되지 않는다.
+
+2.7 EVE Memory Map
+참고 :이 장치 제품군은 EVE는 지원되지 않습니다
+
+2.8 PRU-ICSS Memory Map
+이 장치는 2 개의 PRU 서브 시스템 (PRU-ICSS1, PRU-ICSS2)을 구현합니다. PRU-ICSS에 대한 자세한 내용은 30 장을 참조하십시오.
+
+2.9
+TILER View Memory Map
+Table 2-12 describes the TILER view memory mapping.
+
+
+
+peripherals :주변장치
+interconnect :상호연결
+allows : 허락하다.
+initiators : 초기
+among : 사이에
+on chip: 단일칩 
+intercommunication : 상호통신
+implemented:구현된
+
+일반적인 단일 칩 시스템의 구성:
+
+    1개 이상의 마이크로컨트롤러, 마이크로프로세서나 디지털 신호 처리기 코어를 포함한다.
+    롬, 램, 이이피롬과 플래시 메모리 중 일부가 포함된 메모리 블록이 있다.
+    진동자와 위상 고정 루프를 포함한 타이밍 발생기가 있다.
+    카운터-타이머, 실시간 타이머와 전원 초기화 발생기를 포함한 주변장치가 있다.
+    범용 직렬 버스, 파이어와이어, 이더넷, 범용 비동기 송수신, 직렬 주변장치 인터페이스 버스같은 산업표준 외부 인터페이스가 있다.
+    아날로그-디지털 변환회로와 디지털-아날로그 변환회로가 내장된 아날로그 인터페이스가 있다.
+    전압 레귤레이터와 전원 관리 회로를 포함하고 있다.
+
+이런 블록들은 지적재산 버스나 ARM 유한회사가 개발한 AMBA 버스같은 산업표준 버스로 연결된다. 직접 메모리 접근 제어기는 데이터가 프로세서 코어를 거치지 않고 외부 인터페이스와 메모리 사이에 직접 연결하는 것을 가능하게 해서, 단일 칩 시스템의 데이터 처리속도를 증가시킨다.
+
+physically conditioned: 물리적 조건
+hierarchical : 계급의 따른
+consists:구성되어있다. 
+provides: ~을제공한다.
+describes :기술하다
+allocation: 배당하다
+labeled:표시된다.
+corresponds:대응하다. 
+extended :확장된
+redirected:전환되다.
+At reset :리셋할때
+ available  :유효한
+Interleaving: 주기억을 n개의 뱅크(독립된 동작 가능한 주기억 모듈)로 분할하고 제 i번지가 i mod n 뱅크에 속하도록 하면, 연속 주소를 접근할 때 전 뱅크가 병행 동작하여 n배의 속도가 얻어진다. 주기억의 실효적인 접근 속도 향상에 널리 쓰이는 기법이다.
+occurs at :~에서 발생한다.
+achieve :이루다.
+ respective :각각의
+regardless :관계없이
+described:기술된된
+ configurable :구성가능한

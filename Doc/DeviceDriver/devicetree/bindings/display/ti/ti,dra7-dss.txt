@@ -1,0 +1,141 @@
+﻿Texas Instruments DRA7x Display Subsystem
+=========================================
+
+See Documentation/devicetree/bindings/display/ti/ti,omap-dss.txt for generic
+description about OMAP Display Subsystem bindings.
+
+DSS Core
+--------
+
+Required properties:
+- compatible: "ti,dra7-dss"
+- reg: address and length of the register spaces for 'dss'
+- ti,hwmods: "dss_core"
+- clocks: handle to fclk
+- clock-names: "fck"
+- syscon: phandle to control module core syscon node
+
+Optional properties:
+
+Some DRA7xx SoCs have one dedicated video PLL, some have two. These properties
+can be used to describe the video PLLs:
+
+- reg: address and length of the register spaces for 'pll1_clkctrl',
+  'pll1', 'pll2_clkctrl', 'pll2'
+- clocks: handle to video1 pll clock and video2 pll clock
+- clock-names: "video1_clk" and "video2_clk"
+
+Required nodes:
+- DISPC
+
+Optional nodes:
+- DSS Submodules: HDMI
+- Video port for DPI output
+
+DPI Endpoint required properties:
+- data-lines: number of lines used
+
+
+DISPC
+-----
+
+Required properties:
+- compatible: "ti,dra7-dispc"
+- reg: address and length of the register space
+- ti,hwmods: "dss_dispc"
+- interrupts: the DISPC interrupt
+- clocks: handle to fclk
+- clock-names: "fck"
+
+HDMI
+----
+
+Required properties:
+- compatible: "ti,dra7-hdmi"
+- reg: addresses and lengths of the register spaces for 'wp', 'pll', 'phy',
+       'core'
+- reg-names: "wp", "pll", "phy", "core"
+- interrupts: the HDMI interrupt line
+- ti,hwmods: "dss_hdmi"
+- vdda-supply: vdda power supply
+- clocks: handles to fclk and pll clock
+- clock-names: "fck", "sys_clk"
+
+Optional nodes:
+- Video port for HDMI output
+
+HDMI Endpoint optional properties:
+- lanes: list of 8 pin numbers for the HDMI lanes: CLK+, CLK-, D0+, D0-,
+  D1+, D1-, D2+, D2-. (default: 0,1,2,3,4,5,6,7)
+
+/*
+Texas Instruments DRA7x 디스플레이 서브 시스템
+=============================
+
+generic에 대해서는 Documentation / devicetree / bindings / display / ti / ti, omap-dss.txt를 참조하십시오.
+OMAP 디스플레이 서브 시스템 바인딩에 대한 설명.
+
+DSS 코어
+--------
+
+필수 속성 :
+- 호환 : "ti, dra7-dss"
+- reg : 'dss'에 대한 레지스터 공간의 주소와 길이
+- 티, hwmods : "dss_core"
+- 시계 : fclk 핸들
+- 시계 이름 : "fck"
+- syscon : 모듈 코어 syscon 노드를 제어하는 ​​phandle
+
+선택적 속성 :
+
+일부 DRA7xx SoC는 하나의 전용 비디오 PLL을 가지고 있으며 일부는 2 개를 가지고 있습니다. 이러한 속성
+비디오 PLL을 설명하는 데 사용할 수 있습니다.
+
+- reg : 'pll1_clkctrl'에 대한 레지스터 공간의 주소와 길이,
+  'pll1', 'pll2_clkctrl', 'pll2'
+- clocks : video1 pll clock 및 video2 pll clock을 처리합니다.
+- clock-names : "video1_clk"및 "video2_clk"
+
+필수 노드 :
+- DISPC
+
+선택적 노드 :
+- DSS 서브 모듈 : HDMI
+- DPI 출력을위한 비디오 포트
+
+DPI endpoint 필수 속성 :
+- data-lines : 사용 된 라인 수
+
+
+DISPC
+-----
+
+필수 속성 :
+- 호환 : "ti, dra7-dispc"
+- reg : 레지스터 공간의 주소와 길이
+- 티, hwmods : "dss_dispc"
+- 인터럽트 : DISPC 인터럽트
+- 시계 : fclk 핸들
+- 시계 이름 : "fck"
+
+HDMI
+----
+
+필수 속성 :
+- 호환 : "ti, dra7-hdmi"
+- reg : 'wp', 'pll', 'phy'에 대한 레지스터 공간의 주소와 길이
+       '핵심'
+- reg-names : "wp", "pll", "phy", "core"
+- 인터럽트 : HDMI 인터럽트 라인
+- 티, hwmods : "dss_hdmi"
+- vdda 공급 : vdda 전원 공급 장치
+- clocks : fclk 및 pll 시계를 처리합니다.
+- clock-names : "fck", "sys_clk"
+
+선택적 노드 :
+- HDMI 출력용 비디오 포트
+
+HDMI 엔드 포인트 옵션 속성 :
+- 레인 : HDMI 레인에 대한 8 핀 번호 목록 : CLK +, CLK-, D0 +, D0-,
+  D1 +, D1-, D2 +, D2-. (기본값 : 0,1,2,3,4,5,6,7)
+*/

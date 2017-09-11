@@ -1,0 +1,26 @@
+-include ../../Rules.make
+
+ENV_SETUP ?= ../../linux-devkit/environment-setup
+DESTDIR ?=
+
+all: release
+
+release:
+	@. ${ENV_SETUP}; \
+	make
+
+clean:
+	@. ${ENV_SETUP}; \
+        make clean
+
+install:
+	@if [ ! -d $(DESTDIR) ] ; then \
+		echo "The extracted target filesystem directory doesn't exist."; \
+		echo "Please run setup.sh in the SDK's root directory and then try again."; \
+		exit 1; \
+	fi
+	@install -d ${DESTDIR}/usr/bin
+	@install detect_barcode ${DESTDIR}/usr/bin/detect_barcode
+	@install -d ${DESTDIR}/usr/share/ti/image
+	@install test/sample_barcode.jpg ${DESTDIR}/usr/share/ti/image
+	@echo "barcode-roi example installed"

@@ -1,0 +1,15 @@
+LG Corporation 7" WXGA TFT LCD panel
+
+Required properties:
+- compatible: should be "lg,ld070wx3-sl01"
+
+This binding is compatible with the simple-panel binding, which is specified
+in simple-panel.txt in this directory.
+/*
+LG 전자 7 "WXGA TFT LCD 패널
+
+필수 속성 :
+- 호환 가능 : "lg, ld070wx3-sl01"이어야합니다.
+
+이 바인딩은이 디렉토리의 simple-panel.txt에 지정된 단순 패널 바인딩과 호환됩니다.
+*/

@@ -1,0 +1,57 @@
+A DT changeset is a method which allows one to apply changes
+in the live tree in such a way that either the full set of changes
+will be applied, or none of them will be. If an error occurs partway
+through applying the changeset, then the tree will be rolled back to the
+previous state. A changeset can also be removed after it has been
+applied.
+DT 변경 집합은 변경 내용 전체가 적용되거나 전혀 변경되지 않도록 라이브 트리에서 
+변경 내용을 적용 할 수있는 방법입니다. 변경 집합 적용 도중 오류가 발생하면 트리가 
+이전 상태로 롤백됩니다. 변경 집합은 적용된 후에 제거 할 수도 있습니다.
+
+When a changeset is applied, all of the changes get applied to the tree
+at once before emitting OF_RECONFIG notifiers. This is so that the
+receiver sees a complete and consistent state of the tree when it
+receives the notifier.
+변경 집합이 적용되면 OF_RECONFIG 알림을 방출하기 전에 모든 변경 사항이 트리에
+동시에 적용됩니다. 수신자가 알리미를받을 때 수신자가 트리의 완전하고 일관된 상태를
+볼 수 있도록하는 것입니다.
+
+The sequence of a changeset is as follows.
+변경 집합의 순서는 다음과 같습니다.
+
+1. of_changeset_init() - initializes a changeset
+1. of_changeset_init () - 변경 집합을 초기화합니다.
+
+2. A number of DT tree change calls, of_changeset_attach_node(),
+of_changeset_detach_node(), of_changeset_add_property(),
+of_changeset_remove_property, of_changeset_update_property() to prepare
+a set of changes. No changes to the active tree are made at this point.
+All the change operations are recorded in the of_changeset 'entries'
+list.
+2. 일련의 변경을 준비하기 위해 여러 개의 DT 트리 변경 호출, of_changeset_attach_node (), 
+of_changeset_detach_node (), of_changeset_add_property (), of_changeset_remove_property, of_changeset_update_property ().
+ 이 시점에서 활성 트리가 변경되지 않습니다. 모든 변경 작업은 of_changeset 'entries'목록에 기록됩니다.
+
+3. mutex_lock(of_mutex) - starts a changeset; The global of_mutex
+ensures there can only be one editor at a time.
+3. mutex_lock (of_mutex) - 변경 집합을 시작합니다. of_mutex 전역은
+ 한 번에 하나의 편집기만이 될 수 있도록합니다.
+
+4. of_changeset_apply() - Apply the changes to the tree. Either the
+entire changeset will get applied, or if there is an error the tree will
+be restored to the previous state
+4. of_changeset_apply () - 변경 사항을 트리에 적용합니다. 
+전체 변경 집합이 적용되거나 오류가 발생하면 트리가 이전 상태로 복원됩니다.
+
+5. mutex_unlock(of_mutex) - All operations complete, release the mutex
+5. mutex_unlock (of_mutex) - 모든 연산이 완료되고 뮤텍스를 해제합니다.
+
+If a successfully applied changeset needs to be removed, it can be done
+with the following sequence.
+성공적으로 적용된 변경 집합을 제거해야하는 경우 다음 순서로 수행 할 수 있습니다.
+
+1. mutex_lock(of_mutex)
+
+2. of_changeset_revert()
+
+3. mutex_unlock(of_mutex)

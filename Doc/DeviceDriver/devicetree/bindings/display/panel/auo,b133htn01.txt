@@ -1,0 +1,16 @@
+AU Optronics Corporation 13.3" FHD (1920x1080) color TFT-LCD panel
+
+Required properties:
+- compatible: should be "auo,b133htn01"
+
+This binding is compatible with the simple-panel binding, which is specified
+in simple-panel.txt in this directory.
+
+/*
+AU Optronics Corporation 13.3 인치 FHD (1920x1080) 컬러 TFT-LCD 패널
+
+필수 속성 :
+- 호환 가능 : "auo, b133htn01"이어야합니다.
+
+이 바인딩은이 디렉토리의 simple-panel.txt에 지정된 단순 패널 바인딩과 호환됩니다.
+*/

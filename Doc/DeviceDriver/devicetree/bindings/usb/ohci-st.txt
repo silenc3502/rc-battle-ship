@@ -1,0 +1,55 @@
+ST USB OHCI controller
+
+Required properties:
+
+ - compatible		: must be "st,st-ohci-300x"
+ - reg			: physical base addresses of the controller and length of memory mapped
+			  region
+ - interrupts		: one OHCI controller interrupt should be described here
+ - clocks		: phandle list of usb clocks
+ - clock-names		: should be "ic" for interconnect clock and "clk48"
+See: Documentation/devicetree/bindings/clock/clock-bindings.txt
+
+ - phys			: phandle for the PHY device
+ - phy-names		: should be "usb"
+
+ - resets		: phandle to the powerdown and reset controller for the USB IP
+ - reset-names		: should be "power" and "softreset".
+See: Documentation/devicetree/bindings/reset/st,sti-powerdown.txt
+See: Documentation/devicetree/bindings/reset/reset.txt
+
+필수 속성 :
+
+  - compatible : "st, oh-ohci-300x"이어야합니다.
+  - reg : 컨트롤러의 물리적 기본 주소 및 메모리 매핑 된 영역의 길이
+  - 인터럽트 : 여기에 OHCI 컨트롤러 인터럽트 하나를 설명해야합니다.
+  - clocks : usb clocks의 phandle 목록
+  - clock-names :  상호 연결 클럭 및 "clk48"에 대해 "ic"이어야합니다. 
+	Documentation / devicetree / bindings / clock / clock-bindings.txt를 참조하십시오.
+
+  - phys : PHY 장치의 phandle
+  - phy-names : "usb"여야합니다.
+
+  - resets : 파워 다운으로 향하고 USB IP 용 컨트롤러 리셋 에 phandle
+  - reset-names : "power"및 "softreset"이어야합니다.
+참조 : Documentation / devicetree / bindings / reset / st, sti-powerdown.txt
+참조 : Documentation / devicetree / bindings / reset / reset.txt
+
+
+Example:
+
+	ohci0: usb@0xfe1ffc00 {
+		compatible = "st,st-ohci-300x";
+		reg = <0xfe1ffc00 0x100>;
+		interrupts = <GIC_SPI 149 IRQ_TYPE_NONE>;
+		clocks = <&clk_s_a1_ls 0>,
+			 <&clockgen_b0 0>;
+		clock-names = "ic", "clk48";
+		phys = <&usb2_phy>;
+		phy-names = "usb";
+		status = "okay";
+
+		resets = <&powerdown STIH416_USB0_POWERDOWN>,
+			 <&softreset STIH416_USB0_SOFTRESET>;
+		reset-names = "power", "softreset";
+	};

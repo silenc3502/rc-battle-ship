@@ -1,0 +1,1009 @@
+vivid: Virtual Video Test Driver
+가상 비디오 테스트 드라이버
+================================
+ 
+This driver emulates video4linux hardware of various types: video capture, video output, vbi capture and output, radio receivers and transmitters and a software defined radio receiver. In addition a simple framebuffer device is available for testing capture and output overlays.
+이 드라이버는 비디오 캡처, 비디오 출력, vbi 캡처 및 출력, 라디오 수신기 및 송신기 및 소프트웨어 정의 라디오 수신기와 같은 다양한 유형의 video4linux 하드웨어를 에뮬레이트 합니다. 또한 캡처 및 출력 오버레이를 테스트하는 데 간단한 프레임 버퍼 장치를 사용할 수 있습니다.
+ 
+Up to 64 vivid instances can be created, each with up to 16 inputs and 16 outputs.
+최대 64 개의 vivid 인스턴스를 생성 할 수 있으며 각각 최대 16 개의 입력과 16 개의 출력이 가능합니다.
+ 
+Each input can be a webcam, TV capture device, S-Video capture device or an HDMI capture device. Each output can be an S-Video output device or an HDMI output device.
+각 입력은 웹캠, TV 캡처 장치, S-Video 캡처 장치 또는 HDMI 캡처 장치가 될 수 있습니다. 각 출력은 S- 비디오 출력 장치 또는 HDMI 출력 장치가 될 수 있습니다.
+ 
+These inputs and outputs act exactly as a real hardware device would behave. This allows you to use this driver as a test input for application development, since you can test the various features without requiring special hardware.
+이러한 입력 및 출력은 실제 하드웨어 장치가 작동하는 것처럼 정확하게 작동합니다. 특별한 하드웨어를 요구하지 않고도 다양한 기능을 테스트 할 수 있으므로 이 드라이버를 응용 프로그램 개발을 위한 테스트 입력으로 사용할 수 있습니다.
+ 
+This document describes the features implemented by this driver:
+이 문서는 이 드라이버가 구현한 기능을 설명합니다.
+ 
+- Support for read()/write(), MMAP, USERPTR and DMABUF streaming I/O.
+read () / write (), MMAP, USERPTR 및 DMABUF 스트리밍 I/O를 지원합니다.
+- A large list of test patterns and variations thereof
+테스트 패턴 및 그 변형의 큰 목록
+- Working brightness, contrast, saturation and hue controls
+작동 밝기, 대비, 채도 및 색조 제어
+- Support for the alpha color component
+알파 컬러 컴포넌트 지원
+- Full colorspace support, including limited/full RGB range
+제한된 / 전체 RGB 범위를 포함한 전체 색상 공간 지원
+- All possible control types are present
+가능한 모든 제어 유형이 있습니다.
+- Support for various pixel aspect ratios and video aspect ratios
+다양한 픽셀 종횡비 및 비디오 종횡비 지원
+- Error injection to test what happens if errors occur
+오류가 발생하면 어떻게 될지 테스트하기 위한 오류 주입
+- Supports crop/compose/scale in any combination for both input and output
+입력 및 출력 모두에 대해 조합하여 크롭 / 컴포즈 / 스케일 지원
+- Can emulate up to 4K resolutions
+최대 4K 해상도까지 에뮬레이트 가능
+- All Field settings are supported for testing interlaced capturing
+모든 필드 설정은 interlaced capturing 를 테스트하는 데 지원됩니다.
+- Supports all standard YUV and RGB formats, including two multiplanar YUV formats
+두 개의 다중 평면 YUV 형식을 포함하여 모든 표준 YUV 및 RGB 형식을 지원합니다.
+- Raw and Sliced VBI capture and output support
+Raw 및 Sliced VBI 캡처 및 출력 지원
+- Radio receiver and transmitter support, including RDS support
+RDS 지원을 포함한 라디오 수신기 및 송신기 지원
+- Software defined radio (SDR) support            	
+소프트웨어 정의 라디오 (SDR) 지원
+- Capture and output overlay support
+캡처 및 출력 오버레이 지원
+ 
+These features will be described in more detail below.
+이러한 기능에 대해서는 아래에서 자세히 설명합니다.
+ 
+Table of Contents
+-----------------
+ 
+Section 1: Configuring the driver
+Section 2: Video Capture
+Section 2.1: Webcam Input
+Section 2.2: TV and S-Video Inputs
+Section 2.3: HDMI Input
+Section 3: Video Output
+Section 3.1: S-Video Output
+Section 3.2: HDMI Output
+Section 4: VBI Capture
+Section 5: VBI Output
+Section 6: Radio Receiver
+Section 7: Radio Transmitter
+Section 8: Software Defined Radio Receiver
+Section 9: Controls
+Section 9.1: User Controls - Test Controls
+Section 9.2: User Controls - Video Capture
+Section 9.3: User Controls - Audio
+Section 9.4: Vivid Controls
+Section 9.4.1: Test Pattern Controls
+Section 9.4.2: Capture Feature Selection Controls
+Section 9.4.3: Output Feature Selection Controls
+Section 9.4.4: Error Injection Controls
+Section 9.4.5: VBI Raw Capture Controls
+Section 9.5: Digital Video Controls
+Section 9.6: FM Radio Receiver Controls
+Section 9.7: FM Radio Modulator
+Section 10: Video, VBI and RDS Looping
+Section 10.1: Video and Sliced VBI looping
+Section 10.2: Radio & RDS Looping
+Section 11: Cropping, Composing, Scaling
+Section 12: Formats
+Section 13: Capture Overlay
+Section 14: Output Overlay
+Section 15: Some Future Improvements
+ 
+ 
+Section 1: Configuring the driver
+    	   드라이버 구성
+---------------------------------
+By default the driver will create a single instance that has a video capture device with webcam, TV, S-Video and HDMI inputs, a video output device with S-Video and HDMI outputs, one vbi capture device, one vbi output device, one radio receiver device, one radio transmitter device and one SDR device.
+기본적으로 드라이버는 웹캠, TV, S-Video 및 HDMI 입력이 있는 비디오 캡처 장치, S-Video 및 HDMI 출력이 있는 비디오 출력 장치, 하나의 vbi 캡처 장치, 하나의 vbi 출력 장치, 하나의 vbi 출력 장치가 있는 단일 인스턴스를 생성합니다 무선 수신기 장치, 하나의 무선 송신기 장치 및 하나의 SDR 장치를 포함한다.
+ 
+The number of instances, devices, video inputs and outputs and their types are all configurable using the following module options:
+인스턴스, 장치, 비디오 입력 및 출력 수 및 유형은 모두 다음 모듈 옵션을 사용하여 구성 할 수 있습니다.
+ 
+n_devs: number of driver instances to create. By default set to 1. Up to 64 instances can be created.
+생성할 드라이버 인스턴스수. 기본적으로 1로 설정됩니다. 최대 64 개의 인스턴스를 만들 수 있습니다.
+ 
+node_types: which devices should each driver instance create. An array of hexadecimal values, one for each instance. The default is 0x1d3d.
+각 드라이버 인스턴스가 생성해야 하는 장치. 각 인스턴스에 대해 하나씩 16 진수 값의 배열입니다. 기본값은 0x1d3d입니다.
+    	Each value is a bitmask with the following meaning:
+각 값은 다음과 같은 의미의 비트 마스크입니다.
+           	bit 0: Video Capture node
+           	bit 2-3: VBI Capture node: 0 = none, 1 = raw vbi, 2 = sliced vbi, 3 = both
+           	bit 4: Radio Receiver node
+           	bit 5: Software Defined Radio Receiver node
+           	bit 8: Video Output node
+           	bit 10-11: VBI Output node: 0 = none, 1 = raw vbi, 2 = sliced vbi, 3 = both
+           	bit 12: Radio Transmitter node
+           	bit 16: Framebuffer for testing overlays
+ 
+비트 0 : 비디오 캡처 노드
+비트 2-3 : VBI 캡처 노드 : 0 = 없음, 1 = 원시 vbi, 2 = 슬라이스 vbi, 3 = 모두
+비트 4 : 무선 수신기 노드
+비트 5 : 소프트웨어 정의 무선 수신기 노드
+비트 8 : 비디오 출력 노드
+비트 10-11 : VBI 출력 노드 : 0 = 없음, 1 = 원시 vbi, 2 = 슬라이스 vbi, 3 = 모두
+비트 12 : 무선 송신기 노드
+비트 16 : 오버레이 테스트 용 프레임 버퍼
+ 
+    	So to create four instances, the first two with just one video capture device, the second two with just one video output device you would pass these module options to vivid:
+따라서 네 개의 인스턴스를 만들려면 처음 두 개는 비디오 캡처 장치 하나만 ​​사용하고 나머지 두 개는 비디오 출력 장치 한 개만 있으면 이 모듈 옵션을 생생하게 전달할 수 있습니다.
+ 
+           	n_devs=4 node_types=0x1,0x1,0x100,0x100
+ 
+num_inputs: the number of inputs, one for each instance. By default 4 inputs are created for each video capture device. At most 16 inputs can be created, and there must be at least one.
+각 인스턴스에 대해 하나씩, 입력의 수. 기본적으로 각 비디오 캡처 장치에 대해 4 개의 입력이 생성됩니다. 최대 16 개의 입력을 만들 수 있으며 적어도 하나는 있어야 합니다.
+ 
+input_types: the input types for each instance, the default is 0xe4. This defines what the type of each input is when the inputs are created for each driver instance. This is a hexadecimal value with up to 16 pairs of bits, each pair gives the type and bits 0-1 map to input 0, bits 2-3 map to input 1, 30-31 map to input 15. Each pair of bits has the following meaning:
+각 인스턴스에 대한 입력 유형입니다. 기본값은 0xe4입니다. 이것은 각 드라이버 인스턴스에 대해 입력이 생성 될 때 각 입력의 유형을 정의합니다. 이것은 최대 16 쌍의 비트가 있는 16 진수 값이며, 각 쌍은 형식을 제공하며 비트 0-1은 입력 0에 매핑되고 비트 2-3은 입력 1에 매핑되고 30-31은 입력 15에 매핑됩니다. 각 비트 쌍에는 다음 의미 :
+ 
+           	00: this is a webcam input
+           	01: this is a TV tuner input
+           	10: this is an S-Video input
+           	11: this is an HDMI input
+ 
+    	So to create a video capture device with 8 inputs where input 0 is a TV tuner, inputs 1-3 are S-Video inputs and inputs 4-7 are HDMI inputs you would use the following module options:
+ 
+           	num_inputs=8 input_types=0xffa9
+ 
+num_outputs: the number of outputs, one for each instance. By default 2 outputs are created for each video output device. At most 16 outputs can be created, and there must be at least one.
+각 인스턴스에 대해 하나씩 출력 수입니다. 기본적으로 각 비디오 출력 장치에 대해 2 개의 출력이 생성됩니다. 최대 16 개의 출력을 생성 할 수 있으며 적어도 하나는 있어야 합니다.
+ 
+output_types: the output types for each instance, the default is 0x02. This defines what the type of each output is when the outputs are created for each driver instance. This is a hexadecimal value with up to 16 bits, each bit gives the type and bit 0 maps to output 0, bit 1 maps to output 1, bit 15 maps to output 15. The meaning of each bit is as follows:
+각 인스턴스의 출력 유형이며 기본값은 0x02입니다. 이것은 각 드라이버 인스턴스에 대해 출력이 생성 될 때 각 출력의 유형을 정의합니다. 이것은 최대 16 비트의 16 진수 값이며, 각 비트는 유형을 제공하고 비트 0은 출력 0에 맵핑하고, 비트 1은 출력 1에 맵핑하고, 비트 15는 출력 15에 맵핑합니다. 각 비트의 의미는 다음과 같습니다.
+           	0: this is an S-Video output
+           	1: this is an HDMI output
+ 
+    	So to create a video output device with 8 outputs where outputs 0-3 are S-Video outputs and outputs 4-7 are HDMI outputs you would use the following module options:
+따라서 출력 0-3이 S- 비디오 출력이고 출력 4-7이 HDMI 출력 인 8 개의 출력이 있는 비디오 출력 장치를 만들려면 다음 모듈 옵션을 사용하십시오.
+           	num_outputs=8 output_types=0xf0
+ 
+vid_cap_nr: give the desired videoX start number for each video capture device.
+각 비디오 캡처 장치에 대해 원하는 videoX 시작 번호를 지정합니다.
+    	The default is -1 which will just take the first free number. This allows you to map capture video nodes to specific videoX device nodes. Example:
+기본값은 첫 번째 무료 번호를 취하는 -1입니다. 이를 통해 캡처 비디오 노드를 특정 videoX 장치 노드에 매핑할 수 있습니다. 예:
+ 
+           	n_devs=4 vid_cap_nr=2,4,6,8
+ 
+    	This will attempt to assign /dev/video2 for the video capture device of the first vivid instance, video4 for the next up to video8 for the last instance. If it can't succeed, then it will just take the next free number.
+이렇게하면 첫 번째 vivid 인스턴스의 비디오 캡처 장치에 대해 / dev / video2를 지정하고, 마지막 인스턴스에 대해서는 video8에 대한 video4를 지정합니다. 성공할 수 없다면 다음 무료 번호를 사용합니다.
+ 
+vid_out_nr: give the desired videoX start number for each video output device.
+    	The default is -1 which will just take the first free number.
+각 비디오 출력 장치에 대해 원하는 videoX 시작 번호를 지정하십시오.
+기본값은 첫 번째 무료 번호를 취하는 -1입니다.
+ 
+vbi_cap_nr: give the desired vbiX start number for each vbi capture device.
+    	The default is -1 which will just take the first free number.
+각 vbi 캡처 장치에 대해 원하는 vbiX 시작 번호를 지정합니다.
+        기본값은 첫 번째 무료 번호를 취하는 -1입니다.
+ 
+vbi_out_nr: give the desired vbiX start number for each vbi output device.
+    	The default is -1 which will just take the first free number.
+각 vbi 출력 장치에 대해 원하는 vbiX 시작 번호를 지정하십시오.
+        기본값은 첫 번째 무료 번호를 취하는 -1입니다.
+ 
+radio_rx_nr: give the desired radioX start number for each radio receiver device.
+    	The default is -1 which will just take the first free number.
+각 무선 수신 장치에 대해 원하는 radioX 시작 번호를 지정합니다.
+        기본값은 첫 번째 무료 번호를 취하는 -1입니다.
+ 
+radio_tx_nr: give the desired radioX start number for each radio transmitter
+    	device. The default is -1 which will just take the first free number.
+각 무선 송신기에 대해 원하는 radioX 시작 번호를 지정합니다.
+장치. 기본값은 첫 번째 무료 번호를 취하는 -1입니다.
+ 
+sdr_cap_nr: give the desired swradioX start number for each SDR capture device.
+    	The default is -1 which will just take the first free number.
+각 SDR 캡처 장치에 대해 원하는 swradioX 시작 번호를 지정합니다.
+        기본값은 첫 번째 무료 번호를 취하는 -1입니다
+ 
+ccs_cap_mode: specify the allowed video capture crop/compose/scaling combination for each driver instance. Video capture devices can have any combination of cropping, composing and scaling capabilities and this will tell the vivid driver which of those is should emulate. By default the user can select this through controls.
+각 드라이버 인스턴스에 허용되는 비디오 캡처 크롭 / 컴포즈 / 크기조정 조합을 지정합니다. 비디오 캡처 장치는 자르기, 구성 및 크기 조절 기능의 조합을 가질 수 있으며 이는 vivid 드라이버 중 어떤 것이 에뮬레이션 되어야 하는지 알려줍니다. 기본적으로 사용자는 컨트롤을 통해 이를 선택할 수 있습니다.
+ 
+    	The value is either -1 (controlled by the user) or a set of three bits, each enabling (1) or disabling (0) one of the features:
+값은 -1 (사용자가 제어 함) 또는 3 비트 집합으로 각 기능을 활성화 (1) 또는 비활성화 (0)합니다.
+ 
+bit 0: Enable crop support. Cropping will take only part of the incoming picture.
+bit 1: Enable compose support. Composing will copy the incoming picture into a larger buffer.
+bit 2: Enable scaling support. Scaling can scale the incoming picture.
+비트 0 : 자르기 지원을 사용합니다. 자르기는 들어오는 그림의 일부만 사용합니다.
+비트 1 : 작성 지원을 사용합니다. 합성은 들어오는 그림을 큰 버퍼로 복사합니다.
+비트 2 : 스케일링 지원을 사용합니다. 크기 조정을 통해 들어오는 그림의 크기를 조정할 수 있습니다.
+The scaler of the vivid driver can enlarge up or down to four times the original size. The scaler is very simple and low-quality. Simplicity and speed were key, not quality.
+vivid 드라이버의 스케일러는 원래 크기의 4 배까지 확대 할 수 있습니다. 스케일러는 매우 간단하고 품질이 낮습니다. 단순성과 속도는 품질이 아니라 핵심이었습니다.
+ 
+    	Note that this value is ignored by webcam inputs: those enumerate discrete framesizes and that is incompatible with cropping, composing or scaling.
+이 값은 웹캠 입력에 의해 무시됩니다. 이 값은 개별 프레임 크기를 열거하고 자르기, 작성 또는 크기 조정과 호환되지 않습니다.
+ 
+ccs_out_mode: specify the allowed video output crop/compose/scaling combination for each driver instance. Video output devices can have any combination of cropping, composing and scaling capabilities and this will tell the vivid driver which of those is should emulate. By default the user can select this through controls.
+각 드라이버 인스턴스에 대해 허용되는 비디오 출력 자르기 / 컴포즈 / 크기 조정 조합을 지정합니다. 비디오 출력 장치는 자르기, 구성 및 크기 조절 기능의 조합을 가질 수 있으며 이는 vivid 드라이버에 대해 에뮬레이트 해야 하는 것을 알려줍니다. 기본적으로 사용자는 컨트롤을 통해 이를 선택할 수 있습니다.
+    	The value is either -1 (controlled by the user) or a set of three bits, each enabling (1) or disabling (0) one of the features:
+값은 -1 (사용자가 제어 함) 또는 3 비트 집합으로 각 기능을 활성화 (1) 또는 비활성화 (0)합니다.
+ 
+bit 0: Enable crop support. Cropping will take only part of the outgoing buffer.
+bit 1: Enable compose support. Composing will copy the incoming buffer into a larger picture frame.
+bit 2: Enable scaling support. Scaling can scale the incoming buffer.
+비트 0 : 자르기 지원을 사용합니다. 자르기는 나가는 버퍼의 일부만 사용합니다.
+비트 1 : 작성 지원을 사용합니다. 합성은 들어오는 버퍼를 더 큰 그림 프레임으로 복사합니다.
+비트 2 : 스케일링 지원을 사용합니다. 스케일링은 수신 버퍼의 크기를 조정할 수 있습니다.
+ 
+The scaler of the vivid driver can enlarge up or down to four times the original size. The scaler is very simple and low-quality. Simplicity and speed were key, not quality.
+vivid 드라이버의 스케일러는 원래 크기의 4 배까지 확대 할 수 있습니다. 스케일러는 매우 간단하고 품질이 낮습니다. 단순성과 속도는 품질이 아니라 핵심이었습니다.
+ 
+multiplanar: select whether each device instance supports multi-planar formats, and thus the V4L2 multi-planar API. By default device instances are single-planar.
+각 장치 인스턴스가 다중 평면 형식을 지원하는지 여부를 선택하여 V4L2 다중 평면 API를 지원하는지 여부를 선택합니다. 기본적으로 장치 인스턴스는 단일 평면입니다.
+ 
+    	This module option can override that for each instance. Values are:
+이 모듈 옵션은 각 인스턴스에 대해 이를 대체 할 수 있습니다. 값은 다음과 같습니다.
+           	1: this is a single-planar instance.
+           	2: this is a multi-planar instance.
+1 : 이것은 단일 평면 인스턴스입니다.
+2 : 이것은 다중 평면 인스턴스입니다.
+ 
+vivid_debug: enable driver debugging info
+           	드라이버 디버깅 정보 사용
+ 
+no_error_inj: if set disable the error injecting controls. This option is needed in order to run a tool like v4l2-compliance. Tools like that exercise all controls including a control like 'Disconnect' which emulates a USB disconnect, making the device inaccessible and so all tests that v4l2-compliance is doing will fail afterwards.
+error injecting controls 비활성화 됩니다. 이 옵션은 v4l2 호환과 같은 도구를 실행하기 위해 필요합니다. 이와 같은 도구는 USB 연결 끊기를 에뮬레이션 하는 'Disconnect'와 같은 컨트롤을 포함하여 모든 컨트롤을 사용하기 때문에 장치를 액세스 할 수 없게 만들고 v4l2 호환이 수행하는 모든 테스트가 실패합니다.
+ 
+    	There may be other situations as well where you want to disable the error injection support of vivid. When this option is set, then the controls that select crop, compose and scale behavior are also removed. Unless overridden by ccs_cap_mode and/or ccs_out_mode the will default to enabling crop, compose and scaling.
+vivid의 오류 삽입 지원을 비활성화하려는 다른 상황도 있을 수 있습니다. 이 옵션을 설정하면 자르기, 컴포즈 및 크기조정 동작을 선택하는 컨트롤도 제거됩니다. ccs_cap_mode 및 / 또는 ccs_out_mode로 덮어 쓰지 않는 한 기본적으로 자르기, 컴포즈 및 크기 조정이 가능합니다.
+ 
+Taken together, all these module options allow you to precisely customize the driver behavior and test your application with all sorts of permutations. It is also very suitable to emulate hardware that is not yet available, e.g. when developing software for a new upcoming device.
+모든 모듈 옵션을 사용하면 드라이버 동작을 정확하게 사용자 정의하고 모든 종류의 순열을 사용하여 응용 프로그램을 테스트 할 수 있습니다. 또한 곧 출시 될 새로운 장치 용 소프트웨어를 개발할 때 아직 사용할 수 없는 하드웨어..등..을 에뮬레이션 하는 데 매우 적합합니다.
+ 
+Section 2: Video Capture
+------------------------
+ 
+This is probably the most frequently used feature. The video capture device can be configured by using the module options num_inputs, input_types and ccs_cap_mode (see section 1 for more detailed information), but by default four inputs are configured: a webcam, a TV tuner, an S-Video and an HDMI input, one input for each input type. Those are described in more detail below.
+아마도 가장 많이 사용되는 기능 일 것입니다. 비디오 캡처 장치는 모듈 옵션 인 num_inputs, input_types 및 ccs_cap_mode (자세한 정보는 섹션 1 참조)를 사용하여 구성 할 수 있지만 기본적으로 웹캠, TV 튜너, S-Video 및 HDMI 입력의 네 가지 입력이 구성됩니다, 각 입력 유형에 대해 하나의 입력. 자세한 내용은 아래에서 설명합니다.
+ 
+Special attention has been given to the rate at which new frames become available. The jitter will be around 1 jiffie (that depends on the HZ configuration of your kernel, so usually 1/100, 1/250 or 1/1000 of a second), but the long-term behavior is exactly following the framerate. So a framerate of 59.94 Hz is really different from 60 Hz. If the framerate exceeds your kernel's HZ value, then you will get dropped frames, but the frame/field sequence counting will keep track of that so the sequence count will skip whenever frames are dropped.
+새로운 프레임을 사용할 수 있는 속도에 특별한 주의가 기울여졌습니다. jitter 는 약 1 jiffie (커널의 HZ 구성에 따라 다르므로 대개 1/100, 1/250 또는 1/1000 초)이지만 장기적인 동작은 프레임 속도를 정확히 따라갑니다. 따라서 59.94 Hz의 프레임 속도는 60 Hz와 실제로 다릅니다. 프레임 속도가 커널의 HZ 값을 초과하면 프레임이 끊어 지지만 프레임 / 필드 시퀀스 카운팅은 이를 추적하여 프레임이 떨어질 때마다 시퀀스 카운트가 건너 뜁니다.
+ 
+Section 2.1: Webcam Input
+-------------------------
+ 
+The webcam input supports three framesizes: 320x180, 640x360 and 1280x720. It supports frames per second settings of 10, 15, 25, 30, 50 and 60 fps. Which ones are available depends on the chosen framesize: the larger the framesize, the lower the maximum frames per second.
+웹캠 입력은 320x180, 640x360 및 1280x720의 세 가지 프레임 크기를 지원합니다. 그것은 10, 15, 25, 30, 50 및 60 fps의 초당 프레임 설정을 지원합니다. 사용 가능한 것은 선택한 프레임 크기에 따라 다릅니다. 프레임 크기가 클수록 초당 최대 프레임 수가 더 낮습니다.
+ 
+The initially selected colorspace when you switch to the webcam input will be sRGB.
+웹캠 입력으로 전환 할 때 처음 선택한 색상 공간은 sRGB입니다.
+ 
+Section 2.2: TV and S-Video Inputs
+----------------------------------
+ 
+The only difference between the TV and S-Video input is that the TV has a tuner. Otherwise they behave identically.
+TV와 S-비디오 입력의 유일한 차이점은 TV에 튜너가 있다는 것입니다. 그렇지 않으면 그들은 동일하게 행동합니다.
+ 
+These inputs support audio inputs as well: one TV and one Line-In. They both support all TV standards. If the standard is queried, then the Vivid controls 'Standard Signal Mode' and 'Standard' determine what the result will be.
+이 입력은 오디오 입력도 지원합니다 : 하나의 TV와 하나의 Line-In. 둘 다 모든 TV 표준을 지원합니다. 스탠다드가 쿼리되면 Vivid 컨트롤 '스탠다드 신호 모드'와 '스탠다드'가 결과를 결정합니다.
+ 
+These inputs support all combinations of the field setting. Special care has been taken to faithfully reproduce how fields are handled for the different TV standards. This is particularly noticable when generating a horizontally moving image so the temporal effect of using interlaced formats becomes clearly visible. For 50 Hz standards the top field is the oldest and the bottom field is the newest in time. For 60 Hz standards that is reversed: the bottom field is the oldest and the top field is the newest in time.
+이 입력은 필드 설정의 모든 조합을 지원합니다. 다른 TV 표준에 따라 현장을 다루는 방법을 충실하게 재현하는 데 특별한 주의를 기울였습니다. 이는 수평으로 움직이는 이미지를 생성 할 때 특히 눈에 띄기 때문에 interlaced 된 포맷을 사용하는 시간적 효과가 명확하게 보입니다. 50Hz 표준의 경우 상단 필드는 가장 오래된 필드이고 하단 필드는 최신 광고입니다. 반전 된 60Hz 표준의 경우 하단 필드가 가장 오래된 필드이고 상단 필드가 최신 필드입니다.
+ 
+When you start capturing in V4L2_FIELD_ALTERNATE mode the first buffer will contain the top field for 50 Hz standards and the bottom field for 60 Hz standards. This is what capture hardware does as well.
+V4L2_FIELD_ALTERNATE 모드에서 캡처를 시작하면 첫 번째 버퍼에는 50Hz 표준의 맨 위 필드와 60Hz 표준의 맨 아래 필드가 포함됩니다. 이것이 캡처 하드웨어가 하는 것입니다.
+ 
+Finally, for PAL/SECAM standards the first half of the top line contains noise.
+This simulates the Wide Screen Signal that is commonly placed there.
+마지막으로, PAL / SECAM 표준의 경우 상단 라인의 전반부에 잡음이 포함되어 있습니다.
+이것은 일반적으로 거기에 배치되는 와이드 스크린 신호를 시뮬레이션합니다.
+ 
+The initially selected colorspace when you switch to the TV or S-Video input will be SMPTE-170M.
+TV 또는 S- 비디오 입력으로 전환 할 때 초기에 선택된 색 공간은 SMPTE-170M이됩니다.
+ 
+The pixel aspect ratio will depend on the TV standard. The video aspect ratio can be selected through the 'Standard Aspect Ratio' Vivid control.
+Choices are '4x3', '16x9' which will give letterboxed widescreen video and '16x9 Anomorphic' which will give full screen squashed anamorphic widescreen video that will need to be scaled accordingly.
+픽셀 종횡비는 TV 표준에 따라 다릅니다. 비디오 종횡비는 '표준 종횡비' vivid 컨트롤을 통해 선택할 수 있습니다.
+선택 사항은 '4x3', '16x9'이며 letterboxed 된 와이드-스크린 비디오 및 '16x9 아노몰픽 (Anomorphic)'을 제공하여 화면 크기를 축소시켜야 하는 왜곡된 스크린-비디오를 제공합니다.
+ 
+The TV 'tuner' supports a frequency range of 44-958 MHz. Channels are available every 6 MHz, starting from 49.25 MHz. For each channel the generated image will be in color for the +/- 0.25 MHz around it, and in grayscale for +/- 1 MHz around the channel. Beyond that it is just noise. The VIDIOC_G_TUNER ioctl will return 100% signal strength for +/- 0.25 MHz and 50% for +/- 1 MHz.
+It will also return correct afc values to show whether the frequency is too low or too high.
+TV '튜너'는 44-958 MHz의 주파수 범위를 지원합니다. 채널은 49.25 MHz부터 6 MHz마다 사용할 수 있습니다. 각 채널에 대해 생성 된 이미지는 그 주위에 +/- 0.25 MHz의 색상으로 표시되고 채널 주변의 +/- 1 MHz의 회색조로 표시됩니다. 그 너머 그냥 잡음입니다. VIDIOC_G_TUNER ioctl은 +/- 0.25 MHz에서는 100 % 신호 강도를, +/- 1 MHz에서는 50 % 신호 강도를 반환합니다.
+또한 정확한 afc 값을 반환하여 빈도가 너무 낮거나 너무 높은지 여부를 보여줍니다.
+ 
+The audio subchannels that are returned are MONO for the +/- 1 MHz range around a valid channel frequency.
+돌려 주어지는 오디오 서브 채널은, 유효 채널 주파수를 중심으로 +/- 1 MHz 범위의 MONO입니다.
+When the frequency is within +/- 0.25 MHz of the channel it will return either MONO, STEREO, either MONO | SAP (for NTSC) or LANG1 | LANG2 (for others), or STEREO | SAP.
+주파수가 채널의 +/- 0.25 MHz 내에 있으면 MONO, STEREO 또는 MONO | SAP (NTSC 용) 또는 LANG1 | LANG2 (기타) 또는 STEREO | SAP.
+ 
+Which one is returned depends on the chosen channel, each next valid channel will cycle through the possible audio subchannel combinations. This allows you to test the various combinations by just switching channels..
+어떤 채널이 반환되는지는 선택한 채널에 따라 다르며, 다음에 유효한 각 채널은 가능한 오디오 하위 채널 조합을 순환합니다. 이를 통해 채널을 전환하여 다양한 조합을 테스트 할 수 있습니다.
+ 
+Finally, for these inputs the v4l2_timecode struct is filled in in the dequeued v4l2_buffer struct.
+마지막으로, 이러한 입력에 대해 v4l2_timecode 구조체는 대기열에서 제외 된 v4l2_buffer 구조체에 채워집니다.
+ 
+Section 2.3: HDMI Input
+-----------------------
+ 
+The HDMI inputs supports all CEA-861 and DMT timings, both progressive and interlaced, for pixelclock frequencies between 25 and 600 MHz. The field mode for interlaced formats is always V4L2_FIELD_ALTERNATE. For HDMI the field order is always top field first, and when you start capturing an interlaced format you will receive the top field first.
+HDMI 입력은 25와 600 MHz 사이의 픽셀 클록 주파수에 대해 프로그레시브 및 인터레이스 방식의 모든 CEA-861 및 DMT 타이밍을 지원합니다. 인터레이스 된 형식의 필드 모드는 항상 V4L2_FIELD_ALTERNATE입니다. HDMI의 경우 필드 순서는 항상 맨 위 필드 우선이며, 인터레이스 형식 캡처를 시작하면 맨 위 필드가 먼저 수신됩니다.
+ 
+The initially selected colorspace when you switch to the HDMI input or select an HDMI timing is based on the format resolution: for resolutions less than or equal to 720x576 the colorspace is set to SMPTE-170M, for others it is set to REC-709 (CEA-861 timings) or sRGB (VESA DMT timings).
+HDMI 입력으로 전환하거나 HDMI 타이밍을 선택할 때 초기에 선택한 색상 공간은 포맷 해상도를 기반으로 합니다 : 720x576 이하의 해상도에서는 색상 공간이 SMPTE-170M으로 설정되고 다른 색상 공간은 REC-709로 설정됩니다 CEA-861 타이밍) 또는 sRGB (VESA DMT 타이밍).
+ 
+The pixel aspect ratio will depend on the HDMI timing: for 720x480 is it set as for the NTSC TV standard, for 720x576 it is set as for the PAL TV standard, and for all others a 1:1 pixel aspect ratio is returned.
+픽셀 종횡비는 HDMI 타이밍에 따라 다릅니다. 720x480은 NTSC TV 표준과 마찬가지로 설정되며 720x576은 PAL TV 표준으로 설정되고 다른 모든 경우에는 1 : 1 픽셀 종횡비가 반환됩니다.
+ 
+The video aspect ratio can be selected through the 'DV Timings Aspect Ratio' Vivid control. Choices are 'Source Width x Height' (just use the same ratio as the chosen format), '4x3' or '16x9', either of which can result in pillarboxed or letterboxed video.
+비디오 종횡비는 'DV 타이밍 종횡비'vivid 컨트롤을 통해 선택할 수 있습니다. 선택할 수 있는 '소스 폭 x 높이'(선택한 형식과 동일한 비율 사용), '4x3'또는 '16x9'중 하나가 필 박스 또는 레터 박스 비디오로 나타날 수 있습니다.
+ 
+For HDMI inputs it is possible to set the EDID. By default a simple EDID is provided. You can only set the EDID for HDMI inputs. Internally, however, the EDID is shared between all HDMI inputs.
+HDMI 입력의 경우 EDID를 설정할 수 있습니다. 기본적으로 간단한 EDID가 제공됩니다. HDMI 입력에 대해서만 EDID를 설정할 수 있습니다. 그러나 내부적으로 EDID는 모든 HDMI 입력간에 공유됩니다.
+ 
+No interpretation is done of the EDID data.
+EDID 데이터는 해석되지 않습니다.
+ 
+Section 3: Video Output
+-----------------------
+ 
+The video output device can be configured by using the module options num_outputs, output_types and ccs_out_mode (see section 1 for more detailed information), but by default two outputs are configured: an S-Video and an HDMI input, one output for each output type. Those are described in more detail below.
+비디오 출력 장치는 모듈 옵션 인 num_outputs, output_types 및 ccs_out_mode (자세한 정보는 섹션 1 참조)를 사용하여 구성 할 수 있지만 기본적으로 S-비디오 및 HDMI 입력, 각 출력 유형별로 하나의 출력. 자세한 내용은 아래에서 설명합니다.
+ 
+Like with video capture the framerate is also exact in the long term.
+비디오 캡처와 마찬가지로 프레임 속도도 장기적으로 정확합니다.
+ 
+ 
+Section 3.1: S-Video Output
+---------------------------
+ 
+This output supports audio outputs as well: "Line-Out 1" and "Line-Out 2".
+이 출력은 오디오 출력도 지원합니다
+The S-Video output supports all TV standards.
+S- 비디오 출력은 모든 TV 표준을 지원합니다.
+ 
+This output supports all combinations of the field setting.
+이 출력은 필드 설정의 모든 조합을 지원합니다.
+ 
+The initially selected colorspace when you switch to the TV or S-Video input will be SMPTE-170M.
+TV 또는 S- 비디오 입력으로 전환 할 때 초기에 선택된 색 공간은 SMPTE-170M이됩니다.
+ 
+ 
+Section 3.2: HDMI Output
+------------------------
+ 
+The HDMI output supports all CEA-861 and DMT timings, both progressive and interlaced, for pixelclock frequencies between 25 and 600 MHz. The field mode for interlaced formats is always V4L2_FIELD_ALTERNATE.
+HDMI 출력은 25와 600 MHz 사이의 픽셀 클록 주파수에 대해 프로그레시브 및 인터레이스 방식의 모든 CEA-861 및 DMT 타이밍을 지원합니다. 인터레이스 된 형식의 필드 모드는 항상 V4L2_FIELD_ALTERNATE입니다.
+ 
+The initially selected colorspace when you switch to the HDMI output or select an HDMI timing is based on the format resolution: for resolutions less than or equal to 720x576 the colorspace is set to SMPTE-170M, for others it is set to REC-709 (CEA-861 timings) or sRGB (VESA DMT timings).
+HDMI 출력으로 전환하거나 HDMI 타이밍을 선택할 때 초기에 선택된 색상 공간은 포맷 해상도를 기반으로합니다 : 720x576 이하의 해상도에서는 색상 공간이 SMPTE-170M으로 설정되고 다른 색상 공간은 REC-709로 설정됩니다 CEA-861 타이밍) 또는 sRGB (VESA DMT 타이밍).
+ 
+The pixel aspect ratio will depend on the HDMI timing: for 720x480 is it set as for the NTSC TV standard, for 720x576 it is set as for the PAL TV standard, and for all others a 1:1 pixel aspect ratio is returned.
+픽셀 종횡비는 HDMI 타이밍에 따라 다릅니다. 720x480은 NTSC TV 표준과 마찬가지로 설정되며 720x576은 PAL TV 표준으로 설정되고 다른 모든 경우에는 1 : 1 픽셀 종횡비가 반환됩니다.
+ 
+An HDMI output has a valid EDID which can be obtained through VIDIOC_G_EDID.
+ HDMI 출력에는 VIDIOC_G_EDID를 통해 얻을 수있는 유효한 EDID가 있습니다.
+ 
+Section 4: VBI Capture
+----------------------
+ 
+There are three types of VBI capture devices: those that only support raw (undecoded) VBI, those that only support sliced (decoded) VBI and those that support both. This is determined by the node_types module option. In all cases the driver will generate valid VBI data: for 60 Hz standards it will generate Closed Caption and XDS data. The closed caption stream will alternate between "Hello world!" and "Closed captions test" every second.
+VBI 캡처 장치에는 raw (디코드되지 않은) VBI 만 지원하는 장치, 슬라이스 된 (디코딩 된) VBI 만 지원하는 장치 및 둘 모두를 지원하는 장치가 있습니다. 이것은 node_types 모듈 옵션에 의해 결정됩니다. 모든 경우에 드라이버는 유효한 VBI 데이터를 생성합니다 : 60Hz 표준의 경우 폐쇄 자막 및 XDS 데이터가 생성됩니다. 닫힌 캡션 스트림은 "Hello world!" 매초마다 "자막 테스트"가 있습니다.
+The XDS stream will give the current time once a minute. For 50 Hz standards it will generate the Wide Screen Signal which is based on the actual Video Aspect Ratio control setting and teletext pages 100-159, one page per frame.
+XDS 스트림은 1 분에 한 번 현재 시간을 알려줍니다. 50 Hz 표준의 경우 실제 비디오 종횡비 제어 설정 및 텔레 텍스트 페이지 100-159 (프레임 당 한 페이지)를 기반으로하는 와이드 스크린 신호를 생성합니다.
+ 
+The VBI device will only work for the S-Video and TV inputs, it will give back an error if the current input is a webcam or HDMI.
+VBI 장치는 S- 비디오 및 TV 입력에서만 작동하며 현재 입력이 웹캠 또는 HDMI 인 경우 오류를 다시 표시합니다.
+ 
+ 
+Section 5: VBI Output
+---------------------
+ 
+There are three types of VBI output devices: those that only support raw (undecoded) VBI, those that only support sliced (decoded) VBI and those that support both. This is determined by the node_types module option.
+VBI 출력 장치에는 세 가지 유형이 있습니다. 즉, raw (디코딩되지 않은) VBI 만 지원하는 장치, 슬라이스 된 (디코딩 된) VBI 만 지원하는 장치 및 둘 모두를 지원하는 장치입니다. 이것은 node_types 모듈 옵션에 의해 결정됩니다.
+ 
+The sliced VBI output supports the Wide Screen Signal and the teletext signal for 50 Hz standards and Closed Captioning + XDS for 60 Hz standards.
+분리 된 VBI 출력은 와이드 스크린 신호와 50Hz 표준의 텔레 텍스트 신호 및 60Hz 표준의 폐쇄 자막 + XDS를 지원합니다.
+ 
+The VBI device will only work for the S-Video output, it will give back an error if the current output is HDMI.
+VBI 장치는 S-Video 출력에서만 작동하며 현재 출력이 HDMI 인 경우 오류를 다시 발생시킵니다.
+ 
+ 
+Section 6: Radio Receiver
+-------------------------
+ 
+The radio receiver emulates an FM/AM/SW receiver. The FM band also supports RDS.
+The frequency ranges are:
+라디오 수신기는 FM / AM / SW 수신기를 에뮬레이트합니다. FM 대역은 RDS도 지원합니다.
+주파수 범위는 다음과 같습니다.
+ 
+    	FM: 64 MHz - 108 MHz
+    	AM: 520 kHz - 1710 kHz
+    	SW: 2300 kHz - 26.1 MHz
+ 
+Valid channels are emulated every 1 MHz for FM and every 100 kHz for AM and SW.
+The signal strength decreases the further the frequency is from the valid frequency until it becomes 0% at +/- 50 kHz (FM) or 5 kHz (AM/SW) from the ideal frequency. The initial frequency when the driver is loaded is set to 95 MHz.
+유효한 채널은 FM의 경우 1 MHz마다, AM 및 SW의 경우 100 kHz마다 에뮬레이션됩니다.
+신호 강도는 유효 주파수에서 +/- 50kHz (FM) 또는 5kHz (AM / SW)에서 0 %가 될 때까지 주파수가 유효한 주파수에서 멀어 질수록 감소합니다. 드라이버가  로드될 때의 초기 주파수는 95MHz로 설정됩니다.
+ 
+The FM receiver supports RDS as well, both using 'Block I/O' and 'Controls' modes. In the 'Controls' mode the RDS information is stored in read-only controls. These controls are updated every time the frequency is changed, or when the tuner status is requested. The Block I/O method uses the read() interface to pass the RDS blocks on to the application for decoding.
+FM 수신기는 '블록 I / O'및 '제어'모드를 사용하여 RDS도 지원합니다. '컨트롤'모드에서 RDS 정보는 읽기 전용 컨트롤에 저장됩니다. 이러한 컨트롤은 주파수가 변경되거나 튜너 상태가 요청 될 때마다 업데이트됩니다. Block I / O 메서드는 read () 인터페이스를 사용하여 RDS 블록을 응용 프로그램에 전달하여 디코딩합니다.
+ 
+The RDS signal is 'detected' for +/- 12.5 kHz around the channel frequency, and the further the frequency is away from the valid frequency the more RDS errors are randomly introduced into the block I/O stream, up to 50% of all blocks if you are +/- 12.5 kHz from the channel frequency. All four errors can occur in equal proportions: blocks marked 'CORRECTED', blocks marked 'ERROR', blocks marked 'INVALID' and dropped blocks.
+RDS 신호는 채널 주파수를 중심으로 +/- 12.5 kHz에서 '감지'되며 주파수가 유효한 주파수에서 멀어 질수록 더 많은 RDS 오류가 블록 I / O 스트림에 임의로 도입되어 최대 50 %까지 채널 주파수에서 +/- 12.5 kHz 인 경우 블럭됩니다. 네 가지 오류는 모두 'CORRECTED'로 표시된 블록, 'ERROR'로 표시된 블록, 'INVALID'로 표시된 블록 및 블록이 삭제 된 동등한 비율로 발생할 수 있습니다.
+ 
+The generated RDS stream contains all the standard fields contained in a 0B group, and also radio text and the current time.
+The receiver supports HW frequency seek, either in Bounded mode, Wrap Around mode or both, which is configurable with the "Radio HW Seek Mode" control.
+생성 된 RDS 스트림은 0B 그룹에 포함 된 모든 표준 필드와 라디오 텍스트 및 현재 시간을 포함합니다.
+수신기는 Bounded 모드, Wrap Around 모드 또는 둘 모두에서 HW 주파수 탐색을 지원하며 "Radio HW Seek Mode" 컨트롤로 구성 할 수 있습니다.
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Section 7: Radio Transmitter		무선 송신기
+----------------------------
+ 
+The radio transmitter emulates an FM/AM/SW transmitter. The FM band also supports RDS.
+The frequency ranges are:
+라디오 송신기는 FM / AM / SW 송신기를 에뮬레이트합니다. FM 대역은 RDS도 지원합니다.
+주파수 범위는 다음과 같습니다.
+ 
+    	FM: 64 MHz - 108 MHz
+    	AM: 520 kHz - 1710 kHz
+    	SW: 2300 kHz - 26.1 MHz
+ 
+The initial frequency when the driver is loaded is 95.5 MHz.
+드라이버가 로드될 때의 초기 주파수는 95.5MHz입니다.
+ 
+The FM transmitter supports RDS as well, both using 'Block I/O' and 'Controls' modes. In the 'Controls' mode the transmitted RDS information is configured using controls, and in 'Block I/O' mode the blocks are passed to the driver using write().
+ FM 송신기는 '블록 I / O'및 '제어'모드를 사용하여 RDS도 지원합니다. 'Controls'모드에서 전송 된 RDS 정보는 컨트롤을 사용하여 구성되며 'Block I / O'모드에서는 블록이 write ()를 사용하여 드라이버로 전달됩니다.
+ 
+Section 8: Software Defined Radio Receiver		소프트웨어 정의 무선 수신기
+------------------------------------------
+ 
+The SDR receiver has three frequency bands for the ADC tuner:
+ SDR 리시버는 ADC 튜너에 대해 세 가지 주파수 대역을 가지고 있습니다.
+ 
+    	- 300 kHz
+    	- 900 kHz - 2800 kHz
+    	- 3200 kHz
+ 
+The RF tuner supports 50 MHz - 2000 MHz.
+ RF 튜너는 50MHz - 2000MHz를 지원합니다.
+ 
+The generated data contains the In-phase and Quadrature components of a 1 kHz tone that has an amplitude of sqrt(2).
+생성 된 데이터에는 진폭이 sqrt (2) 인 1kHz 톤의 동 위상 및 직교 성분이 포함됩니다.
+ 
+ 
+Section 9: Controls
+-------------------
+ 
+Different devices support different controls. The sections below will describe each control and which devices support them.
+다른 장치는 다른 컨트롤을 지원합니다. 아래 섹션에서는 각 컨트롤과 해당 컨트롤을 지원하는 장치에 대해 설명합니다.
+ 
+ 
+Section 9.1: User Controls - Test Controls
+------------------------------------------
+ 
+The Button, Boolean, Integer 32 Bits, Integer 64 Bits, Menu, String, Bitmask and Integer Menu are controls that represent all possible control types. The Menu control and the Integer Menu control both have 'holes' in their menu list, meaning that one or more menu items return EINVAL when VIDIOC_QUERYMENU is called. Both menu controls also have a non-zero minimum control value.  These features allow you to check if your application can handle such things correctly.
+These controls are supported for every device type.
+버튼, 부울, 정수 32 비트, 정수 64 비트, 메뉴, 문자열, 비트 마스크 및 정수 메뉴는 가능한 모든 제어 유형을 나타내는 컨트롤입니다. 메뉴 컨트롤과 Integer Menu 컨트롤은 모두 메뉴 목록에 '구멍'이 있습니다. 즉, VIDIOC_QUERYMENU가 호출 될 때 하나 이상의 메뉴 항목이 EINVAL을 반환합니다. 두 메뉴 컨트롤도 0이 아닌 최소 컨트롤 값을 갖습니다. 이러한 기능을 사용하면 응용 프로그램에서 이러한 사항을 올바르게 처리 할 수 ​​있는지 확인할 수 있습니다.
+이러한 컨트롤은 모든 장치 유형에 지원됩니다.
+ 
+ 
+ 
+Section 9.2: User Controls - Video Capture
+------------------------------------------
+ 
+The following controls are specific to video capture.
+다음 컨트롤은 비디오 캡처에만 적용됩니다.
+ 
+The Brightness, Contrast, Saturation and Hue controls actually work and are standard. There is one special feature with the Brightness control: each video input has its own brightness value, so changing input will restore the brightness for that input. In addition, each video input uses a different brightness range (minimum and maximum control values). Switching inputs will cause a control event to be sent with the V4L2_EVENT_CTRL_CH_RANGE flag set.
+This allows you to test controls that can change their range.
+ 밝기, 대비, 채도 및 색조 컨트롤은 실제로 작동하며 표준입니다. 밝기 컨트롤에는 하나의 특별한 기능이 있습니다. 각 비디오 입력은 자체 밝기 값을 가지므로 입력을 변경하면 해당 입력의 밝기가 복원됩니다. 또한 각 비디오 입력은 다른 밝기 범위 (최소 및 최대 제어 값)를 사용합니다. 입력을 전환하면 V4L2_EVENT_CTRL_CH_RANGE 플래그가 설정된 제어 이벤트가 전송됩니다.
+이를 통해 범위를 변경할 수있는 컨트롤을 테스트 할 수 있습니다.
+ 
+The 'Gain, Automatic' and Gain controls can be used to test volatile controls:
+if 'Gain, Automatic' is set, then the Gain control is volatile and changes constantly. If 'Gain, Automatic' is cleared, then the Gain control is a normal control.
+'Gain, Automatic'및 Gain 컨트롤은 휘발성 컨트롤을 테스트하는 데 사용할 수 있습니다.
+'Gain, Automatic'이 설정되면 Gain 컨트롤이 일시적으로 변동합니다. 'Gain, Automatic'이 해제 된 경우 Gain 컨트롤은 일반 컨트롤입니다.
+ 
+The 'Horizontal Flip' and 'Vertical Flip' controls can be used to flip the image. These combine with the 'Sensor Flipped Horizontally/Vertically' Vivid controls.
+'Horizontal Flip'및 'Vertical Flip'컨트롤을 사용하여 이미지를 뒤집을 수 있습니다. 'Sensor Flipped Horizontally / Vertically'Vivid 컨트롤과 결합됩니다.
+ 
+The 'Alpha Component' control can be used to set the alpha component for formats containing an alpha channel.
+ '알파 구성 요소'컨트롤을 사용하여 알파 채널이 포함 된 형식의 알파 구성 요소를 설정할 수 있습니다.
+ 
+ 
+Section 9.3: User Controls - Audio
+----------------------------------
+ 
+The following controls are specific to video capture and output and radio receivers and transmitters. 
+The 'Volume' and 'Mute' audio controls are typical for such devices to control the volume and mute the audio. They don't actually do anything in the vivid driver.
+ 다음 컨트롤은 비디오 캡처 및 출력과 라디오 수신기 및 송신기에만 적용됩니다.
+ '볼륨'및 '음소거'오디오 제어기는 볼륨을 제어하고 오디오를 음소거 할 수있는 장치에 일반적으로 사용됩니다. 그들은 vivid 드라이버에게서 실제로 아무것도 하지 않습니다.
+ 
+ 
+Section 9.4: Vivid Controls
+---------------------------
+ 
+These vivid custom controls control the image generation, error injection, etc.
+이 생생한 사용자 정의 컨트롤은 이미지 생성, 오류 삽입 등을 제어합니다.
+ 
+ 
+Section 9.4.1: Test Pattern Controls
+------------------------------------
+ 
+The Test Pattern Controls are all specific to video capture.
+테스트 패턴 컨트롤은 모두 비디오 캡처에만 적용됩니다.
+ 
+Test Pattern: selects which test pattern to use. Use the CSC Colorbar for testing colorspace conversions: the colors used in that test pattern map to valid colors in all colorspaces. The colorspace conversion is disabled for the other test patterns.
+Test Pattern (테스트 패턴) : 사용할 테스트 패턴을 선택합니다. CSC Colorbar를 사용하여 색상 공간 변환을 테스트합니다.이 테스트 패턴에 사용 된 색상은 모든 색상 공간에서 유효한 색상에 매핑됩니다. 다른 테스트 패턴에서는 색 공간 변환이 비활성화됩니다.
+ 
+OSD Text Mode: selects whether the text superimposed on the test pattern should be shown, and if so, whether only counters should be displayed or the full text.
+OSD 텍스트 모드 : 테스트 패턴에 겹쳐진 텍스트를 표시할지 여부를 선택하고, 그렇다면 카운터 만 표시할지 또는 전체 텍스트를 표시할지 여부를 선택합니다.
+ 
+Horizontal Movement: selects whether the test pattern should move to the left or right and at what speed.
+Horizontal Movement (수평 이동) : 테스트 패턴을 왼쪽 또는 오른쪽으로 이동할지 또는 어떤 속도로 이동할지 선택합니다.
+ 
+Vertical Movement: does the same for the vertical direction.
+수직 이동 : 수직 방향에 대해서도 동일합니다.
+ 
+Show Border: show a two-pixel wide border at the edge of the actual image, excluding letter or pillarboxing.
+ 테두리 표시 : 문자 또는 필러 박스를 제외하고 실제 이미지의 가장자리에 두 개의 픽셀 너비 경계를 표시합니다.
+ 
+Show Square: show a square in the middle of the image. If the image is displayed with the correct pixel and image aspect ratio corrections, then the width and height of the square on the monitor should be the same.
+사각형 표시 : 이미지 가운데에 사각형을 표시합니다. 이미지가 올바른 픽셀 및 이미지 종횡비 보정으로 표시되면 모니터에서 사각형의 너비와 높이가 동일해야합니다.
+ 
+Insert SAV Code in Image: adds a SAV (Start of Active Video) code to the image.
+    	This can be used to check if such codes in the image are inadvertently interpreted instead of being ignored.
+이미지에 SAV 코드 삽입 : 이미지에 SAV (Start of Active Video) 코드를 추가합니다.
+    이미지의 해당 코드가 무시되는 대신 부주의로 해석되는지 여부를 확인하는 데 사용할 수 있습니다.
+ 
+ 
+Insert EAV Code in Image: does the same for the EAV (End of Active Video) code.
+ 이미지에 EAV 코드 삽입 : EAV (End of Active Video) 코드에도 동일하게 적용됩니다.
+ 
+ 
+Section 9.4.2: Capture Feature Selection Controls		캡처 기능 선택 컨트롤
+-------------------------------------------------
+ 
+These controls are all specific to video capture.
+ 이러한 컨트롤은 모두 비디오 캡처에만 적용됩니다.
+ 
+Sensor Flipped Horizontally: the image is flipped horizontally and the V4L2_IN_ST_HFLIP input status flag is set. This emulates the case where a sensor is for example mounted upside down.
+수평으로 뒤집은 센서 : 이미지가 수평으로 뒤집혔고 V4L2_IN_ST_HFLIP 입력 상태 플래그가 설정되었습니다. 이것은 센서가 예를 들어 거꾸로 설치된 경우를 에뮬레이션합니다.
+ 
+Sensor Flipped Vertically: the image is flipped vertically and the V4L2_IN_ST_VFLIP input status flag is set. This emulates the case where a sensor is for example mounted upside down.
+세로로 뒤집힌 센서 : 이미지가 수직으로 뒤집 혔고 V4L2_IN_ST_VFLIP 입력 상태 플래그가 설정되었습니다. 이것은 센서가 예를 들어 거꾸로 설치된 경우를 에뮬레이션합니다.
+ 
+Standard Aspect Ratio: selects if the image aspect ratio as used for the TV or S-Video input should be 4x3, 16x9 or anamorphic widescreen. This may introduce letterboxing.
+TV 또는 S-Video 입력에 사용되는 이미지 종횡비가 4x3, 16x9 또는 아나모픽 와이드 스크린 이어야 하는지 선택합니다. 이것은 레터박스를 도입 할 수 있습니다.
+ 
+DV Timings Aspect Ratio: selects if the image aspect ratio as used for the HDMI input should be the same as the source width and height ratio, or if it should be 4x3 or 16x9. This may introduce letter or pillarboxing.
+ DV 타이밍 종횡비 : HDMI 입력에 사용되는 이미지 종횡비가 소스 폭 및 높이 비율과 같거나 4x3 또는 16x9 인 경우 선택합니다. 레터박스 나 필러박스가 생길 수 있습니다.
+ 
+Timestamp Source: selects when the timestamp for each buffer is taken.
+ 타임 스탬프 소스 : 각 버퍼의 타임 스탬프를 가져올시기를 선택합니다.
+ 
+Colorspace: selects which colorspace should be used when generating the image.
+    	This only applies if the CSC Colorbar test pattern is selected, otherwise the test pattern will go through unconverted.
+    	This behavior is also what you want, since a 75% Colorbar should really have 75% signal intensity and should not be affected by colorspace conversions.
+ Colorspace : 이미지를 생성 할 때 사용할 색 공간을 선택합니다.
+    이 옵션은 CSC Colorbar 테스트 패턴이 선택된 경우에만 적용됩니다. 그렇지 않으면 테스트 패턴이 변환되지 않습니다.
+    75 %의 Colorbar는 실제로 75 %의 신호 강도를 가져야하고 색상 공간 변환의 영향을받지 않아야하므로 이 동작은 사용자가 원하는 것입니다.
+ 
+    	Changing the colorspace will result in the V4L2_EVENT_SOURCE_CHANGE to be sent since it emulates a detected colorspace change.
+색 공간을 변경하면 V4L2_EVENT_SOURCE_CHANGE가 감지 된 색 공간 변경을 에뮬레이트하므로 전송됩니다.
+ 
+Transfer Function: selects which colorspace transfer function should be used when generating an image. This only applies if the CSC Colorbar test pattern is selected, otherwise the test pattern will go through unconverted.
+    	This behavior is also what you want, since a 75% Colorbar should really have 75% signal intensity and should not be affected by colorspace conversions.
+전달 함수 : 이미지 생성시 사용할 색상 공간 전달 함수를 선택합니다. 이 옵션은 CSC Colorbar 테스트 패턴이 선택된 경우에만 적용됩니다. 그렇지 않으면 테스트 패턴이 변환되지 않습니다.
+    75 %의 Colorbar는 실제로 75 %의 신호 강도를 가져야하고 색상 공간 변환의 영향을받지 않아야하므로 이 동작은 사용자가 원하는 것입니다.
+ 
+    	Changing the transfer function will result in the V4L2_EVENT_SOURCE_CHANGE to be sent since it emulates a detected colorspace change.
+ 전달 함수를 변경하면 V4L2_EVENT_SOURCE_CHANGE가 감지 된 색상 공간 변경을 에뮬레이션하므로 전송됩니다.
+ 
+Y'CbCr Encoding: selects which Y'CbCr encoding should be used when generating a Y'CbCr image. 	This only applies if the format is set to a Y'CbCr format as opposed to an RGB format.
+ Y'CbCr 인코딩 : Y'CbCr 이미지를 생성 할 때 사용해야하는 Y'CbCr 인코딩을 선택합니다. 형식이 RGB 형식이 아닌 Y'CbCr 형식으로 설정된 경우에만 적용됩니다.
+ 
+    	Changing the Y'CbCr encoding will result in the V4L2_EVENT_SOURCE_CHANGE to be sent since it emulates a detected colorspace change.
+  Y'CbCr 인코딩을 변경하면 감지 된 색상 공간 변경을 에뮬레이션하므로 V4L2_EVENT_SOURCE_CHANGE가 전송됩니다.
+ 
+Quantization: selects which quantization should be used for the RGB or Y'CbCr encoding when generating the test pattern.
+ 양자화 : 테스트 패턴을 생성 할 때 RGB 또는 Y'CbCr 인코딩에 사용할 양자화를 선택합니다.
+ 
+    	Changing the quantization will result in the V4L2_EVENT_SOURCE_CHANGE to be sent since it emulates a detected colorspace change.
+ 양자화를 변경하면 V4L2_EVENT_SOURCE_CHANGE가 감지 된 색상 공간 변경을 에뮬레이션하므로 전송됩니다.
+ 
+Limited RGB Range (16-235): selects if the RGB range of the HDMI source should be limited or full range. This combines with the Digital Video 'Rx RGB Quantization Range' control and can be used to test what happens if a source provides you with the wrong quantization range information. See the description of that control for more details.
+ 제한된 RGB 범위 (16-235) : HDMI 소스의 RGB 범위가 제한되거나 전체 범위인지 선택합니다. 이것은 디지털 비디오 'Rx RGB Quantization Range'컨트롤과 결합되어 소스가 잘못된 양자화 범위 정보를 제공 할 경우 어떻게되는지 테스트하는 데 사용할 수 있습니다. 자세한 내용은 해당 컨트롤에 대한 설명을 참조하십시오.
+ 
+Apply Alpha To Red Only: apply the alpha channel as set by the 'Alpha Component' user control to the red color of the test pattern only.
+Alpha To Red 전용 적용 : 'Alpha Component'사용자 정의 컨트롤에 의해 설정된 알파 채널을 테스트 패턴의 붉은 색에만 적용하십시오.
+ 
+Enable Capture Cropping: enables crop support. This control is only present if the ccs_cap_mode module option is set to the default value of -1 and if the no_error_inj module option is set to 0 (the default).
+캡처 자르기 사용 : 자르기 지원을 활성화합니다. 이 제어는 ccs_cap_mode 모듈 옵션이 기본값 -1로 설정되고 no_error_inj 모듈 옵션이 0 (기본값)으로 설정된 경우에만 나타납니다.
+ 
+Enable Capture Composing: enables composing support. This control is only present if the ccs_cap_mode module option is set to the default value of -1 and if the no_error_inj module option is set to 0 (the default).
+ 캡처 컴포징 활성화 : 컴포징 서포트가 가능합니다. 이 제어는 ccs_cap_mode 모듈 옵션이 기본값 -1로 설정되고 no_error_inj 모듈 옵션이 0 (기본값)으로 설정된 경우에만 나타납니다.
+ 
+Enable Capture Scaler: enables support for a scaler (maximum 4 times upscaling 	and downscaling). This control is only present if the ccs_cap_mode module option is set to the default value of -1 and if the no_error_inj module option is set to 0 (the default).
+ Capture Scaler 사용 : 스케일러 (최대 4 배 확대 및 축소)를 지원합니다. 이 제어는 ccs_cap_mode 모듈 옵션이 기본값 -1로 설정되고 no_error_inj 모듈 옵션이 0 (기본값)으로 설정된 경우에만 나타납니다.
+ 
+Maximum EDID Blocks: determines how many EDID blocks the driver supports.
+    	Note that the vivid driver does not actually interpret new EDID data, it just stores it. It allows for up to 256 EDID blocks which is the maximum supported by the standard.
+ 최대 EDID 블록 : 드라이버가 지원하는 EDID 블록 수를 결정합니다.
+    생생한 드라이버는 실제로 새로운 EDID 데이터를 해석하지 않고 저장합니다. 표준에서 지원하는 최대 EDID 블록을 허용합니다.
+ 
+Fill Percentage of Frame: can be used to draw only the top X percent of the image. Since each frame has to be drawn by the driver, this demands a lot of the CPU. For large resolutions this becomes problematic. By drawing only part of the image this CPU load can be reduced.
+ Fill Percentage of Frame : 이미지의 상단 X 퍼센트 만 그리는 데 사용할 수 있습니다. 드라이버가 각 프레임을 그려야하기 때문에 많은 CPU가 필요합니다. 큰 해상도의 경우 문제가됩니다. 이미지의 일부만 그리면이 CPU로드가 줄어들 수 있습니다.
+ 
+Section 9.4.3: Output Feature Selection Controls		출력 기능 선택 컨트롤
+------------------------------------------------
+ 
+These controls are all specific to video output.
+이러한 컨트롤은 모두 비디오 출력에만 적용됩니다.
+ 
+Enable Output Cropping: enables crop support. This control is only present if the ccs_out_mode module option is set to the default value of -1 and if the no_error_inj module option is set to 0 (the default).
+출력 자르기 사용 : 자르기 지원을 사용합니다. 이 제어는 ccs_out_mode 모듈 옵션이 기본값 -1로 설정되고 no_error_inj 모듈 옵션이 0 (기본값)으로 설정된 경우에만 나타납니다.
+ 
+Enable Output Composing: enables composing support. This control is only present if the ccs_out_mode module option is set to the default value of -1 and if the no_error_inj module option is set to 0 (the default).
+출력 합성 사용 : 합성 지원이 가능합니다. 이 제어는 ccs_out_mode 모듈 옵션이 기본값 -1로 설정되고 no_error_inj 모듈 옵션이 0 (기본값)으로 설정된 경우에만 나타납니다.
+ 
+Enable Output Scaler: enables support for a scaler (maximum 4 times upscaling and downscaling). This control is only present if the ccs_out_mode module option is set to the default value of -1 and if the no_error_inj module option is set to 0 (the default).
+ Enable Output Scaler : 스케일러 (최대 4 배 업 스케일링 및 다운 스케일링)를 지원합니다. 이 제어는 ccs_out_mode 모듈 옵션이 기본값 -1로 설정되고 no_error_inj 모듈 옵션이 0 (기본값)으로 설정된 경우에만 나타납니다.
+ 
+Section 9.4.4: Error Injection Controls 	에러 인젝션 제어
+---------------------------------------
+ 
+The following two controls are only valid for video and vbi capture.
+다음 두 컨트롤은 비디오 및 vbi 캡처에만 유효합니다.
+ 
+Standard Signal Mode: selects the behavior of VIDIOC_QUERYSTD: what should it return?
+ 표준 신호 모드 : VIDIOC_QUERYSTD의 동작을 선택합니다 : 무엇을 반환해야합니까?
+ 
+    	Changing this control will result in the V4L2_EVENT_SOURCE_CHANGE to be sent since it emulates a changed input condition (e.g. a cable was plugged in or out).
+ 이 컨트롤을 변경하면 V4L2_EVENT_SOURCE_CHANGE가 변경된 입력 조건 (예 : 케이블을 꽂거나 뺐다)을 에뮬레이션하므로 전송됩니다.
+ 
+Standard: selects the standard that VIDIOC_QUERYSTD should return if the previous control is set to "Selected Standard".
+ Standard : 이전 컨트롤이 "Selected Standard"로 설정된 경우 VIDIOC_QUERYSTD가 반환해야하는 표준을 선택합니다.
+ 
+    	Changing this control will result in the V4L2_EVENT_SOURCE_CHANGE to be sent since it emulates a changed input standard.
+ 이 컨트롤을 변경하면 변경된 입력 표준을 에뮬레이션하므로 V4L2_EVENT_SOURCE_CHANGE가 전송됩니다.
+ 
+The following two controls are only valid for video capture.
+ 다음 두 컨트롤은 비디오 캡처에만 유효합니다.
+ 
+DV Timings Signal Mode: selects the behavior of VIDIOC_QUERY_DV_TIMINGS: what should it return?
+ DV Timings 신호 모드 : VIDIOC_QUERY_DV_TIMINGS의 동작을 선택합니다 : 무엇을 반환해야합니까?
+ 
+ 
+    	Changing this control will result in the V4L2_EVENT_SOURCE_CHANGE to be sent since it emulates a changed input condition (e.g. a cable was plugged in or out).
+ 이 컨트롤을 변경하면 V4L2_EVENT_SOURCE_CHANGE가 변경된 입력 조건 (예 : 케이블을 꽂거나 뺐다)을 에뮬레이션하므로 전송됩니다.
+ 
+DV Timings: selects the timings the VIDIOC_QUERY_DV_TIMINGS should return if the previous control is set to "Selected DV Timings".
+ DV Timings : 이전 컨트롤이 "Selected DV Timings"로 설정된 경우 VIDIOC_QUERY_DV_TIMINGS가 반환해야하는 타이밍을 선택합니다.
+ 
+    	Changing this control will result in the V4L2_EVENT_SOURCE_CHANGE to be sent since it emulates changed input timings.
+ 이 컨트롤을 변경하면 변경된 입력 타이밍을 에뮬레이션하므로 V4L2_EVENT_SOURCE_CHANGE가 전송됩니다.
+ 
+The following controls are only present if the no_error_inj module option is set to 0 (the default). These controls are valid for video and vbi capture and output streams and for the SDR capture device except for the Disconnect control which is valid for all devices.
+ 다음 제어는 no_error_inj 모듈 옵션이 0 (기본값)으로 설정된 경우에만 나타납니다. 이러한 컨트롤은 모든 장치에 유효한 Disconnect 컨트롤을 제외하고 비디오 및 vbi 캡처 및 출력 스트림 및 SDR 캡처 장치에 유효합니다.
+ 
+Wrap Sequence Number: test what happens when you wrap the sequence number in struct v4l2_buffer around.
+ 랩 시퀀스 번호 : struct v4l2_buffer에서 시퀀스 번호를 래핑 할 때 일어나는 일을 테스트합니다.
+ 
+Wrap Timestamp: test what happens when you wrap the timestamp in struct v4l2_buffer around.
+ Wrap Timestamp : struct v4l2_buffer에서 타임 스탬프를 래핑 할 때 일어나는 일을 테스트합니다.
+ 
+Percentage of Dropped Buffers: sets the percentage of buffers that are never returned by the driver (i.e., they are dropped).
+ 드롭 된 버퍼의 백분율 : 드라이버가 결코 반환하지 않는 버퍼의 백분율을 설정합니다 (드롭됩니다).
+ 
+Disconnect: emulates a USB disconnect. The device will act as if it has been disconnected. Only after all open filehandles to the device node have been closed will the device become 'connected' again.
+ 연결 끊기 : USB 연결 끊기를 에뮬레이션합니다. 장치는 연결이 끊어진 것처럼 작동합니다. 장치 노드에 열려있는 파일 핸들이 모두 닫힌 후에 만 ​​장치가 다시 '연결'됩니다.
+ 
+Inject V4L2_BUF_FLAG_ERROR: when pressed, the next frame returned by the driver will have the error flag set (i.e. the frame is marked corrupt).
+V4L2_BUF_FLAG_ERROR 삽입 : 드라이버가 반환 한 다음 프레임에 오류 플래그가 설정됩니다 (즉, 프레임이 손상됨으로 표시됨).
+ 
+Inject VIDIOC_REQBUFS Error: when pressed, the next REQBUFS or CREATE_BUFS ioctl call will fail with an error. To be precise: the videobuf2 queue_setup() op will return -EINVAL.
+ VIDIOC_REQBUFS 오류 주입 : 다음 REQBUFS 또는 CREATE_BUFS ioctl 호출을 누르면 오류가 발생하여 실패합니다. 정확하게 말하면, videobuf2 queue_setup () op는 -EINVAL을 반환합니다.
+ 
+Inject VIDIOC_QBUF Error: when pressed, the next VIDIOC_QBUF or VIDIOC_PREPARE_BUFFER ioctl call will fail with an error. To be precise: the videobuf2 buf_prepare() op will return -EINVAL.
+ VIDIOC_QBUF 오류 주입 : 누르면 VIDIOC_QBUF 또는 VIDIOC_PREPARE_BUFFER ioctl 호출이 실패하고 오류가 발생합니다. 정확히 말하면, videobuf2 buf_prepare () 연산은 -EINVAL을 반환합니다.
+ 
+Inject VIDIOC_STREAMON Error: when pressed, the next VIDIOC_STREAMON ioctl call will fail with an error. To be precise: the videobuf2 start_streaming() op will return -EINVAL.
+ VIDIOC_STREAMON 오류 : 다음 VIDIOC_STREAMON ioctl 호출을 누르면 오류가 발생하여 오류가 발생합니다. 정확히 말하면, videobuf2 start_streaming () 연산은 -EINVAL을 반환합니다.
+ 
+Inject Fatal Streaming Error: when pressed, the streaming core will be marked as having suffered a fatal error, the only way to recover from that is to stop streaming. To be precise: the videobuf2  vb2_queue_error() function is called.
+ 치명적인 스트리밍 오류 주입 : 스트리밍 코어가 치명적인 오류를 겪은 것으로 표시됩니다. 스트리밍 코어를 복구하려면 스트리밍을 중지해야합니다. 정확하게 말하면 : videobuf2 vb2_queue_error () 함수가 호출됩니다.
+ 
+ 
+Section 9.4.5: VBI Raw Capture Controls
+---------------------------------------
+ 
+Interlaced VBI Format: if set, then the raw VBI data will be interlaced instead of providing it grouped by field.
+ 인터레이스 된 VBI 포맷 : 설정된 경우, 원시 VBI 데이터는 필드별로 그룹화하지 않고 인터레이스됩니다.
+ 
+Section 9.5: Digital Video Controls
+-----------------------------------
+ 
+Rx RGB Quantization Range: sets the RGB quantization detection of the HDMI input. This combines with the Vivid 'Limited RGB Range (16-235)' control and can be used to test what happens if a source provides you with the wrong quantization range information. This can be tested by selecting an HDMI input, setting this control to Full or Limited range and selecting the opposite in the 'Limited RGB Range (16-235)' control. The effect is easy to see if the 'Gray Ramp' test pattern is selected.
+ Rx RGB 양자화 범위 : HDMI 입력의 RGB 양자화 감지를 설정합니다. Vivid 'Limited RGB Range (16-235)'컨트롤과 결합되어 소스가 잘못된 양자화 범위 정보를 제공하면 어떻게 될지 테스트 할 수 있습니다. HDMI 입력을 선택하고이 컨트롤을 전체 또는 제한 범위로 설정하고 '제한된 RGB 범위 (16-235)'컨트롤에서 반대를 선택하여 테스트 할 수 있습니다. 이 효과는 '회색 램프'테스트 패턴을 선택하면 쉽게 볼 수 있습니다.
+ 
+Tx RGB Quantization Range: sets the RGB quantization detection of the HDMI output. It is currently not used for anything in vivid, but most HDMI transmitters would typically have this control.
+ Tx RGB 양자화 범위 : HDMI 출력의 RGB 양자화 감지를 설정합니다. 현재 생생한 것으로는 사용되지 않지만 대부분의 HDMI 송신기는 일반적으로이 컨트롤을 사용합니다.
+ 
+Transmit Mode: sets the transmit mode of the HDMI output to HDMI or DVI-D. This affects the reported colorspace since DVI_D outputs will always use sRGB.
+ Transmit Mode : HDMI 출력의 전송 모드를 HDMI 또는 DVI-D로 설정합니다. DVI_D 출력은 항상 sRGB를 사용하므로보고 된 색상 공간에 영향을줍니다.
+ 
+Section 9.6: FM Radio Receiver Controls
+---------------------------------------
+ 
+RDS Reception: set if the RDS receiver should be enabled.
+RDS 수신 : RDS 수신자를 사용하도록 설정해야합니다.
+ 
+RDS Program Type:
+RDS PS Name:
+RDS Radio Text:
+RDS Traffic Announcement:
+RDS Traffic Program:
+RDS Music: these are all read-only controls. If RDS Rx I/O Mode is set to "Block I/O", then they are inactive as well. If RDS Rx I/O Mode is set to "Controls", then these controls report the received RDS data. Note that the vivid implementation of this is pretty basic: they are only updated when you set a new frequency or when you get the tuner status (VIDIOC_G_TUNER).
+ RDS Music : 이들은 모두 읽기 전용 컨트롤입니다. RDS Rx I / O 모드가 "I / O 차단"으로 설정된 경우에도 비활성 상태입니다. RDS Rx I / O Mode가 "Controls"로 설정된 경우이 컨트롤은 수신 된 RDS 데이터를보고합니다. 생생한 구현은 매우 기본적인 것인데, 새로운 주파수를 설정하거나 튜너 상태 (VIDIOC_G_TUNER)를 얻었을 때만 업데이트됩니다.
+ 
+Radio HW Seek Mode: can be one of "Bounded", "Wrap Around" or "Both". This determines if VIDIOC_S_HW_FREQ_SEEK will be bounded by the frequency range or wrap-around or if it is selectable by the user.
+ Radio HW Seek Mode : "Bounded", "Wrap Around"또는 "Both"중 하나 일 수 있습니다. 이는 VIDIOC_S_HW_FREQ_SEEK가 주파수 범위 또는 랩 어라운드에 의해 경계 지어 지거나 사용자가 선택할 수 있는지 여부를 결정합니다.
+ 
+Radio Programmable HW Seek: if set, then the user can provide the lower and upper bound of the HW Seek. Otherwise the frequency range boundaries will be used.
+ 라디오 프로그램 가능한 HW 탐색 : 설정된 경우 사용자는 HW 탐색의 하한 및 상한을 제공 할 수 있습니다. 그렇지 않으면 주파수 범위 경계가 사용됩니다.
+ 
+Generate RBDS Instead of RDS: if set, then generate RBDS (the US variant of RDS) data instead of RDS (European-style RDS). This affects only the PICODE and PTY codes.
+ RDS 대신 RBDS 생성 : RDS (유럽 스타일 RDS) 대신 RBDS (RDS의 미국 변형) 데이터를 생성합니다. 이것은 PICODE 및 PTY 코드에만 영향을줍니다.
+ 
+RDS Rx I/O Mode: this can be "Block I/O" where the RDS blocks have to be read() by the application, or "Controls" where the RDS data is provided by the RDS controls mentioned above.
+ RDS Rx I / O 모드 : 응용 프로그램에서 RDS 블록을 읽어야하는 "블록 I / O"또는 위에서 언급 한 RDS 컨트롤에서 RDS 데이터를 제공하는 "컨트롤"일 수 있습니다.
+ 
+Section 9.7: FM Radio Modulator Controls
+----------------------------------------
+ 
+RDS Program ID:
+RDS Program Type:
+RDS PS Name:
+RDS Radio Text:
+RDS Stereo:
+RDS Artificial Head:
+RDS Compressed:
+RDS Dymanic PTY:
+RDS Traffic Announcement:
+RDS Traffic Program:
+RDS Music: these are all controls that set the RDS data that is transmitted by 	the FM modulator.
+FM 변조기에서 전송하는 RDS 데이터를 설정하는 모든 컨트롤입니다.
+ 
+RDS Tx I/O Mode: this can be "Block I/O" where the application has to use write() to pass the RDS blocks to the driver, or "Controls" where the RDS data is provided by the RDS controls mentioned above.
+RDS Tx I / O 모드 : 응용 프로그램이 RDS 블록을 드라이버에 전달하기 위해 write ()를 사용하거나 "RDS"데이터가 위에 언급 된 RDS 컨트롤에 의해 제공되는 "컨트롤"을 사용해야하는 "I / O 차단"이 될 수 있습니다 .
+ 
+ 
+Section 10: Video, VBI and RDS Looping		비디오, VBI 및 RDS 루핑
+--------------------------------------
+ 
+The vivid driver supports looping of video output to video input, VBI output to VBI input and RDS output to RDS input. For video/VBI looping this emulates as if a cable was hooked up between the output and input connector. So video and VBI looping is only supported between S-Video and HDMI inputs and outputs.
+VBI is only valid for S-Video as it makes no sense for HDMI.
+생생한 드라이버는 비디오 입력에 대한 비디오 출력, VBI 입력에 대한 VBI 출력 및 RDS 입력에 대한 RDS 출력의 루핑을 지원합니다. 비디오 / VBI 루핑의 경우 이것은 출력 커넥터와 입력 커넥터 사이에 케이블이 연결되어있는 것처럼 에뮬레이션됩니다. 따라서 비디오 및 VBI 루핑은 S-Video와 HDMI 입력 및 출력 사이에서만 지원됩니다.
+VBI는 S-Video에만 유효합니다. 왜냐하면 HDMI에 대해 아무런 의미가 없기 때문입니다.
+ 
+ 
+Since radio is wireless this looping always happens if the radio receiver frequency is close to the radio transmitter frequency. In that case the radio transmitter will 'override' the emulated radio stations.
+라디오가 무선이기 때문에 무선 수신기 주파수가 무선 송신기 주파수에 근접하면이 루핑이 항상 발생합니다. 이 경우 무선 송신기는 에뮬레이션 된 라디오 방송국을 '무시'합니다.
+ 
+Looping is currently supported only between devices created by the same vivid driver instance.
+ 루핑은 현재 동일한 생생한 드라이버 인스턴스로 생성 된 장치 사이에서만 지원됩니다.
+ 
+ 
+Section 10.1: Video and Sliced VBI looping
+------------------------------------------
+ 
+The way to enable video/VBI looping is currently fairly crude. A 'Loop Video' control is available in the "Vivid" control class of the video capture and VBI capture devices. When checked the video looping will be enabled. Once enabled any video S-Video or HDMI input will show a static test pattern until the video output has started. At that time the video output will be looped to the video input provided that:
+비디오 / VBI 루핑을 활성화하는 방법은 현재 매우 미숙 한 방법입니다. 'Loop Video'컨트롤은 비디오 캡처 및 VBI 캡처 장치의 "Vivid"컨트롤 클래스에서 사용할 수 있습니다. 선택하면 비디오 루핑이 활성화됩니다. 활성화 된 비디오 S-Video 또는 HDMI 입력은 비디오 출력이 시작될 때까지 정적 테스트 패턴을 표시합니다. 이 때 비디오 출력은 다음을 제공하는 비디오 입력으로 루프됩니다.
+ 
+- the input type matches the output type. So the HDMI input cannot receive video from the S-Video output.
+- 입력 유형이 출력 유형과 일치합니다. 따라서 HDMI 입력은 S- 비디오 출력에서 ​​비디오를 수신 할 수 없습니다.
+ 
+- the video resolution of the video input must match that of the video output.
+  So it is not possible to loop a 50 Hz (720x576) S-Video output to a 60 Hz (720x480) S-Video input, or a 720p60 HDMI output to a 1080p30 input.
+- 비디오 입력의 비디오 해상도가 비디오 출력의 비디오 해상도와 일치해야합니다.
+  따라서 50Hz (720x576) S- 비디오 출력을 60Hz (720x480) S- 비디오 입력에 연결하거나 720p60 HDMI 출력을 1080p30 입력에 연결할 수 없습니다.
+ 
+- the pixel formats must be identical on both sides. Otherwise the driver would have to do pixel format conversion as well, and that's taking things too far.
+- 픽셀 형식은 양면에서 동일해야합니다. 그렇지 않으면 드라이버가 픽셀 형식 변환도 해야 할 것이고, 너무 많은 일을하고 있습니다.
+ 
+- the field settings must be identical on both sides. Same reason as above:
+  requiring the driver to convert from one field format to another complicated matters too much. This also prohibits capturing with 'Field Top' or 'Field Bottom' when the output video is set to 'Field Alternate'. This combination, while legal, became too complicated to support. Both sides have to be 'Field Alternate' for this to work. Also note that for this specific case the  sequence and field counting in struct v4l2_buffer on the capture side may not be 100% accurate.
+ - 필드 설정이 양쪽에서 동일해야합니다. 위와 같은 이유 :
+  운전자가 하나의 필드 형식을 다른 복잡한 형식으로 너무 많이 변환해야합니다. 이렇게하면 출력 비디오가 '필드 대체'로 설정된 경우 '필드 상단'또는 '필드 하단'으로 캡쳐하는 것도 금지됩니다. 이러한 합병은 합법적 이었지만 너무 복잡하여 지원할 수 없었습니다. 이 작업을하려면 양측이 '대체 필드'여야합니다. 또한이 특정 경우에 대해 캡처 측의 struct v4l2_buffer에서 시퀀스 및 필드 카운팅이 100 % 정확하지 않을 수 있습니다.
+ 
+- field settings V4L2_FIELD_SEQ_TB/BT are not supported. While it is possible to implement this, it would mean a lot of work to get this right. Since these field values are rarely used the decision was made not to implement this for now.
+ - 필드 설정 V4L2_FIELD_SEQ_TB / BT는 지원되지 않습니다. 이것을 구현하는 것이 가능하지만,이 권리를 얻으려면 많은 노력이 필요합니다. 이 필드 값은 거의 사용되지 않으므로 지금은 구현하지 않기로 결정했습니다.
+ 
+- on the input side the "Standard Signal Mode" for the S-Video input or the "DV Timings Signal Mode" for the HDMI input should be configured so that a valid signal is passed to the video input.
+ - 입력 측에서 S- 비디오 입력의 "표준 신호 모드"또는 HDMI 입력의 "DV 타이밍 신호 모드"는 유효한 신호가 비디오 입력으로 전달되도록 구성되어야합니다.
+ 
+The framerates do not have to match, although this might change in the future.
+ 앞으로 변경 될 수 있지만 프레임 속도는 일치 할 필요가 없습니다.
+ 
+By default you will see the OSD text superimposed on top of the looped video.
+This can be turned off by changing the "OSD Text Mode" control of the video capture device.
+ 기본적으로 루프 된 비디오 상단에 OSD 텍스트가 겹쳐 표시됩니다.
+이것은 비디오 캡처 장치의 "OSD 텍스트 모드"컨트롤을 변경하여 해제 할 수 있습니다.
+ 
+For VBI looping to work all of the above must be valid and in addition the vbi output must be configured for sliced VBI. The VBI capture side can be configured for either raw or sliced VBI. Note that at the moment only CC/XDS (60 Hz formats) and WSS (50 Hz formats) VBI data is looped. Teletext VBI data is not looped.
+VBI 루핑이 작동하려면 위의 모든 사항이 유효해야하며 VBI 출력은 분리 된 VBI에 맞게 구성되어야합니다. VBI 캡처 측면은 원시 또는 슬라이스 VBI에 대해 구성 할 수 있습니다. 현재 CC / XDS (60Hz 포맷) 및 WSS (50Hz 포맷) VBI 데이터 만 반복됩니다. 텔레 텍스트 VBI 데이터는 반복되지 않습니다.
+ 
+ 
+Section 10.2: Radio & RDS Looping		라디오 및 RDS 루핑
+---------------------------------
+ 
+As mentioned in section 6 the radio receiver emulates stations are regular frequency intervals. Depending on the frequency of the radio receiver a signal strength value is calculated (this is returned by VIDIOC_G_TUNER).
+However, it will also look at the frequency set by the radio transmitter and if that results in a higher signal strength than the settings of the radio transmitter will be used as if it was a valid station. This also includes the RDS data (if any) that the transmitter 'transmits'. This is received faithfully on the receiver side. Note that when the driver is loaded the frequencies of the radio receiver and transmitter are not identical, so initially no looping takes place.
+ 섹션 6에서 언급했듯이 라디오 수신기는 규칙적인 주파수 간격을 에뮬레이션합니다. 라디오 수신기의 주파수에 따라 신호 강도 값이 계산됩니다 (VIDIOC_G_TUNER에 의해 반환 됨).
+그러나 라디오 송신기가 설정 한 주파수를보고 해당 송신기가 유효한 스테이션 인 것처럼 라디오 송신기의 설정보다 높은 신호 강도를 발생시키는 지 확인합니다. 여기에는 송신기가 전송하는 RDS 데이터 (있는 경우)도 포함됩니다. 이는 수신기 측에서 충실하게 수신됩니다. 드라이버가로드 될 때 무선 수신기와 송신기의 주파수는 동일하지 않으므로 초기에는 루핑이 발생하지 않습니다.
+ 
+ 
+Section 11: Cropping, Composing, Scaling
+----------------------------------------
+ 
+This driver supports cropping, composing and scaling in any combination. Normally which features are supported can be selected through the Vivid controls, but it is also possible to hardcode it when the module is loaded through the ccs_cap_mode and ccs_out_mode module options. See section 1 on the details of these module options.
+ 이 드라이버는 자르기, 구성 및 조합을 지원합니다. 일반적으로 지원되는 기능은 Vivid 컨트롤을 통해 선택할 수 있지만 모듈이 ccs_cap_mode 및 ccs_out_mode 모듈 옵션을 통해로드 될 때 하드 코드 할 수도 있습니다. 이 모듈 옵션에 대한 자세한 내용은 섹션 1을 참조하십시오.
+ 
+This allows you to test your application for all these variations.
+ 이렇게하면 모든 유사 콘텐츠에 대해 애플리케이션을 테스트 할 수 있습니다.
+ 
+Note that the webcam input never supports cropping, composing or scaling. That only applies to the TV/S-Video/HDMI inputs and outputs. The reason is that webcams, including this virtual implementation, normally use VIDIOC_ENUM_FRAMESIZES to list a set of discrete framesizes that it supports.
+And that does not combine with cropping, composing or scaling. This is primarily a limitation of the V4L2 API which is carefully reproduced here.
+웹캠 입력은 자르기, 구성 또는 크기 조정을 지원하지 않습니다. 이는 TV / S-Video / HDMI 입력 및 출력에만 적용됩니다. 그 이유는이 가상 구현을 포함한 웹캠은 일반적으로 VIDIOC_ENUM_FRAMESIZES를 사용하여 지원하는 개별 프레임 크기 세트를 나열하기 때문입니다.
+그리고 자르기, 작곡 또는 스케일링과 결합되지 않습니다. 이는 주로 여기에서 신중하게 다루어지는 V4L2 API의 제한 사항입니다.
+ 
+The minimum and maximum resolutions that the scaler can achieve are 16x16 and (4096 * 4) x (2160 x 4), but it can only scale up or down by a factor of 4 or less. So for a source resolution of 1280x720 the minimum the scaler can do is 320x180 and the maximum is 5120x2880. You can play around with this using the qv4l2 test tool and you will see these dependencies.
+스케일러가 달성 할 수있는 최소 및 최대 해상도는 16x16 및 (4096 * 4) x (2160x4)이지만 4 배 이하로 확대 또는 축소 할 수 있습니다. 따라서 소스 해상도가 1280x720 인 경우 스케일러의 최소 크기는 320x180이고 최대 크기는 5120x2880입니다. qv4l2 테스트 도구를 사용하여이 문제를 해결하면 이러한 종속성이 표시됩니다.
+ 
+This driver also supports larger 'bytesperline' settings, something that VIDIOC_S_FMT allows but that few drivers implement.
+이 드라이버는 또한 더 큰 'bytesperline'설정을 지원합니다. VIDIOC_S_FMT가 허용하지만 드라이버는 거의 구현되지 않습니다.
+ 
+The scaler is a simple scaler that uses the Coarse Bresenham algorithm. It's designed for speed and simplicity, not quality.
+ 스케일러는 거친 Bresenham 알고리즘을 사용하는 간단한 스케일러입니다. 속도가 아닌 단순성을 위해 설계된 것이지 품질은 아닙니다.
+ 
+If the combination of crop, compose and scaling allows it, then it is possible to change crop and compose rectangles on the fly.
+작물, 조합 및 크기 조정을 통해 조합이 가능하면 작도를 변경하고 직사각형을 즉시 작성할 수 있습니다.
+ 
+ 
+Section 12: Formats
+-------------------
+ 
+The driver supports all the regular packed and planar 4:4:4, 4:2:2 and 4:2:0 YUYV formats, 8, 16, 24 and 32 RGB packed formats and various multiplanar formats.
+ 이 드라이버는 모든 일반 압축 및 평면 4 : 4 : 4, 4 : 2 : 2 및 4 : 2 : 0 YUYV 형식, 8, 16, 24 및 32 RGB 압축 형식과 다양한 다중 평면 형식을 지원합니다.
+ 
+The alpha component can be set through the 'Alpha Component' User control for those formats that support it. If the 'Apply Alpha To Red Only' control is set, then the alpha component is only used for the color red and set to 0 otherwise.
+알파 컴포넌트는 알파 컴포넌트를 지원하는 포맷을 위해 '알파 컴포넌트'사용자 컨트롤을 통해 설정 될 수 있습니다. 'Alpha To Red Only'컨트롤이 설정된 경우 알파 컴포넌트는 빨간색으로 만 사용되며 그렇지 않으면 0으로 설정됩니다.
+ 
+The driver has to be configured to support the multiplanar formats. By default the driver instances are single-planar. This can be changed by setting the multiplanar module option, see section 1 for more details on that option.
+드라이버는 다중 평면 형식을 지원하도록 구성되어야합니다. 기본적으로 드라이버 인스턴스는 단일 평면입니다. 이는 다중 평면 모듈 옵션을 설정하여 변경할 수 있습니다. 자세한 내용은 섹션 1을 참조하십시오.
+ 
+If the driver instance is using the multiplanar formats/API, then the first single planar format (YUYV) and the multiplanar NV16M and NV61M formats the will have a plane that has a non-zero data_offset of 128 bytes. It is rare for data_offset to be non-zero, so this is a useful feature for testing applications.
+드라이버 인스턴스가 다중 평면 형식 / API를 사용하는 경우 첫 번째 단일 평면 형식 (YUYV) 및 다중 평면 NV16M 및 NV61M 형식은 128 바이트의 non-zero data_offset을 갖는 평면을 갖습니다. data_offset이 0이 아닌 경우는 거의 없으므로 이것은 응용 프로그램을 테스트 할 때 유용한 기능입니다.
+ 
+Video output will also honor any data_offset that the application set.
+ 비디오 출력은 응용 프로그램이 설정 한 모든 data_offset에도 적용됩니다.
+ 
+Section 13: Capture Overlay
+---------------------------
+ 
+Note: capture overlay support is implemented primarily to test the existing V4L2 capture overlay API. In practice few if any GPUs support such overlays anymore, and neither are they generally needed anymore since modern hardware is so much more capable. By setting flag 0x10000 in the node_types module option the vivid driver will create a simple framebuffer device that can be  used for testing this API. Whether this API should be used for new drivers is questionable.
+ 참고 : 캡처 오버레이 지원은 주로 기존 V4L2 캡처 오버레이 API를 테스트하기 위해 구현됩니다. 실제로 GPU가 그러한 오버레이를 더 이상 지원하지 않는다면 더 이상 필요하지 않으며 현대 하드웨어가 훨씬 더 많은 기능을 갖추고 있기 때문에 일반적으로 더 이상 필요하지 않습니다. vivid 드라이버는 node_types 모듈 옵션에 플래그 0x10000을 설정하여이 API를 테스트하는 데 사용할 수있는 간단한 프레임 버퍼 장치를 만듭니다. 이 API가 새로운 드라이버에 사용되어야하는지 여부는 의문의 여지가 있습니다.
+ 
+This driver has support for a destructive capture overlay with bitmap clipping and list clipping (up to 16 rectangles) capabilities. Overlays are not supported for multiplanar formats. It also honors the struct v4l2_window field setting: if it is set to FIELD_TOP or FIELD_BOTTOM and the capture setting is FIELD_ALTERNATE, then only the top or bottom fields will be copied to the overlay.
+ 이 드라이버는 비트 맵 클리핑 및 목록 클리핑 (최대 16 개의 사각형) 기능을 사용하여 파괴적인 캡처 오버레이를 지원합니다. 다중 평면 형식에서는 오버레이가 지원되지 않습니다. 또한 구조체 v4l2_window 필드 설정을 준수합니다 : FIELD_TOP 또는 FIELD_BOTTOM으로 설정되고 캡처 설정이 FIELD_ALTERNATE 인 경우 상단 또는 하단 필드 만 오버레이에 복사됩니다.
+ 
+The overlay only works if you are also capturing at that same time. This is a vivid limitation since it copies from a buffer to the overlay instead of filling the overlay directly. And if you are not capturing, then no buffers are available to fill.
+ 오버레이는 동시에 캡처하는 경우에만 작동합니다. 이는 오버레이를 직접 채우지 않고 버퍼에서 오버레이로 복사하기 때문에 생생한 제한 사항입니다. 캡처하지 않으면 버퍼를 사용할 수 없습니다.
+ 
+In addition, the pixelformat of the capture format and that of the framebuffer must be the same for the overlay to work. Otherwise VIDIOC_OVERLAY will return an error.
+또한 캡처 포맷의 픽셀 포맷과 프레임 버퍼의 픽셀 포맷이 동일해야 오버레이가 작동합니다. 그렇지 않으면 VIDIOC_OVERLAY가 오류를 반환합니다.
+ 
+In order to really see what it going on you will need to create two vivid instances: the first with a framebuffer enabled. You configure the capture overlay of the second instance to use the framebuffer of the first, then you start capturing in the second instance. For the first instance you setup the output overlay for the video output, turn on video looping and capture to see the blended framebuffer overlay that's being written to by the second instance. This setup would require the following commands:
+ 진행 상황을 실제로 확인하려면 두 가지 생생한 인스턴스를 만들어야합니다. 첫 번째는 프레임 버퍼가 활성화 된 것입니다. 두 번째 인스턴스의 캡처 오버레이를 구성하여 첫 번째 프레임 버퍼를 사용하고 두 번째 인스턴스에서 캡처를 시작합니다. 첫 번째 인스턴스의 경우 비디오 출력에 대한 출력 오버레이를 설정하고 비디오 루핑을 켜고 캡처하여 두 번째 인스턴스에서 작성한 혼합 된 프레임 버퍼 오버레이를 확인합니다. 이 설정에는 다음 명령이 필요합니다.
+ 
+    	$ sudo modprobe vivid n_devs=2 node_types=0x10101,0x1
+    	$ v4l2-ctl -d1 --find-fb
+    	/dev/fb1 is the framebuffer associated with base address 0x12800000
+    	$ sudo v4l2-ctl -d2 --set-fbuf fb=1
+    	$ v4l2-ctl -d1 --set-fbuf fb=1
+    	$ v4l2-ctl -d0 --set-fmt-video=pixelformat='AR15'
+    	$ v4l2-ctl -d1 --set-fmt-video-out=pixelformat='AR15'
+    	$ v4l2-ctl -d2 --set-fmt-video=pixelformat='AR15'
+    	$ v4l2-ctl -d0 -i2
+    	$ v4l2-ctl -d2 -i2
+    	$ v4l2-ctl -d2 -c horizontal_movement=4
+    	$ v4l2-ctl -d1 --overlay=1
+    	$ v4l2-ctl -d1 -c loop_video=1
+    	$ v4l2-ctl -d2 --stream-mmap --overlay=1
+ 
+And from another console:
+ 
+    	$ v4l2-ctl -d1 --stream-out-mmap
+ 
+And yet another console:
+ 
+    	$ qv4l2
+ 
+and start streaming.
+ 
+As you can see, this is not for the faint of heart...
+ 
+ 
+Section 14: Output Overlay
+--------------------------
+ 
+Note: output overlays are primarily implemented in order to test the existing V4L2 output overlay API. Whether this API should be used for new drivers is questionable.
+ 참고 : 출력 오버레이는 주로 기존 V4L2 출력 오버레이 API를 테스트하기 위해 구현됩니다. 이 API가 새로운 드라이버에 사용되어야하는지 여부는 의문의 여지가 있습니다.
+ 
+This driver has support for an output overlay and is capable of:
+ 이 드라이버는 출력 오버레이를 지원하며 다음을 수행 할 수 있습니다.
+ 
+    	- bitmap clipping,
+    	- list clipping (up to 16 rectangles)
+    	- chromakey
+    	- source chromakey
+    	- global alpha
+    	- local alpha
+    	- local inverse alpha
+    - 비트 맵 클리핑,
+    - 목록 클리핑 (최대 16 개의 직사각형)
+    - 크로 마키
+    - 소스 크로 마키
+    - 전역 알파
+    - 로컬 알파
+    - 국소 역 알파
+ 
+Output overlays are not supported for multiplanar formats. In addition, the pixelformat of the capture format and that of the framebuffer must be the same for the overlay to work. Otherwise VIDIOC_OVERLAY will return an error.
+다중 출력 형식에서는 출력 오버레이가 지원되지 않습니다. 또한 캡처 포맷의 픽셀 포맷과 프레임 버퍼의 픽셀 포맷이 동일해야 오버레이가 작동합니다. 그렇지 않으면 VIDIOC_OVERLAY가 오류를 반환합니다.
+ 
+Output overlays only work if the driver has been configured to create a framebuffer by setting flag 0x10000 in the node_types module option. The created framebuffer has a size of 720x576 and supports ARGB 1:5:5:5 and RGB 5:6:5.
+출력 오버레이는 node_types 모듈 옵션에 플래그 0x10000을 설정하여 프레임 버퍼를 만들도록 드라이버를 구성한 경우에만 작동합니다. 생성 된 프레임 버퍼 크기는 720x576이며 ARGB 1 : 5 : 5 : 5 및 RGB 5 : 6 : 5를 지원합니다.
+ 
+In order to see the effects of the various clipping, chromakeying or alpha processing capabilities you need to turn on video looping and see the results on the capture side. The use of the clipping, chromakeying or alpha processing capabilities will slow down the video loop considerably as a lot of checks have to be done per pixel.
+ 다양한 클리핑, 크로 마키 또는 알파 처리 기능의 효과를 보려면 비디오 루핑을 켜고 캡처 측에서 결과를 확인해야합니다. 클리핑, 크로 마키 또는 알파 처리 기능을 사용하면 픽셀 당 많은 검사가 필요하기 때문에 비디오 루프가 상당히 느려집니다.
+ 
+Section 15: Some Future Improvements	향후 개선 사항
+------------------------------------
+ 
+Just as a reminder and in no particular order:		특별한 순서없이 알림으로서 :
+ 
+- Add a virtual alsa driver to test audio
+- Add virtual sub-devices and media controller support
+- Some support for testing compressed video
+- Add support to loop raw VBI output to raw VBI input
+- Add support to loop teletext sliced VBI output to VBI input
+- Fix sequence/field numbering when looping of video with alternate fields
+- Add support for V4L2_CID_BG_COLOR for video outputs
+- Add ARGB888 overlay support: better testing of the alpha channel
+- Add custom DV timings support
+- Add support for V4L2_DV_FL_REDUCED_FPS
+- Improve pixel aspect support in the tpg code by passing a real v4l2_fract
+- Use per-queue locks and/or per-device locks to improve throughput
+- Add support to loop from a specific output to a specific input across vivid instances
+- The SDR radio should use the same 'frequencies' for stations as the normal radio receiver, and give back noise if the frequency doesn't match up with a station frequency
+- Make a thread for the RDS generation, that would help in particular for the "Controls" RDS Rx I/O Mode as the read-only RDS controls could be updated in real-time.
+ - 오디오 테스트를위한 가상 alsa 드라이버 추가
+- 가상 하위 장치 및 미디어 컨트롤러 지원 추가
+- 압축 비디오 테스트에 대한 일부 지원
+- 원시 VBI 출력을 원시 VBI 입력으로 루프하기위한 지원 추가
+- VBI 출력을 VBI 입력에 루프 된 텔레 텍스트에 추가합니다.
+- 대체 필드로 비디오를 반복 할 때 시퀀스 / 필드 번호 매기기 수정
+- 비디오 출력을위한 V4L2_CID_BG_COLOR에 대한 지원 추가
+- ARGB888 오버레이 지원 추가 : 알파 채널 테스트 개선
+- 사용자 정의 DV 타이밍 지원 추가
+- V4L2_DV_FL_REDUCED_FPS 지원 추가
+- 실제 v4l2_fract를 전달하여 tpg 코드의 픽셀 aspect 지원을 향상시킵니다.
+- 큐 단위 잠금 및 / 또는 장치 별 잠금을 사용하여 처리량 향상
+- 생생한 인스턴스를 통해 특정 출력에서 ​​특정 입력으로 루프하기위한 지원 추가
+- SDR 라디오는 일반 라디오 수신기와 동일한 '주파수'를 사용해야하며 주파수가 방송 주파수와 일치하지 않으면 다시 소음을냅니다
+- 읽기 전용 RDS 컨트롤이 실시간으로 업데이트 될 수 있으므로 특히 "컨트롤"RDS Rx I / O 모드에 도움이되는 RDS 생성을위한 스레드를 만드십시오.
+ 
+ 
+ 
+

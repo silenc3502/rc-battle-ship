@@ -1,0 +1,35 @@
+* EHCI controller, Orion Marvell variants
+
+Required properties:
+- compatible: must be "marvell,orion-ehci"
+- reg: physical base address of the controller and length of memory mapped
+  region.
+- interrupts: The EHCI interrupt
+
+Optional properties:
+- clocks: reference to the clock
+- phys: reference to the USB PHY
+- phy-names: name of the USB PHY, should be "usb"
+
+
+* EHCI 컨트롤러, Orion Marvell 변형
+
+필수 속성 :
+- 호환 가능 : "marvell, orion-ehci"여야합니다.
+- reg : 컨트롤러의 물리적 인 기본 주소와 메모리 매핑 된 영역의 길이.
+- 인터럽트 : EHCI 인터럽트
+
+선택적 속성 :
+- clocks : clocks 에 대한 참조
+- phys : USB PHY에 대한 참조
+- phy-names : USB PHY의 이름이며, "usb"여야합니다.
+
+
+
+Example:
+
+	ehci@50000 {
+		compatible = "marvell,orion-ehci";
+		reg = <0x50000 0x1000>;
+		interrupts = <19>;
+	};

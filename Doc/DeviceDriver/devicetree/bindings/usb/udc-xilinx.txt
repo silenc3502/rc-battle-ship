@@ -1,0 +1,24 @@
+Xilinx USB2 device controller
+
+Required properties:
+- compatible		: Should be "xlnx,usb2-device-4.00.a"
+- reg			: Physical base address and size of the USB2
+			  device registers map.
+- interrupts		: Should contain single irq line of USB2 device
+			  controller
+- xlnx,has-builtin-dma	: if DMA is included
+
+필수 속성 :
+- compatible : "xlnx, usb2-device-4.00.a"여야합니다.
+- reg : 물리적 인 기본 주소와 USB2 장치 레지스터 맵의 크기.
+- 인터럽트 : USB2 장치 컨트롤러의 단일 irq 라인을 포함해야합니다.
+- xlnx, has-builtin-dma : DMA가 포함 된 경우
+
+
+Example:
+ 		axi-usb2-device@42e00000 {
+                        compatible = "xlnx,usb2-device-4.00.a";
+                        interrupts = <0x0 0x39 0x1>;
+                        reg = <0x42e00000 0x10000>;
+                        xlnx,has-builtin-dma;
+                };

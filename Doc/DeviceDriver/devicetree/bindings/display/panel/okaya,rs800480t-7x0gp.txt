@@ -1,0 +1,16 @@
+OKAYA Electric America, Inc. RS800480T-7X0GP 7" WVGA LCD panel
+
+Required properties:
+- compatible: should be "okaya,rs800480t-7x0gp"
+
+This binding is compatible with the simple-panel binding, which is specified
+in simple-panel.txt in this directory.
+
+/*
+OKAYA Electric America, Inc. RS800480T-7X0GP 7 "WVGA LCD 패널
+
+필수 속성 :
+- 호환 : "okaya, rs800480t-7x0gp"이어야합니다.
+
+이 바인딩은이 디렉토리의 simple-panel.txt에 지정된 단순 패널 바인딩과 호환됩니다.
+*/

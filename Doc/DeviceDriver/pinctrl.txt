@@ -1,0 +1,1644 @@
+PINCTRL (PIN CONTROL) subsystem
+핀컨트롤 서브시스템
+
+This document outlines the pin control subsystem in Linux
+이 문서는 Linux의 핀컨트롤 서브시스템 에 대해 간략히 설명합니다.
+
+This subsystem deals with:
+이 서브 시스템은 다음을 다룹니다.
+
+- Enumerating and naming controllable pins
+제어 가능한 핀 열거 및 명명
+
+- Multiplexing of pins, pads, fingers (etc) see below for details
+핀, 패드, 핑거 등의 멀티플렉싱 (자세한 내용은 아래 참조)
+
+- Configuration of pins, pads, fingers (etc), such as software-controlled
+  biasing and driving mode specific pins, such as pull-up/down, open drain,
+  load capacitance etc.
+풀-업/다운, 오픈 드레인, 로드 커패시턴스 등과 
+같은 소프트웨어 컨트롤드 바이어싱 및 구동 모드 특정 핀과 같은 핀, 패드, 핑거 (등)의 구성
+
+Top-level interface
+최상위 인터페이스
+===================
+
+Definition of PIN CONTROLLER:
+핀컨트롤의 정의 :
+
+- A pin controller is a piece of hardware, usually a set of registers, that
+  can control PINs. It may be able to multiplex, bias, set load capacitance,
+  set drive strength, etc. for individual pins or groups of pins.
+핀컨트롤러 는 PIN을 제어할수있는 하드웨어 집합입니다. 일반적으로 레지스터 집합입니다. 
+개별 핀 또는 핀 그룹에 대해 멀티플렉스, 바이어스, 로드 커패시턴스 설정, 드라이브 강도 설정 
+등을 수행할 수 있습니다.
+
+Definition of PIN:
+핀의 정의
+
+- PINS are equal to pads, fingers, balls or whatever packaging input or
+  output line you want to control and these are denoted by unsigned integers
+  in the range 0..maxpin. This numberspace is local to each PIN CONTROLLER, so
+  there may be several such number spaces in a system. This pin space may
+  be sparse - i.e. there may be gaps in the space with numbers where no
+  pin exists.
+핀 은 패드, 핑거, 볼 또는 제어하려는 [패키징 입력 또는 출력 라인]과 동일하며 0.maxpin 범위의 부호없는 정수로 표시됩니다. 이 숫자 공간은 각 PIN CONTROLLER에 국한되어 있으므로 시스템에 이러한 숫자 공간이 여러 개 있을 수 있습니다. 이 핀 공간은 희소할 수 있습니다. 즉 핀이없는 숫자가 있는 공간에 간격이 있을 수 있습니다.
+
+When a PIN CONTROLLER is instantiated, it will register a descriptor to the
+pin control framework, and this descriptor contains an array of pin descriptors
+describing the pins handled by this specific pin controller.
+PIN CONTROLLER가 인스턴스화 되면 (자), 핀 컨트롤 체제에 Descriptor 를 등록하여, 이 Descriptor에는 이 특정의 핀 컨트롤러가 취급하는 핀을 기술하는 일련의 핀 Descriptor가 포함됩니다.
+
+Here is an example of a PGA (Pin Grid Array) chip seen from underneath:
+다음은 PGA (Pin Grid Array) 칩의 예입니다.
+
+        A   B   C   D   E   F   G   H
+
+   8    o   o   o   o   o   o   o   o
+
+   7    o   o   o   o   o   o   o   o
+
+   6    o   o   o   o   o   o   o   o
+
+   5    o   o   o   o   o   o   o   o
+
+   4    o   o   o   o   o   o   o   o
+
+   3    o   o   o   o   o   o   o   o
+
+   2    o   o   o   o   o   o   o   o
+
+   1    o   o   o   o   o   o   o   o
+
+To register a pin controller and name all the pins on this package we can do
+this in our driver:
+핀컨트롤러 를 등록하고 이 패키지의 모든 핀의 이름을 지정하려면 드라이버에서 이 작업을 수행 할 수 있습니다.
+
+#include <linux/pinctrl/pinctrl.h>
+
+const struct pinctrl_pin_desc foo_pins[] = {
+      PINCTRL_PIN(0, "A8"),
+      PINCTRL_PIN(1, "B8"),
+      PINCTRL_PIN(2, "C8"),
+      ...
+      PINCTRL_PIN(61, "F1"),
+      PINCTRL_PIN(62, "G1"),
+      PINCTRL_PIN(63, "H1"),
+};
+
+static struct pinctrl_desc foo_desc = {
+	.name = "foo",
+	.pins = foo_pins,
+	.npins = ARRAY_SIZE(foo_pins),
+	.owner = THIS_MODULE,
+};
+
+int __init foo_probe(void)
+{
+	struct pinctrl_dev *pctl;
+
+	pctl = pinctrl_register(&foo_desc, <PARENT>, NULL);
+	if (!pctl)
+		pr_err("could not register foo pin driver\n");
+}
+
+To enable the pinctrl subsystem and the subgroups for PINMUX and PINCONF and
+selected drivers, you need to select them from your machine's Kconfig entry,
+since these are so tightly integrated with the machines they are used on.
+See for example arch/arm/mach-u300/Kconfig for an example.
+pinctrl 서브 시스템과 PINMUX 및 PINCONF 및 선택한 드라이버에 대한 하위 그룹을 활성화하려면 시스템의 Kconfig 항목에서 선택해야합니다. 이들은 사용된 machine과 너무 밀접하게 통합되어 있기 때문입니다.
+예를 들어 arch / arm / mach-u300 / Kconfig를 참조하십시오.
+
+Pins usually have fancier names than this. You can find these in the datasheet
+for your chip. Notice that the core pinctrl.h file provides a fancy macro
+called PINCTRL_PIN() to create the struct entries. As you can see I enumerated
+the pins from 0 in the upper left corner to 63 in the lower right corner.
+This enumeration was arbitrarily chosen, in practice you need to think
+through your numbering system so that it matches the layout of registers
+and such things in your driver, or the code may become complicated. You must
+also consider matching of offsets to the GPIO ranges that may be handled by
+the pin controller.
+핀은 보통 이보다 더 좋은 이름을 가지고 있습니다. 칩의 데이터 시트에서 이를 확인할 수 있습니다. 
+핵심 pinctrl.h 파일은 구조체 항목을 만들기 위해 PINCTRL_PIN()이라는 멋진 매크로를 제공합니다. 
+보시다시피, 핀의 왼쪽 위 모서리 0에서 오른쪽 아래 모서리 63까지 핀을 열거했습니다.
+이 열거는 임의로 선택되었습니다. 실제로는 번호 매기기 시스템을 통해 레지스터 및 드라이버의 레이아웃과 일치하도록 생각해야합니다. 그렇지 않으면 코드가 복잡해질 수 있습니다. 또한 핀 컨트롤러가 처리 할 수있는 GPIO 범위와의 오프셋 매칭을 고려해야합니다.
+
+For a padring with 467 pads, as opposed to actual pins, I used an enumeration
+like this, walking around the edge of the chip, which seems to be industry
+standard too (all these pads had names, too):
+실제 핀과는 반대로 467 개의 패드가 있는 padring의 경우, 나는 이와 같은 열거를 사용하여 칩의 edge를 따라 걸었습니다. 업계 표준인 것 같습니다 (이 모든 패드에도 이름이 있습니다).
+
+
+     0 ..... 104
+   466        105
+     .        .
+     .        .
+   358        224
+    357 .... 225
+
+
+Pin groups
+핀 그룹
+==========
+
+Many controllers need to deal with groups of pins, so the pin controller
+subsystem has a mechanism for enumerating groups of pins and retrieving the
+actual enumerated pins that are part of a certain group.
+많은 컨트롤러는 핀그룹을 처리해야 하므로 핀컨트롤러 하위시스템은 핀그룹 을 나열하고 특정그룹의 일부인 실제 열거 된 핀을 검색하는 메커니즘을 갖추고 있습니다.
+
+For example, say that we have a group of pins dealing with an SPI interface
+on { 0, 8, 16, 24 }, and a group of pins dealing with an I2C interface on pins
+on { 24, 25 }.
+예를 들어 {0, 8, 16, 24}에 SPI 인터페이스를 처리하는 핀 그룹과 {24, 25}에 핀에 I2C 인터페이스를 다루는 핀 그룹이 있다고 가정 해보십시오.
+
+These two groups are presented to the pin control subsystem by implementing
+some generic pinctrl_ops like this:
+이 두 그룹은 다음과 같이 일반적인 pinctrl_ops를 구현하여 핀 제어 서브 시스템에 제공됩니다.
+
+#include <linux/pinctrl/pinctrl.h>
+
+struct foo_group {
+	const char *name;
+	const unsigned int *pins;
+	const unsigned num_pins;
+};
+
+static const unsigned int spi0_pins[] = { 0, 8, 16, 24 };
+static const unsigned int i2c0_pins[] = { 24, 25 };
+
+static const struct foo_group foo_groups[] = {
+	{
+		.name = "spi0_grp",
+		.pins = spi0_pins,
+		.num_pins = ARRAY_SIZE(spi0_pins),
+	},
+	{
+		.name = "i2c0_grp",
+		.pins = i2c0_pins,
+		.num_pins = ARRAY_SIZE(i2c0_pins),
+	},
+};
+
+
+static int foo_get_groups_count(struct pinctrl_dev *pctldev)
+{
+	return ARRAY_SIZE(foo_groups);
+}
+
+static const char *foo_get_group_name(struct pinctrl_dev *pctldev,
+				       unsigned selector)
+{
+	return foo_groups[selector].name;
+}
+
+static int foo_get_group_pins(struct pinctrl_dev *pctldev, unsigned selector,
+			       const unsigned **pins,
+			       unsigned *num_pins)
+{
+	*pins = (unsigned *) foo_groups[selector].pins;
+	*num_pins = foo_groups[selector].num_pins;
+	return 0;
+}
+
+static struct pinctrl_ops foo_pctrl_ops = {
+	.get_groups_count = foo_get_groups_count,
+	.get_group_name = foo_get_group_name,
+	.get_group_pins = foo_get_group_pins,
+};
+
+
+static struct pinctrl_desc foo_desc = {
+       ...
+       .pctlops = &foo_pctrl_ops,
+};
+
+
+The pin control subsystem will call the .get_groups_count() function to
+determine the total number of legal selectors, then it will call the other functions
+to retrieve the name and pins of the group. Maintaining the data structure of
+the groups is up to the driver, this is just a simple example - in practice you
+may need more entries in your group structure, for example specific register
+ranges associated with each group and so on.
+핀 컨트롤 서브 시스템은 .get_groups_count() 함수를 호출하여 합법적인 selector의 total number를 결정한 다음 다른 함수를 호출하여 그룹의 이름과 핀을 검색합니다. 그룹의 데이터 구조를 유지하는 것은 드라이버에 달려 있습니다. 이것은 간단한 예입니다. 
+실제로는 그룹 구조에 더 많은 항목이 필요합니다 (예 : 각 그룹과 관련된 특정 레지스터 범위 등).
+
+
+Pin configuration
+핀 구성
+=================
+
+Pins can sometimes be software-configured in various ways, mostly related
+to their electronic properties when used as inputs or outputs. For example you
+may be able to make an output pin high impedance, or "tristate" meaning it is
+effectively disconnected. You may be able to connect an input pin to VDD or GND
+using a certain resistor value - pull up and pull down - so that the pin has a
+stable value when nothing is driving the rail it is connected to, or when it's
+unconnected.
+핀은 소프트웨어적 으로 다양한 방법으로 구성될 수 있으며 주로 입/출력 으로 사용될 때 electronic 특성과 관련이 있습니다. 예를 들어 출력 핀을 [하이 임피던스(high impedance)]로 만들거나 "tristate"로 설정하면 효과적으로 연결이 끊어집니다. 입력 핀을 VDD 또는 GND에 연결할 수 있습니다.
+어떤 저항 값을 사용하여 (pull up 저항이나 pull down 저항) - 핀이 안정된 값을 갖도록 핀이 연결된 rail을 구동 할 때나 연결되지 않은 상태에서 핀이 안정된 값을 갖도록 하십시오.
+
+Pin configuration can be programmed by adding configuration entries into the
+mapping table; see section "Board/machine configuration" below.
+핀 구성은 매핑 테이블에 구성 항목을 추가하여 프로그래밍 할 수 있습니다. 
+아래 "Board/machine configuration" 섹션을 참조하십시오
+
+The format and meaning of the configuration parameter, PLATFORM_X_PULL_UP
+above, is entirely defined by the pin controller driver.
+위의 PLATFORM_X_PULL_UP 구성 매개 변수의 형식과 의미는 핀컨트롤러 드라이버에 의해 완전히 정의됩니다.
+
+The pin configuration driver implements callbacks for changing pin
+configuration in the pin controller ops like this:
+핀구성 드라이버는 다음과 같이 핀컨트롤러 ops에서 핀구성을 변경하기위한 콜백을 구현합니다.
+
+#include <linux/pinctrl/pinctrl.h>
+#include <linux/pinctrl/pinconf.h>
+#include "platform_x_pindefs.h"
+
+static int foo_pin_config_get(struct pinctrl_dev *pctldev,
+		    unsigned offset,
+		    unsigned long *config)
+{
+	struct my_conftype conf;
+
+	... Find setting for pin @ offset ...
+
+	*config = (unsigned long) conf;
+}
+
+static int foo_pin_config_set(struct pinctrl_dev *pctldev,
+		    unsigned offset,
+		    unsigned long config)
+{
+	struct my_conftype *conf = (struct my_conftype *) config;
+
+	switch (conf) {
+		case PLATFORM_X_PULL_UP:
+		...
+		}
+	}
+}
+
+static int foo_pin_config_group_get (struct pinctrl_dev *pctldev,
+		    unsigned selector,
+		    unsigned long *config)
+{
+	...
+}
+
+static int foo_pin_config_group_set (struct pinctrl_dev *pctldev,
+		    unsigned selector,
+		    unsigned long config)
+{
+	...
+}
+
+static struct pinconf_ops foo_pconf_ops = {
+	.pin_config_get = foo_pin_config_get,
+	.pin_config_set = foo_pin_config_set,
+	.pin_config_group_get = foo_pin_config_group_get,
+	.pin_config_group_set = foo_pin_config_group_set,
+};
+
+/* Pin config operations are handled by some pin controller */
+static struct pinctrl_desc foo_desc = {
+	...
+	.confops = &foo_pconf_ops,
+};
+
+Since some controllers have special logic for handling entire groups of pins
+they can exploit the special whole-group pin control function. The
+pin_config_group_set() callback is allowed to return the error code -EAGAIN,
+for groups it does not want to handle, or if it just wants to do some
+group-level handling and then fall through to iterate over all pins, in which
+case each individual pin will be treated by separate pin_config_set() calls as
+well.
+일부 컨트롤러는 전체 핀그룹을 처리하기위한 특별한 로직을 가지고 있기 때문에 
+특별한 전체 그룹핀 제어 기능을 이용할 수 있습니다. 
+pin_config_group_set() 콜백 은 처리하지 않으려는 그룹에 대해 오류 코드 -EAGAIN을 반환하도록 허용되거나 
+일부 그룹 수준 처리를 수행하고 모든 핀에 대해 반복 처리하도록 하려는 경우 (각 경우 각각 개별 핀은 별도의 pin_config_set () 호출로도 처리됩니다.
+
+
+Interaction with the GPIO subsystem
+GPIO 하위 시스템과의 상호 작용
+===================================
+
+The GPIO drivers may want to perform operations of various types on the same
+physical pins that are also registered as pin controller pins.
+GPIO 드라이버는 핀컨트롤러 핀으로 등록된 동일한 물리적 핀에서 다양한 유형의 작업을 수행하려고 할 수 있습니다.
+
+First and foremost, the two subsystems can be used as completely orthogonal,
+see the section named "pin control requests from drivers" and
+"drivers needing both pin control and GPIOs" below for details. But in some
+situations a cross-subsystem mapping between pins and GPIOs is needed.
+가장 중요한 두 가지 서브 시스템은 완전 직각으로 사용할 수 있습니다. 자세한 내용은 아래 "드라이버에서 핀 제어 요청(pin control requests from drivers)"및 "핀제어와 GPIO가 필요한 드라이버(drivers needing both pin control and GPIOs)"섹션을 참조하십시오. 그러나 일부 상황에서는 핀과 GPIO 간 교차 서브 시스템 매핑이 필요합니다.
+
+Since the pin controller subsystem have its pinspace local to the pin
+controller we need a mapping so that the pin control subsystem can figure out
+which pin controller handles control of a certain GPIO pin. Since a single
+pin controller may be muxing several GPIO ranges (typically SoCs that have
+one set of pins, but internally several GPIO silicon blocks, each modelled as
+a struct gpio_chip) any number of GPIO ranges can be added to a pin controller
+instance like this:
+핀컨트롤러 서브 시스템은 핀컨트롤러에 pinspace local을 가지고 있기 때문에, 핀컨트롤 서브 시스템이 특정 GPIO 핀의 컨트롤을 처리하는 핀컨트롤러를 파악할 수 있도록 맵핑이 필요합니다. 단일핀 컨트롤러가 여러 GPIO 범위 (일반적으로 한 세트의 핀을 갖고 있지만 내부적으로 GPIO 실리콘 블록 몇 개를 gpio_chip 구조로 모델링 한 SoC)를 muxing 할 수 있기 때문에 모든 GPIO 범위를 이처럼 핀컨트롤러 인스턴스에 추가할 수 있습니다 :
+
+struct gpio_chip chip_a;
+struct gpio_chip chip_b;
+
+static struct pinctrl_gpio_range gpio_range_a = {
+	.name = "chip a",
+	.id = 0,
+	.base = 32,
+	.pin_base = 32,
+	.npins = 16,
+	.gc = &chip_a;
+};
+
+static struct pinctrl_gpio_range gpio_range_b = {
+	.name = "chip b",
+	.id = 0,
+	.base = 48,
+	.pin_base = 64,
+	.npins = 8,
+	.gc = &chip_b;
+};
+
+{
+	struct pinctrl_dev *pctl;
+	...
+	pinctrl_add_gpio_range(pctl, &gpio_range_a);
+	pinctrl_add_gpio_range(pctl, &gpio_range_b);
+}
+
+So this complex system has one pin controller handling two different
+GPIO chips. "chip a" has 16 pins and "chip b" has 8 pins. The "chip a" and
+"chip b" have different .pin_base, which means a start pin number of the
+GPIO range.
+따라서 이 복잡한 시스템에는 2 개의 서로 다른 GPIO 칩을 처리하는 하나의 핀컨트롤러 가 있습니다. "chip a"에는 16 개의 핀이 있고 "chip b"에는 8 개의 핀이 있습니다. "chip a"와 "chip b"는 GPIO 범위의 시작-핀번호 를 의미하는 .pin_base가 다릅니다.
+
+The GPIO range of "chip a" starts from the GPIO base of 32 and actual
+pin range also starts from 32. However "chip b" has different starting
+offset for the GPIO range and pin range. The GPIO range of "chip b" starts
+from GPIO number 48, while the pin range of "chip b" starts from 64.
+"chip a"의 GPIO 범위는 GPIO베이스가 32이고 실제 핀범위도 32에서 시작합니다. 그러나 "chip b"는 GPIO 범위와 핀 범위에 대해 다른 시작 오프셋을 가지고 있습니다. "chip b"의 GPIO 범위는 GPIO 번호 48에서 시작하며 "chip b"의 핀 범위는 64에서 시작합니다.
+
+We can convert a gpio number to actual pin number using this "pin_base".
+They are mapped in the global GPIO pin space at:
+이 "pin_base"를 사용하여 gpio 번호를 실제 핀번호로 변환 할 수 있습니다. GPIO 핀 공간에서 매핑됩니다 :
+
+chip a:
+ - GPIO range : [32 .. 47]
+ - pin range  : [32 .. 47]
+chip b:
+ - GPIO range : [48 .. 55]
+ - pin range  : [64 .. 71]
+
+The above examples assume the mapping between the GPIOs and pins is
+linear. If the mapping is sparse or haphazard, an array of arbitrary pin
+numbers can be encoded in the range like this:
+위의 예에서는 GPIO와 핀 간의 매핑이 선형이라고 가정합니다. 매핑이 희박하거나 우연한 경우 임의의 핀번호 배열을 다음과 같은 범위에서 인코딩 할 수 있습니다.
+
+static const unsigned range_pins[] = { 14, 1, 22, 17, 10, 8, 6, 2 };
+
+static struct pinctrl_gpio_range gpio_range = {
+	.name = "chip",
+	.id = 0,
+	.base = 32,
+	.pins = &range_pins,
+	.npins = ARRAY_SIZE(range_pins),
+	.gc = &chip;
+};
+
+In this case the pin_base property will be ignored. If the name of a pin
+group is known, the pins and npins elements of the above structure can be
+initialised using the function pinctrl_get_group_pins(), e.g. for pin
+group "foo":
+이 경우 pin_base 속성은 무시됩니다. 
+핀그룹의 이름을 알고 있다면 위의 구조체의 pins 및 npins 요소는 pinctrl_get_group_pins () 함수를 사용하여 초기화 할 수 있습니다. 핀 그룹 "foo"의 경우 :
+
+
+pinctrl_get_group_pins(pctl, "foo", &gpio_range.pins, &gpio_range.npins);
+
+
+When GPIO-specific functions in the pin control subsystem are called, these
+ranges will be used to look up the appropriate pin controller by inspecting
+and matching the pin to the pin ranges across all controllers. When a
+pin controller handling the matching range is found, GPIO-specific functions
+will be called on that specific pin controller.
+핀컨트롤 서브 시스템의 GPIO 관련 기능이 호출되면 이 범위는 모든 컨트롤러의 핀범위 를 검사하고 핀범위 와 일치시켜 적절한 핀컨트롤러 를 찾는데 사용됩니다. 일치하는 범위를 처리하는 핀컨트롤러 가 발견되면 해당 핀컨트롤러 에서 GPIO 관련 함수가 호출됩니다.
+
+For all functionalities dealing with pin biasing, pin muxing etc, the pin
+controller subsystem will look up the corresponding pin number from the passed
+in gpio number, and use the range's internals to retrieve a pin number. After
+that, the subsystem passes it on to the pin control driver, so the driver
+will get a pin number into its handled number range. Further it is also passed
+the range ID value, so that the pin controller knows which range it should
+deal with.
+핀biasing , 핀muxing 등을 다루는 모든 기능의 경우, 핀컨트롤러 하위 시스템은 전달된 gpio 번호에서 해당 핀번호 를 찾아 범위 내부를 사용하여 핀번호 를 검색합니다. 그 후, 서브 시스템은 그것을 핀컨트롤 드라이버에 전달하므로 드라이버는 처리된 번호 범위에 핀번호 를 갖게됩니다. 또한 범위 ID 값이 전달되어 핀컨트롤러 가 처리해야하는 범위를 알 수 있습니다.
+
+Calling pinctrl_add_gpio_range from pinctrl driver is DEPRECATED. Please see
+section 2.1 of Documentation/devicetree/bindings/gpio/gpio.txt on how to bind
+pinctrl and gpio drivers.
+pinctrl 드라이버에서 pinctrl_add_gpio_range를 호출하면 사용이 권장되지 않습니다. 
+pinctrl 및 gpio 드라이버를 바인드하는 방법은 Documentation / devicetree / bindings / gpio / gpio.txt 섹션 2.1을 참조하십시오.
+
+
+PINMUX interfaces
+PINMUX 인터페이스
+=================
+
+These calls use the pinmux_* naming prefix.  No other calls should use that prefix.
+이 호출은 pinmux_ * 명명 접두사를 사용합니다. 다른 어떤 호출도 그 접두사를 사용해서는 안됩니다.
+
+
+What is pinmuxing?
+핀 멀티플렉싱 이란 무엇입니까?
+==================
+
+PINMUX, also known as padmux, ballmux, alternate functions or mission modes
+is a way for chip vendors producing some kind of electrical packages to use
+a certain physical pin (ball, pad, finger, etc) for multiple mutually exclusive
+functions, depending on the application. By "application" in this context
+we usually mean a way of soldering or wiring the package into an electronic
+system, even though the framework makes it possible to also change the function
+at runtime.
+padmux, ballmux, 대체 기능(alternate functions) 또는 임무 모드(mission modes) 라고도 하는 PINMUX는 특정 물리적 핀(볼, 패드, 핑거 등)을 여러가지 상호배타적인 기능으로 사용하기 위해 일종의 electronic 패키지를 생산하는 칩 공급 업체를 위한 방법입니다. 이런 맥락에서 "application"이란 용어는 일반적으로 런타임에 기능을 변경할수있는 경우에도 전자 시스템에 패키지를 납땜하거나 배선하는 방법을 의미합니다.
+
+Here is an example of a PGA (Pin Grid Array) chip seen from underneath:
+다음은 PGA (Pin Grid Array) 칩의 예입니다.
+
+        A   B   C   D   E   F   G   H
+      +---+
+   8  | o | o   o   o   o   o   o   o
+      |   |
+   7  | o | o   o   o   o   o   o   o
+      |   |
+   6  | o | o   o   o   o   o   o   o
+      +---+---+
+   5  | o | o | o   o   o   o   o   o
+      +---+---+               +---+
+   4    o   o   o   o   o   o | o | o
+                              |   |
+   3    o   o   o   o   o   o | o | o
+                              |   |
+   2    o   o   o   o   o   o | o | o
+      +-------+-------+-------+---+---+
+   1  | o   o | o   o | o   o | o | o |
+      +-------+-------+-------+---+---+
+
+This is not tetris. The game to think of is chess. Not all PGA/BGA packages
+are chessboard-like, big ones have "holes" in some arrangement according to
+different design patterns, but we're using this as a simple example. Of the
+pins you see some will be taken by things like a few VCC and GND to feed power
+to the chip, and quite a few will be taken by large ports like an external
+memory interface. The remaining pins will often be subject to pin multiplexing.
+이것은 테트리스가 아닙니다. 생각할 게임은 체스입니다. 모든 PGA / BGA 패키지가 체스판과 같은 것은 아니지만 큰 디자인은 다른 디자인 패턴에 따라 일부 배열에서 "holes"을 가지고 있지만 간단한 예제로 사용하고 있습니다. 당신이 볼 수있는 핀 중 일부는 칩에 전력을 공급하기 위해 몇 개의 VCC 및 GND와 같은 것들로 취해질 것이며, 외부 메모리 인터페이스와 같은 대형 포트에 의해 상당수가 차지 될 것입니다. 나머지 핀은 종종 핀 다중화의 영향을 받습니다.
+
+The example 8x8 PGA package above will have pin numbers 0 through 63 assigned
+to its physical pins. It will name the pins { A1, A2, A3 ... H6, H7, H8 } using
+pinctrl_register_pins() and a suitable data set as shown earlier.
+위의 예제 8x8 PGA 패키지는 핀 번호 0에서 63까지 물리적 핀에 할당되어 있습니다.
+pinctrl_register_pins ()와 앞에서 보여준 적절한 데이터 세트를 사용하여 핀 {A1, A2, A3 ... H6, H7, H8}의 이름을 지정합니다.
+
+In this 8x8 BGA package the pins { A8, A7, A6, A5 } can be used as an SPI port
+(these are four pins: CLK, RXD, TXD, FRM). In that case, pin B5 can be used as
+some general-purpose GPIO pin. However, in another setting, pins { A5, B5 } can
+be used as an I2C port (these are just two pins: SCL, SDA). Needless to say,
+we cannot use the SPI port and I2C port at the same time. However in the inside
+of the package the silicon performing the SPI logic can alternatively be routed
+out on pins { G4, G3, G2, G1 }.
+이 8x8 BGA 패키지에서 {A8, A7, A6, A5} 핀은 SPI 포트 (CLK, RXD, TXD, FRM의 4 개 핀)로 사용할 수 있습니다. 이 경우 핀 B5를 범용 GPIO 핀으로 사용할수 있습니다. 그러나 다른 설정에서 핀 {A5, B5}는 I2C 포트로 사용할 수 있습니다 (이 두 핀은 SCL, SDA). 말할 필요도없이 SPI 포트와 I2C 포트를 동시에 사용할 수 없습니다. 그러나 패키지 내부에서 SPI 로직을 수행하는 실리콘은 대안적으로 핀 {G4, G3, G2, G1}에 라우팅 될 수 있습니다.
+
+On the bottom row at { A1, B1, C1, D1, E1, F1, G1, H1 } we have something
+special - it's an external MMC bus that can be 2, 4 or 8 bits wide, and it will
+consume 2, 4 or 8 pins respectively, so either { A1, B1 } are taken or
+{ A1, B1, C1, D1 } or all of them. If we use all 8 bits, we cannot use the SPI
+port on pins { G4, G3, G2, G1 } of course.
+{A1, B1, C1, D1, E1, F1, G1, H1}의 최하위 행에는 특수한 것이 있습니다. 외부 MMC 버스는 2, 4 또는 8 비트 폭이 될 수 있으며 2, 4 또는 8 개의 핀을 가지므로 {A1, B1} 또는 {A1, B1, C1, D1} 또는 모두를 취합니다.
+8 비트를 모두 사용하면 {G4, G3, G2, G1} 핀의 SPI 포트를 사용할 수 없습니다.
+
+This way the silicon blocks present inside the chip can be multiplexed "muxed"
+out on different pin ranges. Often contemporary SoC (systems on chip) will
+contain several I2C, SPI, SDIO/MMC, etc silicon blocks that can be routed to
+different pins by pinmux settings.
+이 방법으로 칩 내부에 존재하는 실리콘 블록을 다른 핀범위 에서 멀티플렉싱 할 수 있습니다. 흔히 현대 SoC (systems on chip)는 여러 개의 I2C, SPI, SDIO / MMC 등을 포함하고 있으며 pinmux 설정에 따라 다른 핀으로 라우팅 될 수 있습니다.
+
+Since general-purpose I/O pins (GPIO) are typically always in shortage, it is
+common to be able to use almost any pin as a GPIO pin if it is not currently
+in use by some other I/O port.
+일반적으로 범용 I / O 핀 (GPIO)은 항상 부족하기 때문에 현재 다른 I / O 포트에서는 사용하지 않는 GPIO 핀으로 거의 모든 핀을 사용할 수 있습니다.
+
+
+Pinmux conventions
+Pinmux 협약
+==================
+
+The purpose of the pinmux functionality in the pin controller subsystem is to
+abstract and provide pinmux settings to the devices you choose to instantiate
+in your machine configuration. It is inspired by the clk, GPIO and regulator
+subsystems, so devices will request their mux setting, but it's also possible
+to request a single pin for e.g. GPIO.
+핀컨트롤러 하위 시스템의 pinmux 기능은 장치 구성에서 인스턴스화 하도록 선택한 장치에 추상화하고 pinmux 설정을 제공하는 것입니다. clk, GPIO 및 레귤레이터 서브 시스템에서 영감을 얻었기 때문에 디바이스는 멀티플렉서 설정을 요청하지만, 예를 들어 단일 핀을 요청할 수도 있습니다 (예를 들면 GPIO).
+
+Definitions:
+정의
+
+- FUNCTIONS can be switched in and out by a driver residing with the pin
+  control subsystem in the drivers/pinctrl/* directory of the kernel. The
+  pin control driver knows the possible functions. In the example above you can
+  identify three pinmux functions, one for spi, one for i2c and one for mmc.
+FUNCTIONS는 커널의 drivers / pinctrl / * 디렉토리에있는 핀컨트롤 서브 시스템에있는 드라이버에 의해 in / out 전환될 수 있습니다. 핀컨트롤 드라이버는 가능한 기능을 알고 있습니다. 위의 예에서 spi에 대해 하나, i2c에 대해 하나, mmc에 대해 하나의 세 가지 pinmux 기능을 식별 할 수 있습니다.
+
+- FUNCTIONS are assumed to be enumerable from zero in a one-dimensional array.
+  In this case the array could be something like: { spi0, i2c0, mmc0 }
+  for the three available functions.
+함수는 1 차원 배열에서 0부터 열거 가능하다고 가정합니다. 이 경우 배열은 {spi0, i2c0, mmc0}과 같은 세 가지 함수를 사용할 수 있습니다.
+
+- FUNCTIONS have PIN GROUPS as defined on the generic level - so a certain
+  function is *always* associated with a certain set of pin groups, could
+  be just a single one, but could also be many. In the example above the
+  function i2c is associated with the pins { A5, B5 }, enumerated as
+  { 24, 25 } in the controller pin space.
+함수는 일반적인 레벨에서 정의 된대로 PIN 그룹을 가지고 있습니다. 그래서 어떤 함수는 특정 핀 그룹 세트와 항상 연관되어 있습니다. 단 하나의 숫자 일 수도 있지만 많은 수입니다. 위의 예에서 함수 i2c는 컨트롤러 핀 공간에서 {24, 25}로 열거된 핀 {A5, B5}과 연관됩니다.
+
+  The Function spi is associated with pin groups { A8, A7, A6, A5 }
+  and { G4, G3, G2, G1 }, which are enumerated as { 0, 8, 16, 24 } and
+  { 38, 46, 54, 62 } respectively.
+Function spi는 각각 {0, 8, 16, 24} 및 {38, 46, 54, 62}로 열거 된 핀 그룹 {A8, A7, A6, A5} 및 {G4, G3, G2, G1} }
+
+  Group names must be unique per pin controller, no two groups on the same
+  controller may have the same name.
+그룹 이름은 핀 컨트롤러 마다 고유해야하며 동일한 컨트롤러의 두 그룹이 같은 이름을 가질 수는 없습니다.
+
+- The combination of a FUNCTION and a PIN GROUP determine a certain function
+  for a certain set of pins. The knowledge of the functions and pin groups
+  and their machine-specific particulars are kept inside the pinmux driver,
+  from the outside only the enumerators are known, and the driver core can:
+ FUNCTION과 PIN GROUP 조합은 특정 핀세트 에 대해 특정 기능을 결정합니다. 함수와 핀 그룹에 대한 지식과 그 기계 별 세부 정보는 pinmux 드라이버 내부에 보관되며 열거자 만 알 수 있도록 외부에서부터 드라이버 코어는 다음을 수행 할 수 있습니다.
+
+  - Request the name of a function with a certain selector (>= 0)
+  - A list of groups associated with a certain function
+  - Request that a certain group in that list to be activated for a certain
+    function
+   - 특정 선택기 (> = 0)가있는 함수의 이름 요청
+   - 특정 기능과 관련된 그룹 목록
+   - 특정 기능에 대해 해당 목록의 특정 그룹을 활성화하도록 요청합니다.
+
+  As already described above, pin groups are in turn self-descriptive, so
+  the core will retrieve the actual pin range in a certain group from the
+  driver.
+이미 위에서 설명했듯이 핀 그룹은 차례대로 자기-설명형(self-descriptive)이므로 코어는 드라이버에서 특정 그룹의 실제 핀 범위를 검색합니다.
+
+- FUNCTIONS and GROUPS on a certain PIN CONTROLLER are MAPPED to a certain
+  device by the board file, device tree or similar machine setup configuration
+  mechanism, similar to how regulators are connected to devices, usually by
+  name. Defining a pin controller, function and group thus uniquely identify
+  the set of pins to be used by a certain device. (If only one possible group
+  of pins is available for the function, no group name need to be supplied -
+  the core will simply select the first and only group available.)
+특정 PIN 컨트롤러의 기능 및 그룹은 보드 파일, 장치 트리 또는 이와 유사한 시스템 설정 구성 메커니즘을 통해 특정 장치에 매핑됩니다. 이러한 메커니즘은 레귤레이터가 장치에 연결되는 방법과 유사하게 대개 이름으로 지정됩니다. 따라서 핀 컨트롤러, 기능 및 그룹을 정의하면 특정 장치에서 사용할 핀 세트를 고유하게 식별할 수 있습니다. (가능한 핀 그룹이 하나 뿐인 경우 그룹 이름을 입력할 필요가 없습니다. 코어는 사용 가능한 첫번째 및 유일한 그룹을 선택하기 만합니다.)
+
+  In the example case we can define that this particular machine shall
+  use device spi0 with pinmux function fspi0 group gspi0 and i2c0 on function
+  fi2c0 group gi2c0, on the primary pin controller, we get mappings
+  like these:
+예제의 경우,이 특정 머신이 
+디바이스 spi0를 pinmux함수 fspi0그룹 gspi0와 
+        i2c0를 함수fi2c0그룹 gi2c0에 사용하도록 정의 할 수 있으며, 
+주 핀 컨트롤러에서 다음과 같은 매핑을 얻습니다.
+
+  {
+    {"map-spi0", spi0, pinctrl0, fspi0, gspi0},
+    {"map-i2c0", i2c0, pinctrl0, fi2c0, gi2c0}
+  }
+
+  Every map must be assigned a state name, pin controller, device and
+  function. The group is not compulsory - if it is omitted the first group
+  presented by the driver as applicable for the function will be selected,
+  which is useful for simple cases.
+모든 맵에는 상태 이름, 핀 컨트롤러, 장치 및 기능이 지정되어야 합니다. 그룹이 강제적이지는 않습니다. 생략된 경우, 기능에 적용할 수있는 드라이버에 의해 제시된 첫 번째 그룹이 선택되며 이는 단순한 경우에 유용합니다.
+
+  It is possible to map several groups to the same combination of device,
+  pin controller and function. This is for cases where a certain function on
+  a certain pin controller may use different sets of pins in different
+  configurations.
+장치, 핀컨트롤러 및 기능의 동일한 조합에 여러 그룹을 매핑 할 수 있습니다. 이는 특정 핀 컨트롤러의 특정 기능이 다른 구성에서 다른 핀 세트를 사용할 수 있는 경우를 위한 것입니다.
+
+- PINS for a certain FUNCTION using a certain PIN GROUP on a certain
+  PIN CONTROLLER are provided on a first-come first-serve basis, so if some
+  other device mux setting or GPIO pin request has already taken your physical
+  pin, you will be denied the use of it. To get (activate) a new setting, the
+  old one has to be put (deactivated) first.
+특정 핀컨트롤 의 특정 핀그룹 을 사용하는 특정 기능의 PIN은 선착순으로 제공되므로, 다른 디바이스 [mux 설정] 이나 [GPIO 핀 요청] 이 이미 물리적 핀을 사용했다면, 당신은 그것의 사용을 거부 당할 것입니다. 
+새 설정을 가져 오려면 (활성화) 이전 설정을 먼저 비활성화 (비활성화)해야합니다.
+
+Sometimes the documentation and hardware registers will be oriented around
+pads (or "fingers") rather than pins - these are the soldering surfaces on the
+silicon inside the package, and may or may not match the actual number of
+pins/balls underneath the capsule. Pick some enumeration that makes sense to
+you. Define enumerators only for the pins you can control if that makes sense.
+때로는 문서 및 하드웨어 레지스터가 핀이 아닌 패드 (또는 "핑거") 주위를 향하게 됩니다. 이는 패키지 내의 실리콘 표면을 납땜하는 것으로 캡슐 아래의 핀/볼 의 실제 수와 일치하거나 일치하지 않을 수 있습니다. 자신에게 맞는 열거형을 선택하십시오. 이해할 수 있는 경우 제어할 수 있는 핀에 대해서만 열거자를 정의하십시오.
+
+Assumptions :
+가정 :
+
+We assume that the number of possible function maps to pin groups is limited by
+the hardware. I.e. we assume that there is no system where any function can be
+mapped to any pin, like in a phone exchange. So the available pin groups for
+a certain function will be limited to a few choices (say up to eight or so),
+not hundreds or any amount of choices. This is the characteristic we have found
+by inspecting available pinmux hardware, and a necessary assumption since we
+expect pinmux drivers to present *all* possible function vs pin group mappings
+to the subsystem.
+핀그룹 에 가능한 펑션맵 의 수는 하드웨어에 의해 제한된다고 가정합니다. 
+즉, 우리는 전화 교환기에서와 같이 모든 기능을 모든 핀에 매핑 할 수있는 시스템이 없다고 가정합니다. 
+따라서 특정 기능에 대한 사용 가능한 핀그룹 은 수백 가지 또는 선택 사항이 아닌 몇 가지 선택 사항으로 (최대 8가지) 제한됩니다.
+이것은 pinmux 드라이버가 사용 가능한 pinmux 하드웨어를 검사하여 발견한 특성이며, pinmux 드라이버가 모든 가능한 기능 대 핀그룹 매핑을 서브 시스템에 제공할 것으로 예상하기 때문에 필요한 가정입니다.
+
+
+Pinmux drivers
+Pinmux 드라이버
+==============
+
+The pinmux core takes care of preventing conflicts on pins and calling
+the pin controller driver to execute different settings.
+pinmux 코어는 핀충돌 을 방지하고 핀컨트롤러 드라이버를 호출하여 다른 설정을 수행합니다.
+
+It is the responsibility of the pinmux driver to impose further restrictions
+(say for example infer electronic limitations due to load, etc.) to determine
+whether or not the requested function can actually be allowed, and in case it
+is possible to perform the requested mux setting, poke the hardware so that
+this happens.
+요청된 기능이 실제로 허용될 수 있는지 여부를 결정하는 추가 제한 사항 (예를 들어 부하로 인한 전자 제한을 추측하는 등)을 적용하는 것은 pinmux 드라이버의 책임이며, 요청된 멀티플렉서 설정을 수행할 수 있는 경우 하드웨어를 찔러서 이러한 상황이 발생하도록 하십시오.
+
+Pinmux drivers are required to supply a few callback functions, some are
+optional. Usually the set_mux() function is implemented, writing values into
+some certain registers to activate a certain mux setting for a certain pin.
+Pinmux 드라이버는 몇 가지 콜백 함수를 제공해야 하며 일부는 선택사항입니다. 일반적으로 set_mux() 함수가 구현되어 특정 핀에 대해 특정 멀티플렉서 설정을 활성화하기 위해 일부 특정 레지스터에 값을 씁니다.
+
+A simple driver for the above example will work by setting bits 0, 1, 2, 3 or 4
+into some register named MUX to select a certain function with a certain
+group of pins would work something like this:
+위의 예제에 대한 간단한 드라이버는 비트 0, 1, 2, 3 또는 4를 MUX라는 특정 레지스터로 설정하여 특정 기능의 핀을 그룹으로 선택하면 작동합니다.
+
+#include <linux/pinctrl/pinctrl.h>
+#include <linux/pinctrl/pinmux.h>
+
+struct foo_group {
+	const char *name;
+	const unsigned int *pins;
+	const unsigned num_pins;
+};
+
+static const unsigned spi0_0_pins[] = { 0, 8, 16, 24 };
+static const unsigned spi0_1_pins[] = { 38, 46, 54, 62 };
+static const unsigned i2c0_pins[] = { 24, 25 };
+static const unsigned mmc0_1_pins[] = { 56, 57 };
+static const unsigned mmc0_2_pins[] = { 58, 59 };
+static const unsigned mmc0_3_pins[] = { 60, 61, 62, 63 };
+
+static const struct foo_group foo_groups[] = {
+	{
+		.name = "spi0_0_grp",
+		.pins = spi0_0_pins,
+		.num_pins = ARRAY_SIZE(spi0_0_pins),
+	},
+	{
+		.name = "spi0_1_grp",
+		.pins = spi0_1_pins,
+		.num_pins = ARRAY_SIZE(spi0_1_pins),
+	},
+	{
+		.name = "i2c0_grp",
+		.pins = i2c0_pins,
+		.num_pins = ARRAY_SIZE(i2c0_pins),
+	},
+	{
+		.name = "mmc0_1_grp",
+		.pins = mmc0_1_pins,
+		.num_pins = ARRAY_SIZE(mmc0_1_pins),
+	},
+	{
+		.name = "mmc0_2_grp",
+		.pins = mmc0_2_pins,
+		.num_pins = ARRAY_SIZE(mmc0_2_pins),
+	},
+	{
+		.name = "mmc0_3_grp",
+		.pins = mmc0_3_pins,
+		.num_pins = ARRAY_SIZE(mmc0_3_pins),
+	},
+};
+
+
+static int foo_get_groups_count(struct pinctrl_dev *pctldev)
+{
+	return ARRAY_SIZE(foo_groups);
+}
+
+static const char *foo_get_group_name(struct pinctrl_dev *pctldev,
+				       unsigned selector)
+{
+	return foo_groups[selector].name;
+}
+
+static int foo_get_group_pins(struct pinctrl_dev *pctldev, unsigned selector,
+			       unsigned ** const pins,
+			       unsigned * const num_pins)
+{
+	*pins = (unsigned *) foo_groups[selector].pins;
+	*num_pins = foo_groups[selector].num_pins;
+	return 0;
+}
+
+static struct pinctrl_ops foo_pctrl_ops = {
+	.get_groups_count = foo_get_groups_count,
+	.get_group_name = foo_get_group_name,
+	.get_group_pins = foo_get_group_pins,
+};
+
+struct foo_pmx_func {
+	const char *name;
+	const char * const *groups;
+	const unsigned num_groups;
+};
+
+static const char * const spi0_groups[] = { "spi0_0_grp", "spi0_1_grp" };
+static const char * const i2c0_groups[] = { "i2c0_grp" };
+static const char * const mmc0_groups[] = { "mmc0_1_grp", "mmc0_2_grp",
+					"mmc0_3_grp" };
+
+static const struct foo_pmx_func foo_functions[] = {
+	{
+		.name = "spi0",
+		.groups = spi0_groups,
+		.num_groups = ARRAY_SIZE(spi0_groups),
+	},
+	{
+		.name = "i2c0",
+		.groups = i2c0_groups,
+		.num_groups = ARRAY_SIZE(i2c0_groups),
+	},
+	{
+		.name = "mmc0",
+		.groups = mmc0_groups,
+		.num_groups = ARRAY_SIZE(mmc0_groups),
+	},
+};
+
+static int foo_get_functions_count(struct pinctrl_dev *pctldev)
+{
+	return ARRAY_SIZE(foo_functions);
+}
+
+static const char *foo_get_fname(struct pinctrl_dev *pctldev, unsigned selector)
+{
+	return foo_functions[selector].name;
+}
+
+static int foo_get_groups(struct pinctrl_dev *pctldev, unsigned selector,
+			  const char * const **groups,
+			  unsigned * const num_groups)
+{
+	*groups = foo_functions[selector].groups;
+	*num_groups = foo_functions[selector].num_groups;
+	return 0;
+}
+
+static int foo_set_mux(struct pinctrl_dev *pctldev, unsigned selector,
+		unsigned group)
+{
+	u8 regbit = (1 << selector + group);
+
+	writeb((readb(MUX)|regbit), MUX)
+	return 0;
+}
+
+static struct pinmux_ops foo_pmxops = {
+	.get_functions_count = foo_get_functions_count,
+	.get_function_name = foo_get_fname,
+	.get_function_groups = foo_get_groups,
+	.set_mux = foo_set_mux,
+	.strict = true,
+};
+
+/* Pinmux operations are handled by some pin controller */
+static struct pinctrl_desc foo_desc = {
+	...
+	.pctlops = &foo_pctrl_ops,
+	.pmxops = &foo_pmxops,
+};
+
+In the example activating muxing 0 and 1 at the same time setting bits
+0 and 1, uses one pin in common so they would collide.
+0과 1의 비트를 동시에 설정하여 
+0과 1을 muxing하는 예제에서는 하나의 핀을 공통으로 사용하므로 충돌을 일으킬 수 있습니다.
+
+The beauty of the pinmux subsystem is that since it keeps track of all
+pins and who is using them, it will already have denied an impossible
+request like that, so the driver does not need to worry about such
+things - when it gets a selector passed in, the pinmux subsystem makes
+sure no other device or GPIO assignment is already using the selected
+pins. Thus bits 0 and 1 in the control register will never be set at the
+same time.
+pinmux 서브 시스템의 장점은 모든 핀을 추적하고 누가 사용하고 있는지, 이미 그런 불가능한 요청을 부인할 것 이므로,
+Driver는 그런 것들에 대해 걱정할 필요가 없습니다.
+selector passed in을 얻으면, pinmux 서브 시스템은 선택된 핀을 이미 사용하고 있는 다른 장치 또는 GPIO 할당을 확인합니다.
+따라서 제어 레지스터의 비트 0과 1은 동시에 설정되지 않습니다.
+
+All the above functions are mandatory to implement for a pinmux driver.
+위의 모든 기능은 pinmux 드라이버 용으로 구현해야합니다.
+
+
+Pin control interaction with the GPIO subsystem
+GPIO 서브 시스템과 핀 컨트롤 상호 작용
+===============================================
+
+Note that the following implies that the use case is to use a certain pin
+from the Linux kernel using the API in <linux/gpio.h> with gpio_request()
+and similar functions. There are cases where you may be using something
+that your datasheet calls "GPIO mode", but actually is just an electrical
+configuration for a certain device. See the section below named
+"GPIO mode pitfalls" for more details on this scenario.
+다음은 gpio_request ()와 비슷한 기능을 가진 <linux / gpio.h>의 API를 사용하여 Linux 커널의 특정 핀을 사용하는 것이 use case임을 의미합니다. 데이터 시트에서 "GPIO 모드"라고하는 것을 사용하는 경우가 있지만 실제로는 특정 장치의 전기적 구성일 뿐입니다. 이 시나리오에 대한 자세한 내용은 아래의 "GPIO 모드 pitfalls"섹션을 참조하십시오.
+
+The public pinmux API contains two functions named pinctrl_request_gpio()
+and pinctrl_free_gpio(). These two functions shall *ONLY* be called from
+gpiolib-based drivers as part of their gpio_request() and
+gpio_free() semantics. Likewise the pinctrl_gpio_direction_[input|output]
+shall only be called from within respective gpio_direction_[input|output]
+gpiolib implementation.
+public pinmux API에는 pinctrl_request_gpio () 및 pinctrl_free_gpio ()라는 두 개의 함수가 포함되어 있습니다. 이 두 함수는 gpio_request () 및 gpio_free () 의미 체계의 일부로 gpiolib 기반 드라이버에서 호출되어야 합니다 [ONLY]. 마찬가지로 pinctrl_gpio_direction_[input | output]은 gpio_direction_[input | output] gpiolib 구현 내에서 호출되어야 합니다.
+
+NOTE that platforms and individual drivers shall *NOT* request GPIO pins to be
+controlled e.g. muxed in. Instead, implement a proper gpiolib driver and have
+that driver request proper muxing and other control for its pins.
+플랫폼과 개별 드라이버는 예를 들어 다중화되도록 제어할 GPIO 핀을 요구해서는 [안된다!!]
+대신 적절한 gpiolib 드라이버를 구현하고 해당 드라이버가 핀에 대한 적절한 muxing 및 기타 제어를 요청하도록 하십시오.
+
+The function list could become long, especially if you can convert every
+individual pin into a GPIO pin independent of any other pins, and then try
+the approach to define every pin as a function.
+기능 목록은 길어질 수 있습니다. 특히 모든 개별 핀을 다른 핀과 독립적인 GPIO 핀으로 변환할 수 있다면 모든 핀을 기능으로 정의하는 방식을 시도하십시오.
+
+In this case, the function array would become 64 entries for each GPIO
+setting and then the device functions.
+이 경우 함수 배열은 각 GPIO 설정에 대해 64개 항목이되고 장치가 작동합니다.
+
+For this reason there are two functions a pin control driver can implement
+to enable only GPIO on an individual pin: .gpio_request_enable() and
+.gpio_disable_free().
+이러한 이유 때문에 개별 핀에서 GPIO 만 활성화하기 위해 핀컨트롤 드라이버가 구현할 수 있는 두 가지 기능, 즉 .gpio_request_enable() 및 .gpio_disable_free()가 있습니다.
+
+This function will pass in the affected GPIO range identified by the pin
+controller core, so you know which GPIO pins are being affected by the request
+operation.
+이 기능은 핀컨트롤러 코어에 의해 식별된 영향을 받는 GPIO 범위를 통과하므로 어떤 GPIO 핀이 요청 동작의 영향을 받는지 알 수 있습니다.
+
+If your driver needs to have an indication from the framework of whether the
+GPIO pin shall be used for input or output you can implement the
+.gpio_set_direction() function. As described this shall be called from the
+gpiolib driver and the affected GPIO range, pin offset and desired direction
+will be passed along to this function.
+드라이버가 GPIO 핀을 입력 또는 출력에 사용할지 여부를 프레임 워크에서 확인해야 하는 경우 .gpio_set_direction () 함수를 구현할 수 있습니다. 설명된 대로 gpiolib 드라이버와 해당 GPIO 범위에서 호출해야 하며 핀 오프셋과 원하는 방향이 이 함수에 전달됩니다.
+
+Alternatively to using these special functions, it is fully allowed to use
+named functions for each GPIO pin, the pinctrl_request_gpio() will attempt to
+obtain the function "gpioN" where "N" is the global GPIO pin number if no
+special GPIO-handler is registered.
+이러한 특수 기능을 사용하는 대신, 각 GPIO 핀에 대해 명명된 기능을 사용할 수 있으며, pinctrl_request_gpio ()는 특별한 GPIO 핸들러가 등록되지 않은 경우 "N"이 글로벌 GPIO 핀번호 인 "gpioN"함수를 가져오려고 시도합니다.
+
+
+GPIO mode pitfalls
+==================
+
+Due to the naming conventions used by hardware engineers, where "GPIO"
+is taken to mean different things than what the kernel does, the developer
+may be confused by a datasheet talking about a pin being possible to set
+into "GPIO mode". 
+"GPIO"가 커널이 하는 것과 다른 것을 의미하는 하드웨어 엔지니어가 사용하는 명명 규칙 때문에 개발자는 "GPIO 모드"로 설정할 수있는 핀에 대해 이야기하는 데이터 시트에 혼란을 느낄 수 있습니다.
+
+It appears that what hardware engineers mean with
+"GPIO mode" is not necessarily the use case that is implied in the kernel
+interface <linux/gpio.h>: a pin that you grab from kernel code and then
+either listen for input or drive high/low to assert/deassert some
+external line.
+"GPIO 모드"에서 하드웨어 엔지니어가 의미하는 바는 반드시 커널 인터페이스 <linux/gpio.h> : a pin (커널 코드에서 가져온 다음 입력을 기다리거나 high/low to assert/deassert를 외부 회선으로 연결한)에 내포 된 use case 일 필요는 없습니다
+
+Rather hardware engineers think that "GPIO mode" means that you can
+software-control a few electrical properties of the pin that you would
+not be able to control if the pin was in some other mode, such as muxed in
+for a device.
+오히려 하드웨어 엔지니어는 "GPIO 모드"는 핀이 장치의 다중 모드와 같이 다른 모드에 있을 경우 제어할 수 없는 몇 가지 전기적 속성을 소프트웨어로 제어할 수 있음을 의미합니다.
+
+
+The GPIO portions of a pin and its relation to a certain pin controller
+configuration and muxing logic can be constructed in several ways. Here
+are two examples:
+핀의 GPIO 부분과 특정 핀컨트롤러 구성 및 멀티플렉싱 로직과의 관계는 여러 가지 방법으로 구성 할 수 있습니다. 다음은 두 가지 예입니다.
+
+(A)
+                       pin config
+                       logic regs
+                       |               +- SPI
+     Physical pins --- pad --- pinmux -+- I2C
+                               |       +- mmc
+                               |       +- GPIO
+                               pin
+                               multiplex
+                               logic regs
+
+Here some electrical properties of the pin can be configured no matter
+whether the pin is used for GPIO or not. If you multiplex a GPIO onto a
+pin, you can also drive it high/low from "GPIO" registers.
+Alternatively, the pin can be controlled by a certain peripheral, while
+still applying desired pin config properties. GPIO functionality is thus
+orthogonal to any other device using the pin.
+핀이 GPIO 용으로 사용되는지 여부에 관계없이 핀의 일부 전기적 특성이 구성 될 수 있습니다. GPIO를 핀에 멀티플렉싱하는 경우 "GPIO"레지스터에서 GPIO를 high/low 로 구동할 수도 있습니다.
+대안적으로, 핀은 원하는 핀구성 특성을 여전히 적용하면서 특정 주변 장치에 의해 제어될 수있다. 따라서 GPIO 기능은 핀을 사용하는 다른 모든 디바이스와 직각을 이룬다.
+
+In this arrangement the registers for the GPIO portions of the pin controller,
+or the registers for the GPIO hardware module are likely to reside in a
+separate memory range only intended for GPIO driving, and the register
+range dealing with pin config and pin multiplexing get placed into a
+different memory range and a separate section of the data sheet.
+이 배열에서 핀컨트롤러의 GPIO 부분에 대한 레지스터 또는 GPIO 하드웨어 모듈용 레지스터는 GPIO 구동 전용 인 별도의 메모리 범위에 상주 할 가능성이 있으며,
+핀구성 및 핀다중화를 다루는 레지스터 범위는 다른 메모리 범위와 데이터 시트의 개별 섹션에 배치됩니다.
+
+A flag "strict" in struct pinmux_ops is available to check and deny
+simultaneous access to the same pin from GPIO and pin multiplexing
+consumers on hardware of this type. The pinctrl driver should set this flag
+accordingly.
+struct pinmux_ops의 플래그 "strict"는 GPIO에서 동일한 핀에 대한 동시 액세스를 확인하고 거부할 수 있으며 이 유형의 하드웨어에서 consumers를 핀 다중화 할 수 있습니다. pinctrl 드라이버는 이 플래그를 적절히 설정해야 합니다.
+
+(B)
+
+                       pin config
+                       logic regs
+                       |               +- SPI
+     Physical pins --- pad --- pinmux -+- I2C
+                       |       |       +- mmc
+                       |       |
+                       GPIO    pin
+                               multiplex
+                               logic regs
+
+In this arrangement, the GPIO functionality can always be enabled, such that
+e.g. a GPIO input can be used to "spy" on the SPI/I2C/MMC signal while it is
+pulsed out. It is likely possible to disrupt the traffic on the pin by doing
+wrong things on the GPIO block, as it is never really disconnected. It is
+possible that the GPIO, pin config and pin multiplex registers are placed into
+the same memory range and the same section of the data sheet, although that
+need not be the case.
+이 배열에서 GPIO 기능을 항상 활성화 할 수 있으므로, 예를들어 GPIO 입력이 SPI / I2C / MMC 신호가 펄스 아웃되는 동안 "spy"로 사용할 수 있습니다.
+실제로 연결이 끊어지지 않으므로 GPIO 블록에서 잘못된 작업을 수행하여 핀의 트래픽을 방해할 수 있습니다.
+GPIO, 핀구성 및 핀 멀티플렉스 레지스터는 동일한 메모리 범위와 데이터 시트의 동일한 섹션에 배치될 수 있지만, 그럴 필요는 없습니다.
+
+In some pin controllers, although the physical pins are designed in the same
+way as (B), the GPIO function still can't be enabled at the same time as the
+peripheral functions. So again the "strict" flag should be set, denying
+simultaneous activation by GPIO and other muxed in devices.
+일부 핀 컨트롤러에서는 물리적 핀이 (B)와 같은 방식으로 설계되지만 주변 장치 기능과 동시에 GPIO 기능을 활성화 할 수 없습니다. 그래서 다시 "엄격한(strict)"플래그가 설정되어 GPIO 및 다른 장치에 다중화된 동시 활성화가 거부됩니다.
+
+From a kernel point of view, however, these are different aspects of the
+hardware and shall be put into different subsystems:
+그러나 커널 관점에서 보면 하드웨어의 다른 측면이며 다른 하위 시스템에 배치해야합니다.
+
+- Registers (or fields within registers) that control electrical
+  properties of the pin such as biasing and drive strength should be
+  exposed through the pinctrl subsystem, as "pin configuration" settings.
+바이어스 및 구동 세기와 같이 핀의 전기적 특성을 제어하는 ​​레지스터 (또는 레지스터 내의 필드)는 "핀 구성"설정으로 pinctrl 서브 시스템을 통해 노출되어야합니다.
+
+- Registers (or fields within registers) that control muxing of signals
+  from various other HW blocks (e.g. I2C, MMC, or GPIO) onto pins should
+  be exposed through the pinctrl subsystem, as mux functions.
+다양한 다른 HW 블록 (예 : I2C, MMC 또는 GPIO)에서 핀으로 신호를 다중화하는 것을 제어하는 ​​레지스터 (또는 레지스터 내의 필드)는 mux 기능처럼 pinctrl 서브 시스템을 통해 노출되어야합니다.
+
+- Registers (or fields within registers) that control GPIO functionality
+  such as setting a GPIO's output value, reading a GPIO's input value, or
+  setting GPIO pin direction should be exposed through the GPIO subsystem,
+  and if they also support interrupt capabilities, through the irqchip
+  abstraction.
+ GPIO의 출력 값 설정, GPIO의 입력 값 읽기 또는 GPIO 핀 방향 설정과 같은 GPIO 기능을 제어하는 ​​레지스터 (또는 레지스터 내의 필드)는 노출되어야 한다. 
+GPIO 서브 시스템을 통해, 그리고 인터럽트 기능을 지원한다면, irqchip 추상화를 통해.
+
+Depending on the exact HW register design, some functions exposed by the
+GPIO subsystem may call into the pinctrl subsystem in order to
+co-ordinate register settings across HW modules. In particular, this may
+be needed for HW with separate GPIO and pin controller HW modules, where
+e.g. GPIO direction is determined by a register in the pin controller HW
+module rather than the GPIO HW module.
+정확한 HW 레지스터 설계에 따라, GPIO 서브 시스템에 의해 노출된 일부 기능은 HW 모듈간에 레지스터 설정을 조정하기 위해 pinctrl 서브 시스템을 호출할 수 있습니다. 특히, 별도의 GPIO 및 핀 컨트롤러 HW 모듈이있는 HW의 경우, 이 기능이 필요할 수 있습니다. GPIO 방향은 GPIO HW 모듈보다는 핀 컨트롤러 HW 모듈의 레지스터에 의해 결정됩니다.
+
+Electrical properties of the pin such as biasing and drive strength
+may be placed at some pin-specific register in all cases or as part
+of the GPIO register in case (B) especially. This doesn't mean that such
+properties necessarily pertain to what the Linux kernel calls "GPIO".
+바이어싱 및 구동 세기(biasing and drive strength)와 같은 핀의 전기적 특성은 모든 경우에 특정 핀 특정 레지스터에 배치되거나 (B)의 경우 GPIO 레지스터의 일부로 배치 될 수 있습니다. 그렇다고해서 이러한 속성이 반드시 Linux 커널이 "GPIO"라고 부르는 것과 관련이 있음을 의미하지는 않습니다.
+
+Example: a pin is usually muxed in to be used as a UART TX line. But during
+system sleep, we need to put this pin into "GPIO mode" and ground it.
+예 : 핀은 일반적으로 UART TX 라인으로 사용하기 위해 다중화됩니다. 그러나 시스템 sleep 중에 이 핀을 "GPIO 모드"에 넣고 ground 해야합니다.
+
+If you make a 1-to-1 map to the GPIO subsystem for this pin, you may start
+to think that you need to come up with something really complex, that the
+pin shall be used for UART TX and GPIO at the same time, that you will grab
+a pin control handle and set it to a certain state to enable UART TX to be
+muxed in, then twist it over to GPIO mode and use gpio_direction_output()
+to drive it low during sleep, then mux it over to UART TX again when you
+wake up and maybe even gpio_request/gpio_free as part of this cycle. This
+all gets very complicated.
+이 핀을 위해 GPIO 서브 시스템에 1 대 1 맵을 만들면 핀이 UART TX 및 GPIO 용으로 동시에 사용되어야한다는 사실을 생각해야한다. 핀 컨트롤 핸들을 잡고 특정 상태로 설정하여 UART TX를 멀티플렉싱 할 수있게 한 다음 GPIO 모드로 트위스트하고 [gpio_direction_output()]를 사용하여 슬립 모드 동안 로우로 구동 한 다음 UART TX로 멀티플렉싱합니다. 다시 wakeup 이 되면, 사이클의 일부로 [gpio_request/gpio_free]조차 할 수 있습니다. 
+이 모든 것은 매우 복잡해집니다.
+
+The solution is to not think that what the datasheet calls "GPIO mode"
+has to be handled by the <linux/gpio.h> interface. Instead view this as
+a certain pin config setting. Look in e.g. <linux/pinctrl/pinconf-generic.h>
+and you find this in the documentation:
+해결책은 데이터 시트가 "GPIO 모드"라고 부르는 것이 <linux / gpio.h> 인터페이스에 의해 처리되어야한다고 생각하지 않는 것입니다. 대신 이것을 특정 핀구성 설정 으로 보십시오. 
+예를 들어보면, <linux / pinctrl / pinconf-generic.h> 
+그리고 이 문서에서 찾을 수 있습니다 :
+
+  PIN_CONFIG_OUTPUT: this will configure the pin in output, use argument
+     1 to indicate high level, argument 0 to indicate low level.
+PIN_CONFIG_OUTPUT : 이것은 핀을 출력으로 설정하고, 인수 1을 사용하여 하이 레벨, 인수 0을 사용하여 로우 레벨을 나타냅니다.
+
+So it is perfectly possible to push a pin into "GPIO mode" and drive the
+line low as part of the usual pin control map. So for example your UART
+driver may look like this:
+따라서 핀을 "GPIO 모드"로 밀어넣고 일반 핀컨트롤 맵의 일부로 라인을 low로 구동할 수 있습니다. 예를 들어 UART 드라이버가 다음과 같이 보일 수 있습니다 :
+
+#include <linux/pinctrl/consumer.h>
+
+struct pinctrl          *pinctrl;
+struct pinctrl_state    *pins_default;
+struct pinctrl_state    *pins_sleep;
+
+pins_default = pinctrl_lookup_state(uap->pinctrl, PINCTRL_STATE_DEFAULT);
+pins_sleep = pinctrl_lookup_state(uap->pinctrl, PINCTRL_STATE_SLEEP);
+
+/* Normal mode */
+retval = pinctrl_select_state(pinctrl, pins_default);
+/* Sleep mode */
+retval = pinctrl_select_state(pinctrl, pins_sleep);
+
+And your machine configuration may look like this:
+--------------------------------------------------
+
+static unsigned long uart_default_mode[] = {
+    PIN_CONF_PACKED(PIN_CONFIG_DRIVE_PUSH_PULL, 0),
+};
+
+static unsigned long uart_sleep_mode[] = {
+    PIN_CONF_PACKED(PIN_CONFIG_OUTPUT, 0),
+};
+
+static struct pinctrl_map pinmap[] __initdata = {
+    PIN_MAP_MUX_GROUP("uart", PINCTRL_STATE_DEFAULT, "pinctrl-foo",
+                      "u0_group", "u0"),
+    PIN_MAP_CONFIGS_PIN("uart", PINCTRL_STATE_DEFAULT, "pinctrl-foo",
+                        "UART_TX_PIN", uart_default_mode),
+    PIN_MAP_MUX_GROUP("uart", PINCTRL_STATE_SLEEP, "pinctrl-foo",
+                      "u0_group", "gpio-mode"),
+    PIN_MAP_CONFIGS_PIN("uart", PINCTRL_STATE_SLEEP, "pinctrl-foo",
+                        "UART_TX_PIN", uart_sleep_mode),
+};
+
+foo_init(void) {
+    pinctrl_register_mappings(pinmap, ARRAY_SIZE(pinmap));
+}
+
+Here the pins we want to control are in the "u0_group" and there is some
+function called "u0" that can be enabled on this group of pins, and then
+everything is UART business as usual. But there is also some function
+named "gpio-mode" that can be mapped onto the same pins to move them into
+GPIO mode.
+여기서 우리가 제어하고자하는 핀은 "u0_group"에 있으며이 핀 그룹에서 "u0"이라는 기능을 사용할 수 있습니다. 그러면 모든 것이 UART 비즈니스입니다. 그러나 GPIO 모드로 전환하기 위해 동일한 핀에 매핑 할 수있는 "gpio-mode"라는 기능이 있습니다.
+
+This will give the desired effect without any bogus interaction with the
+GPIO subsystem. It is just an electrical configuration used by that device
+when going to sleep, it might imply that the pin is set into something the
+datasheet calls "GPIO mode", but that is not the point: it is still used
+by that UART device to control the pins that pertain to that very UART
+driver, putting them into modes needed by the UART. GPIO in the Linux
+kernel sense are just some 1-bit line, and is a different use case.
+이렇게하면 GPIO 하위 시스템과 가짜 상호 작용없이 원하는 효과를 얻을 수 있습니다. 이 장치가 going to sleep 일 때 사용하는 전기구성 일 뿐이며 핀이 "GPIO 모드"라고하는 데이터 시트에 설정되어 있음을 암시할 수 있습니다.하지만 요점은 아닙니다. UART 장치가 제어하기 위해 계속 사용하고 있습니다. 바로 UART 드라이버와 관련된 핀들을 UART에 필요한 모드에 넣습니다. Linux 커널 의미에서의 GPIO는 단지 1 비트 라인이며 다른 사용 사례입니다.
+
+How the registers are poked to attain the push or pull, and output low
+configuration and the muxing of the "u0" or "gpio-mode" group onto these
+pins is a question for the driver.
+푸시 또는 풀을 얻기 위해 레지스터를 찔러넣은다음 로우 구성을 출력하고, "u0"또는 "gpio-mode"그룹을이 핀에 멀티플렉싱하는 방법은 드라이버에 대한 질문입니다.
+
+Some datasheets will be more helpful and refer to the "GPIO mode" as
+"low power mode" rather than anything to do with GPIO. This often means
+the same thing electrically speaking, but in this latter case the
+software engineers will usually quickly identify that this is some
+specific muxing or configuration rather than anything related to the GPIO
+API.
+일부 데이터 시트는 더 유용할 것이고 GPIO와 관련이 있는 것이 아니라 "저전력 모드"로 "GPIO 모드"를 참조하십시오. 이것은 종종 전기적으로 똑같은 것을 의미하지만, 후자의 경우 소프트웨어 엔지니어는 대개 이것이 GPIO API와 관련된 것보다 특정 멀티플렉싱 또는 구성임을 신속하게 식별합니다.
+
+
+Board/machine configuration
+보드/머신 컨피규레이션
+==================================
+
+Boards and machines define how a certain complete running system is put
+together, including how GPIOs and devices are muxed, how regulators are
+constrained and how the clock tree looks. Of course pinmux settings are also
+part of this.
+보드와 머신은 GPIO와 디바이스가 멀티플렉싱되는 방식, 레귤레이터가 제약되는 방식, 클록 트리가 어떻게 보이는지를 포함하여 특정 실행 시스템을 함께 구성하는 방법을 정의합니다. 물론 pinmux 설정도 이 부분입니다.
+
+A pin controller configuration for a machine looks pretty much like a simple
+regulator configuration, so for the example array above we want to enable i2c
+and spi on the second function mapping:
+머신의 핀컨트롤러 설정은 단순한 레귤레이터 설정과 매우 흡사합니다. 위의 예제 배열에서 두 번째 함수 매핑에 대해 i2c 및 spi를 활성화하려고 합니다.
+
+#include <linux/pinctrl/machine.h>
+
+static const struct pinctrl_map mapping[] __initconst = {
+	{
+		.dev_name = "foo-spi.0",
+		.name = PINCTRL_STATE_DEFAULT,
+		.type = PIN_MAP_TYPE_MUX_GROUP,
+		.ctrl_dev_name = "pinctrl-foo",
+		.data.mux.function = "spi0",
+	},
+	{
+		.dev_name = "foo-i2c.0",
+		.name = PINCTRL_STATE_DEFAULT,
+		.type = PIN_MAP_TYPE_MUX_GROUP,
+		.ctrl_dev_name = "pinctrl-foo",
+		.data.mux.function = "i2c0",
+	},
+	{
+		.dev_name = "foo-mmc.0",
+		.name = PINCTRL_STATE_DEFAULT,
+		.type = PIN_MAP_TYPE_MUX_GROUP,
+		.ctrl_dev_name = "pinctrl-foo",
+		.data.mux.function = "mmc0",
+	},
+};
+
+The dev_name here matches to the unique device name that can be used to look
+up the device struct (just like with clockdev or regulators). The function name
+must match a function provided by the pinmux driver handling this pin range.
+여기서 dev_name은 장치 구조를 찾는데 사용할 수 있는 고유한 장치 이름과 일치합니다 (clockdev 또는 조절기와 동일). 함수 이름은 이 핀 범위를 처리하는 pinmux 드라이버가 제공하는 함수와 일치해야합니다.
+
+As you can see we may have several pin controllers on the system and thus
+we need to specify which one of them contains the functions we wish to map.
+보시다시피, 시스템에 여러 개의 핀 컨트롤러가 있을 수 있으므로 매핑할 함수가 들어있는 핀 컨트롤러를 지정해야합니다.
+
+You register this pinmux mapping to the pinmux subsystem by simply:
+다음과 같이 pinmux 매핑을 pinmux 서브 시스템에 등록합니다.
+
+
+       ret = pinctrl_register_mappings(mapping, ARRAY_SIZE(mapping));
+
+
+Since the above construct is pretty common there is a helper macro to make
+it even more compact which assumes you want to use pinctrl-foo and position
+0 for mapping, for example:
+위의 구조체는 매우 일반적이기 때문에 여러분이 pinctrl-foo를 사용하고 매핑을 위해 위치 0을 사용한다고 가정 할 때 더욱 조밀하게 만드는 헬퍼 매크로가 있습니다. 예를 들면 다음과 같습니다.
+
+
+static struct pinctrl_map mapping[] __initdata = {
+	PIN_MAP_MUX_GROUP("foo-i2c.o", PINCTRL_STATE_DEFAULT, "pinctrl-foo", NULL, "i2c0"),
+};
+
+
+The mapping table may also contain pin configuration entries. It's common for
+each pin/group to have a number of configuration entries that affect it, so
+the table entries for configuration reference an array of config parameters
+and values. An example using the convenience macros is shown below:
+매핑 테이블은 또한 핀 구성 엔트리를 포함할 수있다. 각 pin/group에 영향을주는 여러 구성 항목이 있는 것이 일반적이므로 구성용 테이블 항목은 구성 매개 변수 및 값 배열을 참조합니다.
+convenience 매크로를 사용하는 예제는 다음과 같습니다.
+
+
+static unsigned long i2c_grp_configs[] = {
+	FOO_PIN_DRIVEN,
+	FOO_PIN_PULLUP,
+};
+
+static unsigned long i2c_pin_configs[] = {
+	FOO_OPEN_COLLECTOR,
+	FOO_SLEW_RATE_SLOW,
+};
+
+
+static struct pinctrl_map mapping[] __initdata = {
+	PIN_MAP_MUX_GROUP("foo-i2c.0", PINCTRL_STATE_DEFAULT, "pinctrl-foo", "i2c0", "i2c0"),
+	PIN_MAP_CONFIGS_GROUP("foo-i2c.0", PINCTRL_STATE_DEFAULT, "pinctrl-foo", "i2c0", i2c_grp_configs),
+	PIN_MAP_CONFIGS_PIN("foo-i2c.0", PINCTRL_STATE_DEFAULT, "pinctrl-foo", "i2c0scl", i2c_pin_configs),
+	PIN_MAP_CONFIGS_PIN("foo-i2c.0", PINCTRL_STATE_DEFAULT, "pinctrl-foo", "i2c0sda", i2c_pin_configs),
+};
+
+
+Finally, some devices expect the mapping table to contain certain specific
+named states. When running on hardware that doesn't need any pin controller
+configuration, the mapping table must still contain those named states, in
+order to explicitly indicate that the states were provided and intended to
+be empty. Table entry macro PIN_MAP_DUMMY_STATE serves the purpose of defining
+a named state without causing any pin controller to be programmed:
+마지막으로 일부 장치는 매핑 테이블에 특정한 특정명명된 상태가 포함될 것으로 기대합니다. 핀컨트롤러 구성을 필요로하지 않는 하드웨어에서 실행될 때 매핑 테이블은 상태가 제공되고 비어있음을 명시적으로 나타내기 위해 이러한 명명 된 상태를 포함해야합니다.
+테이블 항목 매크로 PIN_MAP_DUMMY_STATE는 핀 컨트롤러를 프로그래밍하지 않고도 명명된 상태를 정의할 목적으로 사용됩니다.
+
+static struct pinctrl_map mapping[] __initdata = {
+	PIN_MAP_DUMMY_STATE("foo-i2c.0", PINCTRL_STATE_DEFAULT),
+};
+
+
+Complex mappings
+복잡한 매
+================
+
+As it is possible to map a function to different groups of pins an optional
+.group can be specified like this:
+함수를 다른 그룹의 핀에 매핑 할 수 있으므로 선택적 .group은 다음과 같이 지정할 수 있습니다.
+
+...
+{
+	.dev_name = "foo-spi.0",
+	.name = "spi0-pos-A",
+	.type = PIN_MAP_TYPE_MUX_GROUP,
+	.ctrl_dev_name = "pinctrl-foo",
+	.function = "spi0",
+	.group = "spi0_0_grp",
+},
+{
+	.dev_name = "foo-spi.0",
+	.name = "spi0-pos-B",
+	.type = PIN_MAP_TYPE_MUX_GROUP,
+	.ctrl_dev_name = "pinctrl-foo",
+	.function = "spi0",
+	.group = "spi0_1_grp",
+},
+...
+
+This example mapping is used to switch between two positions for spi0 at
+runtime, as described further below under the heading "Runtime pinmuxing".
+이 예제 매핑은 런타임에 spi0에 대한 두 위치 사이를 전환하는 데 사용됩니다. 자세한 내용은 아래의 "Runtime pinmuxing"단원에서 설명합니다.
+
+Further it is possible for one named state to affect the muxing of several
+groups of pins, say for example in the mmc0 example above, where you can
+additively expand the mmc0 bus from 2 to 4 to 8 pins. If we want to use all
+three groups for a total of 2+2+4 = 8 pins (for an 8-bit MMC bus as is the
+case), we define a mapping like this:
+또한 위의 mmc0 예제에서 mmc0 버스를 2에서 4 개에서 8 개까지 추가 확장할 수있는 것과 같이 하나의 명명된 상태가 여러 그룹의 핀 그룹을 다중화하는 데 영향을 미칠 수 있습니다. 총 2 + 2 + 4 = 8 핀 (이 경우 8 비트 MMC 버스 용)에 대해 3 개의 그룹을 모두 사용하려면 다음과 같은 매핑을 정의합니다.
+
+...
+{
+	.dev_name = "foo-mmc.0",
+	.name = "2bit"
+	.type = PIN_MAP_TYPE_MUX_GROUP,
+	.ctrl_dev_name = "pinctrl-foo",
+	.function = "mmc0",
+	.group = "mmc0_1_grp",
+},
+{
+	.dev_name = "foo-mmc.0",
+	.name = "4bit"
+	.type = PIN_MAP_TYPE_MUX_GROUP,
+	.ctrl_dev_name = "pinctrl-foo",
+	.function = "mmc0",
+	.group = "mmc0_1_grp",
+},
+{
+	.dev_name = "foo-mmc.0",
+	.name = "4bit"
+	.type = PIN_MAP_TYPE_MUX_GROUP,
+	.ctrl_dev_name = "pinctrl-foo",
+	.function = "mmc0",
+	.group = "mmc0_2_grp",
+},
+{
+	.dev_name = "foo-mmc.0",
+	.name = "8bit"
+	.type = PIN_MAP_TYPE_MUX_GROUP,
+	.ctrl_dev_name = "pinctrl-foo",
+	.function = "mmc0",
+	.group = "mmc0_1_grp",
+},
+{
+	.dev_name = "foo-mmc.0",
+	.name = "8bit"
+	.type = PIN_MAP_TYPE_MUX_GROUP,
+	.ctrl_dev_name = "pinctrl-foo",
+	.function = "mmc0",
+	.group = "mmc0_2_grp",
+},
+{
+	.dev_name = "foo-mmc.0",
+	.name = "8bit"
+	.type = PIN_MAP_TYPE_MUX_GROUP,
+	.ctrl_dev_name = "pinctrl-foo",
+	.function = "mmc0",
+	.group = "mmc0_3_grp",
+},
+...
+
+The result of grabbing this mapping from the device with something like
+this (see next paragraph):
+이런 식으로 장치에서 이 매핑을 얻은 결과입니다 (다음 단락 참조):
+
+	p = devm_pinctrl_get(dev);
+	s = pinctrl_lookup_state(p, "8bit");
+	ret = pinctrl_select_state(p, s);
+
+or more simply:
+또는 더 간단하게 :
+
+	p = devm_pinctrl_get_select(dev, "8bit");
+
+Will be that you activate all the three bottom records in the mapping at
+once. Since they share the same name, pin controller device, function and
+device, and since we allow multiple groups to match to a single device, they
+all get selected, and they all get enabled and disable simultaneously by the
+pinmux core.
+한 번에 매핑의 세 가지 맨 아래 레코드를 모두 활성화 할 것입니다.
+동일한 이름, 핀 컨트롤러 장치, 기능 및 장치를 공유하고 여러 장치가 하나의 장치에 일치하도록 허용하기 때문에 모든 장치가 선택되어 pinmux 코어에서 동시에 활성화 및 비활성화됩니다.
+
+
+Pin control requests from drivers
+=================================
+
+When a device driver is about to probe the device core will automatically
+attempt to issue pinctrl_get_select_default() on these devices.
+장치 드라이버가 장치 코어를 탐색하려고하면 자동으로 이러한 장치에서 pinctrl_get_select_default ()를 실행하려고 시도합니다.
+
+This way driver writers do not need to add any of the boilerplate code
+of the type found below. However when doing fine-grained state selection
+and not using the "default" state, you may have to do some device driver
+handling of the pinctrl handles and states.
+이 방법으로 driver writer는 아래에있는 유형의 상용구 코드를 추가할 필요가 없습니다. 그러나 세분화된 상태 선택을 수행하고 "default"상태를 사용하지 않을 때는 pinctrl 핸들 및 상태에 대한 일부 장치 드라이버 처리를 수행해야 할 수 있습니다.
+
+So if you just want to put the pins for a certain device into the default
+state and be done with it, there is nothing you need to do besides
+providing the proper mapping table. The device core will take care of
+the rest.
+따라서 특정 장치의 핀을 기본 상태로 놓고 끝내고 싶다면 적절한 매핑 테이블을 제공하는 것 이외에는 아무 것도 할 필요가 없습니다. 장치 코어가 나머지 부분을 처리합니다.
+
+Generally it is discouraged to let individual drivers get and enable pin
+control. So if possible, handle the pin control in platform code or some other
+place where you have access to all the affected struct device * pointers. In
+some cases where a driver needs to e.g. switch between different mux mappings
+at runtime this is not possible.
+일반적으로 개별 드라이버가 핀 컨트롤을 사용하도록 설정하는 것은 바람직하지 않습니다. 따라서 가능한 경우 플랫폼 코드나 영향을받는 모든 struct device * 포인터에 대한 액세스 권한이있는 다른 곳에서 핀 컨트롤을 처리하십시오. 드라이버가 필요로하는 경우가 있습니다. 런타임에 다른 mux 매핑간에 전환할 수 없습니다.
+
+A typical case is if a driver needs to switch bias of pins from normal
+operation and going to sleep, moving from the PINCTRL_STATE_DEFAULT to
+PINCTRL_STATE_SLEEP at runtime, re-biasing or even re-muxing pins to save
+current in sleep mode.
+일반적인 경우는 운전자가 핀의 바이어스를 정상 작동 상태에서 슬립 상태로 전환해야 할 필요가있는 경우,
+런타임에 PINCTRL_STATE_DEFAULT에서 PINCTRL_STATE_SLEEP으로 이동하거나, 슬립 모드로 전류를 저장하기 위해 핀을 re-biasing하거나 re-muxing합니다.
+
+A driver may request a certain control state to be activated, usually just the
+default state like this:
+드라이버는 특정 제어 상태가 활성화되도록 요청할 수 있습니다. 일반적으로 다음과 같은 기본 상태가됩니다.
+
+#include <linux/pinctrl/consumer.h>
+
+struct foo_state {
+       struct pinctrl *p;
+       struct pinctrl_state *s;
+       ...
+};
+
+foo_probe()
+{
+	/* Allocate a state holder named "foo" etc */
+	struct foo_state *foo = ...;
+
+	foo->p = devm_pinctrl_get(&device);
+	if (IS_ERR(foo->p)) {
+		/* FIXME: clean up "foo" here */
+		return PTR_ERR(foo->p);
+	}
+
+	foo->s = pinctrl_lookup_state(foo->p, PINCTRL_STATE_DEFAULT);
+	if (IS_ERR(foo->s)) {
+		/* FIXME: clean up "foo" here */
+		return PTR_ERR(s);
+	}
+
+	ret = pinctrl_select_state(foo->s);
+	if (ret < 0) {
+		/* FIXME: clean up "foo" here */
+		return ret;
+	}
+}
+
+This get/lookup/select/put sequence can just as well be handled by bus drivers
+if you don't want each and every driver to handle it and you know the
+arrangement on your bus.
+이 get / lookup / select / put 시퀀스는 모든 드라이버가 bus driver를 처리하고 버스의 배열을 알고 싶지 않으면 bus driver가 처리할 수 ​​있습니다.
+
+The semantics of the pinctrl APIs are:
+pinctrl API의 의미는 다음과 같습니다.
+
+- pinctrl_get() is called in process context to obtain a handle to all pinctrl
+  information for a given client device. It will allocate a struct from the
+  kernel memory to hold the pinmux state. All mapping table parsing or similar
+  slow operations take place within this API.
+pinctrl_get()은 주어진 클라이언트 디바이스에 대한 모든 pinctrl 정보에 대한 핸들을 얻기 위해 프로세스 컨텍스트에서 호출됩니다. pinmux 상태를 유지하기 위해 커널 메모리에서 구조체를 할당합니다. 모든 매핑 테이블 구문 분석 또는 유사한 느린 연산이 이 API 내에서 발생합니다.
+
+- devm_pinctrl_get() is a variant of pinctrl_get() that causes pinctrl_put()
+  to be called automatically on the retrieved pointer when the associated
+  device is removed. It is recommended to use this function over plain
+  pinctrl_get().
+devm_pinctrl_get()은 연결된 장치가 제거될 때 검색된 포인터에서 자동으로 pinctrl_put()을 호출하게하는 pinctrl_get()의 변형입니다. 일반 pinctrl_get()보다 이 함수를 사용하는 것이 좋습니다.
+
+- pinctrl_lookup_state() is called in process context to obtain a handle to a
+  specific state for a client device. This operation may be slow, too.
+pinctrl_lookup_state()는 클라이언트 디바이스의 특정 상태에 대한 핸들을 얻기 위해 프로세스 컨텍스트에서 호출됩니다. 이 작업은 느려질 수도 있습니다.
+
+- pinctrl_select_state() programs pin controller hardware according to the
+  definition of the state as given by the mapping table. In theory, this is a
+  fast-path operation, since it only involved blasting some register settings
+  into hardware. However, note that some pin controllers may have their
+  registers on a slow/IRQ-based bus, so client devices should not assume they
+  can call pinctrl_select_state() from non-blocking contexts.
+ pinctrl_select_state() 프로그램은 매핑 테이블에 주어진 상태의 정의에 따라 컨트롤러 하드웨어를 고정시킵니다. 이론적으로, 이는 하드웨어에 일부 레지스터 설정을 적용하는 작업만 포함하기 때문에 fast-path operation입니다. 그러나 일부 핀 컨트롤러는 slow/IRQ-based 버스에 레지스터를 가질 수 있으므로 클라이언트 장치는 non-blocking 컨텍스트에서 pinctrl_select_state()를 호출할 수 있다고 가정해서는 안됩니다.
+
+- pinctrl_put() frees all information associated with a pinctrl handle.
+pinctrl_put()은 pinctrl 핸들과 관련된 모든 정보를 해제합니다.
+
+- devm_pinctrl_put() is a variant of pinctrl_put() that may be used to
+  explicitly destroy a pinctrl object returned by devm_pinctrl_get().
+  However, use of this function will be rare, due to the automatic cleanup
+  that will occur even without calling it.
+devm_pinctrl_put()은 devct_pinctrl_get()에 의해 반환된 pinctrl 객체를 명시적으로 파기하는 데 사용할 수 있는 pinctrl_put()의 변형입니다. 그러나 이 기능을 사용하지 않아도 자동 정리가 수행되므로 이 기능을 사용하는 경우는 드뭅니다.
+
+  pinctrl_get() must be paired with a plain pinctrl_put().
+  pinctrl_get()은 일반 pinctrl_put()과 쌍을 이루어야합니다.
+  pinctrl_get() may not be paired with devm_pinctrl_put().
+  pinctrl_get()은 devm_pinctrl_put()과 쌍을 이루지 않을 수 있습니다.
+  devm_pinctrl_get() can optionally be paired with devm_pinctrl_put().
+  devm_pinctrl_get()은 선택적으로 devm_pinctrl_put()과 쌍을 이룰 수 있습니다.
+  devm_pinctrl_get() may not be paired with plain pinctrl_put().
+  devm_pinctrl_get()은 일반 pinctrl_put()과 쌍을 이루지 않을 수 있습니다.
+
+
+Usually the pin control core handled the get/put pair and call out to the
+device drivers bookkeeping operations, like checking available functions and
+the associated pins, whereas select_state pass on to the pin controller
+driver which takes care of activating and/or deactivating the mux setting by
+quickly poking some registers.
+일반적으로 핀 제어 코어는 get / put 쌍을 처리하고 장치 드라이버 부기 작업을 호출하는데, 사용 가능한 기능 및 관련 핀을 확인하는 것과 마찬가지로, select_state는 일부 레지스터를 빠르게 파킹하여 멀티플렉서 설정을 활성화 및 / 또는 비활성화하는 핀 컨트롤러 드라이버로 전달합니다.
+
+The pins are allocated for your device when you issue the devm_pinctrl_get()
+call, after this you should be able to see this in the debugfs listing of all
+pins.
+devm_pinctrl_get () 호출을하면 이 핀이 장치에 할당되고, 이후에는 모든 핀의 debugfs 목록에서 이를 볼 수 있습니다.
+
+NOTE: the pinctrl system will return -EPROBE_DEFER if it cannot find the
+requested pinctrl handles, for example if the pinctrl driver has not yet
+registered. Thus make sure that the error path in your driver gracefully
+cleans up and is ready to retry the probing later in the startup process.
+참고 : pinctrl 시스템은 요청된 pinctrl 핸들을 찾을수없는 경우 (예 : pinctrl 드라이버가 아직 등록되지 않은 경우) PROBE_DEFER를 반환합니다. 따라서 드라이버의 오류 경로가 정상적으로 정리되고 시작 프로세스의 후반부에 검사를 다시 시도할 준비가 되었는지 확인하십시오.
+
+
+Drivers needing both pin control and GPIOs
+핀 제어 및 GPIO를 모두 필요로하는 드라이버
+==========================================
+
+Again, it is discouraged to let drivers lookup and select pin control states
+themselves, but again sometimes this is unavoidable.
+다시 말하지만, 드라이버가 핀 컨트롤 상태를 스스로 검색하고 선택하게 하는 것은 바람직하지 않지만 때때로 다시는 피할 수 없는 경우가 있습니다.
+
+So say that your driver is fetching its resources like this:
+드라이버가 다음과 같이 리소스를 가져오고 있다고 가정 해보십시오.
+
+#include <linux/pinctrl/consumer.h>
+#include <linux/gpio.h>
+
+struct pinctrl *pinctrl;
+int gpio;
+
+pinctrl = devm_pinctrl_get_select_default(&dev);
+gpio = devm_gpio_request(&dev, 14, "foo");
+
+Here we first request a certain pin state and then request GPIO 14 to be
+used. If you're using the subsystems orthogonally like this, you should
+nominally always get your pinctrl handle and select the desired pinctrl
+state BEFORE requesting the GPIO. This is a semantic convention to avoid
+situations that can be electrically unpleasant, you will certainly want to
+mux in and bias pins in a certain way before the GPIO subsystems starts to
+deal with them.
+여기서는 먼저 특정 핀 상태를 요청한 다음 GPIO 14를 사용하도록 요청합니다.
+이와 같이 직교적으로 서브 시스템을 사용한다면 명목상 항상 pinctrl 핸들을 가져와 GPIO를 요청하기 전에 원하는 pinctrl 상태를 선택해야합니다.
+이것은 전기적으로 불쾌한 상황을 피하기위한 의미론적 협약이며, GPIO 서브 시스템이 그 문제들을 다루기 전에, 확실히 멀티플렉싱하고 특정 방식으로 핀을 바이어싱 하기를 원할 것입니다
+
+The above can be hidden: using the device core, the pinctrl core may be
+setting up the config and muxing for the pins right before the device is
+probing, nevertheless orthogonal to the GPIO subsystem.
+위의 내용을 숨길 수 있습니다 : 장치 코어를 사용하여 pinctrl 코어는 장치가 probing되기 바로 전에 핀에 대한 구성 및 멀티플렉싱을 설정하지만 그럼에도 GPIO 하위 시스템과 직각을 이루고 있습니다.
+
+But there are also situations where it makes sense for the GPIO subsystem
+to communicate directly with the pinctrl subsystem, using the latter as a
+back-end. This is when the GPIO driver may call out to the functions
+described in the section "Pin control interaction with the GPIO subsystem"
+above. This only involves per-pin multiplexing, and will be completely
+hidden behind the gpio_*() function namespace. In this case, the driver
+need not interact with the pin control subsystem at all.
+그러나 GPIO 서브 시스템이 백엔드로서 후자를 사용하여 pinctrl 서브 시스템과 직접 통신하는 것이 타당한 경우도 있습니다. 이것은 GPIO 드라이버가 위의 "GPIO 서브 시스템과의 핀 컨트롤 상호 작용"절에서 설명한 기능을 호출할 수있는 경우입니다. 이것은 단지 핀 당 다중화를 포함하며 gpio_*() 함수 네임 스페이스 뒤에 완전히 숨겨집니다. 이 경우, 드라이버는 핀 제어 서브 시스템과 전혀 상호 작용할 필요가 없다.
+
+If a pin control driver and a GPIO driver is dealing with the same pins
+and the use cases involve multiplexing, you MUST implement the pin controller
+as a back-end for the GPIO driver like this, unless your hardware design
+is such that the GPIO controller can override the pin controller's
+multiplexing state through hardware without the need to interact with the
+pin control system.
+핀 컨트롤 드라이버와 GPIO 드라이버가 동일한 핀을 다루고 있고 사용 사례가 멀티플렉싱을 포함하는 경우 하드웨어 디자인이 GPIO 컨트롤러가 아니라면 반드시 핀 컨트롤러를 GPIO 드라이버의 백엔드로 구현해야합니다 핀 제어 시스템과 상호 작용할 필요없이 하드웨어를 통해 핀 컨트롤러의 다중화 상태를 무시할 수 있습니다.
+
+
+System pin control hogging
+시스템 핀 제어 호깅
+==========================
+
+Pin control map entries can be hogged by the core when the pin controller
+is registered. This means that the core will attempt to call pinctrl_get(),
+lookup_state() and select_state() on it immediately after the pin control
+device has been registered.
+핀 컨트롤 맵 엔트리는 핀 컨트롤러가 등록 될 때 코어에 의해 호깅 될 수 있습니다. 이것은 핀 제어 장치가 등록 된 직후에 코어가 pinctrl_get (), lookup_state () 및 select_state ()를 호출하려고 시도한다는 것을 의미합니다.
+
+This occurs for mapping table entries where the client device name is equal
+to the pin controller device name, and the state name is PINCTRL_STATE_DEFAULT.
+클라이언트 장치 이름이 핀 컨트롤러 장치 이름과 같고 상태 이름이 PINCTRL_STATE_DEFAULT 인 매핑 테이블 항목에 대해 발생합니다.
+
+{
+	.dev_name = "pinctrl-foo",
+	.name = PINCTRL_STATE_DEFAULT,
+	.type = PIN_MAP_TYPE_MUX_GROUP,
+	.ctrl_dev_name = "pinctrl-foo",
+	.function = "power_func",
+},
+
+Since it may be common to request the core to hog a few always-applicable
+mux settings on the primary pin controller, there is a convenience macro for
+this:
+기본 핀 컨트롤러에서 몇 가지 항상 적용할 수있는 멀티플렉서 설정을 코어에 요청하는 것이 일반적일 수 있으므로 이에 대한 편리한 매크로가 있습니다.
+
+PIN_MAP_MUX_GROUP_HOG_DEFAULT("pinctrl-foo", NULL /* group */, "power_func")
+
+This gives the exact same result as the above construction.
+이것은 위의 구조와 완전히 동일한 결과를 제공합니다.
+
+
+Runtime pinmuxing
+런타임 pinmuxing
+=================
+
+It is possible to mux a certain function in and out at runtime, say to move
+an SPI port from one set of pins to another set of pins. Say for example for
+spi0 in the example above, we expose two different groups of pins for the same
+function, but with different named in the mapping as described under
+"Advanced mapping" above. So that for an SPI device, we have two states named
+"pos-A" and "pos-B".
+실행시에 SPI 포트를 한 세트의 핀에서 다른 핀 세트로 이동하는 것과 같은 특정 기능을 mux 및 out으로 mux 할 수 있습니다. 예를 들어 위의 예제에서 spi0에 대해 말하면 동일한 함수에 대해 서로 다른 두 개의 핀 그룹을 표시하지만 위의 "고급 매핑"에서 설명한 것과 같이 매핑에서 다른 이름을 사용합니다. SPI 장치의 경우 "pos-A"와 "pos-B"라는 두 가지 상태가 있습니다.
+
+This snippet first initializes a state object for both groups (in foo_probe()),
+then muxes the function in the pins defined by group A, and finally muxes it in
+on the pins defined by group B:
+이 snippet은 먼저 두 그룹 (foo_probe()에서)에 대한 상태 객체를 초기화 한 다음 그룹 A로 정의 된 핀에서 함수를 다중화하고 마지막으로 그룹 B로 정의 된 핀에 다중화합니다.
+
+#include <linux/pinctrl/consumer.h>
+
+struct pinctrl *p;
+struct pinctrl_state *s1, *s2;
+
+foo_probe()
+{
+	/* Setup */
+	p = devm_pinctrl_get(&device);
+	if (IS_ERR(p))
+		...
+
+	s1 = pinctrl_lookup_state(foo->p, "pos-A");
+	if (IS_ERR(s1))
+		...
+
+	s2 = pinctrl_lookup_state(foo->p, "pos-B");
+	if (IS_ERR(s2))
+		...
+}
+
+foo_switch()
+{
+	/* Enable on position A */
+	ret = pinctrl_select_state(s1);
+	if (ret < 0)
+	    ...
+
+	...
+
+	/* Enable on position B */
+	ret = pinctrl_select_state(s2);
+	if (ret < 0)
+	    ...
+
+	...
+}
+
+The above has to be done from process context. The reservation of the pins
+will be done when the state is activated, so in effect one specific pin
+can be used by different functions at different times on a running system.
+위의 내용은 프로세스 컨텍스트에서 수행해야합니다. 핀의 예약은 상태가 활성화 될 때 완료 될 수 있으므로, 실제로 한 개의 특정 핀은 실행중인 시스템에서 서로 다른 시간에 다른 기능에 의해 사용될 수 있습니다.

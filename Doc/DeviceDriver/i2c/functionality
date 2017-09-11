@@ -1,0 +1,235 @@
+INTRODUCTION
+------------
+
+Because not every I2C or SMBus adapter implements everything in the 
+I2C specifications, a client can not trust that everything it needs
+is implemented when it is given the option to attach to an adapter:
+the client needs some way to check whether an adapter has the needed
+functionality. 
+
+모든 I2C 또는 SMBus 어댑터가 I2C 사양의 모든 것을 구현하지는 않기 때문에 
+클라이언트는 어댑터에 연결하는 옵션이 제공 될 때 필요한 모든 것이 구현된다는 것을 
+믿을 수 없습니다:
+클라이언트는 어댑터에 필요한 기능이 있는지 여부를 확인하는 방법이 필요합니다.
+
+
+FUNCTIONALITY CONSTANTS
+-----------------------
+
+For the most up-to-date list of functionality constants, please check
+<uapi/linux/i2c.h>!
+
+가장 최신 기능 상수 목록을 보려면 <uapi / linux / i2c.h>를 확인하십시오!
+
+
+  I2C_FUNC_I2C                    Plain i2c-level commands (Pure SMBus
+                                  adapters typically can not do these)
+
+				  일반 i2c 수준 명령 (순수 SMBus 어댑터는 
+				  일반적으로 이러한 작업을 수행 할 수 없습니다)
+
+  I2C_FUNC_10BIT_ADDR             Handles the 10-bit address extensions
+
+				  10 비트 주소 확장을 처리합니다.
+
+  I2C_FUNC_PROTOCOL_MANGLING      Knows about the I2C_M_IGNORE_NAK,
+                                  I2C_M_REV_DIR_ADDR and I2C_M_NO_RD_ACK
+                                  flags (which modify the I2C protocol!)
+
+				  I2C 프로토콜을 수정하는 I2C_M_IGNORE_NAK, 
+				  I2C_M_REV_DIR_ADDR 및 I2C_M_NO_RD_ACK 플래그에 대해 
+				  알고 있습니다.
+
+  I2C_FUNC_NOSTART                Can skip repeated start sequence
+
+				  반복되는 시작 시퀀스를 건너 뛸 수 있음
+
+  I2C_FUNC_SMBUS_QUICK            Handles the SMBus write_quick command
+
+  I2C_FUNC_SMBUS_READ_BYTE        Handles the SMBus read_byte command
+
+  I2C_FUNC_SMBUS_WRITE_BYTE       Handles the SMBus write_byte command
+
+  I2C_FUNC_SMBUS_READ_BYTE_DATA   Handles the SMBus read_byte_data command
+
+  I2C_FUNC_SMBUS_WRITE_BYTE_DATA  Handles the SMBus write_byte_data command
+
+  I2C_FUNC_SMBUS_READ_WORD_DATA   Handles the SMBus read_word_data command
+
+
+  I2C_FUNC_SMBUS_WRITE_WORD_DATA  Handles the SMBus write_byte_data command
+
+  I2C_FUNC_SMBUS_PROC_CALL        Handles the SMBus process_call command
+
+  I2C_FUNC_SMBUS_READ_BLOCK_DATA  Handles the SMBus read_block_data command
+
+  I2C_FUNC_SMBUS_WRITE_BLOCK_DATA Handles the SMBus write_block_data command
+
+  I2C_FUNC_SMBUS_READ_I2C_BLOCK   Handles the SMBus read_i2c_block_data command
+
+  I2C_FUNC_SMBUS_WRITE_I2C_BLOCK  Handles the SMBus write_i2c_block_data command
+
+
+A few combinations of the above flags are also defined for your convenience:
+
+위 플래그의 몇 가지 조합도 사용자의 편의를 위해 정의됩니다:
+
+  I2C_FUNC_SMBUS_BYTE             Handles the SMBus read_byte
+                                  and write_byte commands
+  I2C_FUNC_SMBUS_BYTE_DATA        Handles the SMBus read_byte_data
+                                  and write_byte_data commands
+  I2C_FUNC_SMBUS_WORD_DATA        Handles the SMBus read_word_data
+                                  and write_word_data commands
+  I2C_FUNC_SMBUS_BLOCK_DATA       Handles the SMBus read_block_data
+                                  and write_block_data commands
+  I2C_FUNC_SMBUS_I2C_BLOCK        Handles the SMBus read_i2c_block_data
+                                  and write_i2c_block_data commands
+  I2C_FUNC_SMBUS_EMUL             Handles all SMBus commands that can be
+                                  emulated by a real I2C adapter (using
+                                  the transparent emulation layer)
+
+In kernel versions prior to 3.5 I2C_FUNC_NOSTART was implemented as
+part of I2C_FUNC_PROTOCOL_MANGLING.
+
+3.5 이전의 커널 버전에서는 I2C_FUNC_NOSTART가 I2C_FUNC_PROTOCOL_MANGLING의 
+일부로 구현되었습니다.
+
+
+ADAPTER IMPLEMENTATION
+----------------------
+
+When you write a new adapter driver, you will have to implement a
+function callback `functionality'. Typical implementations are given
+below.
+
+새로운 어댑터 드라이버를 작성하면 함수 콜백`functionality '를 구현해야합니다. 
+일반적인 구현 방법은 다음과 같습니다.
+
+
+A typical SMBus-only adapter would list all the SMBus transactions it
+supports. This example comes from the i2c-piix4 driver:
+
+일반적인 SMBus 전용 어댑터는 지원하는 모든 SMBus 트랜잭션을 나열합니다. 
+이 예제는 i2c-piix4 드라이버에서 가져온 것입니다.
+
+
+  static u32 piix4_func(struct i2c_adapter *adapter)
+  {
+	return I2C_FUNC_SMBUS_QUICK | I2C_FUNC_SMBUS_BYTE |
+	       I2C_FUNC_SMBUS_BYTE_DATA | I2C_FUNC_SMBUS_WORD_DATA |
+	       I2C_FUNC_SMBUS_BLOCK_DATA;
+  }
+
+
+A typical full-I2C adapter would use the following (from the i2c-pxa
+driver):
+
+일반적인 full-I2C 어댑터는 다음을 사용합니다 (i2c-pxa 드라이버에서):
+
+
+  static u32 i2c_pxa_functionality(struct i2c_adapter *adap)
+  {
+	return I2C_FUNC_I2C | I2C_FUNC_SMBUS_EMUL;
+  }
+
+
+I2C_FUNC_SMBUS_EMUL includes all the SMBus transactions (with the
+addition of I2C block transactions) which i2c-core can emulate using
+I2C_FUNC_I2C without any help from the adapter driver. The idea is
+to let the client drivers check for the support of SMBus functions
+without having to care whether the said functions are implemented in
+hardware by the adapter, or emulated in software by i2c-core on top
+of an I2C adapter.
+
+I2C_FUNC_SMBUS_EMUL은 I2C 코어가 어댑터 드라이버의 도움없이 I2C_FUNC_I2C를 
+사용하여 에뮬레이션 할 수있는 모든 SMBus 트랜잭션 (I2C 블록 트랜잭션 추가)을 포함합니다.
+아이디어는 클라이언트 드라이버가 어댑터에 의해 하드웨어에서 구현되는지, 
+I2C 어댑터 상단에서 i2c 코어에 의해 소프트웨어로 에뮬레이트되는지 상관없이 
+SMBus 기능의 지원을 확인하도록하는 것입니다.
+
+
+CLIENT CHECKING
+---------------
+
+Before a client tries to attach to an adapter, or even do tests to check
+whether one of the devices it supports is present on an adapter, it should
+check whether the needed functionality is present. The typical way to do
+this is (from the lm75 driver):
+
+클라이언트가 어댑터에 연결하려고하거나 지원하는 장치 중 하나가 어댑터에 있는지 
+여부를 확인하기위한 테스트를 수행하기 전에 필요한 기능이 있는지 여부를 확인해야합니다.
+이를 수행하는 일반적인 방법은 다음과 같습니다 (lm75 드라이버 사용):
+
+
+  static int lm75_detect(...)
+  {
+	(...)
+	if (!i2c_check_functionality(adapter, I2C_FUNC_SMBUS_BYTE_DATA |
+				     I2C_FUNC_SMBUS_WORD_DATA))
+		goto exit;
+	(...)
+  }
+
+
+Here, the lm75 driver checks if the adapter can do both SMBus byte data
+and SMBus word data transactions. If not, then the driver won't work on
+this adapter and there's no point in going on. If the check above is
+successful, then the driver knows that it can call the following
+functions: i2c_smbus_read_byte_data(), i2c_smbus_write_byte_data(),
+i2c_smbus_read_word_data() and i2c_smbus_write_word_data(). As a rule of
+thumb, the functionality constants you test for with
+i2c_check_functionality() should match exactly the i2c_smbus_* functions
+which you driver is calling.
+
+여기서 lm75 드라이버는 어댑터가 SMBus 바이트 데이터와 SMBus 워드 데이터 트랜잭션을 
+모두 수행 할 수 있는지 확인합니다.
+그렇지 않으면 드라이버가이 어댑터에서 작동하지 않으며 계속 진행할 필요가 없습니다.
+위의 검사가 성공하면 드라이버는 i2c_smbus_read_byte_data (), i2c_smbus_write_byte_data (), 
+i2c_smbus_read_word_data () 및 i2c_smbus_write_word_data () 함수를 호출 할 수 있음을 
+알고 있습니다.
+일반적으로 i2c_check_functionality ()를 사용하여 테스트하는 기능 상수는 드라이버가 호출하는 
+i2c_smbus_ * 기능과 정확히 일치해야합니다.
+
+
+Note that the check above doesn't tell whether the functionalities are
+implemented in hardware by the underlying adapter or emulated in
+software by i2c-core. Client drivers don't have to care about this, as
+i2c-core will transparently implement SMBus transactions on top of I2C
+adapters.
+
+위의 검사는 기능이 기본 어댑터에서 하드웨어로 구현되었는지 또는 i2c 코어에서 소프트웨어로 
+에뮬레이트되었는지 여부를 알려주지 않습니다.
+i2c-core는 I2C 어댑터 위에 SMBus 트랜잭션을 투명하게 구현하므로 
+클라이언트 드라이버는 이에 대해 신경 쓸 필요가 없습니다.
+
+
+CHECKING THROUGH /DEV
+---------------------
+
+If you try to access an adapter from a userspace program, you will have
+to use the /dev interface. You will still have to check whether the
+functionality you need is supported, of course. This is done using
+the I2C_FUNCS ioctl. An example, adapted from the i2cdetect program, is
+below:
+
+사용자 공간 프로그램에서 어댑터에 액세스하려고하면 / dev 인터페이스를 사용해야합니다.
+물론 필요한 기능이 지원되는지 여부를 확인해야합니다. 이것은 I2C_FUNCS ioctl을 사용하여 
+수행됩니다. 예를 들어 i2cdetect 프로그램에서 수정 한 내용은 다음과 같습니다.
+
+
+  int file;
+  if (file = open("/dev/i2c-0", O_RDWR) < 0) {
+	/* Some kind of error handling */
+	exit(1);
+  }
+  if (ioctl(file, I2C_FUNCS, &funcs) < 0) {
+	/* Some kind of error handling */
+	exit(1);
+  }
+  if (!(funcs & I2C_FUNC_SMBUS_QUICK)) {
+	/* Oops, the needed functionality (SMBus write_quick function) is
+           not available! */
+	exit(1);
+  }
+  /* Now it is safe to use the SMBus write_quick command */
+

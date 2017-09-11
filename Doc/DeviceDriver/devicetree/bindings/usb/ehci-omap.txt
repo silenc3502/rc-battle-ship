@@ -1,0 +1,48 @@
+OMAP HS USB EHCI controller
+
+This device is usually the child of the omap-usb-host
+Documentation/devicetree/bindings/mfd/omap-usb-host.txt
+
+Required properties:
+
+- compatible: should be "ti,ehci-omap"
+- reg: should contain one register range i.e. start and length
+- interrupts: description of the interrupt line
+
+Optional properties:
+
+- phys: list of phandles to PHY nodes.
+  This property is required if at least one of the ports are in
+  PHY mode i.e. OMAP_EHCI_PORT_MODE_PHY
+
+To specify the port mode, see
+Documentation/devicetree/bindings/mfd/omap-usb-host.txt
+
+
+이 장치는 대개 omap-usb-host의 하위 파일입니다. Documentation / devicetree / bindings / mfd / omap-usb-host.txt
+
+필수 속성 :
+
+- compatible  : "ti, ehci-omap"이어야합니다.
+- reg : 시작과 길이라는 하나의 레지스터 범위를 포함해야합니다.
+- interrupts : 인터럽트 라인에 대한 설명
+
+선택적 속성 :
+
+- phys : PHY 노드에 대한 phandles 목록입니다.
+   포트 중 하나 이상이 PHY 모드 인 경우이 속성이 필요합니다 (OMAP_EHCI_PORT_MODE_PHY).
+
+포트 모드를 지정하려면 다음을 참조하십시오.
+Documentation / devicetree / bindings / mfd / omap-usb-host.txt
+
+Example for OMAP4:
+
+usbhsehci: ehci@4a064c00 {
+	compatible = "ti,ehci-omap";
+	reg = <0x4a064c00 0x400>;
+	interrupts = <0 77 0x4>;
+};
+
+&usbhsehci {
+	phys = <&hsusb1_phy 0 &hsusb3_phy>;
+};

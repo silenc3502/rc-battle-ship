@@ -1,0 +1,464 @@
+GPIO Descriptor Consumer Interface
+==================================
+
+This document describes the consumer interface of the GPIO framework. Note that it describes the new descriptor-based interface. For a description of the deprecated integer-based GPIO interface please refer to gpio-legacy.txt.
+
+이 문서는 GPIO Framework 의 소비자 인터페이스에 대해 설명한다.
+새로운 Descriptor 기반 인터페이스를 설명한다.
+사용되지 않는 정수 기반 GPIO 인터페이스에 대한 설명은 gpio-legacy.txt 를 참조하라.
+
+
+
+Guidelines for GPIOs consumers
+==============================
+
+Drivers that can't work without standard GPIO calls should have Kconfig entries that depend on GPIOLIB. The functions that allow a driver to obtain and use GPIOs are available by including the following file:
+
+표준 GPIO 호출 없이 작동하지 않는 Driver 는 GPIOLIB 에 의존하는 Kconfig 항목을 가져야 한다.
+Driver 가 GPIO 를 얻고 사용할 수 있게 해주는 함수는 아래 파일을 include 해야 한다:
+
+ #include <linux/gpio/consumer.h>
+
+All the functions that work with the descriptor-based GPIO interface are prefixed with gpiod_. The gpio_ prefix is used for the legacy interface. No other function in the kernel should use these prefixes.
+
+Descriptor 기반 GPIO 인터페이스에서 작동하는 모든 함수 앞에는 gpiod_ 접두어가 붙는다.
+gpio_ 접두어는 legacy 인터페이스에서 사용된다.
+Kernel 의 다른 함수는 이 접두어를 사용해야 한다.
+
+
+
+Obtaining and Disposing GPIOs
+=============================
+
+With the descriptor-based interface, GPIOs are identified with an opaque, non-forgeable handler that must be obtained through a call to one of the gpiod_get() functions. Like many other kernel subsystems, gpiod_get() takes the device that will use the GPIO and the function the requested GPIO is supposed to fulfill:
+
+Descriptor 기반 인터페이스에서 GPIO 는 gpiod_get() 함수 중
+하나를 호출하여 얻어야 하는 불투명하고 위조할 수 없는 Handler 로 식별된다.
+많은 Kernel Subsystem 과 마찬가지로 gpiod_get() 은
+GPIO 를 사용하는 장치와 요청된 GPIO 가 수행해야 하는 기능을 사용한다:
+
+ struct gpio_desc *gpiod_get(struct device *dev, const char *con_id, enum gpiod_flags flags)
+
+If a function is implemented by using several GPIOs together (e.g. a simple LED device that displays digits), an additional index argument can be specified:
+
+여러 GPIO 를 함께 사용하여 기능을 구현하는 경우(예 숫자를 표시하는 간단한 LED 장치), 추가 색인 인수를 지정할 수 있다:
+
+ struct gpio_desc *gpiod_get_index(struct device *dev,
+                                                            const char *con_id, unsigned int idx,
+                                                            enum gpiod_flags flags)
+
+For a more detailed description of the con_id parameter in the DeviceTree case see Documentation/gpio/board.txt
+
+DevcieTree 의 con_id 매개 변수에 대한 자세한 설명은 Documentation/gpio/board.txt 를 참조하라.
+
+The flags parameter is used to optionally specify a direction and initial value for the GPIO. Values can be:
+
+flag 매개 변수는 GPIO 의 방향과 초기값을 선택적으로 지정하는데 사용된다.
+값은 아래와 같다:
+
+* GPIOD_ASIS or 0 to not initialize the GPIO at all. The direction must be set later with one of the dedicated functions.
+* GPIOD_IN to initialize the GPIO as input.
+* GPIOD_OUT_LOW to initialize the GPIO as output with a value of 0.
+* GPIOD_OUT_HIGH to initialize the GPIO as output with a value of 1.
+
+* GPIO 를 전혀 초기화하지 않으려면 GPIOD_ASIS 혹은 0.
+  방향은 전용 기능 중 하나를 사용하여 나중에 설정해야 한다.
+* GPIOD_IN 은 GPIO 를 입력으로 초기화한다.
+* GPIOD_OUT_LOW 를 사용하여 GPIO 를 값 0 의 출력으로 초기화한다.
+* GPIOD_OUT_HIGH 를 사용하여 GPIO 를 값 1 의 출력으로 초기화한다.
+
+Both functions return either a valid GPIO descriptor, or an error code checkable with IS_ERR() (they will never return a NULL pointer). -ENOENT will be returned if and only if no GPIO has been assigned to the device/function/index triplet, other error codes are used for cases where a GPIO has been assigned but an error occurred while trying to acquire it. This is useful to discriminate between mere errors and an absence of GPIO for optional GPIO parameters. For the common pattern where a GPIO is optional, the gpiod_get_optional() and gpiod_get_index_optional() functions can be used. These functions return NULL instead of -ENOENT if no GPIO has been assigned to the requested function:
+
+두 함수 모두 유효한 GPIO Descriptor 를 반환하거나 IS_ERR() 로 검사할 수 있는 오류 코드를 반환한다(이들은 NULL 포인터를 반환하지 않는다)
+Device/Function/Index 트리플렛에 GPIO 가 지정되지 않은 경우에만
+GPIO 가 할당되었지만 이를 가져오는 동안 오류가 발생하는 경우 다른 오류 코드가 사용되는 경우에만 -ENOENT 가 반환된다.
+이는 단순한 오류와 선택적 GPIO 매개변수에 대한 GPIO 부재를 구별하는데 유용하다.
+GPIO 가 선택적인 공통 패턴의 경우 gpiod_get_optional() 및 gpiod_get_index_optional() 함수를 사용할 수 있다.
+이 함수는 GPIO 가 요청된 함수에 할당되지 않은 경우 -ENOENT 대신 NULL 을 반환한다.
+
+ struct gpio_desc *gpiod_get_optional(struct device *dev,
+                                                                 const char *con_id,
+                                                                 enum gpiod_flags flags)
+
+ struct gpio_desc *gpiod_get_index_optional(struct device *dev,
+                                                                            const char *con_id,
+                                                                            unsigned int index,
+                                                                            enum gpiod_flags flags)
+
+For a function using multiple GPIOs all of those can be obtained with one call:
+
+여러 개의 GPIO 를 사용하는 함수의 경우 모두 한 번 호출하여 얻을 수 있다:
+
+ struct gpio_descs *gpiod_get_array(struct device *dev,
+                                                             const char *con_id,
+                                                             enum gpiod_flags flags)
+
+This function returns a struct gpio_descs which contains an array of descriptors:
+
+이 함수는 Descriptor 배열을 포함하는 gpio_descs 구조체를 반환한다.
+
+ struct gpio_descs {
+     unsigned int ndescs;
+     struct gpio_desc *desc[];
+ }
+
+The following function returns NULL instead of -ENOENT if no GPIOs have been assigned to the requested function:
+
+다음 함수는 요청된 함수에 GPIO 가 할당되지 않은 경우 -ENOENT 대신 NULL 을 반환한다:
+
+ struct gpio_descs *gpiod_get_array_optional(struct device *dev,
+                                                                             const char *con_id,
+                                                                             enum gpiod_flags flags)
+
+Device-managed variants of these functions are also defined:
+
+이러한 함수의 장치 관리 변형도 정의된다:
+
+ struct gpio_desc *devm_gpiod_get(struct device *dev, const char *con_id, enum gpiod_flags flags)
+
+ struct gpio_desc *devm_gpiod_get_index(struct device *dev,
+                                                                       const char *con_id,
+                                                                       unsigned int idx,
+                                                                       enum gpiod_flags flags)
+
+ struct gpio_desc *devm_gpiod_get_optional(struct device *dev,
+                                                                            const char *con_id,
+                                                                            enum gpiod_flags flags)
+
+ struct gpio_desc *devm_gpiod_get_index_optional(struct device *dev,
+                                                                            const char *con_id,
+                                                                            unsigned int index,
+                                                                            enum gpiod_flags flags)
+
+ struct gpio_descs *devm_gpiod_get_array(struct device *dev,
+                                                                        const char *con_id,
+                                                                        enum gpiod_flags flags)
+
+ struct gpio_descs *devm_gpiod_get_array_optional(struct device *dev,
+                                                                                       const char *con_id,
+                                                                                       enum gpiod_flags flags)
+
+A GPIO descriptor can be disposed of using the gpiod_put() function:
+
+GPIO Descriptor 는 gpiod_put() 함수를 사용하여 처리할 수 있다:
+
+ void gpiod_put(struct gpio_desc *desc)
+
+For an array of GPIOs this function can be used:
+
+GPIO 배열의 경우 이 함수를 사용할 수 있다:
+
+ void gpiod_put_array(struct gpio_descs *descs)
+
+It is strictly forbidden to use a descriptor after calling these functions. It is also not allowed to individually release descriptors (using gpiod_put()) from an array acquired with gpiod_get_array().
+
+이러한 함수를 호출한 후에 Descriptor 를 사용하는 것이 엄격히 금지되어 있다.
+또한 gpiod_get_array() 로 얻은 배열에서 Descriptor 를 개별적으로 해제할 수 없다(gpiod_put() 사용)
+
+The device-managed variants are, unsurprisingly:
+
+장치 관리 방식의 변형은 별로 대단한 일이 아니다:
+
+ void devm_gpiod_put(struct device *dev, struct gpio_desc *desc)
+
+ void devm_gpiod_put_array(struct device *dev, struct gpio_descs *descs)
+
+
+
+Using GPIOs
+===========
+
+Setting Direction
+-----------------
+The first thing a driver must do with a GPIO is setting its direction. If no direction-setting flags have been given to gpiod_get*(), this is done by invoking one of the gpiod_direction_*() functions:
+
+Driver 가 GPIO 로 수행해야하는 첫 번째 작업은 방향을 설정하는 것이다.
+gpiod_get*() 에 방향 설정 플래그가 지정되지 않은 경우
+gpiod_direction_*() 함수 중 하나를 호출하여 방향 설정 플래그를 지정한다:
+
+ int gpiod_direction_input(struct gpio_desc *desc)
+ int gpiod_direction_output(struct gpio_desc *desc, int value)
+
+The return value is zero for success, else a negative errno. It should be checked, since the get/set calls don't return errors and since misconfiguration is possible. You should normally issue these calls from a task context. However, for spinlock-safe GPIOs it is OK to use them before tasking is enabled, as part of early board setup.
+
+반환값은 성공할 경우 0 이고 그렇지 않으면 음수 errno 이다.
+get / set 호출은 오류를 반환하지 않으며 잘못 구성할 수 있으므로 확인해야 한다.
+일반적으로 Task Context 에서 이러한 호출을 발행해야 한다.
+그러나 Spinlock 안전 GPIO 의 경우 초기 보드 설정의 일환으로 작업이 활성화되기 전에 이를 사용하는 것이 좋다.
+
+For output GPIOs, the value provided becomes the initial output value. This helps avoid signal glitching during system startup.
+
+출력 GPIO 의 경우 제공된 값이 초기 출력 값이된다.
+이렇게하면 System 을 시작하는 동안 신호 글리치를 방지할 수 있다.
+
+A driver can also query the current direction of a GPIO:
+
+Driver 는 또한 GPIO 의 현재 방향을 Query 할 수 있다:
+
+ int gpiod_get_direction(const struct gpio_desc *desc)
+
+This function will return either GPIOF_DIR_IN or GPIOF_DIR_OUT.
+
+이 함수는 GPIOF_DIR_IN 혹은 GPIOF_DIR_OUT 을 반환한다.
+
+Be aware that there is no default direction for GPIOs. Therefore, **using a GPIO without setting its direction first is illegal and will result in undefined behavior!**
+
+GPIO 에 대한 기본 방향이 없음을 알아두자!
+따라서 GPIO 를 먼저 사용하지 않고 GPIO 를 사용하는 것은 불법이며 정의되지 않은 동작을 초래한다!
+
+
+
+Spinlock-Safe GPIO Access
+-------------------------
+Most GPIO controllers can be accessed with memory read/write instructions. Those don't need to sleep, and can safely be done from inside hard (non-threaded) IRQ handlers and similar contexts.
+
+대부분의 GPIO 컨트롤러는 Memory 읽기/쓰기 명령어로 접근할 수 있다.
+이들은 sleep 할 필요가 없으며 Hard(비 스레드) IRQ Handler 및 유사한 Context 에서 안전하게 수행할 수 있다.
+
+Use the following calls to access GPIOs from an atomic context:
+
+원자적 Context 에서 GPIO 에 접근하려면 아래 호출을 사용하라:
+
+ int gpiod_get_value(const struct gpio_desc *desc);
+ void gpiod_set_value(struct gpio_desc *desc, int value);
+
+The values are boolean, zero for low, nonzero for high. When reading the value of an output pin, the value returned should be what's seen on the pin. That won't always match the specified output value, because of issues including open-drain signaling and output latencies.
+
+값은 boolean, low 에 대해 0, high 에 대해 0 이 아니다.
+출력 핀의 값을 읽을 때 반환되는 값은 핀에 표시된 값이어야 한다.
+Open Drain 신호 및 출력 대기 시간과 같은 문제 때문에 항상 지정된 출력 값과 일치하지는 않는다.
+
+The get/set calls do not return errors because "invalid GPIO" should have been reported earlier from gpiod_direction_*(). However, note that not all platforms can read the value of output pins; those that can't should always return zero. Also, using these calls for GPIOs that can't safely be accessed without sleeping (see below) is an error.
+
+get/set 호출은 gpiod_direction_*() 에서 "invalid GPIO" 가 먼저 보고되었으므로 오류를 반환하지 않는다.
+그러나 모든 Platform 이 출력 핀의 값을 읽을 수 있는 것은 아니다.
+0 을 돌려줄 수 없는 것들도 있다.
+또한 sleep 없이 안전하게 접근할 수 있는 GPIO(아래 참조)에 대한 호출은 오류다.
+
+
+
+GPIO Access That May Sleep
+--------------------------
+Some GPIO controllers must be accessed using message based buses like I2C or SPI. Commands to read or write those GPIO values require waiting to get to the head of a queue to transmit a command and get its response. This requires sleeping, which can't be done from inside IRQ handlers.
+
+일부 GPIO 컨트롤러는 I2C 또는 SPI 와 같은 메시지 기반 Bus 를 사용하여 접근해야 한다.
+GPIO 값을 읽거나 쓰는 명령을 전송하고 응답을 얻고 queue 에 도달하기 위해 대기해야한다.
+이를 위해 IRQ Handler 내부에서 수행할 수 없는 절전 모드가 필요하다.
+
+Platforms that support this type of GPIO distinguish them from other GPIOs by returning nonzero from this call:
+
+이 유형의 GPIO 를 지원하는 Platform 은 이 호출에서 0 이 아닌 값을 반환하여 GPIO 와 구별한다:
+
+ int gpiod_cansleep(const struct gpio_desc *desc)
+
+To access such GPIOs, a different set of accessors is defined:
+
+이러한 GPIO 에 접근하기위해 다른 접근자 셋이 정의된다:
+
+ int gpiod_get_value_cansleep(const struct gpio_desc *desc)
+ void gpiod_set_value_cansleep(struct gpio_desc *desc, int value)
+
+Accessing such GPIOs requires a context which may sleep, for example a threaded IRQ handler, and those accessors must be used instead of spinlock-safe accessors without the cansleep() name suffix.
+
+이러한 GPIO 에 접근하려면 예로 스레드된 IRQ Handler 와 같은 sleep 상태의 Context 가 필요하며
+cansleep() 이름 접미사가 없는 spinlock-safe 접근자 대신 해당 접근자를 사용해야 한다.
+
+Other than the fact that these accessors might sleep, and will work on GPIOs that can't be accessed from hardIRQ handlers, these calls act the same as the spinlock-safe calls.
+
+이러한 접근자가 sleep 상태가되고 hardIRQ Handler 에서 접근할 수 없는 GPIO 에서 작동하는 것 외에도 이러한 호출은 spinlock-safe 호출과 동일하게 작동한다.
+
+
+
+Active-low State and Raw GPIO Values
+------------------------------------
+Device drivers like to manage the logical state of a GPIO, i.e. the value their device will actually receive, no matter what lies between it and the GPIO line. In some cases, it might make sense to control the actual GPIO line value. The following set of calls ignore the active-low property of a GPIO and work on the raw line value:
+
+Device Driver 는 GPIO 의 논리적 상태,
+즉 장치가 실제로 수신할 값을 GPIO 라인과 무엇이든지 관게없이 관리하는 것을 좋아한다.
+경우에 따라 실제 GPIO 라인 값을 제어하는 것이 좋다.
+다음 호출 집합은 GPIO 의 active-low 속성을 무시하고 원래 라인 값을 처리한다:
+
+ int gpiod_get_raw_value(const struct gpio_desc *desc)
+ void gpiod_set_raw_value(struct gpio_desc *desc, int value)
+ int gpiod_get_raw_value_cansleep(const struct gpio_desc *desc)
+ void gpiod_set_raw_value_cansleep(struct gpio_desc *desc, int value)
+ int gpiod_direction_output_raw(struct gpio_desc *desc, int value)
+
+The active-low state of a GPIO can also be queried using the following call:
+
+아래 호출을 사용하여 GPIO 의 active-low 상태를 Query 할 수 있다:
+
+ int gpiod_is_active_low(const struct gpio_desc *desc)
+
+Note that these functions should only be used with great moderation ; a driver should not have to care about the physical line level.
+
+이러한 함수는 중대한 검토에만 사용한다.
+Driver 는 실제 회선 수준에 대해 신경을 써서는 안된다.
+
+
+
+The active-low property
+-----------------------
+
+As a driver should not have to care about the physical line level, all of the gpiod_set_value_xxx() or gpiod_set_array_value_xxx() functions operate with the *logical* value. With this they take the active-low property into account. This means that they check whether the GPIO is configured to be active-low, and if so, they manipulate the passed value before the physical line level is driven.
+
+Driver 가 물리적인 수준을 신경 쓸 필요는 없기 때문에 gpiod_set_value_xxx()
+혹은 gpiod_set_array_value_xxx() 함수는 모두 *논리* 값으로 작동한다.
+이것은 active-low 속성을 고려한다.
+즉, GPIO 가 active-low 로 구성되어있는지 확인한 후
+GPIO 가 active-low 로 구성되어 있는지 확인한 후 물리적 라인 수준에서 구동되기 전에 통과된 값을 조작한다.
+
+With this, all the gpiod_set_(array)_value_xxx() functions interpret the parameter "value" as "active" ("1") or "inactive" ("0"). The physical line level will be driven accordingly.
+
+이를 통해 모든 gpiod_set_(array)_value_xxx() 함수는 "active" ("1") 혹은 "inactive" ("0") 으로 "value" 매개변수를 해석한다.
+그에 따라 실제 물리적 라인 수준에서 구동된다.
+
+As an example, if the active-low property for a dedicated GPIO is set, and the gpiod_set_(array)_value_xxx() passes "active" ("1"), the physical line level will be driven low.
+
+예로 전용 GPIO 의 active-low 속성이 설정되고
+gpiod_set_(array)_value_xxx() 가 "active" ("1") 을 전달하면 물리적 라인 수준에서 low 로 구동된다.
+
+To summarize:
+
+요약:
+
+Function (example)               active-low proporty  physical line
+gpiod_set_raw_value(desc, 0);        don't care           low
+gpiod_set_raw_value(desc, 1);        don't care           high
+gpiod_set_value(desc, 0);       default (active-high)     low
+gpiod_set_value(desc, 1);       default (active-high)     high
+gpiod_set_value(desc, 0);             active-low          high
+gpiod_set_value(desc, 1);             active-low          low
+
+Please note again that the set_raw/get_raw functions should be avoided as much as possible, especially by drivers which should not care about the actual physical line level and worry about the logical value instead.
+
+set_raw / get_raw 기능은 가능한 많이 피해야하며
+특히 실제 물리적 라인 수준을 신경쓰지 않아야하고 논리값에 대해 걱정할 필요가 없는 Driver 는 이를 피해야한다.
+
+
+
+Set multiple GPIO outputs with a single function call
+-----------------------------------------------------
+The following functions set the output values of an array of GPIOs:
+
+아래 함수는 GPIO 배열의 출력 값을 설정한다:
+
+ void gpiod_set_array_value(unsigned int array_size,
+                                                struct gpio_desc **desc_array,
+                                                int *value_array)
+ void gpiod_set_raw_array_value(unsigned int array_size,
+                                                       struct gpio_desc **desc_array,
+                                                        int *value_array)
+ void gpiod_set_array_value_cansleep(unsigned int array_size,
+                                                                struct gpio_desc **desc_array,
+                                                                int *value_array)
+ void gpiod_set_raw_array_value_cansleep(unsigned int array_size,
+                                                                        struct gpio_desc **desc_array,
+                                                                        int *value_array)
+
+The array can be an arbitrary set of GPIOs. The functions will try to set GPIOs belonging to the same bank or chip simultaneously if supported by the corresponding chip driver. In that case a significantly improved performance can be expected. If simultaneous setting is not possible the GPIOs will be set sequentially.
+
+배열은 임의의 GPIO 집합이 될 수 있다.
+이 기능을 해당 Chip Driver 가 지원할 경우 동일한 Bank 혹은 Chip 에 속한 GPIO 를 동시에 설정하려고 한다.
+이 경우 상당히 향상된 성능을 기대할 수 있다.
+동시 설정이 불가능한 경우 GPIO 가 순차적으로 설정된다.
+
+The gpiod_set_array() functions take three arguments:
+ * array_size - the number of array elements
+ * desc_array - an array of GPIO descriptors
+ * value_array - an array of values to assign to the GPIOs
+
+gpiod_set_array() 함수는 아래 3 가지 인수를 사용한다:
+* array_size - 배열 요소의 수
+* desc_array - GPIO Descriptor 배열
+* value_array - GPIO 에 할당할 값의 배열열
+
+The descriptor array can be obtained using the gpiod_get_array() function or one of its variants. If the group of descriptors returned by that function matches the desired group of GPIOs, those GPIOs can be set by simply using the struct gpio_descs returned by gpiod_get_array():
+
+Descriptor 배열은 gpiod_get_array() 함수 혹은 그 변형 중 하나를 사용하여 얻을 수 있다.
+해당 함수가 반환한 Descriptor 그룹이 원하는 GPIO 그룹과 일치하면
+GPIO 는 gpiod_get_array() 에서 반환한 struct gpio_descs 를 사용하여 설정할 수 있다:
+
+ struct gpio_descs *my_gpio_descs = gpiod_get_array(...);
+ gpiod_set_array_value(my_gpio_descs->ndescs, my_gpio_descs->desc, my_gpio_values);
+
+It is also possible to set a completely arbitrary array of descriptors. The descriptors may be obtained using any combination of gpiod_get() and gpiod_get_array(). Afterwards the array of descriptors has to be setup manually before it can be used with gpiod_set_array().
+
+Descriptor 의 임의의 배열을 설정할 수도 있다.
+Descriptor 는 gpiod_get() 혹은 gpiod_get_array() 의 조합을 사용하여 얻을 수 있다.
+그런 다음 gpiod_set_array() 와 함께 사용하기 전에 Descriptor 의 배열을 수동으로 설정해야 한다.
+
+Note that for optimal performance GPIOs belonging to the same chip should be contiguous within the array of descriptors.
+
+최적의 성능을 위해 동일한 Chip 에 속하는 GPIO 는 Descriptor 배열 내에서 연속적이어야 한다.
+
+
+
+GPIOs mapped to IRQs
+--------------------
+GPIO lines can quite often be used as IRQs. You can get the IRQ number corresponding to a given GPIO using the following call:
+
+GPIO 라인은 종종 IRQ 로 사용될 수 있다.
+아래 함수를 사용하여 주어진 GPIO 에 해당하는 IRQ 번호를 얻을 수 있다:
+
+ int gpiod_to_irq(const struct gpio_desc *desc)
+
+It will return an IRQ number, or a negative errno code if the mapping can't be done (most likely because that particular GPIO cannot be used as IRQ). It is an unchecked error to use a GPIO that wasn't set up as an input using gpiod_direction_input(), or to use an IRQ number that didn't originally come from gpiod_to_irq(). gpiod_to_irq() is not allowed to sleep.
+
+맵핑을 수행할 수 없는 경우 IRQ 번호 또는 음수 errno 코드를 반환한다
+(특정 GPIO 를 IRQ 로 사용할 수 없기 때문일 가능성이 크다)
+gpiod_direction_input() 을 사용하여 입력으로 설정되지 않은 GPIO 를 사용하거나
+원래 gpiod_to_irq() 에서 가져오지 않은 IRQ 번호를 사용하는 것은 확인되지 않은 오류이다.
+gpiod_to_irq() 는 sleep 할 수 없다.
+
+Non-error values returned from gpiod_to_irq() can be passed to request_irq() or free_irq(). They will often be stored into IRQ resources for platform devices, by the board-specific initialization code. Note that IRQ trigger options are part of the IRQ interface, e.g. IRQF_TRIGGER_FALLING, as are system wakeup capabilities.
+
+gpiod_to_irq() 에서 반환된 오류가 아닌 값은 request_irq() 혹은 free_irq() 에 전달 될 수 있다.
+Board 별 초기화 코드를 통해 Platform 장치용 IRQ 리소스에 저장된다.
+IRQ 트리거 옵션은 IRQ 인터페이스의 일부이다
+(예: IRQF_TRIGGER_FALLING 은 System wakeup 기능과 동일하다)
+
+
+
+GPIOs and ACPI
+==============
+
+On ACPI systems, GPIOs are described by GpioIo()/GpioInt() resources listed by the _CRS configuration objects of devices.  Those resources do not provide connection IDs (names) for GPIOs, so it is necessary to use an additional
+mechanism for this purpose.
+
+ACPI System 에서 GPIO 는 Device 의 _CRS 구성 개체에 의해 나열된 Gpiolo() / Gpioint(0 리소스로 설명된다.
+이러한 리소스는 GPIO 에 대한 연결 ID(이름)을 제공하지 않으므로 이러한 목적을 위해 추가 리소스를 사용해야 한다.
+
+Systems compliant with ACPI 5.1 or newer may provide a _DSD configuration object which, among other things, may be used to provide connection IDs for specific GPIOs described by the GpioIo()/GpioInt() resources in _CRS.  If that is the case, it will be handled by the GPIO subsystem automatically.  However, if the _DSD is not present, the mappings between GpioIo()/GpioInt() resources and GPIO connection IDs need to be provided by device drivers.
+
+
+ACPI 5.1 이상을 준수하는 System 은 무엇보다도 _CRS 의 Gpiolo() / GpioInt() 리소스로 설명된 특정 GPIO 에 대한 연결 ID 를 제공하는데 사용할 수 있는 _DSD 구성 개체를 제공할 수 있다.
+이 경우 GPIO Subsystem 이 자동으로 처리한다.
+그러나 _DSD 가 없으면 Gpiolo() / GpioInt() 리소스와 GPIO 연결 ID 간의 맵핑을 Device Driver 가 제공해야한다.
+
+For details refer to Documentation/acpi/gpio-properties.txt
+
+더 자세한 사항은 Documentation/acpi/gpio-properties.txt 를 참조하라.
+
+
+
+Interacting With the Legacy GPIO Subsystem
+==========================================
+Many kernel subsystems still handle GPIOs using the legacy integer-based interface. Although it is strongly encouraged to upgrade them to the safer descriptor-based API, the following two functions allow you to convert a GPIO descriptor into the GPIO integer namespace and vice-versa:
+
+많은 Kernel Subsystem 은 여전히 legacy integer 기반 인터페이스를 사용하여 GPIO 를 처리한다.
+더 안전한 Descriptor 기반 API 로 업그레이드 하는 것이 강력히 권장되지만 아래 두 함수를 사용하면
+GPIO Descriptor 를 GPIO 정수 이름 공간으로 변환할 수 있으며 그 반대의 경우도 가능하다:
+
+ int desc_to_gpio(const struct gpio_desc *desc)
+ struct gpio_desc *gpio_to_desc(unsigned gpio)
+
+The GPIO number returned by desc_to_gpio() can be safely used as long as the GPIO descriptor has not been freed. All the same, a GPIO number passed to gpio_to_desc() must have been properly acquired, and usage of the returned GPIO descriptor is only possible after the GPIO number has been released.
+
+desc_to_gpio() 가 반환한 GPIO 번호는 GPIO Descriptor 가 해제되지 않는한 안전하게 사용할 수 있다.
+마찬가지로 gpio_to_desc() 에 전달된 GPIO 번호가 제대로 얻어져야하며
+반환된 GPIO Descriptor 는 GPIO 번호가 해제된 후에만 사용할 수 있어야한다.
+
+Freeing a GPIO obtained by one API with the other API is forbidden and an unchecked error.
+
+하나의 API 로 얻은 GPIO 를 다른 API 로 비우는 것은 금지되어 있으며 오류가 검사되지 않는다.

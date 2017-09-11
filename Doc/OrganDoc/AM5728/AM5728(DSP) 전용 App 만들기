@@ -1,0 +1,71 @@
+1. DSP가 리모트 연결로 CCS에 연결되어 있어야 한다.
+(DSP 환경설정을 완료해야 한다.)
+
+
+**CCS의 RSE 창에서 본다**
+2. usr/share/matrix-gui-2.0/apps 밑에 project 폴더를 만든다.
+(우리가 작업하는 Project들을 별도로 모아두기 위한 공간이 될 것이다.)
+그리고 그 폴더 안에 project_wifi 라는 폴더를 만든다.
+
+3. 폴더 안에 project_wifi.desktop 이라는 파일을 만든다.
+
+4. 파일 안에 다음과 같은 내용을 작성한다.
+
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Name=WiFi
+GenericName=AM5728 Development App
+Icon=/usr/share/matrix-gui-2.0/apps/images/wireless-icon.png
+Type=Application
+Exec=wifi_test.sh
+Categories=project
+ProgramType=console
+
+5. minicon으로 접속한다.
+
+6. wifi_test.sh 라는 파일을 만들어 다음과 같은 내용을 작성한다.
+
+#!/bin/sh
+
+ROOTDIR="/home/root"
+WIFIAPP="testnet"
+
+echo "This is Wi-Fi Test for Controller" /* App을 실행했을 때 출력되는 글귀 */
+
+if [ -e "$ROOTDIR/$WIFIAPP" ]
+then
+	cd $ROOTDIR
+	./$WIFIAPP 10000 | grep -i "error" > /dev/null
+	if [ "$?" = "0" ]
+	then
+		echo "Failed to run $ROOTDIR/$WIFIAPP"
+		exit 1
+	fi
+else
+	echo "There are no $ROOTDIR/$WIFIAPP"
+	exit 1
+fi
+
+echo "Wi-Fi Test Server Success"
+
+
+7. 실행할 수 있는 권한을 설정한다. (minicom에서)
+
+chmod 777 wifi_test.sh
+
+
+8. project 폴더 안에 project.desktop 이라는 파일을 만든다.
+
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Name=Project
+GenericName=AM5728 Development App
+Icon=usr/share/matrix-gui-2.0/apps/images/wireless-icon.png
+Type=Directory
+X-MATRIX-CategoryTarget=project
+X-MATRIX-DisplayPriority=5
+
+
+10. DSP에서 Settings에서 Refresh Matrix를 눌러 run을 한다.
+
+11. DSP에 새로 App이 생긴 것을 확인할 수 있다.

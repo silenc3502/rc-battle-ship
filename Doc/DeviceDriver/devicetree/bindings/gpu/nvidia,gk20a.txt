@@ -1,0 +1,92 @@
+NVIDIA GK20A Graphics Processing Unit
+
+Required properties:
+- compatible: "nvidia,<chip>-<gpu>"
+  Currently recognized values:
+  - nvidia,tegra124-gk20a
+- reg: Physical base address and length of the controller's registers.
+  Must contain two entries:
+  - first entry for bar0
+  - second entry for bar1
+- interrupts: Must contain an entry for each entry in interrupt-names.
+  See ../interrupt-controller/interrupts.txt for details.
+- interrupt-names: Must include the following entries:
+  - stall
+  - nonstall
+- vdd-supply: regulator for supply voltage.
+- clocks: Must contain an entry for each entry in clock-names.
+  See ../clocks/clock-bindings.txt for details.
+- clock-names: Must include the following entries:
+  - gpu
+  - pwr
+- resets: Must contain an entry for each entry in reset-names.
+  See ../reset/reset.txt for details.
+- reset-names: Must include the following entries:
+  - gpu
+
+Example:
+
+	gpu@0,57000000 {
+		compatible = "nvidia,gk20a";
+		reg = <0x0 0x57000000 0x0 0x01000000>,
+		      <0x0 0x58000000 0x0 0x01000000>;
+		interrupts = <GIC_SPI 157 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 158 IRQ_TYPE_LEVEL_HIGH>;
+		interrupt-names = "stall", "nonstall";
+		vdd-supply = <&vdd_gpu>;
+		clocks = <&tegra_car TEGRA124_CLK_GPU>,
+			 <&tegra_car TEGRA124_CLK_PLL_P_OUT5>;
+		clock-names = "gpu", "pwr";
+		resets = <&tegra_car 184>;
+		reset-names = "gpu";
+		status = "disabled";
+	};
+
+/*
+
+NVIDIA GK20A 그래픽 처리 장치
+
+필수 속성 :
+- 호환 : "nvidia, <chip> - <gpu>"
+  현재 인식 된 값 :
+  - nvidia, tegra124-gk20a
+- reg : 컨트롤러의 레지스터의 물리적 인 기본 주소와 길이.
+  두 개의 항목이 있어야합니다.
+  - bar0에 대한 첫 번째 항목
+  - bar1에 대한 두 번째 항목
+- 인터럽트 : 인터럽트 이름의 각 항목에 대한 항목을 포함해야합니다.
+  자세한 내용은 ../interrupt-controller/interrupts.txt를 참조하십시오.
+- interrupt-names : 다음 항목을 포함해야합니다.
+  - 실속
+  - 논 스톨
+- vdd-supply : 전원 전압 레귤레이터.
+- clocks : clock-name의 각 항목에 대한 항목을 포함해야합니다.
+  자세한 내용은 ../clocks/clock-bindings.txt를 참조하십시오.
+- clock-names : 다음 항목을 포함해야합니다.
+  - GPU
+  - pwr
+- reset : reset-names에 각 항목에 대한 항목을 포함해야합니다.
+  자세한 내용은 ../reset/reset.txt를 참조하십시오.
+- reset-names : 다음 항목을 포함해야합니다.
+  - GPU
+
+
+Example:
+
+	gpu@0,57000000 {
+		compatible = "nvidia,gk20a";
+		reg = <0x0 0x57000000 0x0 0x01000000>,
+		      <0x0 0x58000000 0x0 0x01000000>;
+		interrupts = <GIC_SPI 157 IRQ_TYPE_LEVEL_HIGH>,
+			     <GIC_SPI 158 IRQ_TYPE_LEVEL_HIGH>;
+		interrupt-names = "stall", "nonstall";
+		vdd-supply = <&vdd_gpu>;
+		clocks = <&tegra_car TEGRA124_CLK_GPU>,
+			 <&tegra_car TEGRA124_CLK_PLL_P_OUT5>;
+		clock-names = "gpu", "pwr";
+		resets = <&tegra_car 184>;
+		reset-names = "gpu";
+		status = "disabled";
+	};
+
+*/

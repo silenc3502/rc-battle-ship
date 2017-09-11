@@ -1,0 +1,86 @@
+This document explains only the device tree data binding. For general
+information about PHY subsystem refer to Documentation/phy.txt
+이 문서에서는 장치 트리 데이터 바인딩 만 설명합니다. PHY 하위 시스템에 대한 일반 정보는 Documentation / phy.txt를 참조하십시오.
+
+PHY device node
+PHY 장치 노드
+===============
+
+Required Properties:
+#phy-cells:	Number of cells in a PHY specifier;  The meaning of all those
+		cells is defined by the binding for the phy node. The PHY
+		provider can use the values in cells to find the appropriate
+		PHY.
+
+필수 등록 정보 :
+# phy-cells : PHY specifier 에있는 셀의 수. 모든 셀의 의미는 phy 노드에 대한 바인딩에 의해 정의됩니다. PHY 제공 provider 는 셀의 값을 사용하여 적절한 PHY를 찾을 수 있습니다.
+
+Optional Properties:
+phy-supply:	Phandle to a regulator that provides power to the PHY. This
+		regulator will be managed during the PHY power on/off sequence.
+
+선택적 속성 :
+phy-supply : PHY에 provides(공급,제공) power하는 regulator에 Phandle. 이 regulator는 PHY 전원 켜기 / 끄기 sequence 동안 관리됩니다.
+
+For example:
+
+phys: phy {
+    compatible = "xxx";
+    reg = <...>;
+    .
+    .
+    #phy-cells = <1>;
+    .
+    .
+};
+
+That node describes an IP block (PHY provider) that implements 2 different PHYs.
+In order to differentiate between these 2 PHYs, an additional specifier should be
+given while trying to get a reference to it.
+이 노드는 2 개의 서로 다른 PHY를 구현하는 IP 블록 (PHY provider)을 설명합니다.
+이 2 개의 PHY를 구별하기 위해 reference를 얻으려는 동안 추가 specifier를 제공해야합니다.
+
+PHY user node
+=============
+
+Required Properties:
+phys : the phandle for the PHY device (used by the PHY subsystem)
+phy-names : the names of the PHY corresponding to the PHYs present in the
+	    *phys* phandle
+필수 등록 정보 :
+phys : PHY 장치의 phandle (PHY 하위 시스템에서 사용)
+phy-names : * phys * phandle에있는 PHY에 해당하는 PHY의 이름
+
+
+Example 1:
+usb1: usb_otg_ss@xxx {
+    compatible = "xxx";
+    reg = <xxx>;
+    .
+    .
+    phys = <&usb2_phy>, <&usb3_phy>;
+    phy-names = "usb2phy", "usb3phy";
+    .
+    .
+};
+
+This node represents a controller that uses two PHYs, one for usb2 and one for
+usb3.
+이 노드는 usb2와 usb3에 각각 하나씩 두 개의 PHY를 사용하는 컨트롤러를 나타냅니다.
+
+Example 2:
+usb2: usb_otg_ss@xxx {
+    compatible = "xxx";
+    reg = <xxx>;
+    .
+    .
+    phys = <&phys 1>;
+    phy-names = "usbphy";
+    .
+    .
+};
+
+This node represents a controller that uses one of the PHYs of the PHY provider
+device defined previously. Note that the phy handle has an additional specifier
+"1" to differentiate between the two PHYs.
+이 노드는 이전에 정의 된 PHY 제공자 장치의 PHY 중 하나를 사용하는 컨트롤러를 나타냅니다. phy 핸들에는 두 개의 PHY를 구분하는 추가 지정자 "1"이 있습니다.

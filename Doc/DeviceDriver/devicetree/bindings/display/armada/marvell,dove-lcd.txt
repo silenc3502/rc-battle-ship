@@ -1,0 +1,54 @@
+Device Tree bindings for Armada DRM CRTC driver
+
+Required properties:
+ - compatible: value should be "marvell,dove-lcd".
+ - reg: base address and size of the LCD controller
+ - interrupts: single interrupt number for the LCD controller
+ - port: video output port with endpoints, as described by graph.txt
+
+Optional properties:
+
+ - clocks: as described by clock-bindings.txt
+ - clock-names: as described by clock-bindings.txt
+	"axiclk" - axi bus clock for pixel clock
+	"plldivider" - pll divider clock for pixel clock
+	"ext_ref_clk0" - external clock 0 for pixel clock
+	"ext_ref_clk1" - external clock 1 for pixel clock
+
+Note: all clocks are optional but at least one must be specified.
+Further clocks may be added in the future according to requirements of
+different SoCs.
+
+Example:
+
+	lcd0: lcd-controller@820000 {
+		compatible = "marvell,dove-lcd";
+		reg = <0x820000 0x1000>;
+		interrupts = <47>;
+		clocks = <&si5351 0>;
+		clock-names = "ext_ref_clk_1";
+	};
+
+
+/*
+Armada DRM CRTC 드라이버의 장치 트리 바인딩
+
+필요한 속성 :
+- 호환성 : 값은 "marvell, dove-lcd"로해야합니다.
+- reg : LCD 컨트롤러의 기본 주소와 크기
+- 인터럽트 : LCD 컨트롤러 단일 인터럽트 번호
+- port : graph.txt에서 설명 된 엔드 포인트의 비디오 출력 포트
+
+옵션 속성 :
+
+- clocks : clock-bindings.txt에 설명 된대로
+- clock-names : clock-bindings.txt에 설명 된대로
+"axiclk"- 픽셀 클럭 axi 버스 클럭
+"plldivider"- 픽셀 클럭 용 PLL 분할기 시계
+"ext_ref_clk0"- 픽셀 클럭을위한 외부 클럭 0
+"ext_ref_clk1"- 픽셀 클럭을위한 외부 클럭 1
+
+참고 : 모든 클럭은 선택 사항이지만 적어도 하나를 지정해야합니다.
+
+다른 SoC의 요구사항에 따라 나중에 클록을 추가할 수도 있다.
+*/

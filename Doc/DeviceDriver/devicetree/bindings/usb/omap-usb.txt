@@ -1,0 +1,116 @@
+OMAP GLUE AND OTHER OMAP SPECIFIC COMPONENTS
+
+OMAP MUSB GLUE
+ - compatible : Should be "ti,omap4-musb" or "ti,omap3-musb"
+ - ti,hwmods : must be "usb_otg_hs"
+ - multipoint : Should be "1" indicating the musb controller supports
+   multipoint. This is a MUSB configuration-specific setting.
+ - num-eps : Specifies the number of endpoints. This is also a
+   MUSB configuration-specific setting. Should be set to "16"
+ - ram-bits : Specifies the ram address size. Should be set to "12"
+ - interface-type : This is a board specific setting to describe the type of
+   interface between the controller and the phy. It should be "0" or "1"
+   specifying ULPI and UTMI respectively.
+ - mode : Should be "3" to represent OTG. "1" signifies HOST and "2"
+   represents PERIPHERAL.
+ - power : Should be "50". This signifies the controller can supply up to
+   100mA when operating in host mode.
+ - usb-phy : the phandle for the PHY device
+ - phys : the phandle for the PHY device (used by generic PHY framework)
+ - phy-names : the names of the PHY corresponding to the PHYs present in the
+   *phy* phandle.
+
+OMAP MUSB GLUE
+  - compatible : "ti, omap4-musb"또는 "ti, omap3-musb"이어야합니다.
+  -  ti,hwmods : "usb_otg_hs"여야합니다.
+   - multipoint : musb 컨트롤러가 multipoint를 지원함을 나타내는 "1"이어야합니다. 이는 MUSB 구성 별 설정입니다.
+  - num-eps : 끝점의 수를 지정합니다. 이는 MUSB 구성 별 설정이기도합니다. "16"으로 설정해야합니다.
+  - ram-bits : 램 주소 크기를 지정합니다. "12"로 설정해야합니다.
+  - interface-type : 컨트롤러와 phy 사이의 인터페이스 유형을 설명하는 보드 별 설정입니다. ULPI 및 UTMI를 각각 지정하는 "0"또는 "1"이어야합니다.
+  - mode : OTG를 나타 내기 위해 "3"이어야합니다. "1"은 호스트를 나타내며 "2"는 주변을 나타냅니다.
+  - power : "50"이어야합니다. 이는 호스트 모드에서 작동 할 때 컨트롤러가 최대 100mA를 공급할 수 있음을 의미합니다.
+  - usb-phy : PHY 장치의 phandle
+  - phys : PHY 장치의 phandle (일반 PHY 프레임 워크에서 사용)
+  - phy-names : * phy * phandle에있는 PHY에 해당하는 PHY의 이름.
+
+
+Optional properties:
+ - ctrl-module : phandle of the control module this glue uses to write to mailbox
+
+선택적 속성 :
+  - ctrl-module : glue가 mailbox에 기입하는데 사용하는 제어 모듈 phandle
+
+SOC specific device node entry
+SOC 특정 장치 노드 항목
+usb_otg_hs: usb_otg_hs@4a0ab000 {
+	compatible = "ti,omap4-musb";
+	ti,hwmods = "usb_otg_hs";
+	multipoint = <1>;
+	num-eps = <16>;
+	ram-bits = <12>;
+	ctrl-module = <&omap_control_usb>;
+	phys = <&usb2_phy>;
+	phy-names = "usb2-phy";
+};
+
+Board specific device node entry
+보드 특정 장치 노드 항목
+&usb_otg_hs {
+	interface-type = <1>;
+	mode = <3>;
+	power = <50>;
+};
+
+OMAP DWC3 GLUE
+ - compatible : Should be
+	* "ti,dwc3" for OMAP5 and DRA7
+	* "ti,am437x-dwc3" for AM437x
+ - ti,hwmods : Should be "usb_otg_ss"
+ - reg : Address and length of the register set for the device.
+ - interrupts : The irq number of this device that is used to interrupt the
+   MPU
+ - #address-cells, #size-cells : Must be present if the device has sub-nodes
+ - utmi-mode : controls the source of UTMI/PIPE status for VBUS and OTG ID.
+   It should be set to "1" for HW mode and "2" for SW mode.
+ - ranges: the child address space are mapped 1:1 onto the parent address space
+
+  - compatible : OMAP5 및 DRA7의 경우 "ti, dwc3"* AM437x의 경우 "ti, am437x-dwc3"이어야 함
+  - ti, hwmods : "usb_otg_ss"여야합니다.
+  - reg : 장치에 설정된 레지스터의 주소와 길이.
+  - 인터럽트 : MPU를 인터럽트하는 데 사용되는이 장치의 irq 번호
+  - # address-cells, # size-cells : 장치에 하위 노드가있는 경우에 있어야합니다.
+  - utmi-mode : VBUS 및 OTG ID에 대한 UTMI / PIPE 상태 소스를 제어합니다.
+    HW 모드에서는 "1"로, SW 모드에서는 "2"로 설정해야합니다.
+  - 범위 : 하위 주소 공간이 상위 주소 공간에 1 : 1로 매핑됩니다.
+
+Optional Properties:
+ - extcon : phandle for the extcon device omap dwc3 uses to detect
+   connect/disconnect events.
+ - vbus-supply : phandle to the regulator device tree node if needed.
+선택적 속성 :
+  - extcon : extcon 장치 용 phandle omap dwc3은 연결 / 연결 끊김 이벤트를 감지하는 데 사용됩니다.
+  - vbus-supply : 필요한 경우 조절기 장치 트리 노드에 연결합니다.
+
+Sub-nodes:
+The dwc3 core should be added as subnode to omap dwc3 glue.
+- dwc3 :
+   The binding details of dwc3 can be found in:
+   Documentation/devicetree/bindings/usb/dwc3.txt
+
+Sub-nodes:
+dwc3 코어는 dwc3 glue 을 omap하기위한 서브 노드로 추가되어야합니다.
+- dwc3 :
+    dwc3의 바인딩 세부 사항은 다음에서 찾을 수 있습니다.
+     Documentation / devicetree / bindings / usb / dwc3.txt
+
+
+omap_dwc3 {
+	compatible = "ti,dwc3";
+	ti,hwmods = "usb_otg_ss";
+	reg = <0x4a020000 0x1ff>;
+	interrupts = <0 93 4>;
+	#address-cells = <1>;
+	#size-cells = <1>;
+	utmi-mode = <2>;
+	ranges;
+};

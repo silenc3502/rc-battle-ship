@@ -1,0 +1,122 @@
+﻿Qualcomm Technologies Inc. adreno/snapdragon eDP output
+
+Required properties:
+- compatible:
+  * "qcom,mdss-edp"
+- reg: Physical base address and length of the registers of controller and PLL
+- reg-names: The names of register regions. The following regions are required:
+  * "edp"
+  * "pll_base"
+- interrupts: The interrupt signal from the eDP block.
+- power-domains: Should be <&mmcc MDSS_GDSC>.
+- clocks: device clocks
+  See Documentation/devicetree/bindings/clocks/clock-bindings.txt for details.
+- clock-names: the following clocks are required:
+  * "core_clk"
+  * "iface_clk"
+  * "mdp_core_clk"
+  * "pixel_clk"
+  * "link_clk"
+- #clock-cells: The value should be 1.
+- vdda-supply: phandle to vdda regulator device node
+- lvl-vdd-supply: phandle to regulator device node which is used to supply power
+  to HPD receiving chip
+- panel-en-gpios: GPIO pin to supply power to panel.
+- panel-hpd-gpios: GPIO pin used for eDP hpd.
+
+
+Optional properties:
+- interrupt-parent: phandle to the MDP block if the interrupt signal is routed
+  through MDP block
+
+Example:
+	mdss_edp: qcom,mdss_edp@fd923400 {
+			compatible = "qcom,mdss-edp";
+			reg-names =
+				"edp",
+				"pll_base";
+			reg =	<0xfd923400 0x700>,
+				<0xfd923a00 0xd4>;
+			interrupt-parent = <&mdss_mdp>;
+			interrupts = <12 0>;
+			power-domains = <&mmcc MDSS_GDSC>;
+			clock-names =
+				"core_clk",
+				"pixel_clk",
+				"iface_clk",
+				"link_clk",
+				"mdp_core_clk";
+			clocks =
+				<&mmcc MDSS_EDPAUX_CLK>,
+				<&mmcc MDSS_EDPPIXEL_CLK>,
+				<&mmcc MDSS_AHB_CLK>,
+				<&mmcc MDSS_EDPLINK_CLK>,
+				<&mmcc MDSS_MDP_CLK>;
+			#clock-cells = <1>;
+			vdda-supply = <&pma8084_l12>;
+			lvl-vdd-supply = <&lvl_vreg>;
+			panel-en-gpios = <&tlmm 137 0>;
+			panel-hpd-gpios = <&tlmm 103 0>;
+	};
+
+/*
+Qualcomm Technologies Inc. adreno / snapdragon eDP 출력
+
+필수 속성 :
+- 호환 가능 :
+  * "qcom, mdss-edp"
+- reg : 컨트롤러 및 PLL 레지스터의 물리적 기본 주소 및 길이
+- reg-names : 레지스터 영역의 이름. 다음 지역이 필요합니다.
+  * "edp"
+  * "pll_base"
+- 인터럽트 : eDP 블록의 인터럽트 신호입니다.
+- power-domains : <& mmcc MDSS_GDSC> 여야합니다.
+- clocks : 장치 클럭
+  자세한 내용은 Documentation / devicetree / bindings / clocks / clock-bindings.txt를 참조하십시오.
+- clock-names : 다음 시계가 필요합니다.
+  * "core_clk"
+  * "iface_clk"
+  * "mdp_core_clk"
+  * "pixel_clk"
+  * "link_clk"
+- # clock-cells : 값은 1이어야합니다.
+- vdda - 공급 : vdda 조절기 장치 노드에 대한 phandle
+- lvl-vdd-supply : HPD 수신 칩에 전원을 공급하는 데 사용되는 조절 장치 노드에 대한 phandle
+- panel-en-gpios : 패널에 전원을 공급하는 GPIO 핀.
+- panel-hpd-gpios : eDP hpd에 사용되는 GPIO 핀.
+
+
+선택적 속성 :
+- interrupt-parent : MDP 블록을 통해 인터럽트 신호가 라우팅되는 경우 MDP 블록을 차단합니다.
+
+Example:
+	mdss_edp: qcom,mdss_edp@fd923400 {
+			compatible = "qcom,mdss-edp";
+			reg-names =
+				"edp",
+				"pll_base";
+			reg =	<0xfd923400 0x700>,
+				<0xfd923a00 0xd4>;
+			interrupt-parent = <&mdss_mdp>;
+			interrupts = <12 0>;
+			power-domains = <&mmcc MDSS_GDSC>;
+			clock-names =
+				"core_clk",
+				"pixel_clk",
+				"iface_clk",
+				"link_clk",
+				"mdp_core_clk";
+			clocks =
+				<&mmcc MDSS_EDPAUX_CLK>,
+				<&mmcc MDSS_EDPPIXEL_CLK>,
+				<&mmcc MDSS_AHB_CLK>,
+				<&mmcc MDSS_EDPLINK_CLK>,
+				<&mmcc MDSS_MDP_CLK>;
+			#clock-cells = <1>;
+			vdda-supply = <&pma8084_l12>;
+			lvl-vdd-supply = <&lvl_vreg>;
+			panel-en-gpios = <&tlmm 137 0>;
+			panel-hpd-gpios = <&tlmm 103 0>;
+	};
+
+*/

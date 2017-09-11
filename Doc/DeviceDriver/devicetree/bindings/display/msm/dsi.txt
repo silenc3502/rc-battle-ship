@@ -1,0 +1,283 @@
+﻿Qualcomm Technologies Inc. adreno/snapdragon DSI output
+
+DSI Controller:
+Required properties:
+- compatible:
+  * "qcom,mdss-dsi-ctrl"
+- reg: Physical base address and length of the registers of controller
+- reg-names: The names of register regions. The following regions are required:
+  * "dsi_ctrl"
+- qcom,dsi-host-index: The ID of DSI controller hardware instance. This should
+  be 0 or 1, since we have 2 DSI controllers at most for now.
+- interrupts: The interrupt signal from the DSI block.
+- power-domains: Should be <&mmcc MDSS_GDSC>.
+- clocks: device clocks
+  See Documentation/devicetree/bindings/clocks/clock-bindings.txt for details.
+- clock-names: the following clocks are required:
+  * "bus_clk"
+  * "byte_clk"
+  * "core_clk"
+  * "core_mmss_clk"
+  * "iface_clk"
+  * "mdp_core_clk"
+  * "pixel_clk"
+- vdd-supply: phandle to vdd regulator device node
+- vddio-supply: phandle to vdd-io regulator device node
+- vdda-supply: phandle to vdda regulator device node
+- qcom,dsi-phy: phandle to DSI PHY device node
+
+Optional properties:
+- panel@0: Node of panel connected to this DSI controller.
+  See files in Documentation/devicetree/bindings/display/panel/ for each supported
+  panel.
+- qcom,dual-dsi-mode: Boolean value indicating if the DSI controller is
+  driving a panel which needs 2 DSI links.
+- qcom,master-dsi: Boolean value indicating if the DSI controller is driving
+  the master link of the 2-DSI panel.
+- qcom,sync-dual-dsi: Boolean value indicating if the DSI controller is
+  driving a 2-DSI panel whose 2 links need receive command simultaneously.
+- interrupt-parent: phandle to the MDP block if the interrupt signal is routed
+  through MDP block
+- pinctrl-names: the pin control state names; should contain "default"
+- pinctrl-0: the default pinctrl state (active)
+- pinctrl-n: the "sleep" pinctrl state
+- port: DSI controller output port. This contains one endpoint subnode, with its
+  remote-endpoint set to the phandle of the connected panel's endpoint.
+  See Documentation/devicetree/bindings/graph.txt for device graph info.
+
+DSI PHY:
+Required properties:
+- compatible: Could be the following
+  * "qcom,dsi-phy-28nm-hpm"
+  * "qcom,dsi-phy-28nm-lp"
+  * "qcom,dsi-phy-20nm"
+- reg: Physical base address and length of the registers of PLL, PHY and PHY
+  regulator
+- reg-names: The names of register regions. The following regions are required:
+  * "dsi_pll"
+  * "dsi_phy"
+  * "dsi_phy_regulator"
+- qcom,dsi-phy-index: The ID of DSI PHY hardware instance. This should
+  be 0 or 1, since we have 2 DSI PHYs at most for now.
+- power-domains: Should be <&mmcc MDSS_GDSC>.
+- clocks: device clocks
+  See Documentation/devicetree/bindings/clocks/clock-bindings.txt for details.
+- clock-names: the following clocks are required:
+  * "iface_clk"
+- vddio-supply: phandle to vdd-io regulator device node
+
+Optional properties:
+- qcom,dsi-phy-regulator-ldo-mode: Boolean value indicating if the LDO mode PHY
+  regulator is wanted.
+
+Example:
+	mdss_dsi0: qcom,mdss_dsi@fd922800 {
+		compatible = "qcom,mdss-dsi-ctrl";
+		qcom,dsi-host-index = <0>;
+		interrupt-parent = <&mdss_mdp>;
+		interrupts = <4 0>;
+		reg-names = "dsi_ctrl";
+		reg = <0xfd922800 0x200>;
+		power-domains = <&mmcc MDSS_GDSC>;
+		clock-names =
+			"bus_clk",
+			"byte_clk",
+			"core_clk",
+			"core_mmss_clk",
+			"iface_clk",
+			"mdp_core_clk",
+			"pixel_clk";
+		clocks =
+			<&mmcc MDSS_AXI_CLK>,
+			<&mmcc MDSS_BYTE0_CLK>,
+			<&mmcc MDSS_ESC0_CLK>,
+			<&mmcc MMSS_MISC_AHB_CLK>,
+			<&mmcc MDSS_AHB_CLK>,
+			<&mmcc MDSS_MDP_CLK>,
+			<&mmcc MDSS_PCLK0_CLK>;
+		vdda-supply = <&pma8084_l2>;
+		vdd-supply = <&pma8084_l22>;
+		vddio-supply = <&pma8084_l12>;
+
+		qcom,dsi-phy = <&mdss_dsi_phy0>;
+
+		qcom,dual-dsi-mode;
+		qcom,master-dsi;
+		qcom,sync-dual-dsi;
+
+		pinctrl-names = "default", "sleep";
+		pinctrl-0 = <&mdss_dsi_active>;
+		pinctrl-1 = <&mdss_dsi_suspend>;
+
+		panel: panel@0 {
+			compatible = "sharp,lq101r1sx01";
+			reg = <0>;
+			link2 = <&secondary>;
+
+			power-supply = <...>;
+			backlight = <...>;
+
+			port {
+				panel_in: endpoint {
+					remote-endpoint = <&dsi0_out>;
+				};
+			};
+		};
+
+		port {
+			dsi0_out: endpoint {
+				remote-endpoint = <&panel_in>;
+			};
+		};
+	};
+
+	mdss_dsi_phy0: qcom,mdss_dsi_phy@fd922a00 {
+		compatible = "qcom,dsi-phy-28nm-hpm";
+		qcom,dsi-phy-index = <0>;
+		reg-names =
+			"dsi_pll",
+			"dsi_phy",
+			"dsi_phy_regulator";
+		reg =   <0xfd922a00 0xd4>,
+			<0xfd922b00 0x2b0>,
+			<0xfd922d80 0x7b>;
+		clock-names = "iface_clk";
+		clocks = <&mmcc MDSS_AHB_CLK>;
+		vddio-supply = <&pma8084_l12>;
+
+		qcom,dsi-phy-regulator-ldo-mode;
+	};
+
+/*
+LVDS 디스플레이 브리지 (ldb)에 대한 장치 트리 바인딩
+
+LVDS 디스플레이 브리지
+===========
+
+LVDS 디스플레이 브리지 장치 트리 노드에는 브리지의 두 LVDS 인코더 채널을 각각 설명하는 최대 두 개의 LVD 채널 노드가 있습니다.
+
+필수 속성 :
+- # address-cells : <1>이어야합니다.
+- # size-cells : <0>이어야합니다.
+- compatible : "fsl, imx53-ldb"또는 "fsl, imx6q-ldb"여야합니다.
+                두 LDB 버전은 비슷하지만, i.MX6은 4 개의 IPU 디스플레이 인터페이스 중 하나를 각 LVDS 채널의 입력으로 선택하기 위해 전면에 멀티플렉서가 추가로 있습니다.
+- gpr : i.MX53 및 i.MX6q에서 <& gpr>이어야합니다.
+         이 phandle은 LVDS 제어 레지스터를 포함하는 iomuxc-gpr 영역을 가리 킵니다.
+- clocks, clock-names : Documentation / devicetree / bindings / clock / clock-bindings.txt에 설명 된대로 LDB 분배기 및 선택기 클록 및 디스플레이 인터페이스 선택기 클럭에 대한 지침
+        i.MX53에는 다음과 같은 클럭이 필요합니다.
+                "di0_pll"- LDB LVDS 채널 0 멀티 플렉스
+                "di1_pll"- LDB LVDS 채널 1 멀티 플렉스
+                "di0"- LDB LVDS 채널 0 게이트
+                "di1"- LDB LVDS 채널 1 게이트
+                "di0_sel"- IPU1 DI0 mux
+                "di1_sel"- IPU1 DI1 mux
+        i.MX6q에는 다음과 같은 추가 클럭이 필요합니다.
+                "di2_sel"- IPU2 DI0 멀티플렉서
+                "di3_sel"- IPU2 DI1 mux
+        각 시계에 필요한 시계 번호는
+        Documentation / devicetree / bindings / clock / imx5-clock.txt 및
+        문서 / devicetree / bindings / clock / imx6q-clock.txt.
+
+선택적 속성 :
+ - pinctrl-names : i.MX53에서는 "default"이고 i.MX6q에서는 사용되지 않습니다.
+ - pinctrl-0 : i.MX53의 LVDS 핀 설정을 가리키는 phandle, i.MX6q에서는 사용되지 않음
+ - fsl, 이중 채널 : 부울 만약 존재한다면, LVDS 채널 0만이 구성되어야합니다 - 하나의 입력은 듀얼 채널 모드에서 두 출력에 분배 될 것입니다
+
+LVDS 채널
+============
+
+각 LVDS 채널에는 패널 장치 노드에 대한 그래프 링크 또는 연결된 LVDS 디스플레이 및 fsl, data-mapping 및 fsl, data-width 속성에 대한 비디오 타이밍을 설명하는 디스플레이 타이밍 노드 중 하나가 있어야합니다.
+
+필수 속성 :
+ - reg : <0> 또는 <1>이어야합니다.
+ - 포트 : 정의 된 끝점 정의가있는 입력 및 출력 포트 노드
+   Documentation / devicetree / bindings / graph.txt.
+   i.MX5에서는 내부 2 입력 멀티플렉서가 사용됩니다. 하드웨어 제한 사항으로 인해 하나의 입력 포트 (포트 @ [0,1]) 만 각 채널에 사용할 수 있습니다 (각각 lvds-channel @ [0,1]).
+   i.MX6에는 4 개의 LVDS 멀티플렉서 입력에 해당하는 4 개의 입력 포트 (포트 @ [0-3])가 있어야합니다.
+   단일 출력 포트 (i.MX5의 포트 @ 2, i.MX6의 포트 @ 4)는 패널 입력 포트에 연결해야합니다. 선택적으로 디스플레이 타이밍이 대신 사용되면 출력 포트를 생략 할 수 있습니다.
+
+선택적 속성 (표시 타이밍을 사용할 경우 필요) :
+ - 디스플레이 타이밍 :에 정의 된 디스플레이 타이밍을 설명하는 노드
+   Documentation / devicetree / bindings / display / display-timing.txt.
+ - fsl, data-mapping : "spwg"또는 "jeida"여야합니다.
+                      직렬화 된 LVDS 신호에 색상 비트가 배치되는 방법을 설명합니다.
+ - fsl, data-width :는 <18> 또는 <24> 여야합니다.
+
+example:
+
+gpr: iomuxc-gpr@53fa8000 {
+	/* ... */
+};
+
+ldb: ldb@53fa8008 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	compatible = "fsl,imx53-ldb";
+	gpr = <&gpr>;
+	clocks = <&clks IMX5_CLK_LDB_DI0_SEL>,
+		 <&clks IMX5_CLK_LDB_DI1_SEL>,
+		 <&clks IMX5_CLK_IPU_DI0_SEL>,
+		 <&clks IMX5_CLK_IPU_DI1_SEL>,
+		 <&clks IMX5_CLK_LDB_DI0_GATE>,
+		 <&clks IMX5_CLK_LDB_DI1_GATE>;
+	clock-names = "di0_pll", "di1_pll",
+		      "di0_sel", "di1_sel",
+		      "di0", "di1";
+
+	/* Using an of-graph endpoint link to connect the panel */
+	lvds-channel@0 {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		reg = <0>;
+
+		port@0 {
+			reg = <0>;
+
+			lvds0_in: endpoint {
+				remote-endpoint = <&ipu_di0_lvds0>;
+			};
+		};
+
+		port@2 {
+			reg = <2>;
+
+			lvds0_out: endpoint {
+				remote-endpoint = <&panel_in>;
+			};
+		};
+	};
+
+	/* Using display-timings and fsl,data-mapping/width instead */
+	lvds-channel@1 {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		reg = <1>;
+		fsl,data-mapping = "spwg";
+		fsl,data-width = <24>;
+
+		display-timings {
+			/* ... */
+		};
+
+		port@1 {
+			reg = <1>;
+
+			lvds1_in: endpoint {
+				remote-endpoint = <&ipu_di1_lvds1>;
+			};
+		};
+	};
+};
+
+panel: lvds-panel {
+	/* ... */
+
+	port {
+		panel_in: endpoint {
+			remote-endpoint = <&lvds0_out>;
+		};
+	};
+};
+
+
+*/

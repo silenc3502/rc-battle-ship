@@ -1,0 +1,123 @@
+﻿Device-Tree bindings for tilcdc DRM driver
+
+Required properties:
+ - compatible: value should be "ti,am33xx-tilcdc".
+ - interrupts: the interrupt number
+ - reg: base address and size of the LCDC device
+
+Recommended properties:
+ - interrupt-parent: the phandle for the interrupt controller that
+   services interrupts for this device.
+ - ti,hwmods: Name of the hwmod associated to the LCDC
+
+Optional properties:
+ - max-bandwidth: The maximum pixels per second that the memory
+   interface / lcd controller combination can sustain
+ - max-width: The maximum horizontal pixel width supported by
+   the lcd controller.
+ - max-pixelclock: The maximum pixel clock that can be supported
+   by the lcd controller in KHz.
+ - blue-and-red-wiring: Recognized values "default", "straight" or
+   "crossed". This property deals with the LCDC revision 2 (found on
+   AM335x) color errata [1].
+    - "straight" indicates normal wiring that supports RGB565,
+      BGR888, and XBGR8888 color formats.
+    - "crossed" indicates wiring that has blue and red wires
+      crossed. This setup supports BGR565, RGB888 and XRGB8888
+      formats.
+    - If the property is not present or its value is not recognized
+      the legacy mode is assumed. This configuration supports RGB565,
+      RGB888 and XRGB8888 formats. However, depending on wiring, the red
+      and blue colors are swapped in either 16 or 24-bit color modes.
+
+Optional nodes:
+
+ - port/ports: to describe a connection to an external encoder. The
+   binding follows Documentation/devicetree/bindings/graph.txt and
+   suppors a single port with a single endpoint.
+
+ - See also Documentation/devicetree/bindings/display/tilcdc/panel.txt and
+   Documentation/devicetree/bindings/display/tilcdc/tfp410.txt for connecting
+   tfp410 DVI encoder or lcd panel to lcdc
+
+[1] There is an errata about AM335x color wiring. For 16-bit color mode
+    the wires work as they should (LCD_DATA[0:4] is for Blue[3:7]),
+    but for 24 bit color modes the wiring of blue and red components is
+    crossed and LCD_DATA[0:4] is for Red[3:7] and LCD_DATA[11:15] is
+    for Blue[3-7]. For more details see section 3.1.1 in AM335x
+    Silicon Errata:
+    http://www.ti.com/general/docs/lit/getliterature.tsp?baseLiteratureNumber=sprz360
+
+Example:
+
+	fb: fb@4830e000 {
+		compatible = "ti,am33xx-tilcdc";
+		reg = <0x4830e000 0x1000>;
+		interrupt-parent = <&intc>;
+		interrupts = <36>;
+		ti,hwmods = "lcdc";
+
+		blue-and-red-wiring = "crossed";
+
+		port {
+			lcdc_0: endpoint@0 {
+				remote-endpoint = <&hdmi_0>;
+			};
+		};
+	};
+
+	tda19988: tda19988 {
+		compatible = "nxp,tda998x";
+		reg = <0x70>;
+
+		pinctrl-names = "default", "off";
+		pinctrl-0 = <&nxp_hdmi_bonelt_pins>;
+		pinctrl-1 = <&nxp_hdmi_bonelt_off_pins>;
+
+		port {
+			hdmi_0: endpoint@0 {
+				remote-endpoint = <&lcdc_0>;
+			};
+		};
+	};
+
+/*
+tilcdc DRM 드라이버에 대한 장치 트리 바인딩
+
+필수 속성 :
+ - compatible : 값은 "ti, am33xx-tilcdc"여야합니다.
+ - interrupts : 인터럽트 번호
+ - reg : LCDC 장치의 기본 주소 및 크기
+
+권장 속성 :
+ - interrupt-parent : 인터럽트 컨트롤러의 phandle
+   서비스 인터럽트를 발생시킵니다.
+ - ti, hwmods : LCDC와 관련된 hwmod의 이름입니다.
+
+선택적 속성 :
+ - 최대 대역폭 : 메모리 인터페이스 / lcd 컨트롤러 조합이 유지할 수있는 초당 최대 픽셀 수
+ - 최대 너비 : 지원되는 최대 가로 픽셀 너비
+   액정 컨트롤러.
+ - max-pixelclock : lcd 컨트롤러가 KHz로 지원할 수있는 최대 픽셀 클록입니다.
+ - 청색 및 적색 배선 : 인식 된 값은 "기본값", "직선"또는 "교차"입니다.
+ 이 속성은 LCD에있는 개정판 2 (AM335x에서 발견)의 색상 에라타 [1]를 다룹니다.
+    - "직선"은 RGB565,
+      BGR888 및 XBGR8888 색상 형식을 지원합니다.
+    - "교차"는 파란색과 빨간색 선이 교차하는 배선을 나타냅니다. 이 설정은 BGR565, RGB888 및 XRGB8888을 지원합니다.
+      형식.
+    - 속성이 없거나 값이 인식되지 않는 경우
+      레거시 모드로 간주됩니다. 이 구성은 RGB565, RGB888 및 XRGB8888 형식을 지원합니다. 그러나 배선에 따라 빨강 및 파랑 색이 16 비트 또는 24 비트 색 모드로 바뀝니다.
+
+선택적 노드 :
+
+ - 포트 / 포트 : 외부 인코더에 대한 연결을 나타냅니다. 바인딩은 Documentation / devicetree / bindings / graph.txt와
+   단일 endpoint을 가진 단일 포트를 지원합니다.
+
+ - Documentation / devicetree / bindings / display / tilcdc / panel.txt를 참조하십시오.
+   tfp410 DVI 인코더 또는 lcd 패널을 lcdc에 연결하기위한 Documentation / devicetree / bindings / display / tilcdc / tfp410.txt
+
+[1] AM335x 컬러 배선에 관한 정오표가 있습니다.
+16 비트 컬러 모드에서는 전선이 정상적으로 작동하지만 (LCD_DATA [0 : 4]는 파란색 [3 : 7]), 24 비트 색상 모드에서는 파란색과 빨간색 구성 요소의 배선이 교차하고 LCD_DATA [0 : 4] ]는 빨간색 [3 : 7]이고 LCD_DATA [11:15]는
+ 블루 [3-7]. 자세한 내용은 AM335x의 3.1.1 절을 참조하십시오.
+    실리콘 정오표 :
+    http://www.ti.com/general/docs/lit/getliterature.tsp?baseLiteratureNumber=sprz360

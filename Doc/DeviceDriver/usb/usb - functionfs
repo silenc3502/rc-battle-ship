@@ -1,0 +1,114 @@
+*How FunctionFS works*
+
+From kernel point of view it is just a composite function with some
+unique behaviour.  It may be added to an USB configuration only after
+the user space driver has registered by writing descriptors and
+strings (the user space program has to provide the same information
+that kernel level composite functions provide when they are added to
+the configuration).
+
+커널 관점에서 볼 때, 그것은 독특한 행동을 하는 복합 함수일 뿐이다.
+사용자 공간 드라이버가 descriptor와 문자열을 작성하여 등록된 후에만 USB 구성에 추가 될 수 있습니다.
+(사용자가 직접 작성하여 등록을 해줘야한다? 드라이버가 등록할 수 있게 내가 만들어야 한다는 건가?) 
+(사용자 공간 프로그램은 커널 레벨 복합 function이 구성에 추가 될 때 제공하는 것과 동일한 정보를 제공해야합니다).
+
+This in particular means that the composite initialisation functions
+may not be in init section (ie. may not use the __init tag).
+
+이는 특히 복합 초기화 함수가 init 섹션에 없다는 것을 (즉, __init 태그를 사용할 수 없음) 의미 할 수 있습니다.
+(init 섹션에 없으면 새로 만들어 준다는 것인가?)
+
+From user space point of view it is a file system which when
+mounted provides an "ep0" file.  User space driver need to
+write descriptors and strings to that file.  It does not need
+to worry about endpoints, interfaces or strings numbers but
+simply provide descriptors such as if the function was the
+only one (endpoints and strings numbers starting from one and
+interface numbers starting from zero).  The FunctionFS changes
+them as needed also handling situation when numbers differ in
+different configurations.
+
+사용자 공간 관점에서 볼 때 마운트 된 파일은 "ep0" 파일을 제공하는 파일 시스템입니다.
+사용자 공간 드라이버는 해당 파일에 descriptor와 문자열을 써야합니다. (쓰고 등록된 후에만 USB 구성에 추가 될 수 있다)
+endpoint, 인터페이스 또는 문자열 번호에 대해 신경 쓸 필요는 없지만 기능이 유일한 경우
+(endpoint 및 문자열 번호는 1부터 시작하고 인터페이스 번호는 0부터 시작) desciptor를 제공합니다.
+FunctionFS는 숫자가 다른 구성에서 다를 때? 필요에 따라 상황을 처리합니다.
+
+When descriptors and strings are written "ep#" files appear
+(one for each declared endpoint) which handle communication on
+a single endpoint.  Again, FunctionFS takes care of the real
+numbers and changing of the configuration (which means that
+"ep1" file may be really mapped to (say) endpoint 3 (and when
+configuration changes to (say) endpoint 2)).  "ep0" is used
+for receiving events and handling setup requests.
+
+descriptor와 문자열이 작성되면 단일 endpoint에서 통신을 처리하는 "ep #"파일 (각 끝점에 하나씩)이 나타납니다.
+(descriptor와 문자열을 작성을 해줘야 한다. 그러면 파일이 하나씩 생긴다.) 
+다시 FunctionFS는 실제 숫자와 구성 변경을 처리합니다 
+(즉, "ep1"파일이 실제로 endpoint 3에 매핑 될 수 있음을 의미합니다 (구성이 endpoint 2로 변경 될 때)).
+(2까지 차 있어서 3이 된다는 말인가?)
+"ep0"은 이벤트 수신 및 설정 요청 처리에 사용됩니다.
+
+When all files are closed the function disables itself.
+
+모든 파일이 닫히면 기능 자체가 비활성화됩니다.
+
+What I also want to mention is that the FunctionFS is designed in such
+a way that it is possible to mount it several times so in the end
+a gadget could use several FunctionFS functions. The idea is that
+each FunctionFS instance is identified by the device name used
+when mounting.
+
+또한 언급하고 싶은 것은 함수가 여러 번 마운트 할 수 있는 방식으로 함수가 설계 되었기 때문에 
+결국에는 가젯이 여러 FunctionS 함수를 사용할 수 있다는 것입니다.
+아이디어는 각 FunctionFS 인스턴스가 마운트 할 때 사용 된 장치 이름으로 식별된다는 것입니다.
+(ep#는 장치이름은 아닌거지? 장치이름이 따로 있겠지? 따로 있다. 아래에 나온다)
+
+One can imagine a gadget that has an Ethernet, MTP and HID interfaces
+where the last two are implemented via FunctionFS.  On user space
+level it would look like this:
+
+마지막 2개가 FunctionFS를 통해 구현되는 이더넷, MTP 및 HID 인터페이스가 있는 가젯을 상상할 수 있습니다.
+사용자 공간 레벨에서는 다음과 같이 보입니다:
+
+$ insmod g_ffs.ko idVendor=<ID> iSerialNumber=<string> functions=mtp,hid (mtp와 hid에서 쓰던 function)
+$ mkdir /dev/ffs-mtp && mount -t functionfs mtp /dev/ffs-mtp
+$ ( cd /dev/ffs-mtp && mtp-daemon ) &
+$ mkdir /dev/ffs-hid && mount -t functionfs hid /dev/ffs-hid
+$ ( cd /dev/ffs-hid && hid-daemon ) &
+
+On kernel level the gadget checks ffs_data->dev_name to identify
+whether it's FunctionFS designed for MTP ("mtp") or HID ("hid").
+
+커널 레벨에서 가젯은 ffs_data-> dev_name을 검사하여 MFS ( "mtp") 또는 HID ( "hid") 용으로 
+설계된 FunctionFS인지 여부를 식별합니다.
+
+If no "functions" module parameters is supplied, the driver accepts
+just one function with any name.
+
+"functions" 모듈 매개 변수가 제공되지 않으면 드라이버는 이름이 있는 함수 하나만 받아들입니다.
+(다른 매개 변수(인수)는 없으니까 함수만 받아들인다. 인수가 없어도 가능하다는 뜻도 되는 거 같다)
+
+When "functions" module parameter is supplied, only functions
+with listed names are accepted. In particular, if the "functions"
+parameter's value is just a one-element list, then the behaviour
+is similar to when there is no "functions" at all; however,
+only a function with the specified name is accepted.
+
+"functions" 모듈 매개 변수가 제공되면 나열된(listed) 이름을 가진 함수만 허용됩니다.
+특히 "함수"매개 변수의 값이 단 하나의 요소 목록인 경우 동작은 "함수"가 없는 경우와 유사합니다;
+그러나 지정된(specified) 이름을 가진 함수만 허용됩니다.
+
+The gadget is registered only after all the declared function
+filesystems have been mounted and USB descriptors of all functions
+have been written to their ep0's.
+
+모든 기능의 파일 시스템이 마운트되고 모든 기능의 USB descriptor가 ep0에 기록 된 후에만 가젯이 등록됩니다.
+("ep0"은 이벤트 수신 및 설정 요청 처리에 사용됩니다.)
+
+Conversely, the gadget is unregistered after the first USB function
+closes its endpoints.
+
+반대로, 첫 번째 USB function이 endpoint를 닫은 후에는 가젯이 등록 취소됩니다.
+(descriptor와 문자열을 작성해 ep0에 등록해 가젯을 만든 후에 함수를 사용한다.
+함수가 endpoint를 닫는다면 가젯 등록이 취소된다-> 함수를 사용하지 못하겠지?)

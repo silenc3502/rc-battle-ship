@@ -1,0 +1,58 @@
+* Samsung Image Rotator
+
+Required properties:
+  - compatible : value should be one of the following:
+	(a) "samsung,exynos4210-rotator" for Rotator IP in Exynos4210
+	(b) "samsung,exynos4212-rotator" for Rotator IP in Exynos4212/4412
+	(c) "samsung,exynos5250-rotator" for Rotator IP in Exynos5250
+
+  - reg : Physical base address of the IP registers and length of memory
+	  mapped region.
+
+  - interrupts : Interrupt specifier for rotator interrupt, according to format
+		 specific to interrupt parent.
+
+  - clocks : Clock specifier for rotator clock, according to generic clock
+	     bindings. (See Documentation/devicetree/bindings/clock/exynos*.txt)
+
+  - clock-names : Names of clocks. For exynos rotator, it should be "rotator".
+
+Example:
+	rotator@12810000 {
+		compatible = "samsung,exynos4210-rotator";
+		reg = <0x12810000 0x1000>;
+		interrupts = <0 83 0>;
+		clocks = <&clock 278>;
+		clock-names = "rotator";
+	};
+
+/*
+* 삼성 이미지 회전 장치
+
+필수 속성 :
+   - compatible : value는 다음 중 하나 여야합니다.
+(a) Exynos4210의 Rotator IP 용 "samsung, exynos4210-rotator"
+(b) Exynos4212 / 4412의 Rotator IP 용 "samsung, exynos4212-rotator"
+Exynos5250의 Rotator IP를위한 (c) "samsung, exynos5250-rotator"
+
+   - reg : IP 레지스터의 물리적 기본 주소와 메모리의 길이
+맵핑 된 영역.
+
+   - 인터럽트 : 형식에 따라 로테이터 인터럽트에 대한 인터럽트 지정자
+부모에게 방해 특정.
+
+   - clocks : 일반 시계에 따른 로테이터 클럭에 대한 클록 지정자
+바인딩. (Documentation / devicetree / bindings / clock / exynos * .txt를 참조하십시오)
+
+   - clock-names : 시계의 이름. exynos rotator의 경우 "rotator"여야합니다
+
+Example:
+	rotator@12810000 {
+		compatible = "samsung,exynos4210-rotator";
+		reg = <0x12810000 0x1000>;
+		interrupts = <0 83 0>;
+		clocks = <&clock 278>;
+		clock-names = "rotator";
+	};
+
+*/

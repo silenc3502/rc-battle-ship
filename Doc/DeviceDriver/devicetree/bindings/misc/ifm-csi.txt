@@ -1,0 +1,62 @@
+IFM camera sensor interface on mpc5200 LocalPlus bus
+
+Required properties:
+- compatible: "ifm,o2d-csi"
+- reg: specifies sensor chip select number and associated address range
+- interrupts: external interrupt line number and interrupt sense mode
+  of the interrupt line signaling frame valid events
+- gpios: three gpio-specifiers for "capture", "reset" and "master enable"
+  GPIOs (strictly in this order).
+- ifm,csi-clk-handle: the phandle to a node in the DT describing the sensor
+  clock generator. This node is usually a general purpose timer controller.
+- ifm,csi-addr-bus-width: address bus width (valid values are 16, 24, 25)
+- ifm,csi-data-bus-width: data bus width (valid values are 8 and 16)
+- ifm,csi-wait-cycles: sensor bus wait cycles
+
+Optional properties:
+- ifm,csi-byte-swap: if this property is present, the byte swapping on
+  the bus will be enabled.
+
+mpc5200 LocalPlus 버스의 IFM 카메라 센서 인터페이스
+
+필수 속성 :
+- 호환 : "ifm, o2d-csi"
+- reg : 센서 칩 선택 번호와 관련 주소 범위 지정 - 인터럽트 : 인터럽트 라인의 인터럽트 감지 번호 및 인터럽트 라인의 인터럽트 감지 모드 유효 신호 - gpios : "capture", "reset"및 "master enable"에 대한 3 개의 gpio 지정자(엄격하게이 순서대로).
+- ifm, csi-clk-handle : 센서 클럭 생성기를 설명하는 DT의 노드에 대한 phandle입니다. 이 노드는 일반적으로 범용 타이머 컨트롤러입니다.
+- ifm, csi-addr-bus-width : 주소 버스 폭 (유효한 값은 16, 24, 25 임)
+- ifm, csi-data-bus-width : 데이터 버스 폭 (유효한 값은 8 및 16 임)
+- ifm, csi-wait-cycles : 센서 버스 대기 사이클
+
+선택적 속성 :
+- ifm, csi-byte-swap :이 속성이 있으면 버스에서 바이트 스와핑이 활성화됩니다.
+
+
+Example:
+
+	csi@3,0 {
+		compatible = "ifm,o2d-csi";
+		reg = <3 0 0x00100000>;		/* CS 3, 1 MiB range */
+									/ * CS 3, 1 MiB 범위 * /
+
+		interrupts = <1 1 2>;		/* IRQ1, edge falling */
+
+		ifm,csi-clk-handle = <&timer7>;
+		gpios = <&gpio_simple 23 0	/* image_capture */
+			 &gpio_simple 26 0	/* image_reset */
+			 &gpio_simple 29 0>;	/* image_master_en */
+
+		ifm,csi-addr-bus-width = <24>;
+		ifm,csi-data-bus-width = <8>;
+		ifm,csi-wait-cycles = <0>;
+	};
+
+The base address of the used chip select is specified in the
+ranges property of the parent localbus node, for example:
+
+	ranges = <0 0 0xff000000 0x01000000
+		  3 0 0xe3000000 0x00100000>;
+
+사용 된 칩 선택의 기본 주소는 상위 로컬 버스 노드의 ranges 속성에 지정됩니다 (예 :
+
+범위 = <0 0 0xff000000 0x01000000
+3 0 0xe3000000 0x00100000>;

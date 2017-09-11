@@ -1,0 +1,44 @@
+EEPROMs (I2C)
+
+Required properties:
+
+  - compatible : should be "<manufacturer>,<type>"
+		 If there is no specific driver for <manufacturer>, a generic
+		 driver based on <type> is selected. Possible types are:
+		 24c00, 24c01, 24c02, 24c04, 24c08, 24c16, 24c32, 24c64,
+		 24c128, 24c256, 24c512, 24c1024, spd
+
+  - reg : the I2C address of the EEPROM
+
+Optional properties:
+
+  - pagesize : the length of the pagesize for writing. Please consult the
+               manual of your device, that value varies a lot. A wrong value
+	       may result in data loss! If not specified, a safety value of
+	       '1' is used which will be very slow.
+
+  - read-only: this parameterless property disables writes to the eeprom
+
+필수 속성 :
+
+   - compatible : "<manufacturer>, <type>"이어야합니다. <manufacturer>에 대한 특정 드라이버가 없으면 <type>을 기반으로하는 일반 드라이버가 선택됩니다. 가능한 유형은 다음과 같습니다.
+24c00, 24c01, 24c02, 24c04, 24c08, 24c16, 24c32, 24c64,
+24c128, 24c256, 24c512, 24c1024, spd
+
+   - reg : EEPROM의 I2C 주소
+
+선택적 속성 :
+
+   - pagesize : 쓰기를위한 페이지 크기의 길이. 장치의 설명서를 참조하십시오. 그 값은 많이 다릅니다. 잘못된 값은 데이터 손실을 초래할 수 있습니다! 지정하지 않으면 '1'의 안전 값이 사용되며 이는 매우 느립니다.
+
+   - 읽기 전용 :이 매개 변수없는 속성은 eeprom에 대한 쓰기를 비활성화합니다.
+
+
+
+Example:
+
+eeprom@52 {
+	compatible = "atmel,24c32";
+	reg = <0x52>;
+	pagesize = <32>;
+};

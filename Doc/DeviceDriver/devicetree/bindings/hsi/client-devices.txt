@@ -1,0 +1,66 @@
+Each HSI port is supposed to have one child node, which
+symbols the remote device connected to the HSI port. The
+following properties are standardized for HSI clients:
+
+Required HSI configuration properties:
+
+- hsi-channel-ids:	A list of channel ids
+
+- hsi-rx-mode:		Receiver Bit transmission mode ("stream" or "frame")
+- hsi-tx-mode:		Transmitter Bit transmission mode ("stream" or "frame")
+- hsi-mode:		May be used instead hsi-rx-mode and hsi-tx-mode if
+			the transmission mode is the same for receiver and
+			transmitter
+- hsi-speed-kbps:	Max bit transmission speed in kbit/s
+- hsi-flow:		RX flow type ("synchronized" or "pipeline")
+- hsi-arb-mode:		Arbitration mode for TX frame ("round-robin", "priority")
+
+Optional HSI configuration properties:
+
+- hsi-channel-names:	A list with one name per channel specified in the
+			hsi-channel-ids property
+
+각 HSI 포트에는 원격 장치가 HSI 포트에 연결된 기호가있고 하나의 자식 노드가 있어야합니다. HSI 클라이언트에 대해 다음 속성이 표준화되었습니다.
+
+필수 HSI 구성 등록 정보 :
+
+- hsi-channel-ids : 채널 ID 목록
+
+- hsi-rx-mode : 수신기 비트 전송 모드 ( "stream" or "frame")
+- hsi-tx-mode : 송신기 비트 전송 모드 ( "stream" or "frame")
+- hsi-mode : 수신기와 송신기의 전송 모드가 동일하면 hsi-rx-mode 및 hsi-tx-mode 대신 사용할 수 있습니다.
+
+- hsi-speed-kbps : 최대 비트 전송 속도 (kbit / s)
+
+- hsi-flow : RX 흐름 유형 ( "synchronized" or "pipeline" )
+
+- hsi-arb-mode : TX 프레임의 조정 모드 ( "round-robin", "priority") 선택적 HSI 구성 속성 :
+
+- hsi-channel-names : hsi-channel-ids 등록 정보에 지정된 채널당 하나의 이름을 가진 목록
+
+
+
+
+Device Tree node example for an HSI client:
+HSI 클라이언트의 장치 트리 노드 예제 :
+
+hsi-controller {
+	hsi-port {
+		modem: hsi-client {
+			compatible = "nokia,n900-modem";
+
+			hsi-channel-ids = <0>, <1>, <2>, <3>;
+			hsi-channel-names = "mcsaab-control",
+					    "speech-control",
+					    "speech-data",
+					    "mcsaab-data";
+			hsi-speed-kbps = <55000>;
+			hsi-mode = "frame";
+			hsi-flow = "synchronized";
+			hsi-arb-mode = "round-robin";
+
+			/* more client specific properties */
+			/ * 더 많은 클라이언트 특정 속성 * /
+		};
+	};
+};

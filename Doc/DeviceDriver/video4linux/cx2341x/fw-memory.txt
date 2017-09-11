@@ -1,0 +1,152 @@
+This document describes the cx2341x memory map and documents some of the register space.
+이 문서는 cx2341x 메모리 맵을 설명하고 일부 레지스터 공간을 문서화합니다.
+ 
+ 
+Note: the memory long words are little-endian ('intel format').
+참고 : 메모리 긴 단어는 리틀 엔디안 입니다. ('인텔 포맷')
+ 
+ 
+Warning! This information was figured out from searching through the memory and registers, this information may not be correct and is certainly not complete, and was not derived from anything more than searching through the memory space with commands like:
+경고! 이 정보는 메모리와 레지스터를 통해 검색 한 것으로 파악되었지만, 이 정보는 정확하지 않을 수 있으며, 확실히 완전하지 않을 수 있으며, 다음과 같은 명령으로 메모리 공간을 검색하는 것 이상으로 파생되지 않았습니다.
+ 
+	ivtvctl -O min=0x02000000,max=0x020000ff
+ 
+ 
+So take this as is, I'm always searching for more stuff, it's a large register space :-).
+그래서 이것을 그대로 받아 들여야 합니다. 저는 항상 더 많은 것들을 찾고 있습니다. 그것은 큰 레지스터영역 입니다 :-).
+ 
+ 
+Memory Map 메모리 맵
+==========
+The cx2341x exposes its entire 64M memory space to the PCI host via the PCI BAR0 (Base Address Register 0). The addresses here are offsets relative to the address held in BAR0.
+cx2341x는 전체 64M 메모리 공간을 PCI BAR0 (Base Address Register 0)을 통해 PCI 호스트에 노출합니다. 여기서 주소는 BAR0에 보유 된 주소에 상대적인 오프셋입니다.
+ 
+ 
+0x00000000-0x00ffffff  Encoder memory space
+0x00000000-0x0003ffff Encode.rom
+      ???-???              MPEG buffer(s)
+      ???-???              Raw video capture buffer(s)
+      ???-???              Raw audio capture buffer(s)
+      ???-???              Display buffers (6 or 9)
+ 
+0x01000000-0x01ffffff  Decoder memory space
+0x01000000-0x0103ffff Decode.rom
+      ???-???               MPEG buffers(s)
+0x0114b000-0x0115afff Audio.rom (deprecated?)
+ 
+0x02000000-0x0200ffff Register Space
+ 
+ 
+Registers 레지스터
+=========
+The registers occupy the 64k space starting at the 0x02000000 offset from BAR0.
+All of these registers are 32 bits wide.
+레지스터는 BAR0에서 0x02000000 오프셋에서 시작하여 64k 공간을 차지합니다.
+이 레지스터들은 모두 32 비트 폭이다.
+ 
+DMA Registers 0x000-0xff:
+ 
+ 0x00 - Control:
+	0=reset/cancel, 1=read, 2=write, 4=stop
+ 0x04 - DMA status:
+	1=read busy, 2=write busy, 4=read error, 8=write error, 16=link list error
+ 0x08 - pci DMA pointer for read link list
+          읽기 링크 목록을위한 pci DMA 포인터
+ 0x0c - pci DMA pointer for write link list
+          읽기 링크 목록을위한 pci DMA 포인터
+ 0x10 - read/write DMA enable:
+	1=read enable, 2=write enable
+ 0x14 - always 0xffffffff, if set any lower instability occurs, 0x00 crashes
+                             만약, 더 낮은 불안정성이 설정되면 0x00 충돌
+ 0x18 - ??
+ 0x1c - always 0x20 or 32, smaller values slow down DMA transactions
+                                 값이 작을수록 DMA 트랜잭션 속도가 느려짐
+ 0x20 - always value of 0x780a010a
+ 0x24-0x3c - usually just random values???  보통 임의의 값???
+ 0x40 - Interrupt status
+ 0x44 - Write a bit here and shows up in Interrupt status 0x40
+          여기에 [인터럽트 상태 0x40]의 비트가 쓰여지고 보여진다 
+ 0x48 - Interrupt Mask
+ 0x4C - always value of 0xfffdffff,
+	if changed to 0xffffffff DMA write interrupts break.
+            0xffffffff로 변경되면 DMA 쓰기 인터럽트가 중단됩니다.
+ 0x50 - always 0xffffffff
+ 0x54 - always 0xffffffff (0x4c, 0x50, 0x54 seem like interrupt masks, are 3 processors on chip, Java ones, VPU, SPU, APU, maybe these are the interrupt masks???).
+         항상 0xffffffff (0x4c, 0x50, 0x54는 인터럽트 마스크처럼 보이며, 칩에 3 개의 프로세서가 있습니다. Java는 VPU, SPU, APU입니다. 인터럽트 마스크입니까?).
+ 0x60-0x7C - random values
+ 0x80 - first write linked list reg, for Encoder Memory addr
+          Encoder Memory addr에 대해, 레지스터 링크드리스트를 먼저 작성하십시오.
+ 0x84 - first write linked list reg, for pci memory addr
+          pci memory addr에 대해, 레지스터 링크드리스트를 먼저 작성하십시오.
+ 0x88 - first write linked list reg, for length of buffer in memory addr
+          memory addr의 버퍼길이에 대해, 레지스터 링크드리스트를 먼저 작성하십시오.
+          (|0x80000000 or this for last link)
+ 0x8c-0xdc - rest of write linked list reg, 8 sets of 3 total, DMA goes here from linked list addr in reg 0x0c, firmware must push through or something.
+ 
+ 0xe0 - first (and only) read linked list reg, for pci memory addr
+ 0xe4 - first (and only) read linked list reg, for Decoder memory addr
+ 0xe8 - first (and only) read linked list reg, for length of buffer
+ 0xec-0xff - Nothing seems to be in these registers, 0xec-f4 are 0x00000000.
+ 
+Memory locations for Encoder Buffers 0x700-0x7ff:
+인코더 버퍼의 메모리 위치
+ 
+These registers show offsets of memory locations pertaining to each buffer area used for encoding, have to shift them by <<1 first.
+이 레지스터는 인코딩에 사용되는 각 버퍼 영역에 속하는 메모리 위치의 오프셋을 보여 주므로 << 1만큼 먼저 이동해야합니다.
+ 
+0x07F8: Encoder SDRAM refresh
+0x07FC: Encoder SDRAM pre-charge
+ 
+Memory locations for Decoder Buffers 0x800-0x8ff:
+디코더 버퍼의 메모리 위치
+ 
+These registers show offsets of memory locations pertaining to each buffer area used for decoding, have to shift them by <<1 first.
+이 레지스터는 디코딩에 사용되는 각 버퍼 영역에 속한 메모리 위치의 오프셋을 보여 주므로 << 1만큼 먼저 시프트해야합니다.
+ 
+0x08F8: Decoder SDRAM refresh
+0x08FC: Decoder SDRAM pre-charge
+ 
+Other memory locations:
+ 
+0x2800: Video Display Module control
+0x2D00: AO (audio output?) control
+0x2D24: Bytes Flushed
+0x7000: LSB I2C write clock bit (inverted)
+0x7004: LSB I2C write data bit (inverted)
+0x7008: LSB I2C read clock bit
+0x700c: LSB I2C read data bit
+0x9008: GPIO get input state
+0x900c: GPIO set output state
+0x9020: GPIO direction (Bit7 (GPIO 0..7) - 0:input, 1:output)
+0x9050: SPU control
+0x9054: Reset HW blocks
+0x9058: VPU control
+0xA018: Bit6: interrupt pending?
+0xA064: APU command
+ 
+ 
+Interrupt Status Register  인터럽트 상태 레지스터
+=========================
+ 
+The definition of the bits in the interrupt status register 0x0040, and the interrupt mask 0x0048. If a bit is cleared in the mask, then we want our ISR to execute.
+인터럽트 상태 레지스터 0x0040의 비트 정의와 인터럽트 마스크 0x0048. 마스크에서 비트가 지워지면 ISR이 실행되기를 원합니다.
+ 
+Bit
+31 Encoder Start Capture
+30 Encoder EOS
+29 Encoder VBI capture
+28 Encoder Video Input Module reset event
+27 Encoder DMA complete
+24 Decoder audio mode change detection event (through event notification)
+22 Decoder data request
+20 Decoder DMA complete
+19 Decoder VBI re-insertion
+18 Decoder DMA err (linked-list bad)
+ 
+Missing
+Encoder API call completed
+Decoder API call completed
+Encoder API post(?)
+Decoder API post(?)
+Decoder VTRACE event
+

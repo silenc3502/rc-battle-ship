@@ -1,0 +1,115 @@
+﻿device-tree bindings for rockchip soc display controller (vop)
+
+VOP (Visual Output Processor) is the Display Controller for the Rockchip
+series of SoCs which transfers the image data from a video memory
+buffer to an external LCD interface.
+
+Required properties:
+- compatible: value should be one of the following
+		"rockchip,rk3288-vop";
+
+- interrupts: should contain a list of all VOP IP block interrupts in the
+		 order: VSYNC, LCD_SYSTEM. The interrupt specifier
+		 format depends on the interrupt controller used.
+
+- clocks: must include clock specifiers corresponding to entries in the
+		clock-names property.
+
+- clock-names: Must contain
+		aclk_vop: for ddr buffer transfer.
+		hclk_vop: for ahb bus to R/W the phy regs.
+		dclk_vop: pixel clock.
+
+- resets: Must contain an entry for each entry in reset-names.
+  See ../reset/reset.txt for details.
+- reset-names: Must include the following entries:
+  - axi
+  - ahb
+  - dclk
+
+- iommus: required a iommu node
+
+- port: A port node with endpoint definitions as defined in
+  Documentation/devicetree/bindings/media/video-interfaces.txt.
+
+Example:
+SoC specific DT entry:
+	vopb: vopb@ff930000 {
+		compatible = "rockchip,rk3288-vop";
+		reg = <0xff930000 0x19c>;
+		interrupts = <GIC_SPI 15 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&cru ACLK_VOP0>, <&cru DCLK_VOP0>, <&cru HCLK_VOP0>;
+		clock-names = "aclk_vop", "dclk_vop", "hclk_vop";
+		resets = <&cru SRST_LCDC1_AXI>, <&cru SRST_LCDC1_AHB>, <&cru SRST_LCDC1_DCLK>;
+		reset-names = "axi", "ahb", "dclk";
+		iommus = <&vopb_mmu>;
+		vopb_out: port {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			vopb_out_edp: endpoint@0 {
+				reg = <0>;
+				remote-endpoint=<&edp_in_vopb>;
+			};
+			vopb_out_hdmi: endpoint@1 {
+				reg = <1>;
+				remote-endpoint=<&hdmi_in_vopb>;
+			};
+		};
+	};
+
+/*
+rockchip soc 디스플레이 컨트롤러 (vop) 용 장치 트리 바인딩
+
+VOP (Visual Output Processor)는 비디오 메모리 버퍼에서 외부 LCD 인터페이스로 이미지 데이터를 전송하는 SoC의 Rockchip 시리즈 용 디스플레이 컨트롤러입니다.
+
+필수 속성 :
+- compatible : value는 다음 중 하나 여야합니다.
+"Rockchip, rk3288-vop";
+
+- 인터럽트 : VSYNC, LCD_SYSTEM 순서로 모든 VOP IP 블록 인터럽트 목록을 포함해야합니다. 인터럽트 지정자 형식은 사용 된 인터럽트 컨트롤러에 따라 다릅니다.
+
+- clocks : clock-names 속성의 항목에 해당하는 시계 지정자를 포함해야합니다.
+
+- clock-names : 반드시 포함해야합니다.
+aclk_vop : ddr 버퍼 전송.
+hclk_vop : ahb 버스에 대한 R / W phy regs.
+dclk_vop : 픽셀 클럭.
+
+- reset : reset-names의 각 항목에 대한 항목을 포함해야합니다.
+  자세한 내용은 ../reset/reset.txt를 참조하십시오.
+- reset-names : 다음 항목을 포함해야합니다.
+  - axi
+  - ahb
+  - dclk
+
+- iommus : iommu 노드 필요
+
+- 포트 : 정의 된 endpoint 정의가있는 포트 노드
+  Documentation / devicetree / bindings / media / video-interfaces.txt.
+
+Example:
+SoC specific DT entry:
+	vopb: vopb@ff930000 {
+		compatible = "rockchip,rk3288-vop";
+		reg = <0xff930000 0x19c>;
+		interrupts = <GIC_SPI 15 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&cru ACLK_VOP0>, <&cru DCLK_VOP0>, <&cru HCLK_VOP0>;
+		clock-names = "aclk_vop", "dclk_vop", "hclk_vop";
+		resets = <&cru SRST_LCDC1_AXI>, <&cru SRST_LCDC1_AHB>, <&cru SRST_LCDC1_DCLK>;
+		reset-names = "axi", "ahb", "dclk";
+		iommus = <&vopb_mmu>;
+		vopb_out: port {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			vopb_out_edp: endpoint@0 {
+				reg = <0>;
+				remote-endpoint=<&edp_in_vopb>;
+			};
+			vopb_out_hdmi: endpoint@1 {
+				reg = <1>;
+				remote-endpoint=<&hdmi_in_vopb>;
+			};
+		};
+	};
+
+*/

@@ -1,0 +1,89 @@
+Device-Tree bindings for drm hdmi driver
+
+Required properties:
+- compatible: value should be one among the following:
+	1) "samsung,exynos5-hdmi" <DEPRECATED>
+	2) "samsung,exynos4210-hdmi"
+	3) "samsung,exynos4212-hdmi"
+	4) "samsung,exynos5420-hdmi"
+- reg: physical base address of the hdmi and length of memory mapped
+	region.
+- interrupts: interrupt number to the cpu.
+- hpd-gpio: following information about the hotplug gpio pin.
+	a) phandle of the gpio controller node.
+	b) pin number within the gpio controller.
+	c) optional flags and pull up/down.
+- clocks: list of clock IDs from SoC clock driver.
+	a) hdmi: Gate of HDMI IP bus clock.
+	b) sclk_hdmi: Gate of HDMI special clock.
+	c) sclk_pixel: Pixel special clock, one of the two possible inputs of
+		HDMI clock mux.
+	d) sclk_hdmiphy: HDMI PHY clock output, one of two possible inputs of
+		HDMI clock mux.
+	e) mout_hdmi: It is required by the driver to switch between the 2
+		parents i.e. sclk_pixel and sclk_hdmiphy. If hdmiphy is stable
+		after configuration, parent is set to sclk_hdmiphy else
+		sclk_pixel.
+- clock-names: aliases as per driver requirements for above clock IDs:
+	"hdmi", "sclk_hdmi", "sclk_pixel", "sclk_hdmiphy" and "mout_hdmi".
+- ddc: phandle to the hdmi ddc node
+- phy: phandle to the hdmi phy node
+- samsung,syscon-phandle: phandle for system controller node for PMU.
+
+Example:
+
+	hdmi {
+		compatible = "samsung,exynos4212-hdmi";
+		reg = <0x14530000 0x100000>;
+		interrupts = <0 95 0>;
+		hpd-gpio = <&gpx3 7 1>;
+		ddc = <&hdmi_ddc_node>;
+		phy = <&hdmi_phy_node>;
+		samsung,syscon-phandle = <&pmu_system_controller>;
+	};
+
+/*
+drm hdmi 드라이버의 장치 트리 바인딩
+
+필수 속성 :
+- compatible : 값은 다음 중 하나 여야합니다.
+1) "samsung, exynos5-hdmi"<DEPRECATED>
+2) "samsung, exynos4210-hdmi"
+3) "samsung, exynos4212-hdmi"
+4) "samsung, exynos5420-hdmi"
+- reg : hdmi의 물리적 기본 주소와 메모리 매핑 영역의 길이.
+- interrupts : CPU에 대한 인터럽트 번호.
+- hpd-gpio : hotplug gpio 핀에 대한 정보.
+a) gpio 컨트롤러 노드의 phandle.
+b) gpio 컨트롤러 내의 핀 번호.
+c) 선택적 플래그 및 위 / 아래로 당기기.
+- clocks : SoC 클럭 드라이버의 클록 ID 목록.
+a) hdmi : HDMI IP 버스 클록의 게이트.
+b) sclk_hdmi : HDMI 특수 클럭의 게이트입니다.
+c) sclk_pixel : 픽셀 특수 클럭, 두 가지 가능한 입력 중 하나
+HDMI 클럭 mux.
+d) sclk_hdmiphy : HDMI PHY 클록 출력, 두 가지 가능한 입력 중 하나
+HDMI 클럭 mux.
+e) mout_hdmi : 드라이버가 두 부모 사이를 전환하는 데 필요합니다 (sclk_pixel 및 sclk_hdmiphy).
+ 구성 후 hdmiphy가 안정적이면 parent는 sclk_hdmiphy 이외의 sclk_pixel로 설정됩니다.
+sclk_pixel.
+- clock-names : 위의 클럭 ID에 대한 드라이버 요구 사항 별 별칭 :
+"hdmi", "sclk_hdmi", "sclk_pixel", "sclk_hdmiphy"및 "mout_hdmi"입니다.
+- ddc : hdmi ddc 노드에 대한 phandle
+- phy : hdmi phy 노드에 대한 phandle
+- samsung, syscon-phandle : PMU 용 시스템 컨트롤러 노드 용 phandle.
+
+Example:
+
+	hdmi {
+		compatible = "samsung,exynos4212-hdmi";
+		reg = <0x14530000 0x100000>;
+		interrupts = <0 95 0>;
+		hpd-gpio = <&gpx3 7 1>;
+		ddc = <&hdmi_ddc_node>;
+		phy = <&hdmi_phy_node>;
+		samsung,syscon-phandle = <&pmu_system_controller>;
+	};
+
+
+*/

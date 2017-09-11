@@ -1,0 +1,399 @@
+27-Dec-2002
+
+The EHCI driver is used to talk to high speed USB 2.0 devices using
+USB 2.0-capable host controller hardware.  The USB 2.0 standard is
+compatible with the USB 1.1 standard. It defines three transfer speeds:
+
+EHCI 드라이버는 USB 2.0 가능 호스트 컨트롤러 하드웨어를 사용하여 고속 USB 2.0 장치와 통신하는 데 사용됩니다.
+USB 2.0 표준은 USB 1.1 표준과 호환됩니다. 3가지 전송 속도를 정의합니다:
+
+    - "High Speed" 480 Mbit/sec (60 MByte/sec)
+    - "Full Speed" 12 Mbit/sec (1.5 MByte/sec)
+    - "Low Speed" 1.5 Mbit/sec
+
+USB 1.1 only addressed full speed and low speed.  High speed devices
+can be used on USB 1.1 systems, but they slow down to USB 1.1 speeds.
+
+USB 1.1은 full speed와 low speed만을 처리했습니다.
+high speed 장치는 USB 1.1 시스템에서 사용할 수 있지만 USB 1.1 속도로 느려집니다.
+(high speed 장치는 USB 2.0을 의미하는 건가? USB 2.0이지만 USB 1.1 시스템을 사용하면 
+속도가 USB 1.1 속도에 맞춰진다는 것?)
+
+USB 1.1 devices may also be used on USB 2.0 systems.  When plugged
+into an EHCI controller, they are given to a USB 1.1 "companion"
+controller, which is a OHCI or UHCI controller as normally used with
+such devices.  When USB 1.1 devices plug into USB 2.0 hubs, they
+interact with the EHCI controller through a "Transaction Translator"
+(TT) in the hub, which turns low or full speed transactions into
+high speed "split transactions" that don't waste transfer bandwidth.
+
+USB 1.1 장치는 USB 2.0 시스템에서도 사용할 수 있습니다.
+EHCI 컨트롤러에 연결되면 USB 1.1 "컴패니언" 컨트롤러에 제공됩니다.
+(EHCI 컨트롤러는 USB 2.0 시스템에서 사용되는 것)
+이 컨트롤러는 일반적으로 이러한 장치에 사용되는 OHCI 또는 UHCI 컨트롤러입니다. 
+(EHCI의 종류인가? 밑을 보니 OHCI와 UHCI 안에 EHCI가 들어있는 것 같다)
+USB 1.1 장치가 USB 2.0 허브에 연결되면 허브의 "Transaction Translator"(TT)를 통해 
+EHCI 컨트롤러와 상호 작용하여 low speed로 낮추거나 full speed의 트랜잭션을 
+전송 대역폭을 낭비하지 않는 high speed "분할 트랜잭션"으로 변환합니다.
+(high speed를 분할해서 full speed를 구현한다는 뜻?)
+
+At this writing, this driver has been seen to work with implementations
+of EHCI from (in alphabetical order):  Intel, NEC, Philips, and VIA.
+Other EHCI implementations are becoming available from other vendors;
+you should expect this driver to work with them too.
+
+이 글에서,이 드라이버들은 EHCI의 구현과 함께 
+작동하는 것으로 보았습니다(알파벳 순서로): Intel, NEC, Philips, and VIA.
+다른 EHCI 구현도 다른 공급 업체에서 제공되고 있습니다; 
+이 드라이버도 다른 공급 업체들과 함께 일할 것을 기대해야 합니다.
+
+While usb-storage devices have been available since mid-2001 (working
+quite speedily on the 2.4 version of this driver), hubs have only
+been available since late 2001, and other kinds of high speed devices
+appear to be on hold until more systems come with USB 2.0 built-in.
+Such new systems have been available since early 2002, and became much
+more typical in the second half of 2002.
+
+2001년 중반부터 USB 저장 장치를 사용할 수 있었지만 (이 드라이버의 2.4 버전에서 상당히 빠르게 작동 함) 
+허브는 2001년 말부터만 사용할 수 있었으며 다른 종류의 high speed 장치는 USB 2.0이 내장되어 있는 
+더 많은 시스템이 출시 될 때까지 보류 상태인 것으로 보입니다.
+이러한 새로운 시스템은 2002년 초부터 사용 가능하며 2002년 하반기에 훨씬 더 일반적으로 사용되었습니다.
+
+Note that USB 2.0 support involves more than just EHCI.  It requires
+other changes to the Linux-USB core APIs, including the hub driver,
+but those changes haven't needed to really change the basic "usbcore"
+APIs exposed to USB device drivers.
+
+USB 2.0 지원에는 EHCI 이상이 포함됩니다.
+허브 드라이버를 포함하여 Linux-USB core API에 대한 다른 변경이 필요하지만 
+이러한 변경으로 인해 USB 장치 드라이버에 노출된 기본 "usbcore" API를 실제로 변경할 필요가 없습니다.
+(EHCI 시스템이 자동적으로 맞춰준다?)
+
+- David Brownell
+  <dbrownell@users.sourceforge.net>
+
+
+FUNCTIONALITY
+기능
+
+This driver is regularly tested on x86 hardware, and has also been
+used on PPC hardware so big/little endianness issues should be gone.
+It's believed to do all the right PCI magic so that I/O works even on
+systems with interesting DMA mapping issues.
+
+이 드라이버는 x86 하드웨어에서 정기적으로 테스트되며 
+PPC 하드웨어에서도 사용되었으므로 크고 작은 endianness issue는 없어야합니다.
+(endianness: 여러 바이트로 구성된 어떤 데이터가 메모리에 저장되는 순서를 나타내는 것)
+흥미로운 DMA 매핑 issue가 있는 시스템에서도 I/O가 작동하도록 모든 PCI 마술을 수행하는 것으로 믿어집니다.
+(PCI가 각종 issue들을 해결해준다)
+
+
+Transfer Types
+전송 유형
+
+At this writing the driver should comfortably handle all control, bulk,
+and interrupt transfers, including requests to USB 1.1 devices through
+transaction translators (TTs) in USB 2.0 hubs.  But you may find bugs.
+
+이 글을 쓰면서 드라이버는 USB 2.0 허브의 transaction translator (TT)를 통해 
+USB 1.1 장치에 대한 요청을 포함하여 모든 제어, bulk 및 인터럽트 전송을 편안하게 처리해야 합니다.
+그러나 버그를 발견 할 수 있습니다.
+
+High Speed Isochronous (ISO) transfer support is also functional, but
+at this writing no Linux drivers have been using that support.
+
+ISO (High Speed Isochronous) 전송 지원도 작동하지만 이 글을 쓰는 동안 Linux 드라이버는 지원하지 않았습니다.
+
+Full Speed Isochronous transfer support, through transaction translators,
+is not yet available.  Note that split transaction support for ISO
+transfers can't share much code with the code for high speed ISO transfers,
+since EHCI represents these with a different data structure.  So for now,
+most USB audio and video devices can't be connected to high speed buses.
+
+transaction translator를 통한 full speed 등시성 전송 지원은 아직 제공되지 않습니다.
+ISO 전송에 대한 분할 트랜잭션 지원은 고속 ISO 전송을 위한 코드와 
+많은 코드를 공유 할 수 없다는 점에 유의하십시오. 
+EHCI는 다른 데이터 구조로 이를 나타내기 때문입니다.
+따라서 현재 대부분의 USB 오디오 및 비디오 장치는 high speed 버스에 연결할 수 없습니다.
+
+
+Driver Behavior
+드라이버 행동
+
+Transfers of all types can be queued.  This means that control transfers
+from a driver on one interface (or through usbfs) won't interfere with
+ones from another driver, and that interrupt transfers can use periods
+of one frame without risking data loss due to interrupt processing costs.
+
+모든 유형의 전송을 대기시킬 수 있습니다.
+이것은 하나의 인터페이스 (또는 usbfs를 통해)에서 드라이버의 제어 전송이 
+다른 드라이버의 제어 전송과 간섭하지 않으며 인터럽트 처리 비용으로 인해 
+데이터 손실 위험없이 한 프레임의 기간을 사용할 수 있음을 의미합니다.
+(인터페이스에서 전송이 독립적으로 일어난다고 할 수 있다)
+
+The EHCI root hub code hands off USB 1.1 devices to its companion
+controller.  This driver doesn't need to know anything about those
+drivers; a OHCI or UHCI driver that works already doesn't need to change
+just because the EHCI driver is also present.
+
+EHCI 루트 허브 코드는 USB 1.1 장치를 해당 컨트롤러에 전달합니다.
+이 드라이버는 해당 드라이버에 대해 알 필요가 없습니다;
+이미 작동하는 OHCI 또는 UHCI 드라이버는 EHCI 드라이버도 있기 때문에 변경할 필요가 없습니다.
+
+There are some issues with power management; suspend/resume doesn't
+behave quite right at the moment.
+
+전원 관리에는 몇 가지 문제가 있습니다. 일시 중지/다시 시작은 현재로서는 제대로 작동하지 않습니다.
+
+Also, some shortcuts have been taken with the scheduling periodic
+transactions (interrupt and isochronous transfers).  These place some
+limits on the number of periodic transactions that can be scheduled,
+and prevent use of polling intervals of less than one frame.
+
+또한 일정한 주기적인 transaction (인터럽트 및 등시성 전송)과 함께 일부 단축키가 사용되었습니다.
+이것들은 스케줄링 할 수 있는 주기적인 트랜잭션의 수에 제한을두고, 1 프레임 미만의 폴링 간격의 사용을 방지합니다.
+(이런 식으로만 전원관리를 하고 있다는 것, 개수에 제한을 두고 처리 시간 간격을 너무 짧지 않게 한다)
+
+
+USE BY
+사용법
+
+Assuming you have an EHCI controller (on a PCI card or motherboard)
+and have compiled this driver as a module, load this like:
+
+EHCI 컨트롤러 (PCI 카드 또는 마더 보드)가 있고 이 드라이버를 모듈로 컴파일 한 경우 다음과 같이 로드하십시오:
+(이 드라이버를 모듈로 로드할 경우)
+
+    # modprobe ehci-hcd
+
+and remove it by:
+
+다음과 같이 제거하십시오:
+(이 드라이버를 해제할 경우)
+
+    # rmmod ehci-hcd
+
+You should also have a driver for a "companion controller", such as
+"ohci-hcd"  or "uhci-hcd".  In case of any trouble with the EHCI driver,
+remove its module and then the driver for that companion controller will
+take over (at lower speed) all the devices that were previously handled
+by the EHCI driver.
+
+또한 "ohci-hcd"또는 "uhci-hcd"와 같은 "companion 컨트롤러" 용 드라이버가 있어야합니다.
+EHCI 드라이버에 문제가 있는 경우 해당 모듈을 제거한 다음 해당 컨트롤러의 드라이버가 
+이전에 EHCI 드라이버에서 처리 한 모든 장치를 인계받습니다 (저속으로, 더 낮은 속도로).
+
+Module parameters (pass to "modprobe") include:
+
+모듈 매개 변수 ("modprobe"에 전달)에는 다음이 포함됩니다:
+(modprobe는 드라이버를 모듈로 로드할 때 쓰는 명령어)
+
+    log2_irq_thresh (default 0):
+	Log2 of default interrupt delay, in microframes.  The default
+	value is 0, indicating 1 microframe (125 usec).  Maximum value
+	is 6, indicating 2^6 = 64 microframes.  This controls how often
+	the EHCI controller can issue interrupts.
+
+    log2_irq_thresh (default 0):
+	Log2의 기본 인터럽트 지연 (마이크로 프레임 단위). 
+	기본값은 0이며 1 마이크로 프레임 (125 마이크로 초)을 나타냅니다.
+	최대 값은 6이며 2 ^ 6 = 64 마이크로 프레임을 나타냅니다.
+	이것은 EHCI 컨트롤러가 인터럽트를 발행 할 수 있는 빈도를 제어합니다.
+
+If you're using this driver on a 2.5 kernel, and you've enabled USB
+debugging support, you'll see three files in the "sysfs" directory for
+any EHCI controller:
+
+2.5 커널에서이 드라이버를 사용하고 USB 디버깅 지원을 활성화 한 경우 
+모든 EHCI 컨트롤러의 "sysfs"디렉토리에 세 개의 파일이 표시됩니다:
+
+	"async" dumps the asynchronous schedule, used for control
+		and bulk transfers.  Shows each active qh and the qtds
+		pending, usually one qtd per urb.  (Look at it with
+		usb-storage doing disk I/O; watch the request queues!)
+
+	"async"는 제어 및 대량 전송에 사용되는 비동기 일정을 덤프합니다. 
+		활성 qh와 qtd가 보류 중입니다. 일반적으로 urb 당 1 qtd입니다. (qh? qtd?)
+		(USB I/O를 사용하는 USB 저장 장치를 보고 요청 큐를 살펴보십시오!)
+
+	"periodic" dumps the periodic schedule, used for interrupt
+		and isochronous transfers.  Doesn't show qtds.
+
+	"periodic"는 인터럽트 및 등시성 전송에 사용되는 주기적 스케줄을 덤프합니다. 
+		qtd를 표시하지 않습니다.
+
+	"registers" show controller register state, and
+
+The contents of those files can help identify driver problems.
+
+	"레지스터"는 컨트롤러 레지스터 상태를 표시하며 해당 파일의 내용은 드라이버 문제를 식별하는 데 도움이 될 수 있습니다.
+
+
+Device drivers shouldn't care whether they're running over EHCI or not,
+but they may want to check for "usb_device->speed == USB_SPEED_HIGH".
+High speed devices can do things that full speed (or low speed) ones
+can't, such as "high bandwidth" periodic (interrupt or ISO) transfers.
+Also, some values in device descriptors (such as polling intervals for
+periodic transfers) use different encodings when operating at high speed.
+
+장치 드라이버는 EHCI를 통해 실행 중인지 여부에 상관하지 않지만 "usb_device-> speed == USB_SPEED_HIGH"를 확인하려고 할 수 있습니다.
+high speed 장치는 "고 대역폭" 주기적 (인터럽트 또는 ISO) 전송과 같이 
+full speed (또는 low speed) 장치가 수행 할 수 없는 작업을 수행 할 수 있습니다.
+또한 device descriptor의 일부 값 (정기 전송의 폴링 간격)은 high speed로 작동 할 때 다른 인코딩을 사용합니다.
+(high speed일 때 더 할 수 있는 것들에 관한 설명)
+
+However, do make a point of testing device drivers through USB 2.0 hubs.
+Those hubs report some failures, such as disconnections, differently when
+transaction translators are in use; some drivers have been seen to behave
+badly when they see different faults than OHCI or UHCI report.
+
+그러나 USB 2.0 허브를 통해 장치 드라이버를 테스트 해야합니다.
+이러한 허브는 단절과 같은 일부 실패를 transaction translator가 사용 중일 때 다르게 보고합니다;
+일부 드라이버는 OHCI 또는 UHCI 보고서와 다른 결함을 볼 때 잘못 행동하는 것으로 나타났습니다.
+(일부 오류가 있다? 그래서 테스트가 필요하다)
+
+
+PERFORMANCE
+퍼포먼스
+
+USB 2.0 throughput is gated by two main factors:  how fast the host
+controller can process requests, and how fast devices can respond to
+them.  The 480 Mbit/sec "raw transfer rate" is obeyed by all devices,
+but aggregate throughput is also affected by issues like delays between
+individual high speed packets, driver intelligence, and of course the
+overall system load.  Latency is also a performance concern.
+
+USB 2.0 처리량은 두 가지 주요 요인에 의해 제어됩니다:
+호스트 컨트롤러가 요청을 처리 할 수있는 속도 및 장치가 응답하는 속도.
+480Mbit/초의 "원시 전송 속도"는 모든 장치에 적용되지만 
+집계 처리량은 개별 고속 패킷 간의 지연, 드라이버 인텔리전스 및 전체 시스템 부하와 같은 문제로 인해 영향을 받습니다.
+대기 시간도 성능 문제입니다.
+(처리량은 처리 속도에 달렸다)
+
+Bulk transfers are most often used where throughput is an issue.  It's
+good to keep in mind that bulk transfers are always in 512 byte packets,
+and at most 13 of those fit into one USB 2.0 microframe.  Eight USB 2.0
+microframes fit in a USB 1.1 frame; a microframe is 1 msec/8 = 125 usec.
+
+bulk 전송은 처리량이 중요한 경우에 주로 사용됩니다.
+대량 전송은 항상 512 바이트 패킷이며, 최대 13개는 USB 2.0 마이크로 프레임 하나에 들어갈 수 있습니다.
+8개의 USB 2.0 마이크로 프레임은 USB 1.1 프레임에 적합합니다; 마이크로 프레임은 1 msec/8 = 125 usec이다.
+(USB 1.1의 마이크로 프레임 안에는 8개가 들어갈 수 있다? 그래서 시간을 8로 나누는 거 아닌가?)
+
+So more than 50 MByte/sec is available for bulk transfers, when both
+hardware and device driver software allow it.  Periodic transfer modes
+(isochronous and interrupt) allow the larger packet sizes which let you
+approach the quoted 480 MBit/sec transfer rate.
+
+따라서 하드웨어 및 장치 드라이버 소프트웨어에서 모두 허용하는 경우 대량 전송에 50 MByte/초 이상을 사용할 수 있습니다. (50은 어떻게 나온 수인가?)
+주기적 전송 모드 (등시성 및 인터럽트)는 더 큰 패킷 크기를 허용하므로 480 MBit/sec 전송 속도에 접근 할 수 있습니다.
+
+
+Hardware Performance
+하드웨어 퍼포먼스
+
+At this writing, individual USB 2.0 devices tend to max out at around
+20 MByte/sec transfer rates.  This is of course subject to change;
+and some devices now go faster, while others go slower.
+
+이 글을 쓰면서, 개별 USB 2.0 장치는 약 20 MByte/sec 전송 속도로 최대화되는 경향이 있습니다.
+이것은 물론 변경 될 수 있습니다. 일부 기기는 이제 더 빨라지고 다른 기기는 더 느리게 진행됩니다.
+
+The first NEC implementation of EHCI seems to have a hardware bottleneck
+at around 28 MByte/sec aggregate transfer rate.  While this is clearly
+enough for a single device at 20 MByte/sec, putting three such devices
+onto one bus does not get you 60 MByte/sec.  The issue appears to be
+that the controller hardware won't do concurrent USB and PCI access,
+so that it's only trying six (or maybe seven) USB transactions each
+microframe rather than thirteen.  (Seems like a reasonable trade off
+for a product that beat all the others to market by over a year!)
+
+EHCI의 첫 번째 NEC 구현은 약 28 MByte/sec의 총 전송률에서 하드웨어 병목 현상이있는 것으로 보입니다.
+이것은 분명히 하나의 장치가 20 MByte/sec 일 때 충분하지만, 
+3 대의 장치를 하나의 버스에 두어도 60 MByte/sec가되지는 않습니다.
+(하나의 길에 여러 장치가 가게 되면 속도가 느려진다)
+문제는 컨트롤러 하드웨어가 동시 USB 및 PCI 액세스를 수행하지 않으므로 13개가 아닌 
+각 마이크로 프레임마다 6개 (또는 7개)의 USB transaction만 시도한다는 것입니다.
+(1년 넘게 다른 모든 제품을 이길 수있는 제품에 대해 합리적인 거래가 일어난 것처럼 보입니다!)
+(이론적으로는 한 번에 13개가 한 번에 처리될 것 같지만 병목현상으로 인해 한꺼번에 처리하는 양이 6, 7개로 준다)
+
+It's expected that newer implementations will better this, throwing
+more silicon real estate at the problem so that new motherboard chip
+sets will get closer to that 60 MByte/sec target.  That includes an
+updated implementation from NEC, as well as other vendors' silicon.
+
+더 새로운 구현이 더 좋을 것으로 예상되며, 문제에 더 많은 실리콘 공간을 던져서 
+새로운 마더 보드 칩 세트는 그 60 Mbyte/sec 목표에 더 가깝게 될 것입니다.
+여기에는 NEC의 업데이트 된 구현뿐만 아니라 다른 공급 업체의 실리콘도 포함됩니다.
+
+There's a minimum latency of one microframe (125 usec) for the host
+to receive interrupts from the EHCI controller indicating completion
+of requests.  That latency is tunable; there's a module option.  By
+default ehci-hcd driver uses the minimum latency, which means that if
+you issue a control or bulk request you can often expect to learn that
+it completed in less than 250 usec (depending on transfer size).
+
+호스트가 요청 완료를 나타내는 EHCI 컨트롤러로부터 인터럽트를 수신하려면 
+최소 1 마이크로 프레임 (125 마이크로 초)의 대기 시간이 필요합니다.
+대기 시간은 조정 가능합니다; 모듈 옵션이 있습니다.
+기본적으로 ehci-hcd 드라이버는 최소 대기 시간을 사용합니다. 
+즉, 제어 또는 대량 요청을 실행하면 전송 크기에 따라 250 usec 미만으로 완료된다는 것을 알 수 있습니다.
+(성능을 좋게 하기 위한 최대한의 노력을 하고 있다)
+
+
+Software Performance
+소프트웨어 퍼포먼스
+
+To get even 20 MByte/sec transfer rates, Linux-USB device drivers will
+need to keep the EHCI queue full.  That means issuing large requests,
+or using bulk queuing if a series of small requests needs to be issued.
+When drivers don't do that, their performance results will show it.
+
+심지어 20 MByte/sec의 전송 속도를 얻으려면 Linux-USB 장치 드라이버가 EHCI 큐를 가득 채워야합니다.
+이는 대규모 요청을 발행하거나 일련의 작은 요청을 발행해야하는 경우에도 대량 큐를 사용하는 것을 의미합니다.
+드라이버가 그렇게하지 않으면 성능 결과가 표시됩니다?
+
+In typical situations, a usb_bulk_msg() loop writing out 4 KB chunks is
+going to waste more than half the USB 2.0 bandwidth.  Delays between the
+I/O completion and the driver issuing the next request will take longer
+than the I/O.  If that same loop used 16 KB chunks, it'd be better; a
+sequence of 128 KB chunks would waste a lot less.
+
+일반적으로 4KB chunk를 작성하는 usb_bulk_msg() 루프는 USB 2.0 대역폭의 절반 이상을 낭비합니다.
+I/O 완료와 다음 요청을 보내는 드라이버 사이의 지연은 I/O보다 오래 걸립니다.
+(입출력보다 다음 요청을 보내는 과정이 더 오래 걸린다)
+동일한 루프가 16KB chunk를 사용한다면 더 좋을 것입니다. 128 KB chunk 시퀀스는 훨씬 덜 낭비 할 것입니다.
+(chunk는 다음 요청을 보낼 때 버퍼처럼 사용하는 것인가? 그래서 클수록 빨라서 낭비가 덜 한다는 건가?)
+
+But rather than depending on such large I/O buffers to make synchronous
+I/O be efficient, it's better to just queue up several (bulk) requests
+to the HC, and wait for them all to complete (or be canceled on error).
+Such URB queuing should work with all the USB 1.1 HC drivers too.
+
+하지만 동기식 I/O를 효율적으로 만드는 데 필요한 대용량 I/O 버퍼에 의존하기보다는
+여러 건의 대량 요청을 HC에 대기시키고 모든 요청이 완료 될 때까지 기다리는 것이 좋습니다.
+(오류가 발생하면 취소됩니다)
+이러한 URB 큐잉은 모든 USB 1.1 HC 드라이버에서도 작동합니다.
+(버퍼에 의존하기 보다는 큐에 올리고 처리하는 과정에서 효율성을 만드는 것이 낫다)
+
+In the Linux 2.5 kernels, new usb_sg_*() api calls have been defined; they
+queue all the buffers from a scatterlist.  They also use scatterlist DMA
+mapping (which might apply an IOMMU) and IRQ reduction, all of which will
+help make high speed transfers run as fast as they can.
+
+Linux 2.5 커널에서 새로운 usb_sg_*() API 호출이 정의되었습니다. 
+그들은 scatterlist에서 모든 버퍼 큐 또한 scatterlist DMA 매핑 (IOMMU를 적용 할 수 있음)과 
+IRQ 감소를 사용하여 high speed 전송을 최대한 빨리 수행 할 수 있습니다.
+(버퍼를 할당하는 큐, DMA 매핑, IRQ 감소를 이용해 속도를 빠르게 한다)
+
+TBD:  Interrupt and ISO transfer performance issues.  Those periodic
+transfers are fully scheduled, so the main issue is likely to be how
+to trigger "high bandwidth" modes.
+
+인터럽트 및 ISO 전송 성능 문제. 
+이러한 정기 전송은 완전히 예약되므로 주요 문제는 "고 대역폭" 모드를 트리거하는 방법일 수 있습니다.
+
+TBD:  More than standard 80% periodic bandwidth allocation is possible
+through sysfs uframe_periodic_max parameter. Describe that.
+
+sysfs uframe_periodic_max 매개 변수를 통해 표준 80 % 이상의 주기적 대역폭 할당이 가능합니다. 설명해주세요.

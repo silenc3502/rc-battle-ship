@@ -1,0 +1,64 @@
+CSR SiRFSoC Reset Controller
+======================================
+
+Please also refer to reset.txt in this directory for common reset
+controller binding usage.
+
+Required properties:
+- compatible: Should be "sirf,prima2-rstc" or "sirf,marco-rstc"
+- reg: should be register base and length as documented in the
+  datasheet
+- #reset-cells: 1, see below
+
+CSR SiRFSoC 리셋 컨트롤러
+========================
+
+common reset controller binding 사용에 대해서는이 디렉토리의 reset.txt를 참조하십시오.
+
+필수 속성 :
+- 호환 가능 : "sirf, prima2-rstc"또는 "sirf, marco-rstc"여야합니다.
+- reg : 데이터 시트에 문서화 된대로 레지스터 기본 및 길이 여야합니다.
+- # reset-cells : 1, 아래 참조
+
+
+
+example:
+
+rstc: reset-controller@88010000 {
+	compatible = "sirf,prima2-rstc";
+	reg = <0x88010000 0x1000>;
+	#reset-cells = <1>;
+};
+
+Specifying reset lines connected to IP modules
+==============================================
+
+The reset controller(rstc) manages various reset sources. This module provides
+reset signals for most blocks in system. Those device nodes should specify the
+reset line on the rstc in their resets property, containing a phandle to the
+rstc device node and a RESET_INDEX specifying which module to reset, as described
+in reset.txt.
+
+For SiRFSoC, RESET_INDEX is just reset_bit defined in SW_RST0 and SW_RST1 registers.
+For modules whose rest_bit is in SW_RST0, its RESET_INDEX is 0~31. For modules whose
+rest_bit is in SW_RST1, its RESET_INDEX is 32~63.
+
+IP 모듈에 연결된 리셋 라인 지정하기
+==================================
+
+리셋 컨트롤러 (rstc)는 다양한 리셋 소스를 관리합니다. 이 모듈은 시스템의 대부분 블록에 리셋 신호를 제공합니다. 이러한 장치 노드는 reset.txt에 설명 된대로 rstc 장치 노드에 대한 phandle과 재설정 할 모듈을 지정하는 RESET_INDEX를 포함하는 resets 속성의 rstc에 재설정 줄을 지정해야합니다.
+
+SiRFSoC의 경우 RESET_INDEX는 SW_RST0 및 SW_RST1 레지스터에 정의 된 reset_bit 일뿐입니다.
+rest_bit이 SW_RST0 인 모듈의 경우 RESET_INDEX는 0 ~ 31입니다. rest_bit이 SW_RST1 인 모듈의 RESET_INDEX는 32 ~ 63입니다.
+
+
+
+example:
+
+vpp@90020000 {
+	compatible = "sirf,prima2-vpp";
+	reg = <0x90020000 0x10000>;
+	interrupts = <31>;
+	clocks = <&clks 35>;
+	resets = <&rstc 6>;
+};

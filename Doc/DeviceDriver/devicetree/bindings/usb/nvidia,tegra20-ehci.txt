@@ -1,0 +1,40 @@
+Tegra SOC USB controllers
+
+The device node for a USB controller that is part of a Tegra
+SOC is as described in the document "Open Firmware Recommended
+Practice : Universal Serial Bus" with the following modifications
+and additions :
+
+Required properties :
+ - compatible : For Tegra20, must contain "nvidia,tegra20-ehci".
+   For Tegra30, must contain "nvidia,tegra30-ehci".  Otherwise, must contain
+   "nvidia,<chip>-ehci" plus at least one of the above, where <chip> is
+   tegra114, tegra124, tegra132, or tegra210.
+ - nvidia,phy : phandle of the PHY that the controller is connected to.
+ - clocks : Must contain one entry, for the module clock.
+   See ../clocks/clock-bindings.txt for details.
+ - resets : Must contain an entry for each entry in reset-names.
+   See ../reset/reset.txt for details.
+ - reset-names : Must include the following entries:
+   - usb
+
+Optional properties:
+ - nvidia,needs-double-reset : boolean is to be set for some of the Tegra20
+   USB ports, which need reset twice due to hardware issues.
+
+
+   Tegra SOC USB 컨트롤러
+
+Tegra SOC의 일부인 USB 컨트롤러의 장치 노드는 "Open Firmware Recommended Practice : Universal Serial Bus"문서에 설명 된대로 다음과 같이 수정 및 추가됩니다.
+
+필수 속성 :
+  - compatible : Tegra20의 경우 "nvidia, tegra20-ehci"를 포함해야합니다. Tegra30의 경우 "nvidia, tegra30-ehci"를 포함해야합니다. 그렇지 않으면 "nvidia, <chip> -ehci"와 적어도 하나 이상을 포함해야합니다. 여기서 <chip>은 tegra114, tegra124, tegra132 또는 tegra210입니다.
+  - nvidia, phy : 컨트롤러가 연결된 PHY의 phandle.
+  - clocks : 모듈 클럭에 대해 하나의 항목을 포함해야합니다.
+    자세한 내용은 ../clocks/clock-bindings.txt를 참조하십시오.
+  - reset : reset-names의 각 항목에 대한 항목을 포함해야합니다. 자세한 내용은 ../reset/reset.txt를 참조하십시오.
+  - reset-names : 다음 항목을 포함해야합니다.
+    - USB
+
+선택적 속성 :
+  - nvidia, needs-double-reset : 하드웨어 문제로 인해 두 번 재설정해야하는 Tegra20 USB 포트 중 일부에 부울을 설정해야합니다.

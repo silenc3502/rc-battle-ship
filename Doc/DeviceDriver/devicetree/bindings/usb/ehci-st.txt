@@ -1,0 +1,58 @@
+ST USB EHCI controller
+
+Required properties:
+ - compatible		: must be "st,st-ehci-300x"
+ - reg			: physical base addresses of the controller and length of memory mapped
+			  region
+ - interrupts		: one EHCI interrupt should be described here
+ - pinctrl-names	: a pinctrl state named "default" must be defined
+ - pinctrl-0		: phandle referencing pin configuration of the USB controller
+See: Documentation/devicetree/bindings/pinctrl/pinctrl-binding.txt
+ - clocks		: phandle list of usb clocks
+ - clock-names		: should be "ic" for interconnect clock and "clk48"
+See: Documentation/devicetree/bindings/clock/clock-bindings.txt
+
+ - phys			: phandle for the PHY device
+ - phy-names		: should be "usb"
+ - resets		: phandle + reset specifier pairs to the powerdown and softreset lines
+			  of the USB IP
+ - reset-names		: should be "power" and "softreset"
+See: Documentation/devicetree/bindings/reset/st,sti-powerdown.txt
+See: Documentation/devicetree/bindings/reset/reset.txt
+
+필수 속성 :
+  - 호환 가능 : "st, st-ehci-300x"이어야합니다.
+  - reg : 컨트롤러의 물리적 기본 주소 및 메모리 매핑 된 영역의 길이
+  - 인터럽트 : 여기에 하나의 EHCI 인터럽트를 설명해야합니다.
+  - pinctrl-names : "default"라는 pinctrl 상태를 정의해야합니다.
+  - pinctrl-0 : USB 컨트롤러의 phandle 참조 핀 구성
+참조 : Documentation / devicetree / bindings / pinctrl / pinctrl-binding.txt
+  - clocks : usb clocks의 phandle 목록
+  - clock-names : 상호 연결 클럭에 대해 "ic"이어야하고 "clk48"
+참조 : Documentation / devicetree / bindings / clock / clock-bindings.txt
+
+  - phys : PHY 장치의 phandle
+  - phy-names : "usb"여야합니다.
+  - 재설정 : phandle + 재설정 지정자 쌍을 USB IP의 powerdown 및 softreset 행에 연결합니다.
+  - reset-names : "power"및 "softreset"이어야합니다.
+참조 : Documentation / devicetree / bindings / reset / st, sti-powerdown.txt
+참조 : Documentation / devicetree / bindings / reset / reset.txt
+
+
+Example:
+
+	ehci1: usb@0xfe203e00 {
+		compatible = "st,st-ehci-300x";
+		reg = <0xfe203e00 0x100>;
+		interrupts = <GIC_SPI 148 IRQ_TYPE_NONE>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_usb1>;
+		clocks = <&clk_s_a1_ls 0>;
+		phys = <&usb2_phy>;
+		phy-names = "usb";
+		status = "okay";
+
+		resets = <&powerdown STIH416_USB1_POWERDOWN>,
+			 <&softreset STIH416_USB1_SOFTRESET>;
+		reset-names = "power", "softreset";
+	};

@@ -1,0 +1,615 @@
+Generic OPP (Operating Performance Points) Bindings
+일반 OPP (운영 성능 포인트) 바인딩
+----------------------------------------------------
+
+Devices work at voltage-current-frequency combinations and some implementations
+have the liberty of choosing these. These combinations are called Operating
+Performance Points aka OPPs. This document defines bindings for these OPPs
+applicable across wide range of devices. For illustration purpose, this document
+uses CPU as a device.
+디바이스는 전압 - 전류 - 주파수 조합에서 작동하며 일부 구현은 이를 선택하는 자유가 있습니다. 
+이러한 조합을 Operating Performance Points aka OPPs 라고합니다. 이 문서는 다양한 장치에 적용 할 수있는 OPP에 대한
+바인딩을 정의합니다. 설명을 돕기 위해이 문서에서는 CPU를 장치로 사용합니다.
+
+This document contain multiple versions of OPP binding and only one of them
+should be used per device.
+이 문서에는 여러 버전의 OPP 바인딩이 포함되어 있으며 장치 당 하나만 사용해야합니다.
+
+Binding 1: operating-points
+============================
+
+This binding only supports voltage-frequency pairs.
+
+Properties:
+- operating-points: An array of 2-tuples items, and each item consists
+  of frequency and voltage like <freq-kHz vol-uV>.
+	freq: clock frequency in kHz
+	vol: voltage in microvolt
+이 바인딩은 전압 - 주파수 쌍만 지원합니다.
+
+등록 정보 :
+- 작동 점 : 2 튜플 항목의 배열이며 각 항목은 <freq-kHz vol -uV>와 같은 주파수 및 전압으로 구성됩니다.
+	주파수 : kHz 단위의 클럭 주파수
+	vol : 마이크로 볼트 단위의 전압
+
+
+Examples:
+
+cpu@0 {
+	compatible = "arm,cortex-a9";
+	reg = <0>;
+	next-level-cache = <&L2>;
+	operating-points = <
+		/* kHz    uV */
+		792000  1100000
+		396000  950000
+		198000  850000
+	>;
+};
+
+
+Binding 2: operating-points-v2
+============================
+
+* Property: operating-points-v2
+
+Devices supporting OPPs must set their "operating-points-v2" property with
+phandle to a OPP table in their DT node. The OPP core will use this phandle to
+find the operating points for the device.
+OPP를 지원하는 장치는 phandle을 사용하여 DT 노드의 OPP 테이블에 
+"operating-points-v2"속성을 설정해야합니다. OPP 코어는이 phandle을 사용하여 장치의 작동 지점을 찾습니다.
+
+If required, this can be extended for SoC vendor specfic bindings. Such bindings
+should be documented as Documentation/devicetree/bindings/power/<vendor>-opp.txt
+and should have a compatible description like: "operating-points-v2-<vendor>".
+필요한 경우 SoC 공급 업체별 바인딩을 확장 할 수 있습니다. 이러한 바인딩은 
+Documentation / devicetree / bindings / power / <vendor> opp.txt로 문서화되어야하며 
+"operating-points-v2- <vendor>"와 같은 호환 가능한 설명이 있어야합니다.
+
+* Property: <supply-name>-opp-domain
+
+Devices requiring control beyond a single regulator can provide a
+"<supply-name>-opp-domain" pointing to an OPP domain node that has registered
+itself with the OPP core using the devm_opp_domain_register API that is part
+of the OPP domain core. Providing this phandle allows a platform OPP domain
+driver to override the standard OPP domain controls and control platform
+specific regulator topologies.
+단일 레귤레이터를 넘어 제어 할 필요가있는 장치는 OPP 도메인 코어의 일부인 devm_opp_domain_register API를
+ 사용하여 OPP 코어에 등록한 OPP 도메인 노드를 가리키는 "<supply-name> -opp-domain"을 제공 할 수 있습니다.
+이 phandle을 제공하면 플랫폼 OPP 도메인 드라이버가 표준 OPP 도메인 제어를 무시하고 플랫폼 특정 레귤레이터 토폴로지를 제어 할 수 있습니다.
+
+
+NOTE: This property is optional, without this the standard single regulator
+"<supply-name>-supply" and single clock will be scaled during OPP transitions.
+참고 :이 속성은 선택 사항이며 표준 단일 레귤레이터가 없으면 선택 사항입니다.
+"<supply-name> -supply"및 OPP 전환 중에 단일 클록이 조정됩니다.
+
+* OPP Table Node
+
+This describes the OPPs belonging to a device. This node can have following
+properties:
+이것은 장치에 속한 OPP를 설명합니다. 이 노드는 다음과 같은 속성을 가질 수 있습니다.
+
+Required properties:
+- compatible: Allow OPPs to express their compatibility. It should be:
+  "operating-points-v2".
+호환 : OPP가 호환성을 나타낼 수있게합니다. 그것은해야한다: "operating-points-v2".
+
+- OPP nodes: One or more OPP nodes describing voltage-current-frequency
+  combinations. Their name isn't significant but their phandle can be used to
+  reference an OPP.
+- OPP 노드 : 전압 - 전류 - 주파수 조합을 설명하는 하나 이상의 OPP 노드. 그들의 이름은 중요하지 않지만 그들의 phandle은 OPP를 참조하는 데 사용될 수 있습니다.
+
+Optional properties:
+- opp-shared: Indicates that device nodes using this OPP Table Node's phandle
+  switch their DVFS state together, i.e. they share clock/voltage/current lines.
+  Missing property means devices have independent clock/voltage/current lines,
+  but they share OPP tables.
+선택적 속성 :
+- opp-shared :이 OPP 테이블 노드의 phandle을 사용하는 장치 노드가 자신의 DVFS 상태를 함께 전환 함을 나타냅니다. 
+즉, clock/voltage/current lines 을 공유합니다. 누락 된 속성은 디바이스가 독립적 인 clock/voltage/current lines 을 가지고 있지만
+ OPP 테이블을 공유한다는 것을 의미합니다.
+
+- status: Marks the OPP table enabled/disabled.
+clock/voltage/current lines
+
+* OPP Node
+
+This defines voltage-current-frequency combinations along with other related
+properties.
+이것은 voltage-current-frequency 조합을 다른 관련 특성과 함께 정의합니다.
+
+Required properties:
+필수 속성 :
+
+- opp-hz: Frequency in Hz, expressed as a 64-bit big-endian integer.
+- opp-hz : 주파수는 Hz로, 64 비트 빅 엔디안 정수로 표시됩니다.
+
+Optional properties:
+선택적 속성 :
+- opp-microvolt: voltage in micro Volts.
+- opp-microvolt : 마이크로 볼트 단위의 전압.
+
+  A single regulator's voltage is specified with an array of size one or three.
+  Single entry is for target voltage and three entries are for <target min max>
+  voltages.
+	단일 레귤레이터의 전압은 크기가 1 또는 3 인 어레이로 지정됩니다.
+	단일 입력은 목표 전압에 대한 것이고 세 항목은 <target min max> 전압에 대한 것입니다.
+
+  Entries for multiple regulators must be present in the same order as
+  regulators are specified in device's DT node.
+ 다중 레귤레이터에 대한 항목은 레귤레이터가 장치의 DT 노드에 지정된 것과 동일한 순서로 존재해야합니다.
+
+
+- opp-microvolt-<name>: Named opp-microvolt property. This is exactly similar to
+  the above opp-microvolt property, but allows multiple voltage ranges to be
+  provided for the same OPP. At runtime, the platform can pick a <name> and
+  matching opp-microvolt-<name> property will be enabled for all OPPs. If the
+  platform doesn't pick a specific <name> or the <name> doesn't match with any
+  opp-microvolt-<name> properties, then opp-microvolt property shall be used, if
+  present.
+  - opp-microvolt- <name> :  Named opp-microvolt 특성. 이것은 위의 opp-microvolt 특성과 정확히 유사하지만
+   동일한 OPP에 대해 여러 전압 범위를 제공 할 수 있습니다.
+    런타임에 플랫폼은 <name>을 선택할 수 있으며 모든 OPP에 대해 일치하는 opp-microvolt- <name> 속성이 활성화됩니다.
+     플랫폼이 특정 <name>을 선택하지 않거나 <name>이 임의의 opp-microvolt- <name> 속성과 일치하지 
+     않으면 opp-microvolt 속성이 사용됩니다 (있는 경우).
+
+- opp-microamp: The maximum current drawn by the device in microamperes
+  considering system specific parameters (such as transients, process, aging,
+  maximum operating temperature range etc.) as necessary. This may be used to
+  set the most efficient regulator operating mode.
+- opp-microamp : 필요에 따라 시스템 특정 매개 변수 (예 : 과도 전류, 프로세스, 에이징, 최대 작동 온도 범위 등)를 고려하여 장치가 마이크로 암페어로 표시 한 최대 전류입니다. 이것은 가장 효율적인 레귤레이터 작동 모드를 설정하는 데 사용될 수 있습니다.
+
+  Should only be set if opp-microvolt is set for the OPP.
+ opp-microvolt가 OPP로 설정된 경우에만 설정해야합니다.
+
+  Entries for multiple regulators must be present in the same order as
+  regulators are specified in device's DT node. If this property isn't required
+  for few regulators, then this should be marked as zero for them. If it isn't
+  required for any regulator, then this property need not be present.
+  다중 레귤레이터에 대한 항목은 레귤레이터가 장치의 DT 노드에 지정된 것과 동일한 순서로 존재해야합니다.
+  소수의 규제 당국이이 특성을 요구하지 않는다면,이를 위해 0으로 표시되어야한다. 
+  어떤 규제 기관에 대해서도 요구되지 않는다면,이 특성은 존재할 필요가 없다.
+
+
+- opp-microamp-<name>: Named opp-microamp property. Similar to
+  opp-microvolt-<name> property, but for microamp instead.
+- opp-microamp- <name> : 명명 된 opp-microamp 속성. opp-microvolt- <name> 속성과 비슷하지만 대신에 마이크로 앰프입니다.
+
+- clock-latency-ns: Specifies the maximum possible transition latency (in
+  nanoseconds) for switching to this OPP from any other OPP.
+- clock-latency-ns : 다른 OPP에서이 OPP로 전환 할 때 가능한 최대 전환 대기 시간 (나노초 단위)을 지정합니다.
+
+- turbo-mode: Marks the OPP to be used only for turbo modes. Turbo mode is
+  available on some platforms, where the device can run over its operating
+  frequency for a short duration of time limited by the device's power, current
+  and thermal limits.
+- 터보 모드 : OPP가 터보 모드에서만 사용되도록 표시합니다. 터보 모드는 장치의 전원, 전류 및 온도 제한으로 제한된 짧은 시간 동안 장치가 작동 주파수에서 작동 할 수있는 일부 플랫폼에서 사용할 수 있습니다.
+
+- opp-suspend: Marks the OPP to be used during device suspend. Only one OPP in
+  the table should have this.
+- opp-suspend : 장치 일시 중지 중에 사용할 OPP를 표시합니다. 테이블의 OPP 하나만이 있어야합니다.
+
+- opp-supported-hw: This enables us to select only a subset of OPPs from the
+  larger OPP table, based on what version of the hardware we are running on. We
+  still can't have multiple nodes with the same opp-hz value in OPP table.
+- opp-supported-hw : 이것은 우리가 실행중인 하드웨어 버전에 따라 더 큰 OPP 테이블에서
+ OPP의 하위 집합만을 선택할 수있게합니다. 우리는 여전히 OPP 테이블에서 같은 opp-hz 값을 가진 다중 노드를 가질 수 없습니다.
+
+  It's an user defined array containing a hierarchy of hardware version numbers,
+  supported by the OPP. For example: a platform with hierarchy of three levels
+  of versions (A, B and C), this field should be like <X Y Z>, where X
+  corresponds to Version hierarchy A, Y corresponds to version hierarchy B and Z
+  corresponds to version hierarchy C.
+OPP에서 지원하는 하드웨어 버전 번호의 계층을 포함하는 사용자 정의 배열입니다. 
+예를 들어, 세 가지 버전(A, B 및 C)의 계층 구조를 가진 플랫폼 인 경우이 필드는 X가 버전 계층 A에 해당하고 Y가 버전 계층 B에 해당하고 Z는 버전 계층 C에 해당합니다. .
+
+  Each level of hierarchy is represented by a 32 bit value, and so there can be
+  only 32 different supported version per hierarchy. i.e. 1 bit per version. A
+  value of 0xFFFFFFFF will enable the OPP for all versions for that hierarchy
+  level. And a value of 0x00000000 will disable the OPP completely, and so we
+  never want that to happen.
+계층 구조의 32 비트 값으로 표시되므로 계층 구조 당 32 개의 지원되는 버전 만있을 수 있습니다.
+ 즉 버전 당 1 비트. 0xFFFFFFFF 값은 해당 계층 구조 레벨의 모든 버전에 대해 OPP를 사용 가능하게합니다.
+  그리고 0x00000000의 값은 OPP를 완전히 불가능하게 할 것이므로 결코 그런 일이 일어나기를 원하지 않습니다.
+ 
+  If 32 values aren't sufficient for a version hierarchy, than that version
+  hierarchy can be contained in multiple 32 bit values. i.e. <X Y Z1 Z2> in the
+  above example, Z1 & Z2 refer to the version hierarchy Z.
+32 비트 값이 버전 계층 구조에 충분하지 않은 경우 해당 버전 계층 구조가 여러 32 비트 값에 포함될 수 있습니다. 
+즉 위의 예에서 <X Y Z1 Z2> 인 경우 Z1 및 Z2는 버전 계층 Z를 나타냅니다.
+
+- status: Marks the node enabled/disabled.
+- status : 노드를 사용 / 사용 안함으로 표시합니다.
+
+Example 1: Single cluster Dual-core ARM cortex A9, switch DVFS states together.
+예제 1 : 단일 클러스터 이중 코어 ARM 피질 A9는 DVFS 상태를 함께 전환합니다.
+
+/ {
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		cpu@0 {
+			compatible = "arm,cortex-a9";
+			reg = <0>;
+			next-level-cache = <&L2>;
+			clocks = <&clk_controller 0>;
+			clock-names = "cpu";
+			cpu-supply = <&cpu_supply0>;
+			operating-points-v2 = <&cpu0_opp_table>;
+		};
+
+		cpu@1 {
+			compatible = "arm,cortex-a9";
+			reg = <1>;
+			next-level-cache = <&L2>;
+			clocks = <&clk_controller 0>;
+			clock-names = "cpu";
+			cpu-supply = <&cpu_supply0>;
+			operating-points-v2 = <&cpu0_opp_table>;
+		};
+	};
+
+	cpu0_opp_table: opp_table0 {
+		compatible = "operating-points-v2";
+		opp-shared;
+
+		opp@1000000000 {
+			opp-hz = /bits/ 64 <1000000000>;
+			opp-microvolt = <970000 975000 985000>;
+			opp-microamp = <70000>;
+			clock-latency-ns = <300000>;
+			opp-suspend;
+		};
+		opp@1100000000 {
+			opp-hz = /bits/ 64 <1100000000>;
+			opp-microvolt = <980000 1000000 1010000>;
+			opp-microamp = <80000>;
+			clock-latency-ns = <310000>;
+		};
+		opp@1200000000 {
+			opp-hz = /bits/ 64 <1200000000>;
+			opp-microvolt = <1025000>;
+			clock-latency-ns = <290000>;
+			turbo-mode;
+		};
+	};
+};
+
+Example 2: Single cluster, Quad-core Qualcom-krait, switches DVFS states
+independently.
+Example 2: 단일 클러스터, 쿼드 코어 Qualcomm-krait는 DVFS 상태를 독립적으로 전환합니다.
+/ {
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		cpu@0 {
+			compatible = "qcom,krait";
+			reg = <0>;
+			next-level-cache = <&L2>;
+			clocks = <&clk_controller 0>;
+			clock-names = "cpu";
+			cpu-supply = <&cpu_supply0>;
+			operating-points-v2 = <&cpu_opp_table>;
+		};
+
+		cpu@1 {
+			compatible = "qcom,krait";
+			reg = <1>;
+			next-level-cache = <&L2>;
+			clocks = <&clk_controller 1>;
+			clock-names = "cpu";
+			cpu-supply = <&cpu_supply1>;
+			operating-points-v2 = <&cpu_opp_table>;
+		};
+
+		cpu@2 {
+			compatible = "qcom,krait";
+			reg = <2>;
+			next-level-cache = <&L2>;
+			clocks = <&clk_controller 2>;
+			clock-names = "cpu";
+			cpu-supply = <&cpu_supply2>;
+			operating-points-v2 = <&cpu_opp_table>;
+		};
+
+		cpu@3 {
+			compatible = "qcom,krait";
+			reg = <3>;
+			next-level-cache = <&L2>;
+			clocks = <&clk_controller 3>;
+			clock-names = "cpu";
+			cpu-supply = <&cpu_supply3>;
+			operating-points-v2 = <&cpu_opp_table>;
+		};
+	};
+
+	cpu_opp_table: opp_table {
+		compatible = "operating-points-v2";
+
+		/*
+		 * Missing opp-shared property means CPUs switch DVFS states
+		 * independently.
+		 */
+	 / *
+	* 누락 된 opp 공유 속성은 CPU가 DVFS 상태를 독립적으로 전환 함을 의미합니다. 
+	* /
+
+		opp@1000000000 {
+			opp-hz = /bits/ 64 <1000000000>;
+			opp-microvolt = <970000 975000 985000>;
+			opp-microamp = <70000>;
+			clock-latency-ns = <300000>;
+			opp-suspend;
+		};
+		opp@1100000000 {
+			opp-hz = /bits/ 64 <1100000000>;
+			opp-microvolt = <980000 1000000 1010000>;
+			opp-microamp = <80000>;
+			clock-latency-ns = <310000>;
+		};
+		opp@1200000000 {
+			opp-hz = /bits/ 64 <1200000000>;
+			opp-microvolt = <1025000>;
+			opp-microamp = <90000;
+			lock-latency-ns = <290000>;
+			turbo-mode;
+		};
+	};
+};
+
+Example 3: Dual-cluster, Dual-core per cluster. CPUs within a cluster switch
+DVFS state together.
+Example 3 : 클러스터 당 듀얼 클러스터, 듀얼 코어 클러스터 내의 CPU는 DVFS 상태를 함께 전환합니다.
+
+/ {
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		cpu@0 {
+			compatible = "arm,cortex-a7";
+			reg = <0>;
+			next-level-cache = <&L2>;
+			clocks = <&clk_controller 0>;
+			clock-names = "cpu";
+			cpu-supply = <&cpu_supply0>;
+			operating-points-v2 = <&cluster0_opp>;
+		};
+
+		cpu@1 {
+			compatible = "arm,cortex-a7";
+			reg = <1>;
+			next-level-cache = <&L2>;
+			clocks = <&clk_controller 0>;
+			clock-names = "cpu";
+			cpu-supply = <&cpu_supply0>;
+			operating-points-v2 = <&cluster0_opp>;
+		};
+
+		cpu@100 {
+			compatible = "arm,cortex-a15";
+			reg = <100>;
+			next-level-cache = <&L2>;
+			clocks = <&clk_controller 1>;
+			clock-names = "cpu";
+			cpu-supply = <&cpu_supply1>;
+			operating-points-v2 = <&cluster1_opp>;
+		};
+
+		cpu@101 {
+			compatible = "arm,cortex-a15";
+			reg = <101>;
+			next-level-cache = <&L2>;
+			clocks = <&clk_controller 1>;
+			clock-names = "cpu";
+			cpu-supply = <&cpu_supply1>;
+			operating-points-v2 = <&cluster1_opp>;
+		};
+	};
+
+	cluster0_opp: opp_table0 {
+		compatible = "operating-points-v2";
+		opp-shared;
+
+		opp@1000000000 {
+			opp-hz = /bits/ 64 <1000000000>;
+			opp-microvolt = <970000 975000 985000>;
+			opp-microamp = <70000>;
+			clock-latency-ns = <300000>;
+			opp-suspend;
+		};
+		opp@1100000000 {
+			opp-hz = /bits/ 64 <1100000000>;
+			opp-microvolt = <980000 1000000 1010000>;
+			opp-microamp = <80000>;
+			clock-latency-ns = <310000>;
+		};
+		opp@1200000000 {
+			opp-hz = /bits/ 64 <1200000000>;
+			opp-microvolt = <1025000>;
+			opp-microamp = <90000>;
+			clock-latency-ns = <290000>;
+			turbo-mode;
+		};
+	};
+
+	cluster1_opp: opp_table1 {
+		compatible = "operating-points-v2";
+		opp-shared;
+
+		opp@1300000000 {
+			opp-hz = /bits/ 64 <1300000000>;
+			opp-microvolt = <1045000 1050000 1055000>;
+			opp-microamp = <95000>;
+			clock-latency-ns = <400000>;
+			opp-suspend;
+		};
+		opp@1400000000 {
+			opp-hz = /bits/ 64 <1400000000>;
+			opp-microvolt = <1075000>;
+			opp-microamp = <100000>;
+			clock-latency-ns = <400000>;
+		};
+		opp@1500000000 {
+			opp-hz = /bits/ 64 <1500000000>;
+			opp-microvolt = <1010000 1100000 1110000>;
+			opp-microamp = <95000>;
+			clock-latency-ns = <400000>;
+			turbo-mode;
+		};
+	};
+};
+
+Example 4: Handling multiple regulators
+
+/ {
+	cpus {
+		cpu@0 {
+			compatible = "arm,cortex-a7";
+			...
+
+			cpu-supply = <&cpu_supply0>, <&cpu_supply1>, <&cpu_supply2>;
+			operating-points-v2 = <&cpu0_opp_table>;
+		};
+	};
+
+	cpu0_opp_table: opp_table0 {
+		compatible = "operating-points-v2";
+		opp-shared;
+
+		opp@1000000000 {
+			opp-hz = /bits/ 64 <1000000000>;
+			opp-microvolt = <970000>, /* Supply 0 */
+					<960000>, /* Supply 1 */
+					<960000>; /* Supply 2 */
+			opp-microamp =  <70000>,  /* Supply 0 */
+					<70000>,  /* Supply 1 */
+					<70000>;  /* Supply 2 */
+			clock-latency-ns = <300000>;
+		};
+
+		/* OR */
+
+		opp@1000000000 {
+			opp-hz = /bits/ 64 <1000000000>;
+			opp-microvolt = <970000 975000 985000>, /* Supply 0 */
+					<960000 965000 975000>, /* Supply 1 */
+					<960000 965000 975000>; /* Supply 2 */
+			opp-microamp =  <70000>,		/* Supply 0 */
+					<70000>,		/* Supply 1 */
+					<70000>;		/* Supply 2 */
+			clock-latency-ns = <300000>;
+		};
+
+		/* OR */
+
+		opp@1000000000 {
+			opp-hz = /bits/ 64 <1000000000>;
+			opp-microvolt = <970000 975000 985000>, /* Supply 0 */
+					<960000 965000 975000>, /* Supply 1 */
+					<960000 965000 975000>; /* Supply 2 */
+			opp-microamp =  <70000>,		/* Supply 0 */
+					<0>,			/* Supply 1 doesn't need this */
+					<70000>;		/* Supply 2 */
+			clock-latency-ns = <300000>;
+		};
+	};
+};
+
+Example 5: opp-supported-hw
+(example: three level hierarchy of versions: cuts, substrate and process)
+
+/ {
+	cpus {
+		cpu@0 {
+			compatible = "arm,cortex-a7";
+			...
+
+			cpu-supply = <&cpu_supply>
+			operating-points-v2 = <&cpu0_opp_table_slow>;
+		};
+	};
+
+	opp_table {
+		compatible = "operating-points-v2";
+		status = "okay";
+		opp-shared;
+
+		opp@600000000 {
+			/*
+			 * Supports all substrate and process versions for 0xF
+			 * cuts, i.e. only first four cuts.
+			 */
+			
+			/ *
+			* 0xF에 대한 모든 기판 및 프로세스 버전을 지원합니다.
+			* 자르기, 즉 처음 네 자르기.
+			* /
+
+			opp-supported-hw = <0xF 0xFFFFFFFF 0xFFFFFFFF>
+			opp-hz = /bits/ 64 <600000000>;
+			opp-microvolt = <900000 915000 925000>;
+			...
+		};
+
+		opp@800000000 {
+			/*
+			 * Supports:
+			 * - cuts: only one, 6th cut (represented by 6th bit).
+			 * - substrate: supports 16 different substrate versions
+			 * - process: supports 9 different process versions
+			 */
+
+			 / *
+			* 지원 :
+			* - cuts : 오직 하나, 6 번째 컷 (6 번째 비트로 표시).
+			* - substrate : 16 가지 기판 버전 지원
+			* - process : 9 가지 프로세스 버전 지원
+				* /
+
+			opp-supported-hw = <0x20 0xff0000ff 0x0000f4f0>
+			opp-hz = /bits/ 64 <800000000>;
+			opp-microvolt = <900000 915000 925000>;
+			...
+		};
+	};
+};
+
+Example 6: opp-microvolt-<name>, opp-microamp-<name>:
+(example: device with two possible microvolt ranges: slow and fast)
+(예 : 두 가지 가능한 마이크로 볼트 범위가있는 장치 : 느리고 and 빠름)
+/ {
+	cpus {
+		cpu@0 {
+			compatible = "arm,cortex-a7";
+			...
+
+			operating-points-v2 = <&cpu0_opp_table>;
+		};
+	};
+
+	cpu0_opp_table: opp_table0 {
+		compatible = "operating-points-v2";
+		opp-shared;
+
+		opp@1000000000 {
+			opp-hz = /bits/ 64 <1000000000>;
+			opp-microvolt-slow = <900000 915000 925000>;
+			opp-microvolt-fast = <970000 975000 985000>;
+			opp-microamp-slow =  <70000>;
+			opp-microamp-fast =  <71000>;
+		};
+
+		opp@1200000000 {
+			opp-hz = /bits/ 64 <1200000000>;
+			opp-microvolt-slow = <900000 915000 925000>, /* Supply vcc0 */
+					      <910000 925000 935000>; /* Supply vcc1 */
+			opp-microvolt-fast = <970000 975000 985000>, /* Supply vcc0 */
+					     <960000 965000 975000>; /* Supply vcc1 */
+			opp-microamp =  <70000>; /* Will be used for both slow/fast */
+		};
+	};
+};

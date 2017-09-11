@@ -1,0 +1,35 @@
+Picochip picoXcell SPAcc (Security Protocol Accelerator) bindings
+
+Picochip picoXcell devices contain crypto offload engines that may be used for
+IPSEC and femtocell layer 2 ciphering.
+
+Required properties:
+  - compatible : "picochip,spacc-ipsec" for the IPSEC offload engine
+    "picochip,spacc-l2" for the femtocell layer 2 ciphering engine.
+  - reg : Offset and length of the register set for this device
+  - interrupt-parent : The interrupt controller that controls the SPAcc
+    interrupt.
+  - interrupts : The interrupt line from the SPAcc.
+  - ref-clock : The input clock that drives the SPAcc.
+
+Picochip picoXcell 장치는 IPSEC 및 펨토 셀 2 계층 암호화에 사용될 수있는 암호화 오프로드 엔진을 포함합니다.
+
+필수 속성 :
+   - 호환 가능 : 펨토 셀 계층 2 암호화 엔진을위한 IPSEC 오프로드 엔진 "picochip, spacc-l2"의 경우 "picochip, spacc-ipsec"
+   - reg :이 장치에 설정된 레지스터 오프셋 및 길이
+   - interrupt-parent : SPAcc 인터럽트를 제어하는 인터럽트 컨트롤러.
+   - interrupts : SPAcc로부터의 인터럽트 라인.
+   - ref-clock : SPAcc를 구동하는 입력 클럭입니다.
+
+
+
+
+Example SPAcc node:
+
+spacc@10000 {
+	compatible = "picochip,spacc-ipsec";
+	reg = <0x100000 0x10000>;
+	interrupt-parent = <&vic0>;
+	interrupts = <24>;
+	ref-clock = <&ipsec_clk>, "ref";
+};

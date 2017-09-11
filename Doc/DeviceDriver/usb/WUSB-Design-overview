@@ -1,0 +1,625 @@
+
+Linux UWB + Wireless USB + WiNET
+
+   (C) 2005-2006 Intel Corporation
+   Inaky Perez-Gonzalez <inaky.perez-gonzalez@intel.com>
+
+   This program is free software; you can redistribute it and/or
+   modify it under the terms of the GNU General Public License version
+   2 as published by the Free Software Foundation.
+이 프로그램은 무료 소프트웨어이다; 재배포 및 수정가능하다.
+
+   This program is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this program; if not, write to the Free Software
+   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+   02110-1301, USA.
+
+
+Please visit http://bughost.org/thewiki/Design-overview.txt-1.8 for
+updated content.
+
+    * Design-overview.txt-1.8
+
+This code implements a Ultra Wide Band stack for Linux, as well as
+drivers for the USB based UWB radio controllers defined in the
+Wireless USB 1.0 specification (including Wireless USB host controller
+and an Intel WiNET controller).
+이 코드는 Linux 용 Ultra Wide Band 스택과 Wireless USB 1.0 사양에 정의된 
+USB 기반 UWB 무선 컨트롤러용 드라이버를 구현합니다. 
+(무선 USB 호스트 컨트롤러 및 Intel WiNET 컨트롤러 포함)
+
+   1. Introduction
+         1. HWA: Host Wire adapters, your Wireless USB dongle
+            HWA: 호스트 와이어 어댑터, 무선 USB 동글
+
+         2. DWA: Device Wired Adaptor, a Wireless USB hub for wired
+            devices
+	    DMA: 장치 유선 어댑터, 유선 장치 용 무선 USB 허브
+
+         3. WHCI: Wireless Host Controller Interface, the PCI WUSB host
+            adapter
+	    WHCI: 무선 호스트 컨트롤러 인터페이스, PCI USB 호스트 어댑터
+			
+   2. The UWB stack
+         1. Devices and hosts: the basic structure
+	    장치와 호스트 : 기본 구조
+
+         2. Host Controller life cycle
+	    호스트 컨트롤러 수명주기
+
+         3. On the air: beacons and enumerating the radio neighborhood
+	    공중에서 : 비콘(스마트폰 근거리통신 기술)과 라디오 지역을 나타냅니다.
+
+         4. Device lists
+	    장치 목록
+
+         5. Bandwidth allocation
+	    대역폭 할당
+
+   3. Wireless USB Host Controller drivers
+      무선 USB 호스트 컨트롤러 드라이버
+
+   4. Glossary
+      어휘
+
+
+    Introduction
+
+UWB is a wide-band communication protocol that is to serve also as the
+low-level protocol for others (much like TCP sits on IP). Currently
+these others are Wireless USB and TCP/IP, but seems Bluetooth and
+Firewire/1394 are coming along.
+UWB는 광대역 통신 프로토콜로 다른 사람들을 위한 low-level protocol 역할도 합니다 (TCP가 IP에 있는 것처럼). 
+현재 다른 것들은 무선 USB와 TCP/IP 있다. 그러나 블루투스와 Firewire/1394가 등장하고 있는 것 같습니다.
+
+UWB uses a band from roughly 3 to 10 GHz, transmitting at a max of
+~-41dB (or 0.074 uW/MHz--geography specific data is still being
+negotiated w/ regulators, so watch for changes). That band is divided in
+a bunch of ~1.5 GHz wide channels (or band groups) composed of three
+subbands/subchannels (528 MHz each). Each channel is independent of each
+other, so you could consider them different "busses". Initially this
+driver considers them all a single one.
+UWB는 약 3~10GHz의 대역을 사용하며 최대 ~-41dB(또는 0.074uW/MHz - 지리 정보 관련 데이터는 
+여전히 협상 중이므로 변경 사항을 지켜보고 있음)로 전송합니다.
+이 대역은 3개의 서브 밴드/서브 채널(각각 528 MHz)로 구성된 ~1.5 GHz 와이드 채널(또는 밴드 그룹)의 
+묶음으로 나뉩니다.
+각 채널은 서로 독립적이므로 다른 "버스(busses)"로 간주할 수 있습니다. 
+처음에 이 드라이버는 그 모두를 하나로 고려합니다.
+
+Radio time is divided in 65536 us long /superframes/, each one divided
+in 256 256us long /MASs/ (Media Allocation Slots), which are the basic
+time/media allocation units for transferring data. At the beginning of
+each superframe there is a Beacon Period (BP), where every device
+transmit its beacon on a single MAS. The length of the BP depends on how
+many devices are present and the length of their beacons.
+라디오 시간은 65536 us long/superframes/256 us 길이로 나뉜 하나/MASs/(미디어 할당 슬롯) 기본적인 시간/
+데이터 전송을 위한 미디어 할당 단위로 나뉘어집니다.
+각 수퍼 프레임의 시작 부분에는 모든 장치가 단일 MAS에서 비콘을 전송하는 비컨주기(Beacon Period, BP)가 있습니다. 
+BP의 길이는 장치의 수와 비컨의 길이에 따라 다릅니다.
+
+Devices have a MAC (fixed, 48 bit address) and a device (changeable, 16
+bit address) and send periodic beacons to advertise themselves and pass
+info on what they are and do. They advertise their capabilities and a
+bunch of other stuff.
+장치는 MAC(고정 비트, 48 비트 주소) 및 장치(변경 가능, 16 비트 주소)를 가지고 있으며 정기적인 비콘을 보내 
+자신을 알리고 자신이 무엇인지와 무엇을 하는지에 대한 정보를 전달합니다.
+그들은 그들의 능력과 다른 것들을 알립니다.
+
+The different logical parts of this driver are:
+이 드라이버의 다른 논리 부분은 다음과 같습니다.
+
+    *
+
+      *UWB*: the Ultra-Wide-Band stack -- manages the radio and
+      associated spectrum to allow for devices sharing it. Allows to
+      control bandwidth assignment, beaconing, scanning, etc
+	*UWB*: 울트라 와이드 밴드 스택(Ultra-Wide-Band stack) --
+	라디오 및 관련 스펙트럼을 관리하여	이를 공유하는 장치를 허용합니다.
+	대역폭 할당, 비커닝, 스캐닝 등을 제어할 수 있습니다.
+
+    *
+
+      *WUSB*: the layer that sits on top of UWB to provide Wireless USB.
+      The Wireless USB spec defines means to control a UWB radio and to
+      do the actual WUSB.
+	*WUSB*: 무선 USB를 제공하기 위해 UWB 상단에 있는 레이어.
+	무선 USB 규격은 UWB 라디오(무선?)을 제어하고 실제 WUSB를 사용하는 수단을 정의합니다.
+
+
+      HWA: Host Wire adapters, your Wireless USB dongle
+	HWA: 호스트 와이어 어댑터, 무선 USB 동글
+
+WUSB also defines a device called a Host Wire Adaptor (HWA), which in
+mere terms is a USB dongle that enables your PC to have UWB and Wireless
+USB. The Wireless USB Host Controller in a HWA looks to the host like a
+[Wireless] USB controller connected via USB (!)
+WUSB는 호스트 와이어 어댑터(HWA)라는 장치도 정의합니다.
+이 장치는 PC에서 UWB 및 무선 USB를 사용할 수 있게 해주는 USB 동글입니다.
+HWA의 무선 USB 호스트 컨트롤러는 USB를 통해 연결된 [무선] USB 컨트롤러처럼 호스트를 찾습니다.(!)
+
+The HWA itself is broken in two or three main interfaces:
+HWA 자체는 2~3개의 주요 인터페이스로 나뉩니다.
+
+    *
+
+      *RC*: Radio control -- this implements an interface to the
+      Ultra-Wide-Band radio controller. The driver for this implements a
+      USB-based UWB Radio Controller to the UWB stack.
+	*RC*: 라디오 컨트롤 -- 
+	이 인터페이스는 울트라 와이드 밴드 라디오 컨트롤러에 대한 인터페이스를 구현합니다.
+	이 드라이버는 USB 기반 UWB 라디오 컨트롤러를 UWB 스택에 구현합니다.
+
+    *
+
+      *HC*: the wireless USB host controller. It looks like a USB host
+      whose root port is the radio and the WUSB devices connect to it.
+      To the system it looks like a separate USB host. The driver (will)
+      implement a USB host controller (similar to UHCI, OHCI or EHCI)
+      for which the root hub is the radio...To reiterate: it is a USB
+      controller that is connected via USB instead of PCI.
+	*HC*: 무선 USB 호스트 컨트롤러.
+	루트 포트가 라디오이고 WUSB 장치가 연결되어있는 USB 호스트처럼 보입니다.
+	시스템에 별도의 USB 호스트처럼 보입니다.
+	드라이버는 루트 허브가 라디오인 USB 호스트 컨트롤러(UHCI, OHCI 또는 EHCI와 유사)를 구현합니다.
+	다시 말하면: PCI 대신 USB를 통해 연결된 USB 컨트롤러입니다.
+
+    *
+
+      *WINET*: some HW provide a WiNET interface (IP over UWB). This
+      package provides a driver for it (it looks like a network
+      interface, winetX). The driver detects when there is a link up for
+      their type and kick into gear.
+	*WINET*: 일부 HW는 Wi-Y 인터페이스(UWB상의 IP)를 제공합니다.
+	이 패키지는 드라이버를 제공합니다.(네트워크 인터페이스인 winetX처럼 보입니다)
+	드라이버는 자신의 유형에 맞는 링크가 있을 때 이를 감지하고 기어를 작동시킵니다.
+
+
+      DWA: Device Wired Adaptor, a Wireless USB hub for wired devices
+	DWA: 장치 유선 어댑터, 유선 장치 용 무선 USB 허브
+
+These are the complement to HWAs. They are a USB host for connecting
+wired devices, but it is connected to your PC connected via Wireless
+USB. To the system it looks like yet another USB host. To the untrained
+eye, it looks like a hub that connects upstream wirelessly.
+이것들은 HWAs를 보완합니다.
+유선 장치를 연결하기위한 USB 호스트입니다. 그러나 무선 USB를 통해 연결된 PC에 연결됩니다.
+시스템에 또 다른 USB 호스트처럼 보입니다.
+모르는 사람에게는 무선으로 업스트림에 연결되는 허브처럼 보입니다.
+
+We still offer no support for this; however, it should share a lot of
+code with the HWA-RC driver; there is a bunch of factorization work that
+has been done to support that in upcoming releases.
+우리는 여전히 이것을 지지하지 않습니다.; 그러나 HWA-RC 드라이버와 많은 코드를 공유해야합니다.;
+다가올 공개를 지원하기 위해 수행된 많은 인수 분해 작업(여러사람의 분담 작업?)이 있습니다.
+
+
+      WHCI: Wireless Host Controller Interface, the PCI WUSB host adapter
+	WHCI: 무선 호스트 컨트롤러 인터페이스, PCI USB 호스트 어댑터
+
+This is your usual PCI device that implements WHCI. Similar in concept
+to EHCI, it allows your wireless USB devices (including DWAs) to connect
+to your host via a PCI interface. As in the case of the HWA, it has a
+Radio Control interface and the WUSB Host Controller interface per se.
+이것은 WHCI를 구현하는 일반적인 PCI 장치입니다.
+EHCI와 비슷한 개념으로 무선 USB 장치(DWA 포함)를 PCI 인터페이스를 통해 호스트에 연결할 수 있습니다.
+HWA의 경우와 마찬가지로, 무선 제어 인터페이스와 WUSB 호스트 컨트롤러 인터페이스가 있습니다.
+
+There is still no driver support for this, but will be in upcoming
+releases.
+아직 드라이버 지원은 없지만 곧 출시 될 예정입니다.
+
+
+    The UWB stack
+
+The main mission of the UWB stack is to keep a tally of which devices
+are in radio proximity to allow drivers to connect to them. As well, it
+provides an API for controlling the local radio controllers (RCs from
+now on), such as to start/stop beaconing, scan, allocate bandwidth, etc.
+UWB 스택의 주된 임무는 드라이버가 무선 장치에 연결될 수 있도록 장치가 무선 근접 상태에 있는지를 확인하는 것입니다.
+또한 비커닝(beconing) 시작/중지, 스캔, 대역폭 할당 등과 같은 로컬 라디오 컨트롤러(RC)를 제어하기위한 API를 제공합니다.
+
+
+      Devices and hosts: the basic structure
+
+The main building block here is the UWB device (struct uwb_dev). For
+each device that pops up in radio presence (ie: the UWB host receives a
+beacon from it) you get a struct uwb_dev that will show up in
+/sys/bus/uwb/devices.
+여기서 주요 빌딩 블록은 UWB 장치(struct uwb_dev)입니다.
+무선 장치(즉, UWB 호스트가 비컨을 수신 함)에서 나타나는 각 장치에 대해 /sys/bus/uwb/devices에 나타날 구조체 uwb_dev를 얻습니다.
+
+For each RC that is detected, a new struct uwb_rc and struct uwb_dev are
+created. An entry is also created in /sys/class/uwb_rc for each RC.
+감지된 각 RC(라디오 컨트롤러)에 대해 새 구조체 uwb_rc 및 struct uwb_dev가 만들어집니다. 
+또한 각 RC에 대해 /sys/class/uwb_rc에 항목(entry)이 작성됩니다.
+
+Each RC driver is implemented by a separate driver that plugs into the
+interface that the UWB stack provides through a struct uwb_rc_ops. The
+spec creators have been nice enough to make the message format the same
+for HWA and WHCI RCs, so the driver is really a very thin transport that
+moves the requests from the UWB API to the device [/uwb_rc_ops->cmd()/]
+and sends the replies and notifications back to the API
+[/uwb_rc_neh_grok()/]. Notifications are handled to the UWB daemon, that
+is chartered, among other things, to keep the tab of how the UWB radio
+neighborhood looks, creating and destroying devices as they show up or
+disappear.
+각 RC 드라이버는 UWB 스택이 struct uwb_rc_ops를 통해 제공하는 인터페이스에 연결되는
+별도의 드라이버로 구현됩니다.
+spec creators는 HWA 및 WHCI RC에 대해 메시지 형식을 동일하게 만들기에 충분한 능력이 있으므로 
+드라이버는 실제로 UWB API에서 장치[/uwb_rc_ops-> cmd()/]로 요청을 이동시키고
+답장과 알림을 API[/uwb_rc_neh_grok()/]로 다시 보내는 매우 얇은(간단한) 전송만 한다.
+알림은 UWB 데몬으로 처리됩니다. 다른 것들 중에서도 UWB 라디오 이웃(neighborhood)이 어떻게 보이는지 
+탭을 유지하고, 장치가 나타나거나 사라지는 대로 장치를 만들고 파괴합니다.
+
+Command execution is very simple: a command block is sent and a event
+block or reply is expected back. For sending/receiving command/events, a
+handle called /neh/ (Notification/Event Handle) is opened with
+/uwb_rc_neh_open()/.
+명령 실행은 매우 간단합니다: 명령 블록이 전송되고 이벤트 블록 또는 응답이 반환될 것으로 예상됩니다.
+명령/이벤트를 송수신하기 위해 /neh/(Notification/Event Handle) 핸들이 /uwb_rc_neh_open()/과 함께 열립니다.
+
+The HWA-RC (USB dongle) driver (drivers/uwb/hwa-rc.c) does this job for
+the USB connected HWA. Eventually, drivers/whci-rc.c will do the same
+for the PCI connected WHCI controller.
+HWA-RC (USB 동글) 드라이버 (drivers/uwb/hwa-rc.c)는 USB로 연결된 HWA에 대해 이 작업을 수행합니다.
+결국 drivers/whci-rc.c는 PCI 연결 WHCI 컨트롤러에서도 동일하게 작동합니다.
+
+
+      Host Controller life cycle
+
+So let's say we connect a dongle to the system: it is detected and
+firmware uploaded if needed [for Intel's i1480
+/drivers/uwb/ptc/usb.c:ptc_usb_probe()/] and then it is reenumerated.
+Now we have a real HWA device connected and
+/drivers/uwb/hwa-rc.c:hwarc_probe()/ picks it up, that will set up the
+Wire-Adaptor environment and then suck it into the UWB stack's vision of
+the world [/drivers/uwb/lc-rc.c:uwb_rc_add()/].
+따라서 동글을 시스템에 연결한다고 가정 해 봅시다. 
+필요한 경우 인텔의 i1480/drivers/uwb/ptc/usb.c:ptc_usb_probe()/가
+검색되고 펌웨어가 업로드 된 다음 다시 열거됩니다.
+이제 우리는 실제 HWA 장치를 연결하고 /drivers/uwb/hwa-rc.c:hwarc_probe()/를 가져 와서 
+와이어 어댑터 환경을 설정하고 UWB 스택의 세계 비전(vision)에 위치시킵니다. [/drivers/uwb/lc-rc.c:uwb_rc_add()/].
+
+    *
+
+      [*] The stack should put a new RC to scan for devices
+      [/uwb_rc_scan()/] so it finds what's available around and tries to
+      connect to them, but this is policy stuff and should be driven
+      from user space. As of now, the operator is expected to do it
+      manually; see the release notes for documentation on the procedure.
+	[*] 스택은 새로운 RC를 장치 [/uwb_rc_scan()/]를 검색하여 사용할 수 있는 것을 찾아서 연결하려고
+	시도합니다. 이것은 정책이며 사용자 공간에서 유도되어야 합니다.
+	현재 운영자는 수동으로 처리해야합니다. 절차에 대한 문서는 릴리스 정보를 참조하십시오.
+
+When a dongle is disconnected, /drivers/uwb/hwa-rc.c:hwarc_disconnect()/
+takes time of tearing everything down safely (or not...).
+동글이 연결이 끊어지면 /drivers/uwb/hwa-rc.c:hwarc_disconnect()/가 모두 안전하게 끊어지는 시간을 가지지 않습니다.
+
+
+      On the air: beacons and enumerating the radio neighborhood
+	공중에서 : 비콘과 라디오 지역을 열거합니다.
+
+So assuming we have devices and we have agreed for a channel to connect
+on (let's say 9), we put the new RC to beacon:
+따라서 우리가 장치를 가지고 있으며 연결을 위한 채널에 동의했다면 (9라고 가정 해 봅시다), 
+우리는 새로운 RC를 신호로 설정합니다 :
+
+    *
+
+            $ echo 9 0 > /sys/class/uwb_rc/uwb0/beacon
+
+Now it is visible. If there were other devices in the same radio channel
+and beacon group (that's what the zero is for), the dongle's radio
+control interface will send beacon notifications on its
+notification/event endpoint (NEEP). The beacon notifications are part of
+the event stream that is funneled into the API with
+/drivers/uwb/neh.c:uwb_rc_neh_grok()/ and delivered to the UWBD, the UWB
+daemon through a notification list.
+이제는 볼 수 있습니다. 동일한 무선 채널과 비컨 그룹에 다른 장치가있는 경우(0 인 경우) 
+동글의 무선 제어 인터페이스는 알림/이벤트 endpoint(NEEP)에서 비콘 알림을 보냅니다.
+비콘 알림은 /drivers/uwb/neh.c:uwb_rc_neh_grok()/를 사용하여 API에 유입되는 이벤트 목록의 일부이며 
+알림 목록을 통해 UWB 데몬으로 전달됩니다.
+
+UWBD wakes up and scans the event list; finds a beacon and adds it to
+the BEACON CACHE (/uwb_beca/). If he receives a number of beacons from
+the same device, he considers it to be 'onair' and creates a new device
+[/drivers/uwb/lc-dev.c:uwbd_dev_onair()/]. Similarly, when no beacons
+are received in some time, the device is considered gone and wiped out
+[uwbd calls periodically /uwb/beacon.c:uwb_beca_purge()/ that will purge
+the beacon cache of dead devices].
+UWBD가 깨어나서 이벤트 목록을 검색합니다. 비컨을 찾아 BEACON CACHE (/uwb_beca/)에 추가합니다.
+동일한 장치에서 여러 개의 비컨을 수신하면 '켜짐'으로 간주하여 
+새 장치 [/drivers/uwb/lc-dev.c:uwbd_dev_onair()/]를 만듭니다.
+마찬가지로, 어떤 시간에 비컨이 수신되지 않으면, 장치는 사라진 것으로 간주됩니다.
+[uwbd는 주기적으로 /uwb/beacon.c:uwb_beca_purge()/를 꺼서 죽은 장치의 비컨 캐시를 지웁니다.]
+
+
+      Device lists
+
+All UWB devices are kept in the list of the struct bus_type uwb_bus_type.
+모든 UWB 장치는 struct bus_type uwb_bus_type의 목록에 보관됩니다.
+
+
+      Bandwidth allocation
+
+The UWB stack maintains a local copy of DRP availability through
+processing of incoming *DRP Availability Change* notifications. This
+local copy is currently used to present the current bandwidth
+availability to the user through the sysfs file
+/sys/class/uwb_rc/uwbx/bw_avail. In the future the bandwidth
+availability information will be used by the bandwidth reservation
+routines.
+UWB 스택은 들어오는 *DRP Availability Change* 통지를 처리하여 DRP 가용성의 로컬 복사본을 유지 관리합니다.
+이 로컬 복사본은 현재 sysfs file/sys/class/uwb_rc/uwbx/bw_avail을 통해 
+사용자에게 현재 대역폭 가용성을 제공하는데 사용됩니다.
+나중에는 대역폭 예약 정보가 대역폭 예약 루틴에 의해 사용될 것입니다.
+
+The bandwidth reservation routines are in progress and are thus not
+present in the current release. When completed they will enable a user
+to initiate DRP reservation requests through interaction with sysfs. DRP
+reservation requests from remote UWB devices will also be handled. The
+bandwidth management done by the UWB stack will include callbacks to the
+higher layers will enable the higher layers to use the reservations upon
+completion. [Note: The bandwidth reservation work is in progress and
+subject to change.]
+대역폭 예약 루틴이 진행 중이므로 현재 릴리스에는 없습니다.
+완료되면 사용자는 sysfs와의 상호 작용을 통해 DRP 예약 요청을 시작할 수 있습니다.
+원격 UWB 장치의 DRP 예약 요청도 처리됩니다.
+UWB 스택에 의해 수행되는 대역폭 관리에는 상위 계층에 대한 콜백이 포함되어있어 
+상위 계층에서 완료시 예약을 사용할 수 있습니다.
+[참고 : 대역폭 예약 작업이 진행 중이며 변경 될 수 있습니다.]
+
+
+    Wireless USB Host Controller drivers
+
+*WARNING* This section needs a lot of work!
+
+As explained above, there are three different types of HCs in the WUSB
+world: HWA-HC, DWA-HC and WHCI-HC.
+위에서 설명한 것처럼 WUSB 세계에는 HWA-HC, DWA-HC 및 WHCI-HC라는 세 가지 유형의 HC가 있습니다.
+
+HWA-HC and DWA-HC share that they are Wire-Adapters (USB or WUSB
+connected controllers), and their transfer management system is almost
+identical. So is their notification delivery system.
+HWA-HC와 DWA-HC는 와이어 어댑터 (USB 또는 WUSB 연결 컨트롤러)를 공유하며 전송 관리 시스템은 거의 동일합니다. 그들의 통보 전달 시스템도 마찬가지입니다.
+
+HWA-HC and WHCI-HC share that they are both WUSB host controllers, so
+they have to deal with WUSB device life cycle and maintenance, wireless
+root-hub
+HWA-HC와 WHICH-HC는 둘 다 USB 호스트 컨트롤러이므로 
+그들은 WUSB 장치 수명주기 및 유지 관리, 무선루트 허브를 처리해야 합니다.
+
+HWA exposes a Host Controller interface (HWA-HC 0xe0/02/02). This has
+three endpoints (Notifications, Data Transfer In and Data Transfer
+Out--known as NEP, DTI and DTO in the code).
+HWA는 호스트 컨트롤러 인터페이스 (HWA-HC 0xe0/02/02)를 노출합니다. 
+여기에는 세 개의 endpoints(알림, 데이터 전송(안) 및 데이터 전송(밖)--코드에서 NEP, DTI 및 DTO라고 함)이 있습니다.
+
+We reserve UWB bandwidth for our Wireless USB Cluster, create a Cluster
+ID and tell the HC to use all that. Then we start it. This means the HC
+starts sending MMCs.
+우리는 우리의 무선 USB 클러스터를 위한 UWB 대역폭을 예약하고, 
+클러스터 ID를 생성하고, HC에 모든 것을 사용하도록 지시합니다.
+그런 다음 시작합니다. 이것은 HC가 MMC를 보내기 시작함을 의미합니다.
+
+    *
+
+      The MMCs are blocks of data defined somewhere in the WUSB1.0 spec
+      that define a stream in the UWB channel time allocated for sending
+      WUSB IEs (host to device commands/notifications) and Device
+      Notifications (device initiated to host). Each host defines a
+      unique Wireless USB cluster through MMCs. Devices can connect to a
+      single cluster at the time. The IEs are Information Elements, and
+      among them are the bandwidth allocations that tell each device
+      when can they transmit or receive.
+	MMC는 WUSB IE 전송 (호스트와 장치 명령/알림) 및 장치 알림 (장치가 호스트에서 시작됨)을 위해 할당된
+	UWB 채널 시간에 스트림을 정의하는 WUSB1.0 사양 어딘가에 정의된 데이터 블록입니다.
+	각 호스트는 MMC를 통해 고유 한 무선 USB 클러스터를 정의합니다.
+	장치는 한 번에 단일 클러스터에 연결할 수 있습니다. 
+	IE는 정보 요소이며, 각 장치가 전송 또는 수신할 수있는 시간을 알려주는 대역폭 할당입니다.
+
+Now it all depends on external stimuli.
+이제는 모두 외부 자극에 관련된 것들 입니다.
+
+*New device connection*
+
+A new device pops up, it scans the radio looking for MMCs that give out
+the existence of Wireless USB channels. Once one (or more) are found,
+selects which one to connect to. Sends a /DN_Connect/ (device
+notification connect) during the DNTS (Device Notification Time
+Slot--announced in the MMCs
+새로운 장치가 나타나면 라디오를 검색하여 무선 USB 채널의 존재를 알려주는 MMC를 찾습니다.
+하나 (또는 이상)가 발견되면 연결할 대상을 선택합니다.
+DNTS (장치 알림 시간 슬롯 - MMC에 발표된) 동안 /DN_Connect/ (장치 알림 연결)를 보냅니다.
+
+HC picks the /DN_Connect/ out (nep module sends to notif.c for delivery
+into /devconnect/). This process starts the authentication process for
+the device. First we allocate a /fake port/ and assign an
+unauthenticated address (128 to 255--what we really do is
+0x80 | fake_port_idx). We fiddle with the fake port status and /hub_wq/
+sees a new connection, so he moves on to enable the fake port with a reset.
+HC는 /DN_Connect/ out을 선택합니다. (nep 모듈이 /devconnect/로 전달하기 위해 notif.c로 보냄).
+이 프로세스는 장치의 인증 프로세스를 시작합니다.
+먼저 /fake port/를 할당하고 인증되지 않은 주소를 할당합니다.
+(128에서 255까지--우리가 실제로하는 일은 0x80 | fake_port_idx입니다).
+가짜 포트 상태와 /hub_wq/는 새로운 연결을 갖게 되므로 리셋을 통해 가짜 포트를 활성화합니다.
+
+So now we are in the reset path -- we know we have a non-yet enumerated
+device with an unauthorized address; we ask user space to authenticate
+(FIXME: not yet done, similar to bluetooth pairing), then we do the key
+exchange (FIXME: not yet done) and issue a /set address 0/ to bring the
+device to the default state. Device is authenticated.
+이제 우리는 리셋 경로에 있습니다. -- 승인되지 않은 주소를 가진 아직 등록되지 않은 기기가 있음을 알고 있습니다;
+우리는 사용자 공간에 인증을 요청합니다 (FIXME : 아직 완료되지 않았습니다. 블루투스 페어링과 유사 함).
+그런 다음 키 교환 (FIXME : 아직 완료되지 않음)을 수행하고 /set address 0/을 실행하여 
+장치를 기본 상태로 만듭니다. 장치가 인증되었습니다.
+
+From here, the USB stack takes control through the usb_hcd ops. hub_wq
+has seen the port status changes, as we have been toggling them. It will
+start enumerating and doing transfers through usb_hcd->urb_enqueue() to
+read descriptors and move our data.
+여기서 USB 스택은 usb_hcd 작업을 통해 제어합니다. hub_wq는 포트 상태가 변경된 것을 확인합니다.
+descriptor를 읽고 데이터를 이동하기 위해 usb_hcd->urb_enqueue()를 통해 열거 및 전송을 시작합니다.
+
+
+*Device life cycle and keep alives*
+
+Every time there is a successful transfer to/from a device, we update a
+per-device activity timestamp. If not, every now and then we check and
+if the activity timestamp gets old, we ping the device by sending it a
+Keep Alive IE; it responds with a /DN_Alive/ pong during the DNTS (this
+arrives to us as a notification through
+devconnect.c:wusb_handle_dn_alive(). If a device times out, we
+disconnect it from the system (cleaning up internal information and
+toggling the bits in the fake hub port, which kicks hub_wq into removing
+the rest of the stuff).
+기기와 주고 받는 성공적인 전송이 있을 때마다 기기당 활동 타임 스탬프를 업데이트합니다.
+그렇지 않다면, 지금 우리는 확인하고 액티비티 타임 스탬프가 오래되면 디바이스에 ping(전송 확인 테스트?)을 한다.
+Keep Alive IE를 보냄으로써;
+NTS 동안 /DN_Alive/ pong으로 응답합니다.
+(이것은 devconnect.c : wusb_handle_dn_alive()를 통해 알림으로 우리에게 도착합니다.)
+장치가 시간 초과되면 시스템에서 연결이 끊어집니다.
+(내부 정보를 정리하고 가짜 허브 포트의 비트를 토글링(하나의 값에서 다른 값으로 전환)하여
+hub_wq를 실행하여 나머지 부분을 제거합니다.)
+
+This is done through devconnect:__wusb_check_devs(), which will scan the
+device list looking for whom needs refreshing.
+이는 evconnect를 통해 수행됩니다:
+__wusb_check_devs()는 장치 목록을 스캔하여 누구에게 refreshing이 필요한지를 검색합니다.
+
+If the device wants to disconnect, it will either die (ugly) or send a
+/DN_Disconnect/ that will prompt a disconnection from the system.
+장치가 연결을 끊으려는 경우 시스템이 끊어지면 (잘못되거나) /DN_Disconnect/를 보내거나 죽게됩니다.
+
+
+*Sending and receiving data*
+
+Data is sent and received through /Remote Pipes/ (rpipes). An rpipe is
+/aimed/ at an endpoint in a WUSB device. This is the same for HWAs and
+DWAs.
+데이터는 Remote Pipes/(rpipes)를 통해 보내고 받습니다.
+rpipe는 WUSB 장치의 endpoint에 있습니다. HWAs 및 DWA의 경우에도 마찬가지입니다.
+
+Each HC has a number of rpipes and buffers that can be assigned to them;
+when doing a data transfer (xfer), first the rpipe has to be aimed and
+prepared (buffers assigned), then we can start queueing requests for
+data in or out.
+각 HC에는 할당 할 수있는 여러 개의 rpipes 및 버퍼가 있습니다;
+데이터 전송 (xfer)을 할 때, 먼저 rpipe를 조준하고 준비 (버퍼 할당)해야 합니다. 
+그런 다음 데이터 요청을 큐에 넣거나 빠지게 할 수 있습니다.
+
+Data buffers have to be segmented out before sending--so we send first a
+header (segment request) and then if there is any data, a data buffer
+immediately after to the DTI interface (yep, even the request). If our
+buffer is bigger than the max segment size, then we just do multiple
+requests.
+전송하기 전에 데이터 버퍼를 세그먼트 화해야합니다.--그래서 우리는 먼저 헤더 (세그먼트 요청)를 보낸 다음 
+데이터가 있으면 DTI 인터페이스 바로 다음에 데이터 버퍼 (요청까지도)를 보냅니다.
+버퍼가 최대 세그먼트 크기보다 큰 경우 여러 요청을 수행합니다.
+
+[This sucks, because doing USB scatter gatter in Linux is resource
+intensive, if any...not that the current approach is not. It just has to
+be cleaned up a lot :)].
+[Linux에서 USB 분산기를 사용하는 것은 리소스 집약적이기 때문에 이는 끔찍한 일입니다.
+만약에 ... 현재의 접근 방식이 아니라면. 그것은 단지 많이 정리해야합니다. :)]
+
+If reading, we don't send data buffers, just the segment headers saying
+we want to read segments.
+읽을 때, 우리는 세그먼트를 읽으려는 세그먼트 헤더에는 데이터 버퍼를 보내지 않습니다.
+
+When the xfer is executed, we receive a notification that says data is
+ready in the DTI endpoint (handled through
+xfer.c:wa_handle_notif_xfer()). In there we read from the DTI endpoint a
+descriptor that gives us the status of the transfer, its identification
+(given when we issued it) and the segment number. If it was a data read,
+we issue another URB to read into the destination buffer the chunk of
+data coming out of the remote endpoint. Done, wait for the next guy. The
+callbacks for the URBs issued from here are the ones that will declare
+the xfer complete at some point and call its callback.
+xfer가 실행되면 DTI endpoint에서 데이터 준비가되었다는 알림을 받습니다.
+(xfer.c를 통해 처리 : wa_handle_notif_xfer())
+거기에서 우리는 DTI endpoint에서 이전의 상태, identification(우리가 발행했을 때 주어진)과 
+세그먼트 번호를 제공하는 descriptor를 읽었다.
+
+Seems simple, but the implementation is not trivial.
+간단하지만 구현은 간단하지 않습니다.
+
+    *
+
+      *WARNING* Old!!
+
+The main xfer descriptor, wa_xfer (equivalent to a URB) contains an
+array of segments, tallys on segments and buffers and callback
+information. Buried in there is a lot of URBs for executing the segments
+and buffer transfers.
+주 xfer descriptor인 wa_xfer(URB와 동일)는 세그먼트의 배열, 세그먼트 및 버퍼의 콜 및 콜백 정보를 포함합니다.
+세그먼트와 버퍼 전송을 실행하기위한 많은 URB가있다.
+
+For OUT xfers, there is an array of segments, one URB for each, another
+one of buffer URB. When submitting, we submit URBs for segment request
+1, buffer 1, segment 2, buffer 2...etc. Then we wait on the DTI for xfer
+result data; when all the segments are complete, we call the callback to
+finalize the transfer.
+OUT xfers의 경우 각 세그먼트에 대해 하나의 URB, 또 다른 하나의 버퍼 URB, 세그먼트 배열이 있습니다.
+제출할 때 세그먼트 요청 1, 버퍼 1, 세그먼트 2, 버퍼 2 ... 등에 대한 URB를 제출합니다.
+그런 다음 DTI에서 xfer 결과 데이터를 기다립니다. 모든 세그먼트가 완료되면 콜백을 호출하여 전송을 완료합니다.
+
+For IN xfers, we only issue URBs for the segments we want to read and
+then wait for the xfer result data.
+IN xfers의 경우 우리가 읽기 원하는 세그먼트에 대해서만 URB를 실행한 다음, xfer 결과 데이터를 기다립니다.
+
+
+*URB mapping into xfers*
+
+This is done by hwahc_op_urb_[en|de]queue(). In enqueue() we aim an
+rpipe to the endpoint where we have to transmit, create a transfer
+context (wa_xfer) and submit it. When the xfer is done, our callback is
+called and we assign the status bits and release the xfer resources.
+이것은 hwahc_op_urb_ [en | de] queue ()에 의해 수행됩니다.
+enqueue()에서 우리는 rpipe를 우리가 전송해야하는 endpoint로 보내고, 
+전송 컨텍스트 (wa_xfer)를 생성하고 제출해야한다.
+xfer가 끝나면 콜백이 호출되고 status 비트를 할당하고 xfer 자원을 해제합니다.
+
+In dequeue() we are basically cancelling/aborting the transfer. We issue
+a xfer abort request to the HC, cancel all the URBs we had submitted
+and not yet done and when all that is done, the xfer callback will be
+called--this will call the URB callback.
+dequeue()에서 우리는 기본적으로 전달을 취소/중단합니다.
+우리는 HC에게 xfer abort 요청을 보내고 아직 제출하지 않은 URB를 모두 취소하고 
+모든 작업이 완료되면 xfer 콜백이 호출됩니다. 이것은 URB 콜백을 호출합니다.
+
+
+    Glossary
+
+*DWA* -- Device Wire Adapter
+
+USB host, wired for downstream devices, upstream connects wirelessly
+with Wireless USB.
+
+*EVENT* -- Response to a command on the NEEP
+
+*HWA* -- Host Wire Adapter / USB dongle for UWB and Wireless USB
+
+*NEH* -- Notification/Event Handle
+
+Handle/file descriptor for receiving notifications or events. The WA
+code requires you to get one of this to listen for notifications or
+events on the NEEP.
+
+*NEEP* -- Notification/Event EndPoint
+
+Stuff related to the management of the first endpoint of a HWA USB
+dongle that is used to deliver an stream of events and notifications to
+the host.
+
+*NOTIFICATION* -- Message coming in the NEEP as response to something.
+
+*RC* -- Radio Control
+
+Design-overview.txt-1.8 (last edited 2006-11-04 12:22:24 by
+InakyPerezGonzalez)

@@ -1,0 +1,89 @@
+﻿SHARP LS037V7DW01 TFT-LCD panel
+===================================
+
+Required properties:
+- compatible: "sharp,ls037v7dw01"
+
+Optional properties:
+- label: a symbolic name for the panel
+- enable-gpios: a GPIO spec for the optional enable pin.
+  This pin is the INI pin as specified in the LS037V7DW01.pdf file.
+- reset-gpios: a GPIO spec for the optional reset pin.
+  This pin is the RESB pin as specified in the LS037V7DW01.pdf file.
+- mode-gpios: a GPIO
+  ordered MO, LR, and UD as specified in the LS037V7DW01.pdf file.
+
+Required nodes:
+- Video port for DPI input
+
+This panel can have zero to five GPIOs to configure to change configuration
+between QVGA and VGA mode and the scan direction. As these pins can be also
+configured with external pulls, all the GPIOs are considered optional with holes
+in the array.
+
+Example
+-------
+
+Example when connected to a omap2+ based device:
+
+lcd0: display {
+	compatible = "sharp,ls037v7dw01";
+	power-supply = <&lcd_3v3>;
+	enable-gpios = <&gpio5 24 GPIO_ACTIVE_HIGH>;	/* gpio152, lcd INI */
+	reset-gpios = <&gpio5 27 GPIO_ACTIVE_HIGH>;	/* gpio155, lcd RESB */
+	mode-gpios = <&gpio5 26 GPIO_ACTIVE_HIGH	/* gpio154, lcd MO */
+		      &gpio1 2 GPIO_ACTIVE_HIGH		/* gpio2, lcd LR */
+		      &gpio1 3 GPIO_ACTIVE_HIGH>;	/* gpio3, lcd UD */
+
+	port {
+		lcd_in: endpoint {
+			remote-endpoint = <&dpi_out>;
+		};
+	};
+};
+
+/*
+SHARP LS037V7DW01 TFT-LCD 패널
+=======================
+
+필수 속성 :
+- 호환 가능 : "sharp, ls037v7dw01"
+
+선택적 속성 :
+- label : 패널의 상징적 인 이름
+- enable-gpios : 선택적인 인 에이블 핀을위한 GPIO 스펙.
+  이 핀은 LS037V7DW01.pdf 파일에 지정된 INI 핀입니다.
+- reset-gpios : 옵션 리셋 핀을위한 GPIO 스펙.
+  이 핀은 LS037V7DW01.pdf 파일에 지정된 RESB 핀이다.
+- mode-gpios : GPIO
+  LS037V7DW01.pdf 파일에 지정된대로 MO, LR 및 UD로 주문합니다.
+
+필수 노드 :
+- DPI 입력 용 비디오 포트
+
+이 패널은 QVGA와 VGA 모드 및 스캔 방향 사이에서 컨피규레이션을 변경하도록 구성 할 수있는 GPIO를 0-5 개까지 가질 수 있습니다.
+
+ 이 핀들은 외부 풀 (pull)로 구성 될 수 있기 때문에 모든 GPIO는 어레이의 구멍과 함께 옵션으로 간주됩니다.
+
+Example
+-------
+
+Example when connected to a omap2+ based device:
+
+lcd0: display {
+	compatible = "sharp,ls037v7dw01";
+	power-supply = <&lcd_3v3>;
+	enable-gpios = <&gpio5 24 GPIO_ACTIVE_HIGH>;	/* gpio152, lcd INI */
+	reset-gpios = <&gpio5 27 GPIO_ACTIVE_HIGH>;	/* gpio155, lcd RESB */
+	mode-gpios = <&gpio5 26 GPIO_ACTIVE_HIGH	/* gpio154, lcd MO */
+		      &gpio1 2 GPIO_ACTIVE_HIGH		/* gpio2, lcd LR */
+		      &gpio1 3 GPIO_ACTIVE_HIGH>;	/* gpio3, lcd UD */
+
+	port {
+		lcd_in: endpoint {
+			remote-endpoint = <&dpi_out>;
+		};
+	};
+};
+
+*/

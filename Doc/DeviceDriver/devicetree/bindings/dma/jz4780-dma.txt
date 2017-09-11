@@ -1,0 +1,111 @@
+* Ingenic JZ4780 DMA Controller
+
+Required properties:
+
+- compatible: Should be "ingenic,jz4780-dma"
+- reg: Should contain the DMA controller registers location and length.
+- interrupts: Should contain the interrupt specifier of the DMA controller.
+- interrupt-parent: Should be the phandle of the interrupt controller that
+- clocks: Should contain a clock specifier for the JZ4780 PDMA clock.
+- #dma-cells: Must be <2>. Number of integer cells in the dmas property of
+  DMA clients (see below).
+
+Optional properties:
+
+- ingenic,reserved-channels: Bitmask of channels to reserve for devices that
+  need a specific channel. These channels will only be assigned when explicitly
+  requested by a client. The primary use for this is channels 0 and 1, which
+  can be configured to have special behaviour for NAND/BCH when using
+  programmable firmware.
+
+Example:
+
+dma: dma@13420000 {
+	compatible = "ingenic,jz4780-dma";
+	reg = <0x13420000 0x10000>;
+
+	interrupt-parent = <&intc>;
+	interrupts = <10>;
+
+	clocks = <&cgu JZ4780_CLK_PDMA>;
+
+	#dma-cells = <2>;
+
+	ingenic,reserved-channels = <0x3>;
+};
+
+DMA clients must use the format described in dma.txt, giving a phandle to the
+DMA controller plus the following 2 integer cells:
+
+1. Request type: The DMA request type for transfers to/from the device on
+   the allocated channel, as defined in the SoC documentation.
+
+2. Channel: If set to 0xffffffff, any available channel will be allocated for
+   the client. Otherwise, the exact channel specified will be used. The channel
+   should be reserved on the DMA controller using the ingenic,reserved-channels
+   property.
+
+Example:
+
+uart0: serial@10030000 {
+	...
+	dmas = <&dma 0x14 0xffffffff
+		&dma 0x15 0xffffffff>;
+	dma-names = "tx", "rx";
+	...
+};
+
+
+
+
+/*
+* Ingenic JZ4780 DMA 컨트롤러
+
+필수 속성 :
+
+- 호환 : "ingenic, jz4780-dma"이어야 함
+- reg : DMA 컨트롤러에 위치와 길이를 등록해야합니다.
+- interrupts : DMA 컨트롤러의 인터럽트 지정자를 포함해야합니다.
+- interrupt-parent : 인터럽트 컨트롤러의 phandle이어야합니다.
+- clocks : JZ4780 PDMA 클록에 대한 시계 지정자를 포함해야합니다.
+- # dma-cells : <2> 여야합니다. DMA 클라이언트의 dmas 속성에있는 정수 셀 수 (아래 참조)
+
+선택적 속성 :
+
+- ingenic, reserved-channels : 특정 채널이 필요한 장치에 예약 할 채널의 비트 마스크입니다. 이 채널은 클라이언트가 명시 적으로 요청한 경우에만 할당됩니다. 이것의 주요 용도는 채널 0과 1이며, 프로그래머블 펌웨어를 사용할 때 NAND / BCH에 특별한 동작을하도록 구성 할 수 있습니다.
+
+Example:
+
+dma: dma@13420000 {
+	compatible = "ingenic,jz4780-dma";
+	reg = <0x13420000 0x10000>;
+
+	interrupt-parent = <&intc>;
+	interrupts = <10>;
+
+	clocks = <&cgu JZ4780_CLK_PDMA>;
+
+	#dma-cells = <2>;
+
+	ingenic,reserved-channels = <0x3>;
+};
+
+
+DMA 클라이언트는 dma.txt에 설명 된 형식을 사용해야하며 DMA 컨트롤러에 다음과 같은 2 개의 정수 셀을 추가 할 수 있습니다.
+
+1. 요청 유형 : SoC 문서에 정의 된대로 할당 된 채널에서 장치로 / 장치로 전송하기위한 DMA 요청 유형입니다.
+
+2. 채널 : 0xffffffff로 설정하면 사용 가능한 채널이
+   클라이언트. 그렇지 않으면 지정된 정확한 채널이 사용됩니다. 채널은 고유, 예약 채널 속성을 사용하여 DMA 컨트롤러에 예약되어야합니다.
+
+
+Example:
+
+uart0: serial@10030000 {
+	...
+	dmas = <&dma 0x14 0xffffffff
+		&dma 0x15 0xffffffff>;
+	dma-names = "tx", "rx";
+	...
+};
+*/

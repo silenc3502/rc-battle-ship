@@ -1,0 +1,22 @@
+<마스크 적용할때>
+cv::Mat imageROI = image(cv::Rect(410, 250, logo.cols, logo.rows));
+  // 영상 ROI 정의
+  // Rect는 사각형 영역 지정
+  // 410, 270은 각각 logo의 x좌표, y좌표 시작지점
+  // logo.cols, logo.rows는 로고의 끝지점
+ cv::Mat mask = cv::imread("logo.jpg", 0);
+  // 마스크를 불러들이기 (그레이레벨 영상이어야 함)
+ logo.copyTo(imageROI, mask);
+  // 마스크를 ROI에 복사 (참조가 아닌 복사)
+
+
+<영상 합칠때>
+std::vector<cv::Mat> planes; // 3개 영상의 백터 생성
+ cv::split(image, planes); // 3채널 단일 영상을 각 1채널 영상으로 분리
+ planes[0] += background; // 파랑 채널 합치기
+  // planes[1]이면 초록 채널 합치기
+  // planes[2]이면 빨강 채널 합치기
+ cv::merge(planes, result); // 3개의 1채널을 3채널을 갖는 단일 영상으로 통합
+
+
+

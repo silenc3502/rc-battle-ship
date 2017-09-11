@@ -1,0 +1,88 @@
+* ZTE ZX296702 DMA controller
+
+Required properties:
+- compatible: Should be "zte,zx296702-dma"
+- reg: Should contain DMA registers location and length.
+- interrupts: Should contain one interrupt shared by all channel
+- #dma-cells: see dma.txt, should be 1, para number
+- dma-channels: physical channels supported
+- dma-requests: virtual channels supported, each virtual channel
+		have specific request line
+- clocks: clock required
+
+Example:
+
+Controller:
+	dma: dma-controller@0x09c00000{
+		compatible = "zte,zx296702-dma";
+		reg = <0x09c00000 0x1000>;
+		clocks = <&topclk ZX296702_DMA_ACLK>;
+		interrupts = <GIC_SPI 66 IRQ_TYPE_LEVEL_HIGH>;
+		#dma-cells = <1>;
+		dma-channels = <24>;
+		dma-requests = <24>;
+	};
+
+Client:
+Use specific request line passing from dmax
+For example, spdif0 tx channel request line is 4
+	spdif0: spdif0@0b004000 {
+		#sound-dai-cells = <0>;
+		compatible = "zte,zx296702-spdif";
+		reg = <0x0b004000 0x1000>;
+		clocks = <&lsp0clk ZX296702_SPDIF0_DIV>;
+		clock-names = "tx";
+		interrupts = <GIC_SPI 21 IRQ_TYPE_LEVEL_HIGH>;
+		dmas = <&dma 4>;
+		dma-names = "tx";
+	}
+
+
+/*
+
+
+* ZTE ZX296702 DMA 컨트롤러
+
+필수 속성 :
+- 호환 : "zte, zx296702-dma"이어야합니다.
+- reg : DMA 레지스터 위치와 길이를 포함해야합니다.
+- interrupts : 모든 채널이 공유하는 하나의 인터럽트를 포함해야합니다.
+- # dma-cells : dma.txt를 참조하십시오. 1, para number 여야합니다.
+- dma-channels : 지원되는 물리 채널
+- dma-requests : 가상 채널 지원, 각 가상 채널은 특정 요청 라인
+- clock : 필요한 클럭
+
+
+
+Example:
+
+Controller:
+	dma: dma-controller@0x09c00000{
+		compatible = "zte,zx296702-dma";
+		reg = <0x09c00000 0x1000>;
+		clocks = <&topclk ZX296702_DMA_ACLK>;
+		interrupts = <GIC_SPI 66 IRQ_TYPE_LEVEL_HIGH>;
+		#dma-cells = <1>;
+		dma-channels = <24>;
+		dma-requests = <24>;
+	};
+
+Client:
+dmax에서 전달하는 특정 요청 라인 사용
+예를 들어, spdif0 tx 채널 요청 줄은 4입니다.
+
+	spdif0: spdif0@0b004000 {
+		#sound-dai-cells = <0>;
+		compatible = "zte,zx296702-spdif";
+		reg = <0x0b004000 0x1000>;
+		clocks = <&lsp0clk ZX296702_SPDIF0_DIV>;
+		clock-names = "tx";
+		interrupts = <GIC_SPI 21 IRQ_TYPE_LEVEL_HIGH>;
+		dmas = <&dma 4>;
+		dma-names = "tx";
+	}
+
+
+
+
+*/

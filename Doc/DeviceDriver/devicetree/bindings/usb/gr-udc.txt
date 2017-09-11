@@ -1,0 +1,57 @@
+USB Peripheral Controller driver for Aeroflex Gaisler GRUSBDC.
+
+The GRUSBDC USB Device Controller core is available in the GRLIB VHDL
+IP core library.
+
+Note: In the ordinary environment for the core, a Leon SPARC system,
+these properties are built from information in the AMBA plug&play.
+
+Required properties:
+
+- name : Should be "GAISLER_USBDC" or "01_021"
+
+- reg : Address and length of the register set for the device
+
+- interrupts : Interrupt numbers for this device. Either one interrupt number
+	for all interrupts, or one for status related interrupts, one for IN
+	endpoint related interrupts and one for OUT endpoint related interrupts.
+
+Optional properties:
+
+- epobufsizes : Array of buffer sizes for OUT endpoints when they differ
+	from the default size of 1024. The array is indexed by the OUT endpoint
+	number. If the property is present it typically contains one entry for
+	each OUT endpoint of the core. Fewer entries overrides the default sizes
+	only for as many endpoints as the array contains.
+
+- epibufsizes : Array of buffer sizes for IN endpoints when they differ
+	from the default size of 1024. The array is indexed by the IN endpoint
+	number. If the property is present it typically contains one entry for
+	each IN endpoint of the core. Fewer entries overrides the default sizes
+	only for as many endpoints as the array contains.
+
+For further information look in the documentation for the GLIB IP core library:
+http://www.gaisler.com/products/grlib/grip.pdf
+
+
+GRUSBDC USB 장치 컨트롤러 코어는 GRLIB VHDL IP 코어 라이브러리에서 사용할 수 있습니다.
+
+참고 : 일반적인 환경 인 Leon SPARC 시스템의 경우 이러한 속성은 AMBA 플러그 앤 플레이의 정보로 작성됩니다.
+
+필수 속성 :
+
+- name : 'GAISLER_USBDC'또는 '01_021 '이어야합니다.
+
+- reg : 장치에 설정된 레지스터의 주소와 길이
+
+- interrupts :이 장치의 번호를 인터럽트합니다. 모든 인터럽트에 대한 하나의 인터럽트 번호 또는 상태 관련 인터럽트에 대한 인터럽트 번호, IN endpoint 관련 인터럽트 및 OUT endpoint 관련 인터럽트 중 하나.
+
+선택적 속성 :
+
+- epobufsizes : OUT 엔드 포인트가 기본 크기 인 1024와 다를 때의 버퍼 크기 배열. 배열은 OUT 엔드 포인트 번호에 의해 색인됩니다. 속성이있는 경우 일반적으로 코어의 각 OUT 끝점에 대해 하나의 항목이 포함됩니다. 적은 수의 항목 만이 배열에 포함 된 끝점의 기본 크기보다 우선합니다.
+
+- epibufsizes : 기본 엔드 포인트 크기가 1024 인 IN 엔드 포인트의 버퍼 크기 배열. IN 엔드 포인트 번호로 인덱스가 인덱싱됩니다. 속성이있는 경우 일반적으로 코어의 각 IN 끝점에 대해 하나의 항목이 포함됩니다. 적은 수의 항목 만이 배열에 포함 된 끝점의 기본 크기보다 우선합니다.
+
+For further information look in the documentation for the GLIB IP core library:
+자세한 내용은 GLIB IP 코어 라이브러리 설명서를 참조하십시오.
+http://www.gaisler.com/products/grlib/grip.pdf

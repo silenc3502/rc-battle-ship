@@ -1,0 +1,63 @@
+Generic MIPI DSI Command Mode Panel
+===================================
+
+Required properties:
+- compatible: "panel-dsi-cm"
+
+Optional properties:
+- label: a symbolic name for the panel
+- reset-gpios: panel reset gpio
+- te-gpios: panel TE gpio
+
+Required nodes:
+- Video port for DSI input
+
+Example
+-------
+
+lcd0: display {
+	compatible = "tpo,taal", "panel-dsi-cm";
+	label = "lcd0";
+
+	reset-gpios = <&gpio4 6 GPIO_ACTIVE_HIGH>;
+
+	port {
+		lcd0_in: endpoint {
+			remote-endpoint = <&dsi1_out_ep>;
+		};
+	};
+};
+
+
+/*
+일반 MIPI DSI 명령 모드 패널
+=======================
+
+필수 속성 :
+- 호환 : "panel-dsi-cm"
+
+선택적 속성 :
+- label : 패널의 상징적 인 이름
+- reset-gpios : 패널 재설정 gpio
+- te-gpios : 패널 TE gpio
+
+필수 노드 :
+- DSI 입력 용 비디오 포트
+
+Example
+-------
+
+lcd0: display {
+	compatible = "tpo,taal", "panel-dsi-cm";
+	label = "lcd0";
+
+	reset-gpios = <&gpio4 6 GPIO_ACTIVE_HIGH>;
+
+	port {
+		lcd0_in: endpoint {
+			remote-endpoint = <&dsi1_out_ep>;
+		};
+	};
+};
+
+*/

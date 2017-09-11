@@ -1,0 +1,73 @@
+ST-Ericsson COH 901 318 DMA Controller
+
+This is a DMA controller which has begun as a fork of the
+ARM PL08x PrimeCell VHDL code.
+
+Required properties:
+- compatible: should be "stericsson,coh901318"
+- reg: register locations and length
+- interrupts: the single DMA IRQ
+- #dma-cells: must be set to <1>, as the channels on the
+  COH 901 318 are simple and identified by a single number
+- dma-channels: the number of DMA channels handled
+
+Example:
+
+dmac: dma-controller@c00020000 {
+	compatible = "stericsson,coh901318";
+	reg = <0xc0020000 0x1000>;
+	interrupt-parent = <&vica>;
+	interrupts = <2>;
+	#dma-cells = <1>;
+	dma-channels = <40>;
+};
+
+Consumers example:
+
+uart0: serial@c0013000 {
+	compatible = "...";
+	(...)
+	dmas = <&dmac 17 &dmac 18>;
+	dma-names = "tx", "rx";
+};
+
+
+
+
+/*
+
+ST-Ericsson COH 901 318 DMA 컨트롤러
+
+이것은 DMA 컨트롤러로서 포크로 시작했습니다.
+ARM PL08x PrimeCell VHDL 코드.
+
+필수 속성 :
+- 호환 가능 : "stericsson, coh901318"이어야합니다.
+- 등록 : 위치 및 길이 등록
+- 인터럽트 : 단일 DMA IRQ
+- # dma-cells : COH 901 318의 채널이 단순하고 단일 번호로 식별되므로 <1>로 설정해야합니다.
+- dma-channels : 처리 된 DMA 채널의 수
+
+
+Example:
+
+dmac: dma-controller@c00020000 {
+	compatible = "stericsson,coh901318";
+	reg = <0xc0020000 0x1000>;
+	interrupt-parent = <&vica>;
+	interrupts = <2>;
+	#dma-cells = <1>;
+	dma-channels = <40>;
+};
+
+
+Consumers example:
+
+uart0: serial@c0013000 {
+	compatible = "...";
+	(...)
+	dmas = <&dmac 17 &dmac 18>;
+	dma-names = "tx", "rx";
+};
+
+*/

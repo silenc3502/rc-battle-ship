@@ -1,0 +1,64 @@
+Samsung SoC SSS (Security SubSystem) module
+
+The SSS module in S5PV210 SoC supports the following:
+S5PV210 SoC의 SSS 모듈은 다음을 지원합니다.
+
+-- Feeder (FeedCtrl)
+-- Advanced Encryption Standard (AES)
+- 고급 암호화 표준 (AES)
+
+-- Data Encryption Standard (DES)/3DES
+- 데이터 암호화 표준 (DES) / 3DES
+
+-- Public Key Accelerator (PKA)
+- 공개 키 가속기 (PKA)
+
+-- SHA-1/SHA-256/MD5/HMAC (SHA-1/SHA-256/MD5)/PRNG
+
+-- PRNG: Pseudo Random Number Generator
+- PRNG : 의사 난수 생성기
+
+The SSS module in Exynos4 (Exynos4210) and
+Exynos5 (Exynos5420 and Exynos5250) SoCs
+Exynos4 (Exynos4210) 및 Exynos5 (Exynos5420 및 Exynos5250) SoC의 SSS 모듈
+
+supports the following also:
+다음을 지원합니다.
+
+-- ARCFOUR (ARC4)
+-- True Random Number Generator (TRNG)
+- 진정한 난수 생성기 (TRNG)
+
+-- Secure Key Manager
+- 보안 키 관리자
+
+Required properties:
+
+- compatible : Should contain entries for this and backward compatible
+  SSS versions:
+  - "samsung,s5pv210-secss" for S5PV210 SoC.
+  - "samsung,exynos4210-secss" for Exynos4210, Exynos4212, Exynos4412, Exynos5250,
+		Exynos5260 and Exynos5420 SoCs.
+- 호환 :이 항목과 이전 버전과의 호환 가능 항목을 포함해야합니다.
+   SSS 버전 :
+   - S5PV210 SoC 용 "samsung, s5pv210-secss".
+   Exynos4210, Exynos4212, Exynos4412, Exynos5250, Exynos5260 및 Exynos5420 SoC 용 "samsung, exynos4210-secss".
+
+- reg : Offset and length of the register set for the module
+- reg : 모듈에 설정된 레지스터 오프셋 및 길이
+
+- interrupts : interrupt specifiers of SSS module interrupts, should contain
+		following entries:
+		- first : feed control interrupt (required for all variants),
+		- second : hash interrupt (required only for samsung,s5pv210-secss).
+- 인터럽트 : SSS 모듈 인터럽트의 인터럽트 지정자는 다음 항목을 포함해야합니다.
+- 첫 번째 : 피드 제어 인터럽트 (모든 변형에 필요),
+- 두 번째 : 해시 인터럽트 (samsung, s5pv210-secss에만 필요).
+
+
+- clocks : list of clock phandle and specifier pairs for all clocks  listed in
+		clock-names property.
+- clocks : clock-names 속성에 나열된 모든 clocks에 대한 clocks phandle 및 지정자 쌍 목록입니다.
+
+- clock-names : list of device clock input names; should contain one entry "secss".
+- clock-names : 장치 클럭 입력 이름 목록. 하나의 항목 "secss"를 포함해야합니다.

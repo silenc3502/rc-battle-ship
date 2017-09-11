@@ -1,0 +1,208 @@
+GPIO Mappings
+=============
+
+This document explains how GPIOs can be assigned to given devices and functions. Note that it only applies to the new descriptor-based interface. For a description of the deprecated integer-based GPIO interface please refer to gpio-legacy.txt (actually, there is no real mapping possible with the old interface; you just fetch an integer from somewhere and request the corresponding GPIO.
+
+이 문서는 주어진 Devices 와 기능으로 GPIO 를 어떻게 할당할 수 있는지 설명한다.
+새로운 Descriptor 기반 Interface 에서만 적용된다는 점에 유의해보자 ~
+사용되지 않는 정수 기반 GPIO Interface 에 대한 설명은 gpio-legacy.txt 를 참조하도록 한다
+(실제로는 이전 인터페이스에서 가능한 맵핑이 없다;
+어딘가에서 정수를 가져와서 해당 GPIO 를 요청한다)
+
+Platforms that make use of GPIOs must select ARCH_REQUIRE_GPIOLIB (if GPIO usage is mandatory) or ARCH_WANT_OPTIONAL_GPIOLIB (if GPIO support can be omitted) in their Kconfig. Then, how GPIOs are mapped depends on what the platform uses to describe its hardware layout. Currently, mappings can be defined through device tree, ACPI, and platform data.
+
+GPIO 를 사용하는 플랫폼은 ARCH_REQUIRE_GPIOLIB(GPIO 사용이 필수인 경우) 혹은 ARCH_WANT_OPTIONAL_GPIOLIB(GPIO 지원을 생략할 수 있는 경우) 를 Kconfig 에서 선택해야 한다.
+그런 다음 GPIO 가 어떻게 맵핑되는지 플랫폼이 HW Layout 을 기술하는 방법에 따라 다르다.
+현재 맵핑은 Device Tree, ACPI, 그리고 Platform Data 를 통해 정의할 수 있다.
+
+
+
+Device Tree
+-----------
+GPIOs can easily be mapped to devices and functions in the device tree. The exact way to do it depends on the GPIO controller providing the GPIOs, see the device tree bindings for your controller.
+
+GPIO 는 Device Tree 의 Device 및 기능에 쉽게 맵핑될 수 있다.
+GPIO 를 제공하는 정확한 방법은 GPIO 를 제공하는 GPIO Controller 에 따라 다르며 Controller 의 Device Tree Bindings 를 참조하라.
+
+GPIOs mappings are defined in the consumer device's node, in a property named <function>-gpios, where <function> is the function the driver will request through gpiod_get(). For example:
+
+GPIOs 맵핑은 소비자 Device 의 노드에서 <function>-gpios 라는 속성으로 정의된다.
+여기서 <function> 은 Driver 가 gpiod_get() 을 통해 요청할 함수이다.
+예:
+
+ foo_device {
+  compatible = "acme,foo";
+  ...
+  led-gpios = <&gpio 15 GPIO_ACTIVE_HIGH>, /* red */
+       <&gpio 16 GPIO_ACTIVE_HIGH>, /* green */
+       <&gpio 17 GPIO_ACTIVE_HIGH>; /* blue */
+
+  power-gpios = <&gpio 1 GPIO_ACTIVE_LOW>;
+ };
+
+Properties named <function>-gpio are also considered valid and old bindings use it but are only supported for compatibility reasons and should not be used for newer bindings since it has been deprecated.
+
+<function>-gpio 라는 이름의 속성도 유효하다고 간주되며 이전 바인딩 호환성을 이유로 지원되지만
+더 이상 사용되지 않으므로 더 새로운 바인딩에는 사용하지 않아야 한다.
+
+This property will make GPIOs 15, 16 and 17 available to the driver under the "led" function, and GPIO 1 as the "power" GPIO:
+
+이 속성은 GPIO 15, 16 및 17 을 "led" 기능으로 Driver 에 GPIO 1 을 "전원" GPIO 로 사용할 수 있게 한다:
+
+ struct gpio_desc *red, *green, *blue, *power;
+
+ red = gpiod_get_index(dev, "led", 0, GPIOD_OUT_HIGH);
+ green = gpiod_get_index(dev, "led", 1, GPIOD_OUT_HIGH);
+ blue = gpiod_get_index(dev, "led", 2, GPIOD_OUT_HIGH);
+
+ power = gpiod_get(dev, "power", GPIOD_OUT_HIGH);
+
+The led GPIOs will be active-high, while the power GPIO will be active-low (i.e. gpiod_is_active_low(power) will be true).
+
+led GPIOs 는 Active-High 이며 GPIO 는 Active-Low (즉, gpiod_is_active_low(power) 는 참이 될 것) 이다.
+
+The second parameter of the gpiod_get() functions, the con_id string, has to be the <function>-prefix of the GPIO suffixes ("gpios" or "gpio", automatically looked up by the gpiod functions internally) used in the device tree. With above "led-gpios" example, use the prefix without the "-" as con_id parameter: "led".
+
+gpiod_get() 함수의 두 번째 매개 변수인 con_id 문자열은 Device Tree 에서 사용되는
+GPIO 접미사("gpios" 혹은 "gpio", 내부적으로 gpiod 함수에 의해 자동으로 조회됨) 의 <function>-prefix 이어야 한다.
+위의 "led-gpios" 예에서 con_id 매개변수로 "-" 없이 접두어를 사용하라: "led"
+
+Internally, the GPIO subsystem prefixes the GPIO suffix ("gpios" or "gpio") with the string passed in con_id to get the resulting string (snprintf(... "%s-%s", con_id, gpio_suffixes[]).
+
+내부적으로 GPIO Subsystem 은 결과 문자열 (snprintf( ... "%s-%s", con_id, gpio_suffixes[]) 를 얻기 위해
+con_id 에 전달된 문자열로 GPIO 접미사("gpios" 혹은 "gpio") 접두사를 붙인다.
+
+
+
+ACPI
+----
+ACPI also supports function names for GPIOs in a similar fashion to DT. The above DT example can be converted to an equivalent ACPI description with the help of _DSD (Device Specific Data), introduced in ACPI 5.1:
+
+ACPI 는 DT 와 유사한 방식으로 GPIO 의 함수 이름도 지원한다.
+위의 DT 예는 ACPI 5.1 에서 소개된 _DSD(Device Specific Data) 를 사용하여 동등한 ACPI 기술자로 변환할 수 있다:
+
+ Device (FOO) {
+  Name (_CRS, ResourceTemplate () {
+   GpioIo (Exclusive, ..., IoRestrictionOutputOnly,
+    "\\_SB.GPI0") {15} // red
+   GpioIo (Exclusive, ..., IoRestrictionOutputOnly,
+    "\\_SB.GPI0") {16} // green
+   GpioIo (Exclusive, ..., IoRestrictionOutputOnly,
+    "\\_SB.GPI0") {17} // blue
+   GpioIo (Exclusive, ..., IoRestrictionOutputOnly,
+    "\\_SB.GPI0") {1} // power
+  })
+
+  Name (_DSD, Package () {
+   ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
+   Package () {
+    Package () {
+     "led-gpios",
+     Package () {
+      ^FOO, 0, 0, 1,
+      ^FOO, 1, 0, 1,
+      ^FOO, 2, 0, 1,
+     }
+    },
+    Package () {
+     "power-gpios",
+     Package () {^FOO, 3, 0, 0},
+    },
+   }
+  })
+ }
+
+For more information about the ACPI GPIO bindings see Documentation/acpi/gpio-properties.txt.
+
+ACPI GPIO Bindings 에 대한 자세한 내용은 Documentation/acpi/gpio-properties.txt 를 참조하라.
+
+
+
+Platform Data
+-------------
+Finally, GPIOs can be bound to devices and functions using platform data. Board files that desire to do so need to include the following header:
+
+마지막으로 GPIO 는 Platform Data 를 사용하여 Device 및 기능에 Binding 할 수 있다.
+보드 파일에는 아래 헤더를 포함시켜야 한다:
+
+ #include <linux/gpio/machine.h>
+
+GPIOs are mapped by the means of tables of lookups, containing instances of the gpiod_lookup structure. Two macros are defined to help declaring such mappings:
+
+GPIO 는 gpiod_lookup 구조체의 Instance 를 포함하는 조회 테이블의 방법으로 맵핑된다.
+맵핑을 선언하는데 도움이되는 두 개의 매크로가 정의된다:
+
+ GPIO_LOOKUP(chip_label, chip_hwnum, dev_id, con_id, flags)
+ GPIO_LOOKUP_IDX(chip_label, chip_hwnum, dev_id, con_id, idx, flags)
+
+where
+
+  - chip_label is the label of the gpiod_chip instance providing the GPIO
+  - chip_hwnum is the hardware number of the GPIO within the chip
+  - dev_id is the identifier of the device that will make use of this GPIO. It
+ can be NULL, in which case it will be matched for calls to gpiod_get() with a NULL device.
+  - con_id is the name of the GPIO function from the device point of view. It can be NULL, in which case it will match any function.
+  - idx is the index of the GPIO within the function.
+  - flags is defined to specify the following properties:
+ * GPIOF_ACTIVE_LOW - to configure the GPIO as active-low
+ * GPIOF_OPEN_DRAIN - GPIO pin is open drain type.
+ * GPIOF_OPEN_SOURCE - GPIO pin is open source type.
+
+ - chip_label 은 GPIO 를 제공하는 gpiod_chip Instance 의 레이블이다.
+ - chip_hwnum 은 chip 내에 있는 GPIO 의 HW 번호이다.
+ - dev_id 는 GPIO 를 사용하는 장치의 식별자이다.
+   NULL 일 수 있으며, 이 경우 NULL 장치가 있는 gpiod_get() 호출과 일치한다.
+ - con_id 는 Device 관점에서 볼 때 GPIO 함수의 이름이다.
+   NULL 일 수 있으며, 이 경우 모든 함수와 일치한다.
+ - idx 는 함수 내의 GPIO 인덱스다.
+ - flags 는 아래 등록 정보를 지정하도록 정의된다.
+ * GPIOF_ACTIVE_LOW - GPIO 핀은 Active-Low 로 구성됨
+ * GPIOF_OPEN_DRAIN - GPIO 핀이 Open Drain
+ * GPIOF_OPEN_SOURCE - GPIO 핀이 Open Source
+
+In the future, these flags might be extended to support more properties.
+
+미래에 이러한 flag 는 추가 속성을 지원하도록 확장될 수 있다.
+
+Note that GPIO_LOOKUP() is just a shortcut to GPIO_LOOKUP_IDX() where idx = 0.
+
+GPIO_LOOKUP() 은 idx = 0 인 GPIO_LOOKUP_IDX() 의 바로가기이다.
+
+A lookup table can then be defined as follows, with an empty entry defining its end:
+
+Lookup 테이블은 아래와 같이 정의될 수 있으며 빈 항목은 끝을 정의한다:
+
+struct gpiod_lookup_table gpios_table = {
+ .dev_id = "foo.0",
+ .table = {
+  GPIO_LOOKUP_IDX("gpio.0", 15, "led", 0, GPIO_ACTIVE_HIGH),
+  GPIO_LOOKUP_IDX("gpio.0", 16, "led", 1, GPIO_ACTIVE_HIGH),
+  GPIO_LOOKUP_IDX("gpio.0", 17, "led", 2, GPIO_ACTIVE_HIGH),
+  GPIO_LOOKUP("gpio.0", 1, "power", GPIO_ACTIVE_LOW),
+  { },
+ },
+};
+
+And the table can be added by the board code as follows:
+
+그리고 테이블은 아래와 같이 보드 코드에 의해 추가될 수 있다:
+
+ gpiod_add_lookup_table(&gpios_table);
+
+The driver controlling "foo.0" will then be able to obtain its GPIOs as follows:
+
+"foo.0" 을 제어하는 Driver 는 아래와 같이 해당 GPIO 를 얻을 수 있다:
+
+ struct gpio_desc *red, *green, *blue, *power;
+
+ red = gpiod_get_index(dev, "led", 0, GPIOD_OUT_HIGH);
+ green = gpiod_get_index(dev, "led", 1, GPIOD_OUT_HIGH);
+ blue = gpiod_get_index(dev, "led", 2, GPIOD_OUT_HIGH);
+
+ power = gpiod_get(dev, "power", GPIOD_OUT_HIGH);
+
+Since the "led" GPIOs are mapped as active-high, this example will switch their signals to 1, i.e. enabling the LEDs. And for the "power" GPIO, which is mapped as active-low, its actual signal will be 0 after this code. Contrary to the legacy integer GPIO interface, the active-low property is handled during mapping and is thus transparent to GPIO consumers.
+
+"led" GPIOs 는 Active High 로 맵핑되기 때문에 이 예는 신호를 1 로 스위칭한다.
+Active-Low 로 맵핑되는 "power" GPIO 의 경우, 이 코드 이후 실제 신호는 0 이 된다.
+기존 정수 GPIO 인터페이스와 달리 Active-Low 속성은 맵핑 중에 처리되므로 GPIO 소비자에게는 투명하다.

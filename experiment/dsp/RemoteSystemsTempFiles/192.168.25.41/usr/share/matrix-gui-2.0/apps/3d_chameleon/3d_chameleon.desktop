@@ -1,0 +1,9 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Name=Chameleon
+GenericName=Demo App
+Icon=/usr/share/matrix-gui-2.0/apps/images/3d-chameleon_man-icon.png
+Type=Application
+Exec=runOGLES2ChameleonMan.sh -qaf=1000
+Categories=3d
+ProgramType=gui

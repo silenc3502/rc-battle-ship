@@ -1,0 +1,80 @@
+* Marvell XOR engines
+
+Required properties:
+- compatible: Should be "marvell,orion-xor" or "marvell,armada-380-xor"
+- reg: Should contain registers location and length (two sets)
+    the first set is the low registers, the second set the high
+    registers for the XOR engine.
+- clocks: pointer to the reference clock
+
+The DT node must also contains sub-nodes for each XOR channel that the
+XOR engine has. Those sub-nodes have the following required
+properties:
+- interrupts: interrupt of the XOR channel
+
+The sub-nodes used to contain one or several of the following
+properties, but they are now deprecated:
+- dmacap,memcpy to indicate that the XOR channel is capable of memcpy operations
+- dmacap,memset to indicate that the XOR channel is capable of memset operations
+- dmacap,xor to indicate that the XOR channel is capable of xor operations
+- dmacap,interrupt to indicate that the XOR channel is capable of
+  generating interrupts
+
+Example:
+
+xor@d0060900 {
+	compatible = "marvell,orion-xor";
+	reg = <0xd0060900 0x100
+	       0xd0060b00 0x100>;
+	clocks = <&coreclk 0>;
+	status = "okay";
+
+	xor00 {
+	      interrupts = <51>;
+	};
+	xor01 {
+	      interrupts = <52>;
+	};
+};
+
+
+/*
+
+* Marvell XOR 엔진
+
+필수 속성 :
+- compatible : "marvell, orion-xor"또는 "marvell, armada-380-xor"이어야합니다.
+- reg : 레지스터 위치와 길이를 포함해야 함 (2 개 세트)
+    첫 번째 세트는 로우 레지스터이고, 두 번째 세트는 XOR 엔진의 하이 레지스터입니다.
+- 클럭 : 기준 클럭에 대한 포인터
+
+DT 노드는 또한 XOR 엔진에있는 각 XOR 채널에 대한 하위 노드를 포함해야합니다. 이러한 하위 노드에는 다음이 필요합니다.
+속성 :
+- 인터럽트 : XOR 채널의 인터럽트
+
+다음 중 하나 또는 여러 가지를 포함하는 하위 노드
+속성을 사용하지만 더 이상 사용되지 않습니다.
+- dmacap, memcpy는 XOR 채널이 memcpy 연산을 할 수 있음을 나타냅니다.
+- dmacap, memset - XOR 채널이 memset 작업을 수행 할 수 있음을 나타냅니다.
+- dmacap, xor - XOR 채널이 xor 작업을 수행 할 수 있음을 나타냅니다.
+- dmacap, XOR 채널이 인터럽트를 생성 할 수 있음을 나타 내기 위해 인터럽트합니다.
+
+Example:
+
+xor@d0060900 {
+	compatible = "marvell,orion-xor";
+	reg = <0xd0060900 0x100
+	       0xd0060b00 0x100>;
+	clocks = <&coreclk 0>;
+	status = "okay";
+
+	xor00 {
+	      interrupts = <51>;
+	};
+	xor01 {
+	      interrupts = <52>;
+	};
+};
+
+*/
+

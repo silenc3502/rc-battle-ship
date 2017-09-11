@@ -1,0 +1,105 @@
+STMicroelectronics STi MIPHY365x PHY binding
+============================================
+
+This binding describes a miphy device that is used to control PHY hardware
+for SATA and PCIe.
+
+Required properties (controller (parent) node):
+- compatible    : Should be "st,miphy365x-phy"
+- st,syscfg     : Phandle / integer array property. Phandle of sysconfig group
+		  containing the miphy registers and integer array should contain
+		  an entry for each port sub-node, specifying the control
+		  register offset inside the sysconfig group.
+
+Required nodes	:  A sub-node is required for each channel the controller
+		   provides. Address range information including the usual
+		   'reg' and 'reg-names' properties are used inside these
+		   nodes to describe the controller's topology. These nodes
+		   are translated by the driver's .xlate() function.
+
+이 바인딩은 SATA 및 PCIe 용 PHY 하드웨어를 제어하는 데 사용되는 miphy 장치를 설명합니다.
+
+필수 속성 (컨트롤러 (부모) 노드) :
+- 호환 : "st, miphy365x-phy"여야합니다.
+- st, syscfg : Phandle / 정수 배열 속성. miphy 레지스터와 정수 배열을 포함하는 sysconfig 그룹의 Phandle은 각 포트 하위 노드에 대한 항목을 포함해야하며 sysconfig 그룹 내의 제어 레지스터 오프셋을 지정해야합니다.
+
+필수 노드 : 제어기가 제공하는 각 채널마다 하위 노드가 필요합니다. 일반적인 'reg'및 'reg-names'속성을 포함한 주소 범위 정보는 컨트롤러의 토폴로지를 설명하기 위해이 노드 내부에서 사용됩니다. 이 노드는 드라이버의 .xlate () 함수로 변환됩니다.
+
+
+Required properties (port (child) node):
+- #phy-cells 	: Should be 1 (See second example)
+		  Cell after port phandle is device type from:
+			- PHY_TYPE_SATA
+			- PHY_TYPE_PCI
+- reg        	: Address and length of register sets for each device in
+		  "reg-names"
+- reg-names     : The names of the register addresses corresponding to the
+		  registers filled in "reg":
+			- sata:   For SATA devices
+			- pcie:   For PCIe devices
+
+Optional properties (port (child) node):
+- st,sata-gen	     :	Generation of locally attached SATA IP. Expected values
+			are {1,2,3). If not supplied generation 1 hardware will
+			be expected
+- st,pcie-tx-pol-inv :	Bool property to invert the polarity PCIe Tx (Txn/Txp)
+- st,sata-tx-pol-inv :	Bool property to invert the polarity SATA Tx (Txn/Txp)
+
+필수 속성 (포트 (하위) 노드) :
+- # phy-cells : 1이어야합니다 (두 번째 예 참조).
+포트 phandle 이후의 셀은 다음과 같은 장치 유형입니다.
+- PHY_TYPE_SATA
+- PHY_TYPE_PCI
+- reg : "reg-names"에있는 각 장치에 대한 레지스터 세트의 주소와 길이
+- reg-names : "reg"로 채워진 레지스터에 해당하는 레지스터 주소의 이름 :
+- SATA : SATA 장치의 경우
+- pcie : PCIe 장치 용
+
+선택적 속성 (포트 (하위) 노드) :
+- st, sata-gen : 로컬로 연결된 SATA IP의 생성. 예상 값은 {1,2,3}입니다. 제공되지 않으면 1 세대 하드웨어가 예상됩니다.
+- st, pcie-tx-pol-inv : 극성 반전을위한 Bool 속성 PCIe Tx (Txn / Txp)
+- st, sata-tx-pol-inv : Bool 속성으로 극성 반전 SATA Tx (Txn / Txp)
+
+
+Example:
+
+	miphy365x_phy: miphy365x@fe382000 {
+		compatible      = "st,miphy365x-phy";
+		st,syscfg  	= <&syscfg_rear 0x824 0x828>;
+		#address-cells	= <1>;
+		#size-cells	= <1>;
+		ranges;
+
+		phy_port0: port@fe382000 {
+			reg = <0xfe382000 0x100>, <0xfe394000 0x100>;
+			reg-names = "sata", "pcie";
+			#phy-cells = <1>;
+			st,sata-gen = <3>;
+		};
+
+		phy_port1: port@fe38a000 {
+			reg = <0xfe38a000 0x100>, <0xfe804000 0x100>;;
+			reg-names = "sata", "pcie", "syscfg";
+			#phy-cells = <1>;
+			st,pcie-tx-pol-inv;
+		};
+	};
+
+Specifying phy control of devices
+장치의 phy 제어 지정
+=================================
+
+Device nodes should specify the configuration required in their "phys"
+property, containing a phandle to the phy port node and a device type.
+
+장치 노드는 phy 포트 노드와 장치 유형에 대한 phandle을 포함하는 "phys"속성에 필요한 구성을 지정해야합니다.
+
+Example:
+
+#include <dt-bindings/phy/phy.h>
+
+	sata0: sata@fe380000 {
+		...
+		phys	  = <&phy_port0 PHY_TYPE_SATA>;
+		...
+	};

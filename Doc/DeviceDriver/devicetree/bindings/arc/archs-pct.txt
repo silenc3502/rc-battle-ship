@@ -1,0 +1,21 @@
+* ARC HS Performance Counters
+
+The ARC HS can be configured with a pipeline performance monitor for counting
+CPU and cache events like cache misses and hits. Like conventional PCT there
+are 100+ hardware conditions dynamically mapped to upto 32 counters.
+It also supports overflow interrupts.
+
+Required properties:
+
+- compatible : should contain
+	"snps,archs-pct"
+
+Example:
+
+pmu {
+        compatible = "snps,archs-pct";
+};
+
+
+ARC HS는 CPU와 캐시 미스와 충돌 등의 캐시 이벤트를 카운트하는 파이프 라인 성능 모니터로 구성 할 수 있습니다. 기존의 PCT뿐만 아니라 100 개 이상의 하드웨어 조건이 최대 32 개의 카운터에 동적으로 매핑되어 있습니다.
+또한 오버 플로우 인터럽트도 지원하고 있습니다.

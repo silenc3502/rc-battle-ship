@@ -1,0 +1,63 @@
+TI Wakeup M3 Remoteproc Driver
+==============================
+
+The TI AM33xx and AM43xx family of devices use a small Cortex M3 co-processor
+(commonly referred to as Wakeup M3 or CM3) to help with various low power tasks
+that cannot be controlled from the MPU. This CM3 processor requires a firmware
+binary to accomplish this. The wkup_m3 remoteproc driver handles the loading of
+the firmware and booting of the CM3.
+TI AM33xx 및 AM43xx 제품군은 소형 Cortex M3 co-processor (일반적으로 Wakeup M3 또는 CM3이라고 함)를 사용하여 MPU에서 제어 할 수없는 다양한 저전력 작업을 지원합니다. 이 CM3 processor는 이를 수행하기 위해 펌웨어 바이너리가 필요합니다. wkup_m3 remoteproc 드라이버는 펌웨어로드 및 CM3 부팅을 처리합니다.
+
+Wkup M3 Device Node:
+====================
+A wkup_m3 device node is used to represent the Wakeup M3 processor instance
+within the SoC. It is added as a child node of the parent interconnect bus
+(l4_wkup) through which it is accessible to the MPU.
+wkup_m3 장치 노드는 SoC 내의 Wakeup M3 프로세서 인스턴스를 나타내는 데 사용됩니다. 
+MPU에서 액세스 할 수있는 상위 상호 연결 버스 (l4_wkup)의 하위 노드로 추가됩니다.
+
+Required properties:
+--------------------
+- compatible:		Should be one of,
+					그 중 하나 여야합니다.
+
+				"ti,am3352-wkup-m3" for AM33xx SoCs
+				"ti,am4372-wkup-m3" for AM43xx SoCs
+- reg:			Should contain the address ranges for the two internal
+			memory regions, UMEM and DMEM. The parent node should
+			provide an appropriate ranges property for properly
+			translating these into bus addresses.
+			두 개의 내부 메모리 영역 인 UMEM 및 DMEM의 주소 범위를 포함해야합니다. 
+			부모 노드는 이들을 버스 주소로 적절하게 변환하기 위해 적절한 ranges 속성을 제공해야합니다.
+
+- reg-names:		Contains the corresponding names for the two memory
+			regions. These should be named "umem" & "dmem".
+- reg-names : 두 메모리 영역에 해당하는 names을 포함합니다. 이러한 names은 "umem"& "dmem"이어야합니다.
+
+- ti,hwmods:		Name of the hwmod associated with the wkupm3 device.
+					wkupm3 디바이스와 연관된 hwmod의 Name.
+- ti,pm-firmware:	Name of firmware file to be used for loading and
+			booting the wkup_m3 remote processor.
+ 					wkup_m3 원격 프로세서로드 및 부팅에 사용할 펌웨어 파일 Name입니다.
+Example:
+--------
+/* AM33xx */
+ocp {
+	 l4_wkup: l4_wkup@44c00000 {
+		compatible = "am335-l4-wkup", "simple-bus";
+		ranges = <0 0x44c00000 0x400000>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		wkup_m3: wkup_m3@100000 {
+			compatible = "ti,am3352-wkup-m3";
+			reg = <0x100000 0x4000>,
+			      <0x180000 0x2000>;
+			reg-names = "umem", "dmem";
+			ti,hwmods = "wkup_m3";
+			ti,pm-firmware = "am335x-pm-firmware.elf";
+		};
+	};
+
+	...
+};

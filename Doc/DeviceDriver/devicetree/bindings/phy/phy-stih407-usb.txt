@@ -1,0 +1,35 @@
+ST STiH407 USB PHY controller
+
+This file documents the dt bindings for the usb picoPHY driver which is the PHY for both USB2 and USB3
+host controllers (when controlling usb2/1.1 devices) available on STiH407 SoC family from STMicroelectronics.
+
+Required properties:
+- compatible		: should be "st,stih407-usb2-phy"
+- st,syscfg		: phandle of sysconfig bank plus integer array containing phyparam and phyctrl register offsets
+- resets		: list of phandle and reset specifier pairs. There should be two entries, one
+			  for the whole phy and one for the port
+- reset-names		: list of reset signal names. Should be "global" and "port"
+See: Documentation/devicetree/bindings/reset/st,sti-powerdown.txt
+See: Documentation/devicetree/bindings/reset/reset.txt
+
+이 파일에는 STMicroelectronics의 STiH407 SoC 제품군에서 사용할 수있는 USB2 및 USB3 호스트 컨트롤러 (usb2 / 1.1 디바이스 제어시) 용 PHY 인 usb picoPHY 드라이버의 dt 바인딩에 대한 문서가 있습니다.
+
+필수 속성 :
+- compatible : "st, stih407-usb2-phy"여야합니다.
+- st, syscfg : sysconfig 뱅크의 phandle과 phyparam 및 phyctrl 레지스터 오프셋을 포함하는 정수 배열
+- reset : phandle 및 reset 지정자 쌍 목록입니다. 두 개의 항목이 있어야합니다. 하나는 전체 phy이고 하나는 포트입니다.
+- reset-names : 재설정 된 신호 이름 목록. "globa"및 "port"여야합니다.
+참조 : Documentation / devicetree / bindings / reset / st, sti-powerdown.txt
+참조 : Documentation / devicetree / bindings / reset / reset.txt
+
+
+Example:
+
+usb2_picophy0: usbpicophy@f8 {
+	compatible	= "st,stih407-usb2-phy";
+	#phy-cells	= <0>;
+	st,syscfg	= <&syscfg_core 0x100 0xf4>;
+	resets		= <&softreset STIH407_PICOPHY_SOFTRESET>,
+			  <&picophyreset STIH407_PICOPHY0_RESET>;
+	reset-names	= "global", "port";
+};

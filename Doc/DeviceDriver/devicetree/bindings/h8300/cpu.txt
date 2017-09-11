@@ -1,0 +1,22 @@
+* H8/300 CPU bindings
+
+Required properties:
+
+- compatible: Compatible property value should be "renesas,h8300".
+- clock-frequency: Contains the clock frequency for CPU, in Hz.
+
+* H8 / 300 CPU 바인딩
+
+필수 속성 :
+
+- compatible : 호환되는 속성 값은 "renesas, h8300"이어야합니다.
+- clock-frequency : CPU의 클록 주파수 (Hz)를 포함합니다.
+
+
+
+Example:
+
+		cpu@0 {
+			compatible = "renesas,h8300";
+			clock-frequency = <20000000>;
+		};

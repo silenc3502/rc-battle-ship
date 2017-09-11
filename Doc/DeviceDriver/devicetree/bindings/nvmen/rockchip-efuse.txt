@@ -1,0 +1,52 @@
+= Rockchip eFuse device tree bindings =
+
+Required properties:
+- compatible: Should be "rockchip,rockchip-efuse"
+- reg: Should contain the registers location and exact eFuse size
+- clocks: Should be the clock id of eFuse
+- clock-names: Should be "pclk_efuse"
+
+= Data cells =
+Are child nodes of eFuse, bindings of which as described in
+bindings/nvmem/nvmem.txt
+
+= Rockchip eFuse 장치 트리 바인딩 =
+
+필수 속성 :
+- 호환 : "rockchip, rockchip-efuse"이어야합니다.
+- reg : 레지스터 위치와 정확한 eFuse 크기를 포함해야합니다.
+- clocks : eFuse의 clock ID 여야합니다.
+- clock-names : "pclk_efuse"여야합니다.
+
+= 데이터 셀 =
+bindings / nvmem / nvmem.txt에 설명되어있는 바인딩 eFuse의 자식 노드입니다.
+
+Example:
+
+	efuse: efuse@ffb40000 {
+		compatible = "rockchip,rockchip-efuse";
+		reg = <0xffb40000 0x20>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+		clocks = <&cru PCLK_EFUSE256>;
+		clock-names = "pclk_efuse";
+
+		/* Data cells */
+		cpu_leakage: cpu_leakage {
+			reg = <0x17 0x1>;
+		};
+	};
+
+= Data consumers =
+Are device nodes which consume nvmem data cells.
+
+= 데이터 소비자 =
+nvmem 데이터 셀을 소비하는 장치 노드입니다.
+
+Example:
+
+	cpu_leakage {
+		...
+		nvmem-cells = <&cpu_leakage>;
+		nvmem-cell-names = "cpu_leakage";
+	};

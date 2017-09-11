@@ -1,0 +1,87 @@
+This document describes how to upload the cx2341x firmware to the card.
+ 
+How to find
+===========
+See the web pages of the various projects that uses this chip for information on how to obtain the firmware.
+ 
+The firmware stored in a Windows driver can be detected as follows:
+ 
+- Each firmware image is 256k bytes.
+- The 1st 32-bit word of the Encoder image is 0x0000da7
+- The 1st 32-bit word of the Decoder image is 0x00003a7
+- The 2nd 32-bit word of both images is 0xaa55bb66
+ 
+How to load
+===========
+- Issue the FWapi command to stop the encoder if it is running. Wait for the command to complete.
+- Issue the FWapi command to stop the decoder if it is running. Wait for the command to complete.
+- Issue the I2C command to the digitizer to stop emitting VSYNC events.
+- Issue the FWapi command to halt the encoder's firmware. 
+- Sleep for 10ms.
+- Issue the FWapi command to halt the decoder's firmware.
+- Sleep for 10ms.
+- Write 0x00000000 to register 0x2800 to stop the Video Display Module.
+- Write 0x00000005 to register 0x2D00 to stop the AO (audio output?).
+- Write 0x00000000 to register 0xA064 to ping? the APU.
+- Write 0xFFFFFFFE to register 0x9058 to stop the VPU.
+- Write 0xFFFFFFFF to register 0x9054 to reset the HW blocks.
+- Write 0x00000001 to register 0x9050 to stop the SPU.
+- Sleep for 10ms.
+- Write 0x0000001A to register 0x07FC to init the Encoder SDRAM's pre-charge.
+- Write 0x80000640 to register 0x07F8 to init the Encoder SDRAM's refresh to 1us.
+- Write 0x0000001A to register 0x08FC to init the Decoder SDRAM's pre-charge.
+- Write 0x80000640 to register 0x08F8 to init the Decoder SDRAM's refresh to 1us.
+- Sleep for 512ms. (600ms is recommended)
+- Transfer the encoder's firmware image to offset 0 in Encoder memory space.
+- Transfer the decoder's firmware image to offset 0 in Decoder memory space.
+- Use a read-modify-write operation to Clear bit 0 of register 0x9050 to re-enable the SPU.
+- Sleep for 1 second.
+- Use a read-modify-write operation to Clear bits 3 and 0 of register 0x9058 to re-enable the VPU.
+- Sleep for 1 second.
+- Issue status API commands to both firmware images to verify.
+ 
+ 
+ 
+ 
+이 문서는 cx2341x 펌웨어를 카드에 업로드하는 방법을 설명합니다.
+ 
+찾는 방법
+===========
+펌웨어를 얻는 방법에 대한 정보는이 칩을 사용하는 다양한 프로젝트의 웹 페이지를 참조하십시오.
+ 
+Windows 드라이버에 저장된 펌웨어는 다음과 같이 감지 할 수 있습니다.
+ 
+- 각 펌웨어 이미지는 256k 바이트입니다.
+- 인코더 이미지의 첫 번째 32 비트 워드는 0x0000da7입니다.
+- 디코더 이미지의 첫 번째 32 비트 워드는 0x00003a7입니다.
+- 두 이미지의 두 번째 32 비트 단어는 0xaa55bb66입니다.
+ 
+적재 방법
+===========
+- 실행중인 경우 인코더를 중지하려면 FWapi 명령을 실행하십시오. 명령이 완료 될 때까지 기다리십시오.
+- 디코더가 실행중인 경우 중지하려면 FWapi 명령을 실행하십시오. 명령이 완료 될 때까지 기다리십시오.
+- 디지타이저로 I2C 명령을 실행하여 VSYNC 이벤트 방출을 중지합니다.
+- FWapi 명령을 실행하여 인코더의 펌웨어를 중지합니다.
+- 10ms 동안 잠자기.
+- 디코더 펌웨어를 중지하려면 FWapi 명령을 실행하십시오.
+- 10ms 동안 잠자기.
+- 비디오 디스플레이 모듈을 정지 시키려면 0x00000000을 레지스터 0x2800에 씁니다.
+- AO (오디오 출력?)를 중지하려면 0x00000005를 레지스터 0x2D00에 씁니다.
+- 0xA064를 ping에 등록하려면 0x00000000을 씁니다. APU.
+- VPU를 중지하려면 0xFFFFFFFE를 0x9058에 기록하십시오.
+- HW 블록을 재설정하려면 0xFFFFFFFF를 레지스터 0x9054에 씁니다.
+- SPU를 정지 시키려면 0x00000001을 레지스터 0x9050에 씁니다.
+- 10ms 동안 잠자기.
+- 인코더 SDRAM의 사전 충전을 초기화하려면 0x000FC를 0x07FC에 등록하십시오.
+- 0x80000640을 0x07F8에 등록하여 인코더 SDRAM을 1us로 초기화하십시오.
+- 디코더 SDRAM의 사전 충전을 초기화하려면 0x000FC를 0x08FC에 등록하십시오.
+- 디코더 SDRAM을 1us로 초기화하려면 0x80000640을 0x08F8에 등록하십시오.
+- 512ms 동안 잠자기. (600ms 권장)
+- 인코더의 펌웨어 이미지를 인코더 메모리 공간의 오프셋 0으로 전송합니다.
+- 디코더의 펌웨어 이미지를 디코더 메모리 공간의 오프셋 0으로 전송합니다.
+- 읽기 - 수정 - 쓰기 동작을 사용하여 레지스터 0x9050의 비트 0을 클리어하여 SPU를  re-enable (다시활성화) 한다.
+- 1 초 동안 수면.
+- 읽기 - 수정 - 쓰기 연산을 사용하여 레지스터 0x9058의 비트 3과 0을 지우고 VPU를 re-enable (다시활성화) 한다.
+- 1 초 동안 수면.
+- 확인 할 펌웨어 이미지 모두에 상태 API 명령을 발행합니다.
+

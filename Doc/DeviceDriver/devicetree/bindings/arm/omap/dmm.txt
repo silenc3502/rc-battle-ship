@@ -1,0 +1,35 @@
+OMAP Dynamic Memory Manager (DMM) bindings
+
+The dynamic memory manager (DMM) is a module located immediately in front of the
+SDRAM controllers (called EMIFs on OMAP). DMM manages various aspects of memory
+accesses such as priority generation amongst initiators, configuration of SDRAM
+interleaving, optimizing transfer of 2D block objects, and provide MMU-like page
+translation for initiators which need contiguous dma bus addresses.
+	//DMM (Dynamic Memory Manager)은 DRAM 컨트롤러 바로 앞에 위치한 모듈입니다 (OMAP의 EMIF라고 함). 
+	DMM은 이니시에이터 중 우선 순위 생성, SDRAM 인터리빙 구성, 2D 블록 객체 전송 최적화 및 인접한 DMA 버스 주소가 필요한 
+	이니시에이터 용 MMU와 같은 페이지 변환과 같은 메모리 액세스의 다양한 측면을 관리합니다.
+
+Required properties:
+- compatible:	Should contain "ti,omap4-dmm" for OMAP4 family
+		Should contain "ti,omap5-dmm" for OMAP5 family
+		Should contain "ti,dra7-dmm" for DRA7x family
+- reg:		Contains DMM register address range (base address and length)
+- interrupts:	Should contain an interrupt-specifier for DMM_IRQ.
+- ti,hwmods:	Name of the hwmod associated to DMM, which is typically "dmm"
+
+//필수 속성 :
+- 호환 가능 : OMAP4 제품군에 "ti, omap4-dmm"을 포함해야합니다.
+OMAP5 제품군에 대해 "ti, omap5-dmm"을 포함해야합니다.
+DRA7x 계열의 "ti, dra7-dmm"을 포함해야합니다.
+- reg : DMM 레지스터 주소 범위 (기본 주소 및 길이)를 포함합니다.
+- interrupts : DMM_IRQ에 대한 인터럽트 지정자를 포함해야합니다.
+- ti, hwmods : 일반적으로 "dmm"인 DMM과 관련된 hwmod의 이름입니다.
+
+
+Example:
+
+dmm@4e000000 {
+	compatible = "ti,omap4-dmm";
+	reg = <0x4e000000 0x800>;
+	ti,hwmods = "dmm";
+};

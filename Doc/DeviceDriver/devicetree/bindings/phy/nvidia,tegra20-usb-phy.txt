@@ -1,0 +1,134 @@
+Tegra SOC USB PHY
+
+The device node for Tegra SOC USB PHY:
+
+Required properties :
+ - compatible : For Tegra20, must contain "nvidia,tegra20-usb-phy".
+   For Tegra30, must contain "nvidia,tegra30-usb-phy".  Otherwise, must contain
+   "nvidia,<chip>-usb-phy" plus at least one of the above, where <chip> is
+   tegra114, tegra124, tegra132, or tegra210.
+ - reg : Defines the following set of registers, in the order listed:
+   - The PHY's own register set.
+     Always present.
+   - The register set of the PHY containing the UTMI pad control registers.
+     Present if-and-only-if phy_type == utmi.
+ - phy_type : Should be one of "utmi", "ulpi" or "hsic".
+ - clocks : Defines the clocks listed in the clock-names property.
+ - clock-names : The following clock names must be present:
+   - reg: The clock needed to access the PHY's own registers. This is the
+     associated EHCI controller's clock. Always present.
+   - pll_u: PLL_U. Always present.
+   - timer: The timeout clock (clk_m). Present if phy_type == utmi.
+   - utmi-pads: The clock needed to access the UTMI pad control registers.
+     Present if phy_type == utmi.
+   - ulpi-link: The clock Tegra provides to the ULPI PHY (cdev2).
+     Present if phy_type == ulpi, and ULPI link mode is in use.
+ - resets : Must contain an entry for each entry in reset-names.
+   See ../reset/reset.txt for details.
+ - reset-names : Must include the following entries:
+   - usb: The PHY's own reset signal.
+   - utmi-pads: The reset of the PHY containing the chip-wide UTMI pad control
+     registers. Required even if phy_type == ulpi.
+
+Tegra SOC USB PHY의 장치 노드 :
+
+필수 속성 :
+  - compatible : Tegra20의 경우 "nvidia, tegra20-usb-phy"가 있어야합니다.
+    Tegra30의 경우 "nvidia, tegra30-usb-phy"가 있어야합니다. 그렇지 않으면 "nvidia, <chip> -usb-phy"를 적어도 하나 이상을 포함해야합니다. 여기서 <chip>은 tegra114, tegra124, tegra132 또는 tegra210입니다.
+  - reg : 나열된 순서대로 다음 레지스터 세트를 정의합니다.
+    - PHY 자체 레지스터 세트.
+      항상 존재한다
+    - UTMI 패드 제어 레지스터가 포함 된 PHY의 레지스터 세트입니다.
+      if-and-only-if phy_type == utmi를 제시하십시오.
+- phy_type : "utmi", "ulpi"또는 "hsic"중 하나 여야합니다.
+  - clocks : clock-names 속성에 clocks listed를 정의합니다.
+  - clock-names : 다음 clock names이 있어야합니다.
+    - reg : PHY 자신의 레지스터에 액세스하는데 필요한 클록. 이것은 관련된 EHCI 컨트롤러의 clock입니다. 항상 존재한다.
+    - pll_u : PLL_U. 항상 존재한다.
+    - 타이머 : 타임 아웃 클럭 (clk_m). phy_type == utmi 인 경우 표시하십시오.
+    - utmi-pads : UTMI 패드 제어 레지스터에 액세스하는 데 필요한 clock입니다.
+      phy_type == utmi 인 경우 표시하십시오.
+    - ulpi-link : clock Tegra 는 ULPI PHY (cdev2)에 제공됩니다.
+      phy_type == ulpi이면 존재하고 ULPI 링크 모드가 사용 중입니다.
+  - reset : reset-names의 각 항목에 대한 항목을 포함해야합니다.
+    See ../reset/reset.txt for details.
+- reset-names : 다음 항목을 포함해야합니다.
+    - usb : PHY의 자체 재설정 신호.
+    - utmi-pads : chip-wide UTMI pad control 레지스터가 포함 된 PHY의 재설정. phy_type == ulpi 인 경우에도 필요합니다.
+
+
+
+Required properties for phy_type == ulpi:
+  - nvidia,phy-reset-gpio : The GPIO used to reset the PHY.
+
+phy_type == ulpi의 필수 속성 :
+   - nvidia, phy-reset-gpio : GPIO는 PHY를 재설정하는 데 사용됩니다.
+
+
+Required PHY timing params for utmi phy, for all chips:
+  - nvidia,hssync-start-delay : Number of 480 Mhz clock cycles to wait before
+    start of sync launches RxActive
+  - nvidia,elastic-limit : Variable FIFO Depth of elastic input store
+  - nvidia,idle-wait-delay : Number of 480 Mhz clock cycles of idle to wait
+    before declare IDLE.
+  - nvidia,term-range-adj : Range adjusment on terminations
+  - Either one of the following for HS driver output control:
+    - nvidia,xcvr-setup : integer, uses the provided value.
+    - nvidia,xcvr-setup-use-fuses : boolean, indicates that the value is read
+      from the on-chip fuses
+    If both are provided, nvidia,xcvr-setup-use-fuses takes precedence.
+  - nvidia,xcvr-lsfslew : LS falling slew rate control.
+  - nvidia,xcvr-lsrslew :  LS rising slew rate control.
+
+모든 칩에 대해 utmi phy에 필요한 PHY 타이밍 매개 변수 :
+   - nvidia, hssync-start-delay : 동기화 시작 전에 대기 할 480Mhz 클럭 사이클 수입니다. RxActive
+   - nvidia, elastic-limit : 가변 FIFO 가변 입력 저장소 깊이
+   - nvidia, idle-wait-delay : IDLE을 선언하기 전에 대기 할 idle 시간의 480 Mhz 클럭 사이클 수입니다.
+   - nvidia, term-range-adj : adjusment 종단의 범위 
+- HS 드라이버 출력 제어를 위해 다음 중 하나가 필요합니다.
+     - nvidia, xcvr-setup : 정수, 제공된 값을 사용합니다.
+     - nvidia, xcvr-setup-use-fuses : boolean. on-chip fuses에서 '값을 읽음' 을 나타냅니다.
+     둘 다 제공되면 nvidia, xcvr-setup-use-fuses가 우선합니다.
+   - nvidia, xcvr-lsfslew : LS falling slew rate control.
+   - nvidia, xcvr-lsrslew : LS rising slew rate control.
+
+
+Required PHY timing params for utmi phy, only on Tegra30 and above:
+  - nvidia,xcvr-hsslew : HS slew rate control.
+  - nvidia,hssquelch-level : HS squelch detector level.
+  - nvidia,hsdiscon-level : HS disconnect detector level.
+
+utmi phy에 대한 필수 PHY 타이밍 매개 변수, Tegra30 이상에만 해당 :
+   - nvidia, xcvr-hsslew : HS slew rate control.
+   - nvidia, hssquelch level : HS squelch 검출기 level.
+   - nvidia, hsdiscon-level : HS 연결 해제 감지기 level.
+
+Optional properties:
+  - nvidia,has-legacy-mode : boolean indicates whether this controller can
+    operate in legacy mode (as APX 2500 / 2600). In legacy mode some
+    registers are accessed through the APB_MISC base address instead of
+    the USB controller.
+  - nvidia,is-wired : boolean. Indicates whether we can do certain kind of power
+    optimizations for the devices that are always connected. e.g. modem.
+  - dr_mode : dual role mode. Indicates the working mode for the PHY. Can be
+    "host", "peripheral", or "otg". Defaults to "host" if not defined.
+      host means this is a host controller
+      peripheral means it is device controller
+      otg means it can operate as either ("on the go")
+  - nvidia,has-utmi-pad-registers : boolean indicates whether this controller
+    contains the UTMI pad control registers common to all USB controllers.
+
+선택적 속성 :
+   - nvidia, has-legacy-mode : 부울은이 컨트롤러가 레거시 모드 (APX 2500 / 2600)로 작동 할 수 있는지 여부를 나타냅니다. 레거시 모드에서 일부 레지스터는 USB 컨트롤러 대신 APB_MISC 기본 주소를 통해 액세스됩니다.
+   - nvidia, is-wired : 부울입니다. 항상 연결된 장치에 대해 특정 종류의 전력 최적화를 수행 할 수 있는지 여부를 나타냅니다. e.g. 모뎀.
+- dr_mode : 이중 역할 모드. PHY의 작동 모드를 나타냅니다. "호스트", "주변 장치"또는 "otg"일 수 있습니다. 정의되지 않은 경우 기본값은 "host"입니다.
+       호스트는 호스트 컨트롤러임을 의미합니다.
+       주변 장치가 장치 컨트롤러임을 의미합니다.
+       otg는 둘 중 하나( "이동 중에")로 작동 할 수 있음을 의미합니다.
+   - nvidia, has-utmi-pad-registers : boolean 은 이 컨트롤러에 모든 USB 컨트롤러에 공통 인 UTMI 패드 컨트롤 레지스터가 있는지 여부를 나타냅니다.
+
+VBUS control (required for dr_mode == otg, optional for dr_mode == host):
+  - vbus-supply: regulator for VBUS
+
+VBUS 제어 (dr_mode == otg에 필요, dr_mode == 호스트에 대해 선택 사항) :
+   - vbus-supply : VBUS를위한 regulator

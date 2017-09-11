@@ -1,0 +1,27 @@
+#                            \\\// 
+#                           -(o o)- 
+#========================oOO==(_)==OOo=======================
+# This file contains the exports needed for automating the
+# build process of WLAN components.
+# Place this file in the same directory with wl18xx_build.sh
+# build scripts. No need to run 'source setup-env', the build
+# scripts will perfom it internaly. 
+#===========================================================
+# User specific environment settings - use full PATH
+
+CUR_DIR=`pwd`
+BUILD_INSTALL_DIR=$CUR_DIR/../..
+
+# if DEFAULT toolchain path is set toolchain will be downloaded to ./toolchain.
+export TOOLCHAIN_PATH=${BUILD_INSTALL_DIR}/linux-devkit/sysroots/${NATIVE_PATH}/usr/bin
+
+# if DEFAULT path to root filesystem is set ./fs folder will be used.
+export ROOTFS=${INSTALL_PATH}
+
+#if DEFAULT kernel path is set - kernel will be downloaded (set branch to match kernel version)
+export KERNEL_PATH=${BUILD_INSTALL_DIR}/board-support/${KERNEL_VER}
+
+export CROSS_COMPILE=arm-linux-gnueabihf-
+export ARCH=arm
+[ "$TOOLCHAIN_PATH" != "DEFAULT" ] && export PATH=$TOOLCHAIN_PATH:$PATH
+

@@ -1,0 +1,98 @@
+Allwinner A10 DMA Controller
+
+This driver follows the generic DMA bindings defined in dma.txt.
+
+Required properties:
+
+- compatible:	Must be "allwinner,sun4i-a10-dma"
+- reg:		Should contain the registers base address and length
+- interrupts:	Should contain a reference to the interrupt used by this device
+- clocks:	Should contain a reference to the parent AHB clock
+- #dma-cells :	Should be 2, first cell denoting normal or dedicated dma,
+		second cell holding the request line number.
+
+Example:
+	dma: dma-controller@01c02000 {
+		compatible = "allwinner,sun4i-a10-dma";
+		reg = <0x01c02000 0x1000>;
+		interrupts = <27>;
+		clocks = <&ahb_gates 6>;
+		#dma-cells = <2>;
+	};
+
+Clients:
+
+DMA clients connected to the Allwinner A10 DMA controller must use the
+format described in the dma.txt file, using a three-cell specifier for
+each channel: a phandle plus two integer cells.
+The three cells in order are:
+
+1. A phandle pointing to the DMA controller.
+2. Whether it is using normal (0) or dedicated (1) channels
+3. The port ID as specified in the datasheet
+
+Example:
+	spi2: spi@01c17000 {
+		compatible = "allwinner,sun4i-a10-spi";
+		reg = <0x01c17000 0x1000>;
+		interrupts = <0 12 4>;
+		clocks = <&ahb_gates 22>, <&spi2_clk>;
+		clock-names = "ahb", "mod";
+		dmas = <&dma 1 29>, <&dma 1 28>;
+		dma-names = "rx", "tx";
+		status = "disabled";
+		#address-cells = <1>;
+		#size-cells = <0>;
+	};
+
+
+/*
+Allwinner A10 DMA 컨트롤러
+
+이 드라이버는 dma.txt에 정의 된 일반 DMA 바인딩을 따릅니다.
+
+필수 속성 :
+
+- 호환 : "allwinner, sun4i-a10-dma"여야합니다.
+- reg : 레지스터 기본 주소와 길이를 포함해야합니다.
+- interrupts :이 장치에서 사용하는 인터럽트에 대한 참조를 포함해야합니다.
+- clock : 상위 AHB 클럭에 대한 참조를 포함해야합니다.
+- # dma-cells : 2, 첫 번째 셀은 정상 또는 전용 dma, 두 번째 셀은 요청 회선 번호를 나타냅니다.
+
+
+Example:
+	dma: dma-controller@01c02000 {
+		compatible = "allwinner,sun4i-a10-dma";
+		reg = <0x01c02000 0x1000>;
+		interrupts = <27>;
+		clocks = <&ahb_gates 6>;
+		#dma-cells = <2>;
+	};
+
+
+클라이언트 :
+
+Allwinner A10 DMA 컨트롤러에 연결된 DMA 클라이언트는 3 셀 지정자를 사용하여 dma.txt 파일에 설명 된 형식을 사용해야합니다.
+각 채널 : phandle과 2 개의 정수 셀.
+세 개의 셀은 순서대로 있습니다.
+
+1. DMA 컨트롤러를 가리키는 phandle.
+2. 정상 (0) 채널 또는 전용 채널 (1)을 사용하는지 여부
+3. 데이터 시트에 지정된 포트 ID
+
+
+Example:
+	spi2: spi@01c17000 {
+		compatible = "allwinner,sun4i-a10-spi";
+		reg = <0x01c17000 0x1000>;
+		interrupts = <0 12 4>;
+		clocks = <&ahb_gates 22>, <&spi2_clk>;
+		clock-names = "ahb", "mod";
+		dmas = <&dma 1 29>, <&dma 1 28>;
+		dma-names = "rx", "tx";
+		status = "disabled";
+		#address-cells = <1>;
+		#size-cells = <0>;
+	};
+
+*/

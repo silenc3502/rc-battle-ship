@@ -1,0 +1,130 @@
+* Synopsys Designware DMA Controller
+
+Required properties:
+- compatible: "snps,dma-spear1340"
+- reg: Address range of the DMAC registers
+- interrupt: Should contain the DMAC interrupt number
+- dma-channels: Number of channels supported by hardware
+- dma-requests: Number of DMA request lines supported, up to 16
+- dma-masters: Number of AHB masters supported by the controller
+- #dma-cells: must be <3>
+- chan_allocation_order: order of allocation of channel, 0 (default): ascending,
+  1: descending
+- chan_priority: priority of channels. 0 (default): increase from chan 0->n, 1:
+  increase from chan n->0
+- block_size: Maximum block size supported by the controller
+- data_width: Maximum data width supported by hardware per AHB master
+  (0 - 8bits, 1 - 16bits, ..., 5 - 256bits)
+
+
+Optional properties:
+- interrupt-parent: Should be the phandle for the interrupt controller
+  that services interrupts for this device
+- is_private: The device channels should be marked as private and not for by the
+  general purpose DMA channel allocator. False if not passed.
+
+Example:
+
+	dmahost: dma@fc000000 {
+		compatible = "snps,dma-spear1340";
+		reg = <0xfc000000 0x1000>;
+		interrupt-parent = <&vic1>;
+		interrupts = <12>;
+
+		dma-channels = <8>;
+		dma-requests = <16>;
+		dma-masters = <2>;
+		#dma-cells = <3>;
+		chan_allocation_order = <1>;
+		chan_priority = <1>;
+		block_size = <0xfff>;
+		data_width = <3 3>;
+	};
+
+DMA clients connected to the Designware DMA controller must use the format
+described in the dma.txt file, using a four-cell specifier for each channel.
+The four cells in order are:
+
+1. A phandle pointing to the DMA controller
+2. The DMA request line number
+3. Source master for transfers on allocated channel
+4. Destination master for transfers on allocated channel
+
+Example:
+	
+	serial@e0000000 {
+		compatible = "arm,pl011", "arm,primecell";
+		reg = <0xe0000000 0x1000>;
+		interrupts = <0 35 0x4>;
+		status = "disabled";
+		dmas = <&dmahost 12 0 1>,
+			<&dmahost 13 0 1 0>;
+		dma-names = "rx", "rx";
+	};
+
+
+
+
+/*
+
+* Synopsys DesignWare DMA 컨트롤러
+
+필수 속성 :
+- 호환 : "snps, dma-spear1340"
+- reg : DMAC 레지스터의 주소 범위
+- interrupt : DMAC 인터럽트 번호를 포함해야합니다.
+- dma-channels : 하드웨어가 지원하는 채널 수
+- dma-requests : 지원되는 DMA 요청 행 수, 최대 16 개
+- dma-masters : 컨트롤러에서 지원하는 AHB 마스터 수
+- # dma-cells : <3>이어야합니다.
+- chan_allocation_order : 채널 할당 순서, 0 (기본값) : 오름차순,
+  1 : 내림차순
+- chan_priority : 채널 우선 순위. 0 (기본값) : chan에서 증가 0 -> n, 1 :
+  챈 n-> 0에서 증가
+- block_size : 컨트롤러가 지원하는 최대 블록 크기
+- data_width : AHB 마스터 당 하드웨어가 지원하는 최대 데이터 폭 (0 - 8 비트, 1 - 16 비트, ..., 5 - 256 비트)
+
+
+선택적 속성 :
+- interrupt-parent :이 장치에 대한 인터럽트를 서비스하는 인터럽트 컨트롤러의 phandle이어야합니다.
+- is_private : 장치 채널은 일반용 DMA 채널 할당 기가 아닌 개인용으로 표시되어야합니다. 전달되지 않으면 False입니다.
+
+Example:
+
+	dmahost: dma@fc000000 {
+		compatible = "snps,dma-spear1340";
+		reg = <0xfc000000 0x1000>;
+		interrupt-parent = <&vic1>;
+		interrupts = <12>;
+
+		dma-channels = <8>;
+		dma-requests = <16>;
+		dma-masters = <2>;
+		#dma-cells = <3>;
+		chan_allocation_order = <1>;
+		chan_priority = <1>;
+		block_size = <0xfff>;
+		data_width = <3 3>;
+	};
+
+Designware DMA 컨트롤러에 연결된 DMA 클라이언트는 각 채널에 4 셀 지정자를 사용하여 dma.txt 파일에 설명 된 형식을 사용해야합니다.
+네 개의 셀은 순서대로 다음과 같습니다.
+
+1. DMA 컨트롤러를 가리키는 phandle
+2. DMA 요구 라인 번호
+3. 할당 된 채널에서 전송을위한 원본 마스터
+4. 할당 된 채널에서의 전송을위한 대상 마스터
+
+Example:
+	
+	serial@e0000000 {
+		compatible = "arm,pl011", "arm,primecell";
+		reg = <0xe0000000 0x1000>;
+		interrupts = <0 35 0x4>;
+		status = "disabled";
+		dmas = <&dmahost 12 0 1>,
+			<&dmahost 13 0 1 0>;
+		dma-names = "rx", "rx";
+	};
+
+*/

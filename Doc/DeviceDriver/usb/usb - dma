@@ -1,0 +1,244 @@
+In Linux 2.5 kernels (and later), USB device drivers have additional control
+over how DMA may be used to perform I/O operations.  The APIs are detailed
+in the kernel usb programming guide (kerneldoc, from the source code).
+
+Linux 2.5 커널 (이상)에서 USB 장치 드라이버는 I/O 작업을 수행하는 데 
+DMA를 사용하는 방법에 대한 추가 제어 기능을 제공합니다.
+API는 커널 usb 프로그래밍 안내서 (kerneldoc, 소스 코드)에 자세히 설명되어 있습니다.
+
+
+API OVERVIEW
+API 개요
+
+The big picture is that USB drivers can continue to ignore most DMA issues,
+though they still must provide DMA-ready buffers (see
+Documentation/DMA-API-HOWTO.txt).  That's how they've worked through
+the 2.4 (and earlier) kernels.
+
+큰 그림은 USB 드라이버가 여전히 DMA 준비 버퍼 (Documentation/DMA-API-HOWTO.txt 참조)를 
+제공해야하지만 대부분의 DMA 문제를 무시할 수 있다는 것입니다.
+(버퍼는 필요하지만 문제들을 무시할 수 있다)
+이것이 2.4 커널과 그 이전의 커널을 사용하는 방법입니다.
+
+OR:  they can now be DMA-aware.
+OR: 그들은 이제 DMA를 인식 할 수 있습니다.
+
+- New calls enable DMA-aware drivers, letting them allocate dma buffers and
+  manage dma mappings for existing dma-ready buffers (see below).
+
+- 새로운 호출은 DMA 인식 드라이버를 가능하게 하여 dma 버퍼를 할당하고 
+  기존의 dma-ready 버퍼 (아래 참조)에 대한 dma 매핑을 관리하게 합니다.
+
+- URBs have an additional "transfer_dma" field, as well as a transfer_flags
+  bit saying if it's valid.  (Control requests also have "setup_dma", but
+  drivers must not use it.)
+
+- URB에는 추가적인 "transfer_dma"필드와 유효한지 나타내는 transfer_flags 비트가 있습니다.
+  (제어 요청(control request)에도 "setup_dma"가 있지만 드라이버는 이를 사용해서는 안됩니다.)
+
+- "usbcore" will map this DMA address, if a DMA-aware driver didn't do
+  it first and set URB_NO_TRANSFER_DMA_MAP.  HCDs
+  don't manage dma mappings for URBs.
+
+- DMA 인식 드라이버가 먼저 URB_NO_TRANSFER_DMA_MAP을 설정하지 않으면 "usbcore"가 이 DMA 주소를 매핑합니다.
+  (URB_NO_TRANSFER_DMA_MAP에 dma 주소가 매핑되는 것 같다)
+  HCD는 URB에 대한 dma 매핑을 관리하지 않습니다.
+
+- There's a new "generic DMA API", parts of which are usable by USB device
+  drivers.  Never use dma_set_mask() on any USB interface or device; that
+  would potentially break all devices sharing that bus.
+
+- USB 장치 드라이버에서 사용할 수 있는 새로운 "일반 DMA API"가 있습니다.
+  모든 USB 인터페이스나 장치에서 dma_set_mask()를 사용하지 마십시오. (주의!!)
+  그 버스를 공유하는 모든 장치가 손상 될 가능성이 있습니다.
+
+
+ELIMINATING COPIES
+복제물 제거
+
+It's good to avoid making CPUs copy data needlessly.  The costs can add up,
+and effects like cache-trashing can impose subtle penalties.
+
+CPU가 데이터를 불필요하게 복사하지 않도록 하는 것이 좋습니다.
+비용이 증가 할 수 있으며 캐시 쓰레기 같은 것은 작지만 결점이 될 수 있습니다.
+
+- If you're doing lots of small data transfers from the same buffer all
+  the time, that can really burn up resources on systems which use an
+  IOMMU to manage the DMA mappings.  It can cost MUCH more to set up and
+  tear down the IOMMU mappings with each request than perform the I/O!
+
+- 항상 동일한 버퍼에서 많은 양의 작은 데이터 전송을 수행하는 경우 
+  IOMMU를 사용하여 DMA 매핑을 관리하는 시스템에서 리소스를 실제로 소모할 수 있습니다.
+  I/O를 수행하는 것보다 각 요청마다 IOMMU 매핑을 설정하고 해체하는 데 더 많은 비용이 듭니다!
+  (입출력보다 DMA 주소를 매핑하고 해제하는 일에 더 많은 비용이 든다)
+
+  For those specific cases, USB has primitives to allocate less expensive
+  memory.  They work like kmalloc and kfree versions that give you the right
+  kind of addresses to store in urb->transfer_buffer and urb->transfer_dma.
+  You'd also set URB_NO_TRANSFER_DMA_MAP in urb->transfer_flags:
+
+  이러한 특정 경우에 대해 USB는 저렴한 메모리를 할당하기 위한 기본 요소를 가지고 있습니다.
+  (낭비없이 메모리를 작게 할당하기 위한 방법이 있다)
+  그들은 kmalloc 및 kfree 버전과 같이 작동하여 urb-> transfer_buffer 및 urb-> transfer_dma에 
+  저장할 올바른 주소를 제공합니다. (작게 할당해서 주소를 저장한다?)
+  URB_NO_TRANSFER_DMA_MAP을 urb-> transfer_flags로 설정합니다:
+
+	void *usb_alloc_coherent (struct usb_device *dev, size_t size,
+		int mem_flags, dma_addr_t *dma);
+
+	void usb_free_coherent (struct usb_device *dev, size_t size,
+		void *addr, dma_addr_t dma);
+
+  Most drivers should *NOT* be using these primitives; they don't need
+  to use this type of memory ("dma-coherent"), and memory returned from
+  kmalloc() will work just fine.
+
+  대부분의 드라이버는 이러한 프리미티브?(원시요소?)를 사용하지 않아야 합니다;
+  이 유형의 메모리 ("dma-coherent")를 사용할 필요가 없으며 
+  kmalloc()으로 할당된 메모리가 정상적으로 작동하게 됩니다. 
+
+  The memory buffer returned is "dma-coherent"; sometimes you might need to
+  force a consistent memory access ordering by using memory barriers.  It's
+  not using a streaming DMA mapping, so it's good for small transfers on
+  systems where the I/O would otherwise thrash an IOMMU mapping.  (See
+  Documentation/DMA-API-HOWTO.txt for definitions of "coherent" and
+  "streaming" DMA mappings.)
+
+  할당된 메모리 버퍼는 "dma-coherent"입니다;
+  때로는 메모리 장벽을 사용하여 일관된 메모리 액세스 순서를 강제해야 할 수도 있습니다.
+  (할당된 메모리 버퍼를 어디부터 쓸건지 강제해야 한다는 건가? 메모리에 접급하는 애의 순서를 지정해야 한다는?)
+  스트리밍 DMA 매핑을 사용하지 않기 때문에 I/O가 IOMMU 매핑을 thrash하는 시스템의
+  작은 전송에 적합합니다. (thrash: 페이징이 너무 빈번하게 일어나 속도가 떨어지는 것을 감시)
+  ("coherent"및 "streaming"DMA 매핑의 정의는 Documentation/DMA-API-HOWTO.txt를 참조하십시오.)
+
+  Asking for 1/Nth of a page (as well as asking for N pages) is reasonably
+  space-efficient.
+
+  페이지의 1/Nth (N 페이지를 요구하는 것)를 묻는 것은 공간 효율적입니다.
+  (얼마의 공간이 필요할지 묻는 것은 공간의 낭비를 줄여준다. 작은 공간이 필요할 수도 있다)
+
+  On most systems the memory returned will be uncached, because the
+  semantics of dma-coherent memory require either bypassing CPU caches
+  or using cache hardware with bus-snooping support.  While x86 hardware
+  has such bus-snooping, many other systems use software to flush cache
+  lines to prevent DMA conflicts.
+
+  대부분의 시스템에서 dma-coherent 메모리(할당된 메모리 버퍼)는 CPU 캐시를 우회하거나 
+  버스 스누핑을 지원하는 캐시 하드웨어를 사용해야 하기 때문에 할당된 메모리는 캐시 되지 않습니다.
+  (DMA 주소 매핑을 위해 할당된 메모리 버퍼는 캐시가 되지 않는다)
+  x86 하드웨어가 버스 스누핑을하는 동안 많은 다른 시스템에서는 
+  소프트웨어를 사용하여 캐시 충돌을 방지하기 위해 캐시 라인을 비웁니다.
+  (스누핑: 기억장치의 내용이 캐시 내용과 일치하는지를 감시하고 필요에 따라 캐시 내용을 파기)
+
+- Devices on some EHCI controllers could handle DMA to/from high memory.
+
+- 일부 EHCI 컨트롤러의 장치는 high 메모리로/메모리로부터 DMA를 처리할 수 있습니다.
+  (high memory는 뭐지? 높은 메모리? 상위 메모리인가? 하위 장치가 상위 장치의 메모리를 통해 DMA를 처리?)
+
+  Unfortunately, the current Linux DMA infrastructure doesn't have a sane
+  way to expose these capabilities ... and in any case, HIGHMEM is mostly a
+  design wart specific to x86_32.  So your best bet is to ensure you never
+  pass a highmem buffer into a USB driver.  That's easy; it's the default
+  behavior.  Just don't override it; e.g. with NETIF_F_HIGHDMA.
+
+  안타깝게도 현재의 Linux DMA 인프라는 이러한 기능을 공개적으로 공개할 방법이 없으며 
+  어떠한 경우에도 HIGHMEM은 대부분 x86_32에 특화된 디자인 wart?(핵심?)입니다.
+  그래서 가장 좋은 방법은 highmem 버퍼를 절대로 USB 드라이버에 전달하지 않도록 하는 것입니다.
+  간단합니다. 그것은 기본 동작입니다.(디폴트로 정해진 동작)
+  그냥 무시하지 마라. 예 : NETIF_F_HIGHDMA와 함께.
+
+  This may force your callers to do some bounce buffering, copying from
+  high memory to "normal" DMA memory.  If you can come up with a good way
+  to fix this issue (for x86_32 machines with over 1 GByte of memory),
+  feel free to submit patches.
+
+  이로 인해 호출자가 high 메모리에서 "정상적인" DMA 메모리로 복사하는 bounce 버퍼링을 할 수 있습니다.
+  이 문제를 해결할 수있는 좋은 방법을 생각해 낼 수 있다면 (1 GByte 이상의 메모리가 있는 x86_32 컴퓨터의 경우) 
+  패치를 제출하십시오.
+  (high 메모리를 DMA 메모리로 복사할 수 있는데 이 작업을 수행하면 안되는 것 같다.
+  이러한 작업이 일어나는 것을 방지해야 하는데 현재로서는 highmem 버퍼를 USB 드라이버로 전달하지 않도록
+  하는 것 뿐인 것 같다)
+
+
+WORKING WITH EXISTING BUFFERS
+기존 버퍼로 작업하기
+
+Existing buffers aren't usable for DMA without first being mapped into the
+DMA address space of the device.  However, most buffers passed to your
+driver can safely be used with such DMA mapping.  (See the first section
+of Documentation/DMA-API-HOWTO.txt, titled "What memory is DMA-able?")
+
+기존 버퍼는 먼저 장치의 DMA 주소 공간에 매핑하지 않고 DMA에 사용할 수 없습니다. (맵핑을 필수)
+그러나 드라이버에 전달된 대부분의 버퍼는 이러한 DMA 매핑과 함께 안전하게 사용할 수 있습니다.
+(Documentation/DMA-API-HOWTO.txt의 첫 번째 섹션 인 "어떤 메모리가 DMA 가능합니까?"를 참조하십시오)
+
+- When you're using scatterlists, you can map everything at once.  On some
+  systems, this kicks in an IOMMU and turns the scatterlists into single
+  DMA transactions:
+
+- 스캐터리스트?를 사용하는 경우 모든 것을 한 번에 매핑 할 수 있습니다.
+  일부 시스템에서는 IOMMU에서 시작하여 스캐터리스트를 단일 DMA 트랜잭션으로 변환합니다:
+  (스캐터리스트가 DMA 맵핑으로 변환한다는 것인가?)
+
+	int usb_buffer_map_sg (struct usb_device *dev, unsigned pipe,
+		struct scatterlist *sg, int nents);
+
+	void usb_buffer_dmasync_sg (struct usb_device *dev, unsigned pipe,
+		struct scatterlist *sg, int n_hw_ents);
+
+	void usb_buffer_unmap_sg (struct usb_device *dev, unsigned pipe,
+		struct scatterlist *sg, int n_hw_ents);
+
+  It's probably easier to use the new usb_sg_*() calls, which do the DMA
+  mapping and apply other tweaks to make scatterlist i/o be fast.
+
+  아마도 DMA 매핑을 수행하고 scatterlist 입출력을 빠르게 하기 위한 
+  다른 개조?를 적용하는 새로운 usb_sg_*() 호출을 사용하는 것이 더 쉽습니다.
+  (다른 개조라는 것은 새로운 DMA 맵핑을 이야기하는 건가? 개조는 이해가 안간다)
+
+- Some drivers may prefer to work with the model that they're mapping large
+  buffers, synchronizing their safe re-use.  (If there's no re-use, then let
+  usbcore do the map/unmap.)  Large periodic transfers make good examples
+  here, since it's cheaper to just synchronize the buffer than to unmap it
+  each time an urb completes and then re-map it on during resubmission.
+
+- 일부 드라이버는 대형 버퍼를 매핑하고 안전한 재사용을 동기화하는 모델로 작업하는 것을 선호 할 수 있습니다.
+  (재사용이 없다면, usbcore가 map/unmap을 하도록 하십시오.) (매핑을 하고 해제하는 작업을 따로 해줘야 한다)
+  대기주기 전송은 여기에 좋은 예가 됩니다. urb가 완료될 때마다 버퍼를 해제하는 것보다
+  버퍼를 동기화하는 것이 더 저렴하므로, urb를 다시 제출하는 동안 버퍼를 다시 매핑하십시오.
+  (해제하지 않고 다시 매핑해서 사용한다는 뜻인 것 같다. 할당, 해제에 많은 낭비가 생기니까)
+
+  These calls all work with initialized urbs:  urb->dev, urb->pipe,
+  urb->transfer_buffer, and urb->transfer_buffer_length must all be
+  valid when these calls are used (urb->setup_packet must be valid too
+  if urb is a control request):
+
+  이러한 호출(아래 코드)은 모두 초기화 된 urbs와 함께 작동합니다: (기존 버퍼 사용하는 코드)
+  urb-> dev, urb-> pipe, urb-> transfer_buffer 및 urb-> transfer_buffer_length는
+  이 호출이 사용될 때 모두 유효해야합니다.
+  (urb-> setup_packet은 urb가 제어 요청 인 경우에도 유효해야 합니다):
+
+	struct urb *usb_buffer_map (struct urb *urb);
+
+	void usb_buffer_dmasync (struct urb *urb);
+
+	void usb_buffer_unmap (struct urb *urb);
+
+  The calls manage urb->transfer_dma for you, and set URB_NO_TRANSFER_DMA_MAP
+  so that usbcore won't map or unmap the buffer.  They cannot be used for
+  setup_packet buffers in control requests.
+
+  호출은 당신을 위해 urb-> transfer_dma를 관리하고 URB_NO_TRANSFER_DMA_MAP을 설정하여 
+  usbcore가 버퍼를 매핑하거나 맵핑 해제하지 않도록 합니다. 
+  (기존 버퍼로 작업해야 하니 새로 할당이나 해제는 하지 못하게 하는 것이다)
+  (usbcore가 DAM 주소를 맵핑하는 일을 한다)
+  제어 요청의 setup_packet 버퍼에는 사용할 수 없습니다. (기존 버퍼를 사용하는 방식을 사용하지 못함)
+
+Note that several of those interfaces are currently commented out, since
+they don't have current users.  See the source code.  Other than the dmasync
+calls (where the underlying DMA primitives have changed), most of them can
+easily be commented back in if you want to use them.
+
+현재 사용자가 없으므로 이러한 인터페이스 중 일부는 현재 주석 처리되어 있습니다.
+소스 코드를 참조하십시오.
+dmasync 호출 (기본 DMA 기본 요소가 변경된 부분) 외에도 사용하려는 경우 대부분을 다시 주석 처리 할 수 있습니다.

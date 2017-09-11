@@ -1,0 +1,1620 @@
+LM5122/-Q1 Wide-Input Synchronous Boost Controller With Multiple Phase Capability
+
+1. Features
+
+* AEC-Q100 은 아래 사항을 인증한다:
+  - 소자 동작 온도 등급 1: -40℃  ~ +125℃
+    주변 작동 온도 범위
+  - 소자 HBM ESD 분류 수준 2
+  - 소자 CDM ESD 분류 수준 C6
+* 최대 입력 전압: 65V
+* 최소 입력 전압: 3V(구동을 위해 4.5V)
+* 출력 전압은 최대 100V
+* Bypass(V_out = V_in) 동작
+* 1.0% 정확도의 1.2V Reference
+* 1 MHz 로 Free-Run 및 Synchronizable Switching
+* Peak Current Mode Control
+* 견고한 3A Integrated Gate Drivers
+* Adaptive Dead-Time Control
+* Optional Diode Emulation Mode
+* Programmable Cycle-by-Cycle Current Limit
+* Hiccup Mode Overload Protection
+* Programmable Line UVLO
+* Programmable Soft-Start
+* Thermal Shutdown Protection
+* Low Shutdown Quiescent Current: 9uA
+* Programmable Slope Compensation
+* Programmable Skip Cycle Mode Reduces Standby Power
+* Allows External VCC Supply
+* Inductor DCR Current Sensing Capability
+* Multiphase Capability
+* Thermally Enhanced 20-Pin HTSSOP
+
+
+
+2. Applications
+
+* 12-V, 24-V, 48-V 전원 시스템
+* 자동차 시동 및 시동 끄기
+* 오디오 전원 공급기
+* 고전류 전원 시스템
+
+
+
+3. Description
+
+LM5122 는 고효율 동기식 Boost Regulator Application 을 위한
+다상 동기식 Boost Controller 에 해당한다.
+제어 방법은 Peak Current Mode 제어를 기반으로 한다.
+Current Mode 제어는 고유의 Line Feedforward,
+Cycle-by-Cycle Current Limiting, 그리고 Loop 보상의 용이성을 제공한다.
+
+Switching Frequency 는 최대 1 MHz 까지 프로그래밍 할 수 있다.
+적응형 Dead-Time Control 기능을 갖춘
+2 개의 견고한 N Channel MOSFET Gate Driver 로 높은 효율을 달성한다.
+또한 사용자가 선택할 수 있는 Diode Emulation Mode 는
+불연속 모드 동작을 가능하게 하여 경부하 조건에서 향상된 효율을 제공한다.
+
+내부 Charge Pump 는 High-Side Synchronous Switch(Bypass 동작)에 대해 100% duty 를 허용한다.
+180도 위상이 이동된 Clock 출력으로 쉬운 다중 위상 Interleave 로 구성이 가능하다.
+추가 기능으로는 Thermal Shutdown, Frequency Synchronization,
+Hiccup Mode Current Limit 및 Adjustable Line Undervoltage Lockout 이 있다.
+
+
+
+* Device Information
+
+PART NUMBER	PACKAGE		BODY SIZE(NOM)
+LM5122		HTSSOP(20)	6.50mm x 4.40mm
+LM5122-Q1
+
+(1) 사용 가능한 모든 Package 에 대해 Datasheet 끝에 있는 주문 가능한 부록을 참조하라.
+
+Simplified Application Diagram
+
+
+
+* Table of Contents
+ 
+1.  Features
+2.  Applications
+3.  Descriptions
+4.  Revision History
+5.  Pin Configuration and Functions
+6.  Specifications
+    6-1. Absolute Maximum Ratings
+    6-2. ESD Ratings: LM5122
+    6-3. ESD Ratings: LM5122-Q1
+    6-4. Recommended Operating Conditions
+    6-5. Thermal Information
+    6-6. Electrical Characteristics
+    6-7. Typical Characteristics
+7.  Detailed Description
+    7-1. Overview
+    7-2. Functional Block Diagram
+    7-3. Feature Description
+    7-4. Device Functional Modes
+8.  Application and Implementation
+    8-1. Application Information
+    8-2. Typical Application
+9.  Power Supply Recommendations
+10. Layout
+    10.1 Layout Guidelines
+    10.2 Layout Example
+11. Device and Documentation Support
+    11.1 Related Links
+    11.2 Community Resources
+    11.3 Trademarks
+    11.4 Electrostatic Discharge Caution
+    11.5 Glossary
+12. Mechanical, Packaging, and Orderable Information
+
+
+
+4. Revision History
+
+알림:
+이전 버전의 페이지 번호는 현재 버전의 페이지 번호와 다를 수 있다.
+
+* 개정 F(2015 년 5 월)에서 개정 G 페이지로의 변경
+  - 자동차 ESD 기능 추가
+  - 내용 및 두 번째 방정식 추가
+  - 방정식 변경
+
+* 개정 E(2014 년 12 월)에서 개정 F 페이지로 변경
+  - 취급 등급을 ESD 정격으로 변경하고 보관 온도를 절대 최대 정격으로 변경
+  - ESD 등급을 kV 에서 V 로 변경
+  - Current Sense 저항 RS 공식 29 에서 저항(Ohm) 기호를 반영하도록 오타 변경
+
+* 개정 D(2013 년 9 월)에서 개정 E 페이지로 변경
+  - 핀 구성 및 기능 섹션, 처리 등급 테이블, 기능 설명 섹션, 장치 기능 모드,
+    Application 및 구현 섹션, 전원 공급 장치 권장 사항 섹션, 레이아웃 섹션,
+    장치 및 설명서 지원 섹션, 기계 및 패키징 및 주문 정보 섹션 추가
+
+* 개정 C(2013 년 8 월)에서 개정 D 페이지로 변경
+  - 5k ohm ~ 20k ohm 으로 변경
+  - C_COMP 를 C_HF 로 변경
+
+* 개정 B(2013 년 5 월)에서 개정 C 페이지로 변경
+  - 패키지 부록을 삭제
+
+* 개정 A(2013 년 5 월)에서 개정 B 페이지로 변경
+  - 소자 정보 테이블 삭제
+
+* 원본(2013 년 3 월)에서 개정 A 로 변경
+  - 전체 데이터 시트 발표
+
+
+
+5. Pin Configuration and Function
+
+	PIN
+NAME		NO	TYPE				Description
+AGND		9	G	Analog 접지 연결
+                                내부 전압 Reference 및 Analog 회로에서 반환
+BST		20	P	Bootstrap Gate Drive 용 High-Side Driver 전원
+                                외부 Bootstrap Diode 의 음극과 Bootstrap 콘덴서에 연결한다.
+                                Bootstrap 콘덴서는 High-Side N Channel MOSFET Gate 를
+                                충전하기 위해 전류를 공급하며
+                                Controller 에 최대한 가깝게 배치해야한다.
+                                내부 BST Charge Pump 는 Bypass 동작을 위해
+                                Bootstrap 콘덴서에 200uA 를 공급한다.
+COMP		11	O	내부 오차 증폭기의 출력
+                                Loop 보상 Network 는 이 핀과 FB 핀 사이에 연결되어야 한다.
+CSN		3	I	전류 감지 증폭기의 반전 입력
+                                전류 감지 저항의 음극 측에 연결한다.
+CSP		4	I	전류 감지 증폭기의 비반전 입력
+                                전류 감지 저항의 양극 측에 연결한다.
+FB		10	I	Feedback
+                                내부 오류 증폭기의 반전 입력
+                                출력에서 이 핀까지의 저항 분배기는 출력 전압 레벨을 설정한다.
+                                FB 핀의 레귤레이션 임계 값은 1.2V 에 해당한다.
+HO		19	O	High-Side N-Channel MOSFET Gate Drive 출력
+                                짧은 Inductance 경로를 통해 High-Side Synchronous N-Channel
+                                MOSFET Switch 의 Gate 에 연결한다.
+KI		16	0	Low-Side N-Channel MOSFET Gate Drive 출력
+                                짧은 Inductance 경로를 통해 Low-Side Synchronous N-Channel
+                                MOSFET Switch 의 Gate 에 연결한다.
+MODE		13	I	Switching Mode 선택 핀
+                                700k ohm Pull-Up 및 100k ohm Pull-Down 저항 내부는
+                                MODE 핀을 기본값으로 0.15V 로 유지한다.
+                                외부 Pull-Up 혹은 Pull-Down 저항을 추가함으로써
+                                MODE 핀 전압을 프로그래밍할 수 있다.
+                                MODE 핀 전압이 1.2V Diode Emulation Mode Threshold 보다 큰 경우
+                                PWM 모드가 활성화되어 High-Side N-Channel MOSFET Switch 를 통해
+                                전류가 어느 방향으로든 흐를 수 있도록 한다.
+                                MODE 핀 전압이 1.2V 보다 낮으면
+                                Controller 는 Diode Emulation Mode 로 작동한다.
+                                Skip Cycle 비교기가 기본값으로 활성화된다.
+                                MODE 핀이 접지되면 Controller 는
+                                여전히 Diode Emulation Mode 에서 작동하지만
+                                Skip Cycle 비교기는 정상 작동시 Trigger 되지 않으며
+                                낮은 경부하에서 Pulse Skipping 동작을 가능하게 한다.
+OPT		2	I	Clock Synchronization 선택 핀
+                                또한 이 핀은 Master/Slave 구성과 관련된
+                                SYNCOUT 을 활성화/비활성화한다.
+                                OPT 핀을 Floating 상태로 두어서는 안된다.
+PGND		15	G	Low-Side N-Channel MOSFET Gate Driver 의 전원 접지 연결 핀
+                                Low-Side N-Channel MOSFET Switch 의
+                                Source Terminal 에 직접 연결한다.
+RES		14	O	Hiccup Mode Off-Time 을 구성하고
+                                과부하 상태에서 재시작 Delay 를 구성하는
+                                외부 콘덴서의 재시작 Timer 핀
+                                Hiccup Mode 동작이 필요하지 않을 때
+                                AGND 에 직접 연결하라.
+SLOPE		12	I	Slope Compensation 은 SLOPE 와 AGND 사이의
+                                단일 저항으로 프로그래밍 된다.
+SS		7	I	Soft-Start Programming 핀
+                                외부 콘덴서와 내부 10uA 전류 소스는 Soft-Start 중
+                                내부 오차 증폭기 Reference 의 Ramp 속도를 설정한다.
+SW		18	I/O	Boost Regulator 의 Switching Node
+                                Bootstrap 콘덴서,
+                                High-Side N-Channel MOSFET Switch 의 소스 터미널 및
+                                Low-Side N-Channel MOSFET Switch 의 드레인 터미널을
+                                짧은 Inductance 경로를 통해 연결한다.
+SYNCIN/RT	8	I	내부 Oscillator Frequency 는
+                                RT 와 AGND 사이의 단일 저항으로 프로그래밍 된다.
+                                내부 Oscillator 는 이 SYNCIN 핀에 양의 펄스 신호를
+                                인가하여 외부 클록에 동기화할 수 있다.
+                                Master 구성에서 권장되는
+                                최대 내부 Oscillator Frequency 는 2 MHz 이며
+                                최대 Switching Frequency 는 1 MHz 이다.
+SYNCOUT		1	O	Clock 출력 핀
+                                SYNCOUT 은 Interleave 작업을 위해
+                                180 도 이동된 클럭 출력을 제공한다.
+                                SYNCOUT 핀은 사용하지 않을 때 플로팅 상태로 둘 수 있다.
+                                Slave Mode 와 SYNCOUT 섹션을 참조하라.
+UVLO		6	I	저전압 잠금 프로그래밍 핀
+                                UVLO 핀이 0.4V 미만이면 Regulator 는 Shutdown Mode 에
+                                있고 모든 기능은 Disable 상태에 해당한다.
+                                UVLO 핀 전압이 0.4V 보다 크고 1.2V 미만이면
+                                Regulator 는 VCC Regulator 로 작동하고
+                                HO 및 LO 출력에서 Switching 없는 대기 Mode 에 해당한다.
+                                UVLO 핀 전압이 1.2V 이상이면 시동 절차가 시작된다.
+                                UVLO 핀에서 10uA 전류 소스는 1.2V 를 초과할 때
+                                활성화되고 외부 UVLO 저항을 통해 흘러 Hysteresis 를 제공한다.
+                                UVLO 핀은 플로팅 상태로 두어서는 안된다.
+VCC		17	P/O/I	VCC Bias 공급 핀
+                                Controller 에 가능한 가까이 위치한
+                                낮은 ESR/ESL 콘덴서를 사용하여 PGND 로 국지적으로 디커플링한다.
+VIN		5	P/I	VCC Regulator 용 전원 입력 소스
+                                짧은 콘덴서 경로로 입력 콘덴서 및
+                                소스 전원 공급 장치 연결부에 연결한다.
+EP		EP	N/A	Package 의 노출된 Pad
+                                내부 전기 연결이 없다.
+                                열 저항을 줄이기 위해 큰 접지면에 납땜해야 한다.
+
+
+
+6. Specifications
+
+6.1. Absolute Maximum Ratings
+
+실온에서 작동 범위(별도의 언급이 없는 한)
+
+(1) 절대 최대 정격에 나열된 것 이외의 응력은 장치에 영구적인 손상을 줄 수 있다.
+    이는 stress 등급으로 권장 작동 조건에 명시된 조건 이외의
+    다른 조건에서의 장치의 기능 작동은 암시되어 있지 않다.
+    장기간 절대 최대 정격 조건에 노출되면 장치의 신뢰성에 영향을 줄 수 있다.
+    달리 명시하지 않는 한 모든 전압은 AGND 핀을 기준으로 한다.
+
+(2) 입력 전원 전압이 VCC 전압보다 낮으면 Application 정보를 참조하라!
+
+(3) 모든 출력 핀은 외부 전압이 인가되도록 지정되지 않는다.
+
+
+
+6.2. ESD Ratings: LM5122
+
+(1) JEDEC 문서 JEP155 에 따르면 500-V HBM 을 사용하면
+    표준 ESD 제어 절차로 안전하게 제조할 수 있다.
+(2) JEDEC 문서 JEP157 에 따르면 250-V CDM 을 사용하면
+    표준 ESD 제어 절차로 안전하게 제조할 수 있다.
+
+
+
+6.3. ESD Ratings: LM5122-Q1
+
+(1) AEC Q100-002 는 HBM Stress 가
+    ANSI/ESDA/JEDEC JS-001 사양에 따라 수행되었음을 나타낸다.
+
+
+
+6.4. Recommended Operating Conditions
+
+실온 동작 범위(별도 명시가 없는한)
+
+(1) 권장 작동 조건은 장치의 작동이 의도된 조건이지만
+    특정 성능 제한을 보장하지 않는다.
+(2) 최소 VIN 동작 전압은 항상 4.5V 이다.
+    사용 가능한 외부 소스로부터 VIN 전압이 공급된다고 가정하면
+    최소 입력 전원 전압은 시동후 3.0V 가 될 수 있다.
+
+
+
+6.5. Thermal Information
+
+(1) 기존 및 새로운 열 Metrics 에 대한 자세한 내용은
+    IC Package Thermal Metrics Application Report, SPRA953 을 참조하라.
+    http://www.ti.com/lit/an/spra953c/spra953c.pdf
+
+
+
+6.6. Electrical Characteristics
+
+달리 명시되지 않는 한 이 사양은 -40도 ~ 125도 범위이며,
+V_Vin = 12V, V_Vcc = 8.3V, R_T = 20k ohm, LO 및 HO 는 무부하다.
+일반적인 값은 T_J = 25도 에서 가장 가능성있는
+Parametric 표준을 나타내며 Reference 목적으로만 제공된다.
+
+
+
+6.7. Typical Characteristics
+
+
+
+7. Detailed Description
+
+7.1. Overview
+
+LM5122 Wide Input Range Synchronous Boost Controller 는
+고효율 동기 Boost Regulator 를 구현하는데 필요한 모든 기능을 갖추고 있다.
+Regulator 제어 방법은 Peak 전류 모드 제어를 기반으로 한다.
+Peak Current Mode 제어는 고유한 Line Feed-Forward 및
+Loop Compensation 의 용이성을 제공한다.
+이 고집적 Controller 는 Adaptive Dead-Time Control 기능이 있는
+강력한 High-Side 및 Low-Side N-Channel MOSFET Drivers 를 제공한다.
+Switching Frequency 는 단일 저항으로 최대 1 MHz 를 설정하거나
+External Clock 과 동기화하여 사용자 프로그래밍이 가능하다.
+
+High-Side Synchronous Switch 의 제어 모드는
+강제 PWM(FPWM) 혹은 Diode Emulation Mode 로 구성할 수 있다.
+Fault Protection 기능엔 UVLO 핀을 Pulling Down 함에 의해
+Cycle-by-Cycle Current Limiting, Hiccup Mode Over Load Protection,
+Thermal Shutdown, 및 Remote Shutdown 기능이 포함된다.
+UVLO 입력은 입력 전압이 사용자가 선택한 임계값에 도달할 때
+Controller 를 Enable 하며 Low 로 하면 매우 작은 9uA Shutdown 대기 전류를 제공한다.
+이 Device 는 방열을 돕기 위해 노출 패드가 있는 20 핀 HTSSOP Package 로 제공된다.
+
+
+
+7.2. Functional Block Diagram
+
+
+
+7.3. Feature Description
+
+7.3.1. Undervoltage Lockout(UVLO)
+
+LM5122 는 Dual Level UVLO Circuit 을 갖추고 있다.
+UVLO 핀 전압이 0.4V UVLO Standby Enable Threshold 보다 작으면
+LM5122 는 모든 기능이 비활성화된 Shutdown Mode 에 있다.
+Shutdown Comparator 는 전환하는 동안
+Chatter 를 피하기 위해 0.1V 의 Hysteresis 를 제공한다.
+전원이 켜져있는 동안 UVLO 핀 전압이 0.4V 이상 1.2V 미만이면
+Controller 는 VCC Regulator 가 작동하고
+HO 및 LO 출력에서 Switching 이 없는 대기 모드에 있다.
+이 기능은 UVLO 핀을 외부 Open Collector 또는 Open Drain 장치로
+UVLO 핀을 UVLO Standby Enable Threshold 아래로 Pull Down 하여
+UVLO 핀을 원격 Remote Shutdown 기능으로 사용할 수 있게 한다.
+
+Figure 16. UVLO Remote Standby and Shutdown Control
+
+UVLO 핀 전압이 1.2V UVLO Threshold 를 초과하고
+VCC 전압이 VCC UV Threshold 값을 초과하면 시동 절차가 시작된다.
+UVLO Hysteresis 는 UVLO 설정점 분배기의
+임피던스로 켜지거나 꺼지는 내부 10uA 전류 소스로 수행된다.
+UVLO 핀 전압이 1.2V 를 초과하면
+Current Source 는 UVLO 핀에서 전압을 빠르게 올릴 수 있다.
+UVLO 핀 전압이 1.2V UVLO Threshold 아래로 떨어지면
+Current Source 가 Disable 되어 UVLO 핀의 전압이 빠르게 떨어진다.
+UVLO Hysteresis Current Source 외에도
+UVLO Toggling 의 Rising Edge 와 Falling Edge 모두에서
+5us Deglitch Filter 는 전원이 켜지거나 꺼질 때 Chatter 를 방지한다.
+
+공급 전압에서 AGND 까지의 외부 UVLO 설정 전압 분압기는
+Regulator 의 최소 입력 동작 전압을 설정하는데 사용된다.
+분압기는 입력 전압이 원하는 동작 범위에 있을 때
+UVLO 핀의 전압이 1.2V 보다 커지도록 설계되어야 한다.
+UVLO 핀의 최대 정격 전압은 15V 이다.
+필요한 경우 UVLO 핀을 외부 Zener Diode 로 Clamp 할 수 있다.
+UVLO 핀은 Floating 상태로 두어서는 안된다.
+RUV1 및 RUV2 의 값은 수학 식 1 및 수학 식 2 로부터 결정된다.
+
+R_UV2 = V_HYS / 10uA ohm
+R_UV1 = (1.2V * R_UV2) / {V_IN(STARTUP) - 1.2V} ohm
+
+V_HYS 는 원하는 UVLO Hysteresis 에 해당한다.
+V_IN(STARTUP) 은 전원을 켜는 동안 원하는 Regulator 의 시동 전압이다.
+
+Turn-Off 동안 일반적인 Shutdown Voltage 은 아래와 같이 계산할 수 있다:
+
+V_IN(SHUTDOWN) = V_IN(STARTUP) - V_HYS
+
+
+
+7.3.2. High Voltage VCC Regulator
+
+LM5122 에는 Controller 및 N-Channel MOSFET Driver 를 위한
+전형적인 7.6V VCC Bias Voltage 를 제공하는 내부 고전압 Regulator 가 내장되어 있다.
+VCC Regulator 의 입력인 VIN 은 65V 의 입력 전압 소스에 연결할 수 있다.
+VCC Regulator 는 UVLO 핀 전압이 0.4V 보다 클 때 켜진다.
+입력 전압이 VCC 설정점 레벨보다 낮으면 VCC 출력은 작은 전압 강하로 VIN 을 추적한다.
+VCC Regulator 의 출력은 최소 50 mA 에서 전류 제한이 있다.
+
+Power Up 시에 Regulator 는 VCC 핀에 연결된 콘덴서에 전류를 공급한다.
+VCC 콘덴서의 권장 콘덴서 범위는 1.0uF ~ 47uF 이며
+CBST 값의 10 배 이상인 것이 좋다.
+VIN 전압이 6V 미만에서 작동할 때 VCC 콘덴서 값은 4.7 uF 이상이어야 한다.
+
+외부 전원으로부터 VCC 를 공급함으로써
+LM5122 Device 의 내부 전력 손실을 줄일 수 있다.
+외부 VCC Bias 전원이 존재하고 전압이 9V 보다 크고 14.5V 미만이다.
+외부 VCC Bias 전원은 그림 17 과 같이 Diode 를 통해 직접 VCC 핀에 인가될 수 있다.
+
+Figure 17. External Bias Supply when 9V < V_EXT < 14.5V
+
+그림 18 은 Boost Inductor 에 추가 권선을 사용하여
+VCC Bias 전압을 유도하는 방법이다.
+이 회로는 VCC 전압을 VCC Regulation 전압보다 높여
+내부 VCC Regulator 를 차단하도록 설계되어야 한다.
+
+Figure 18. External Bias Supply using Transformer
+
+VCC Regulator Series Pass Transistor 에는
+VCC 와 VIN 사이에 Diode 가 포함되어 있는데
+Figure 19 와 같이 정상 동작시 완전히 순방향 Bias 되지 않아야 한다.
+외부 VCC Bias 전원의 전압이 VIN 핀 전압보다 큰 경우,
+외부 Bias 전원이 VCC 를 통해 입력 서플라이로 전류를 통과하지 못하도록
+외부 전원 공급 장치에서 VIN 핀으로 외부 전원 차단 Diode 가 필요하다.
+VCC 가 외부 Bias 전원에 의해 공급될 때
+모든 Application 에 대해 Blocking Diode 의 필요성을 평가해야 한다.
+특히 입력 전원 전압이 4.5V 미만인 경우
+외부 VCC 전원을 공급하고 외부 전원 차단 다이오드가 필요하다.
+
+Figure 19. VIN Configuration when V_VIN < V_VCC
+
+
+
+7.3.3. Oscillator
+
+LM5122 Switching Frequency 는 RT 핀과 AGND 핀 사이에 연결된
+단일 외부 저항으로 프로그래밍 할 수 있다.
+저항은 디바이스에 매우 가깝고 RT 핀과 AGND 핀에 연결되어야 한다.
+원하는 Switching Frequency(f_SW) 를 설정하기 위한
+저항은 식 4 로 계산할 수 있다.
+
+R_T = (9 x 10^9) / f_SW ohm
+
+
+
+7.3.4. Slope Compensation
+
+Duty Cycle 이 50% 보다 큰 경우
+Peak Current Mode Regulator 는 Subharmonic Oscillation 을 가지게 된다.
+Subharmonic Oscillation 은 일반적으로 폭이 좁고
+폭이 좁은 Duty Cycle 을 관찰하여 특성화된다.
+이 Subharmonic Oscillation 은 감지된 Inductor Current 에
+Slope Compensation 으로 알려진 인공 Ramp 를 추가하는 기술로 제거할 수 있다.
+
+Figure 20. Slope Compensation
+
+Slope Compensation 의 양은 SLOPE 핀과 AGND 핀 사이에 연결된
+단일 저항으로 프로그래밍 할 수 있다.
+Slope Compensation 의 양은 아래와 같이 계산할 수 있다.
+
+V_SLOPE = {(6 x 10^9) / (f_SW x R_SLOPE)} x D
+D = 1 - V_IN / V_OUT
+
+R_SLOPE 값은 최소 입력 전압에서 아래 식으로 결정할 수 있다:
+
+R_SLOPE = (L_IN x 6 x 10^9) / {(K x V_OUT - V_IN(MIN)) x R_S x 10} ohm
+K = 0.82 ~ 1
+
+이전 방정식에서 K 는 입력 범위에 대해 아래와 같이 계산할 수 있다:
+
+K = {1 + (L_IN x 6 x 10^9) / (V_IN x R_S x 10 x R_SLOPE)} x D'
+D' = V_IN / V_OUT
+
+어떤 경우에도 K 는 0.5 이상이어야 한다.
+500 kHz 이상의 높은 Switching Frequency 에서,
+최소 지연 시간은 내부 지연으로 인한 Slope Compensation 의 양에
+영향을 미치기 때문에 K 계수는 1 보다 크거나 같을 것을 권장한다.
+
+감지된 Inductor Current 와 Slope Compensation 의 합은
+Load 및 적절한 Current Limit 동작으로
+적절한 시동을 위해 COMP 출력 고전압(VOH) 보다 낮아야 한다.
+R_SLOPE 의 최소값을 아래와 같이 제한한다:
+
+R_SLOPE > {(5.7 x 10^9) / f_SW} x [1.2 - {V_IN(MIN) / V_OUT}] ohm
+
+이 식이 대다수의 경우 사용된다.
+
+R_SLOPE > (8 x 10^9) / f_SW ohm
+
+V_IN(MIN) < 5.5V 일 때 위와 같은 보수적인 선택을 고려해야 한다.
+
+SLOPE 핀은 floating 상태로 둘 수 없다.
+
+
+
+7.3.5. Error Amplifier
+
+내부의 High-Gain Error Amplifier 는 FB 핀 전압과
+내부 정밀도 1.2V Reference 의 차이에 비례하는 오류 신호를 생성한다.
+Error Amplifier 의 출력은 COMP 핀에 연결되어 사용자가
+Type 2 Loop Compensation Network 를 제공할 수 있도록 한다.
+
+R_COMP, C_COMP, 그리고 C_HF 는 Error Amplifier Gain 및
+Phase 특성을 구성하여 안정적인 Voltage Loop 를 달성한다.
+이 Network 는 DC 에 Pole, Phase Boost 를 위한 중간 대역 Zero(fZ_EA),
+그리고 High Frequency Pole(fP_EA) 를 생성한다.
+R_COMP 의 최소 권장 값은 2k ohm 이다.
+Feedback Compensation 섹션을 참조하라.
+
+f_(Z_EA) = 1 / (2π x R_COMP x C_COMP) [Hz]
+f_(P_EA) = 1 / [2π x R_COMP x {(C_COMP x C_HF) / (C_COMP + C_HF)}] [Hz]
+
+
+
+7.3.6. PWM Comparator
+
+감지된 Inductor Current 와 Slope Compensation Ramp 의 합이 V_COMP - 1.2V 보다 클 때,
+PWM Comparator 는 1.2V 내부 COMP 를 통해 PWM 전압 강하를 통해 감지된 Inductor Current 와
+Slope Compensation Ramp 의 합을 COMP 핀의 전압과 비교하고 현재 Cycle 을 종료한다.
+
+Figure 21. Feedback Configuration and PWM Comparator
+
+
+
+7.3.7. Soft-Start
+
+Soft-Start 기능은 Regulator 가
+점진적으로 정상 상태 동작점에 도달하도록 도와주므로 시동 Stress 와 Surge 가 감소된다.
+LM5122 는 FB 핀을 SS 핀 전압 혹은 내부 1.2V Reference 중 낮은 값으로 조정한다.
+내부 10uA Soft-Start Current Source 는 SS 핀에 연결된
+외부 Soft-Start Capacitor 의 전압을 점차 증가시킨다.
+이로 인해 입력 전압 레벨에서 목표 출력 전압까지 출력 전압이 서서히 상승한다.
+Soft-Start Time(tSS) 은 입력 전원 전압에 따라 달라지며 식 11 로 계산한다.
+
+t_SS = {(C_SS x 1.2V) / 10uA} x (1 - V_IN / V_OUT)
+
+UVLO 핀 전압이 1.2V UVLO Threshold 보다 크고
+VCC UV Threshold 를 초과하면 내부 10uA Soft-Start Current Source 가 커진다.
+이 Soft-Start Sequence 의 시작 부분에서 V_SS 는
+내부 SS Pull Down Switch 로 25mV 미만으로 떨어뜨려야 한다.
+SS 핀은 외부 Switch 에 의해 Pull Down 될 수 있지만
+Switch 를 수행하기 위해 Pulling up 하는 것은 허용되지 않는다.
+시동 지연(Figure 22 참조)은 High-Side Boot Capacitor 가
+내부 BST Charge Pump 에 의해 완전히 충전되기에 충분해야 한다.
+
+CSS 의 값은 Soft-Start Time 동안 출력 콘덴서를 충전할만큼 충분히 커야 한다.
+
+C_SS > {(10uA x V_OUT) / 1.2V} x (C_OUT / I_OUT)
+
+
+
+7.3.8. HO and LO Drivers
+
+LM5122 에는 강력한 N-Channel MOSFET Gate Driver 와
+관련된 N-Channel MOSFET Switch 를 구동하는 High-Side Level Shifter 가 내장되어 있다.
+High-Side Gate Driver 는 External Boot Diode DBST 및
+Bootstrap Capacitor CBST 와 함께 동작한다.
+Low-Side N Channel MOSFET Driver 의 On-Time 동안 SW 핀 전압은 약 0V 이고
+CBST 는 DBST 를 통해 VCC 로부터 충전된다.
+BST 와 SW 핀 사이의 짧은 Trace 로 연결된 0.1uF 이상의 세라믹 콘덴서를 권장한다.
+
+LO 및 HO 출력은 Adaptive Dead-Time 방식으로 제어되어
+2 개의 출력이 동시에 활성화되지 않도록 한다.
+Controller 가 LO 를 활성화하도록 명령하면
+Adaptive Dead-Time Logic 은 먼저 HO 를 Disable 하고
+HO-SW 전압이 떨어질 때까지 대기한다.
+LO 는 작은 지연(HO Fall 에서 LO Rise Delay) 후에 활성화된다.
+유사하게 HO Turn-On 은 LO 전압이 방전될 때까지 지연된다.
+HO 는 작은 Delay 후에 활성화된다(LO Fall 에서 HO Rise Delay)
+이 기법은 특히 VCC 가 더 높은 외부 전압 소스에 의해 공급될 때
+모든 크기 N Channel MOSFET Device 에 적합한 Dead-Time 을 보장한다.
+직렬 Gate 저항을 추가할 때 주의하라.
+그러면 유효 Dead-Time(불감) 시간이 줄어들 수 있다.
+
+특히 VIN 전압 범위가 VCC Regulation 레벨 미만이거나 Bypass 동작이 필요한 경우
+N-Channel MOSFET Devices Threshold 전압을 선택할 때 주의해야 한다.
+Bypass 동작이 필요한 경우 특히 출력 전압이 12V 미만인 경우
+High-Side N-Channel MOSFET 에 대해 Logic Level Device 를 선택해야 한다.
+낮은 입력 전압에서 시동하는 동안
+Low-Side N-Channel MOSFET Switch 의 Get Plateau Voltage(MOSFET 특성) 는
+N-Channel MOSFET Device 를 완전히 Enhance 하기에 충분해야 한다.
+(Enhancement 는 전압이 일정한 상태에서 전류가 대폭 증폭되는 구간)
+작동시 Low-Side N-Channel MOSFET Drive Voltage 가
+Low-Side N-Channel MOSFET Device Gate Plateau Voltage 보다 낮다면
+Regulator 가 제대로 작동되지 않을 수 있으며
+고전력 손실 상태에서 최대 Duty Cycle 에 고착될 수 있다.
+이 조건은 낮은 Threshold N-Channel MOSFET Switch 를 선택하거나
+UVLO 핀 전압 프로그래밍으로 VIN(STARTUP) 을 증가시킴으로써 피할 수 있다.
+
+
+
+7.3.9. Bypass Operation(V_OUT = V_IN)
+
+LM5122 는 입력 전원 전압이 목표 출력 전압 이상인 경우
+High-Side Synchronous Switch 에 100% Duty Cycle 동작을 허용한다.
+내부 200uA BST Charge Pump 는 Power Stage Switching 없이
+High-Side N-Channel MOSFET Switch 를 켜기 위해
+충분한 High-Side Driver 전원 전압을 유지한다.
+UVLO 핀 전압이 1.2V 보다 크고 VCC 전압이 VCC UV Threshold 를 초과할 때
+내부 BST Charge Pump 가 활성화된다.
+SW 전압이 9V 보다 클 때 BST Charge Pump 는
+5.3V 최소 BST 2 SW 전압을 발생시킨다.
+이를 위해선 적절한 bypass 동작을 위해 최소 9V Boost 출력 전압이 필요하다.
+저온 및 고온에서 충분한 Driver 공급 전압을 유지하려면
+Boot Diode 의 누설 전류가 항상 BST Charge Pump Sourcing Current 보다 작아야 한다.
+Bypass 동작이 필요할 때 권장되는 PWM 구성은 Forced PWM Mode 이다.
+
+
+
+7.3.10. Cycle-by-Cycle Current Limit
+
+LM5122 는 Peak Cycle-by-Cycle Current Limit 기능을 갖추고 있다.
+CSP 2 CSN 전압이 75mV Cycle-by-Cycle Current Limit Threshold 를 초과하면
+Current Limit Comparator 는 즉시 LO 출력을 중단한다.
+
+Inductor Saturation 과 같이 Inductor Current 가 Overshoot 할 수 있는 경우
+Current Limit Comparator 는 Current 가
+Current Limit Threshold 이하로 떨어질 때까지 Pulse 를 Skip 한다.
+Current Limit 의 Peak Inductor Current 는 아래와 같이 계산할 수 있다:
+
+I_PEAK(CL) = 75mV / R_S
+
+
+
+7.3.11. Clock Synchronization
+
+SYNCIN/RT 핀을 사용하여 내부 발진기를 외부 클럭과 동기화할 수 있다.
+RT 핀에서 Positive 로 가는 Synchronization Clock 은
+RT Sync 상승 Threshold 보다 커야하며
+RT 핀에서 Negative 로 가는 Synchronization Clock 은
+내부 Synchronization Pulse Detector 를 통과하기 위해
+RT Sync 하강 Threshold 보다 커야 한다.
+
+Master1 Mode 에서 2 가지 유형의 구성이 Clock Synchronization 에 허용된다.
+Figure 23 에서 외부 Synchronization Pulse 의 Frequency 는
+RT 저항에 의해 프로그램된 내부 발진기 주파수의 +40% 및 -20% 이내가 되도록 권장된다.
+예로 Master1 Mode 에서 450 kHz Switching 을 위해서는
+900 kHz 외부 Synchronization Clock 및 20k ohm RT 저항이 필요하다.
+내부 발진기는 Positive Edge 에서 RT 핀으로 AC 커플링을 수행함으로써 동기화된다.
+100pF 콘덴서를 통해 커플링된 5V 진폭 펄스 신호는 좋은 시작점이다.
+RT 저항은 발진기가 구동하거나 혹은 외부적으로 동기화되었는지 여부에 관계없이
+Figure 23 구성의 AC 커플링 콘덴서에서 항상 필요하다.
+
+RT 핀 전압이 외부 Pulse 의 하강 에지에서 -0.3V 이하가 되지 않도록 주의해야 한다.
+이것은 외부 동기화 펄스의 Duty Cycle 을 제한할 수 있다.
+외부 펄스의 상승 에지에서 LO 의 상승 에지까지 약 400ns Delay 가 있다.
+
+Figure 23. Oscillator Synchronization Through AC Coupling in Master1 Mode
+
+Figure 24 의 구성에서 내부 Oscillator 는 Duty Cycle 한계가 없는 RT 저항을 통해
+RT 핀에 외부 동기화 클록을 연결함으로써 동기화 될 수 있다.
+외부 클럭 소스의 출력단은 낮은 임피던스의 Totem-Pole 구조여야 한다.
+f_SYNC 의 기본 논리 상태는 Low 여야 한다.
+
+Figure 24. Oscillator Synchronization Through a Resistor in Master1 Mode
+
+Master2 및 Slave Mode 에서 이 외부 Synchronization Clock 은
+RT 핀에 직접 연결되어야하며 항상 연속적으로 제공되어야 한다.
+내부 발진기 주파수는 FB 및 OPT 핀 조합을 구성하여
+Switching Frequency 보다 2 배 빠르거나 스위칭 주파수와 같을 수 있다(표 1 참조)
+
+
+
+7.3.12. Maximum Duty Cycle
+
+높은 PWM Duty Cycle 에서 작동할 때
+Low-Side N-Channel MOSFET Device 는 매 Cycle 마다 강제로 꺼진다.
+이 강제된 LO Off-Time 은 Controller 의 최대 Duty Cycle 을 제한한다.
+높은 스위칭 주파수와 높은 Duty Cycle 요구 사항을 가진
+Boost Regulator 를 설계할 때 필요한 최대 Duty Cycle 을 확인해야 한다.
+목표 출력 전압을 달성할 수 있는 최소 입력 전원 전압은
+수식 14 혹은 15 로 계산할 수 있다.
+
+V_VCC 가 5.5V 보다 크거나 V_VIN 이 6.0V 보다 크면 수식 14 를 사용한다.
+이 조건 중 하나를 만족하지 않는 저전압 Application 의 경우 식 15 를 사용한다.
+
+V_IN(MIN) = f_SW x V_OUT x (400ns + margin)
+V_IN(MIN) = f_SW x V_OUT x (750ns + margin)
+
+정상 작동시 약 100ns 의 margin 을 권장한다.
+
+
+
+7.3.13. Thermal Protection
+
+내부의 Thermal Shutdown 회로는 최대 접합 온도를 초과하는 경우
+Controller 를 보호하기 위해 제공된다.
+일반적으로 165 도에서 활성화되면
+Controller 는 Low-Power Shutdown Mode 로 강제 전환되며,
+출력 드라이버, 분리 스위치 및 VCC Regulator 는 비활성화된다.
+이 기능은 과열 및 Device 파손을 방지하기 위해 고안되었다.
+
+
+
+7.4. Device Functional Modes
+
+7.4.1. MODE Control(Forced PWM Mode and Diode Emulation Mode)
+
+Diode 가 아닌 High-Side Switch 로 구현된 Fully Synchronous Boost Regulator 는
+경부하, 과전압 혹은 부하 과도 현상과 같은 특정 조건에서
+Sink Current 로부터 출력할 수 있는 기능을 가지고 있다.
+LM5122 는 강제 PWM Mode 혹은 Diode Emulation Mode 로 작동하도록 구성할 수 있다.
+
+강제 PWM Mode(FPWM) 에서 High-Side N-Channel MOSFET Switch 의 역전류가 허용되고
+부하 조건이 가볍거나 무부하 상태에서 Inductor 전류가 연속적으로 흐른다.
+강제 PWM Mode 의 이점은 가볍거나 무부하 조건에서 일정한 주파수로 동작하고
+가벼운 부하 ~ 무거운 부하 과도까지 응답이 빠르다.
+강제 PWM Mode 를 활성화하려면
+MODE 핀을 VCC 에 연결하거나 1.2V 이상의 전압에 연결한다.
+FPWM Mode 에서 역전류는 제한되지 않는다.
+
+Diode Emulatio Mode 에서 High-Side Switch 의 전류 흐름은
+한 방향(Source 2 Drain)에서만 허용된다.
+CSP 에서 CSN 으로의 전압이 Low-Side Switch On-Time 동안
+Zero Current Detection 의 Rising Threshold 인 7 mV 보다 큰 경우
+High-Side Switch 를 켤 수 있다.
+CSP 대 CSN 전압이 High-Side Switch On-Time 동안
+Zero Current Detection 의 Falling Threshold 미만인 경우
+High-Side N-Channel MOSFET Switch 를 통한 출력에서 입력의로의 역전류가 방지되고
+나머지 PWM Cycle 동안 High-Side N-Channel MOSFET Switch 를
+Latching Off 함으로써 Discontinuous Conduction Mode 가 가능해진다.
+Diode Emulation 의 이점은 경부하 조건에서 전력 손실이 낮다는 것이다.
+
+Figure 25. MODE Selection
+
+작동시 LM5122 는 작동시 사전 Bias 된 부하로
+Diode Emulation 을 강제하는 반면 SS 핀 전압은 1.2V 미만이다.
+강제 Diode Emulation 은 SS 가 1.2V 보다 클 때
+PWM Comparator 로부터의 Pulse 에 의해 종료된다.
+Soft-Start 기간 동안 LO Pulse 가 없으면 Soft-Start 가 끝날 때
+350 ns 의 단일 샷 LO Pulse 가 강제로 Bootstrap 콘덴서를 충전하는데 도움이 된다.
+내부 전류 감지 지연 때문에 Inductor Ripple 비율이 높고
+매우 높은 Switching Frequency 에서 작동하는 경우
+Diode Emulation Mode 용 LM5122 를 신중하게 평가해야 한다.
+FPWM Mode 에서 무부하까지의 전 부하 동안의 과도 성능도 검증되어야 한다.
+
+
+
+7.4.2. MODE Control(Skip Cycle Mode and Pulse Skipping Mode)
+
+Regulator 의 경부하 효율은 일반적으로 Converter 의 Switching 및
+Bias Current 와 관련된 손실이 부하에 전달되는 총 전력의 대다수가 될 때 떨어진다.
+경부하 효율을 높이기 위해 LM5122 는 Diode Emulation Mode 에서
+2 가지 유형의 경부하 작동을 제공한다.
+
+LM5122 Controller 에 통합된 Skip Cycle Mode 는 Switching Loss 를 줄이고
+평균 Switching Frequency 를 낮춤으로써 경부하 조건에서 효율을 향상시킨다.
+Skip Cycle Comparator 에 의해 Skip Cycle 동작이 달성된다.
+경부하 조건이 발생하면 COMP 핀 전압은 자연적으로 감소하여
+Regulator 가 제공하는 Peak Current 를 감소시킨다.
+COMP 전압 강하 동안 Skip Cycle Threshold 는 VMODE -20 mV 로 정의되고
+COMP 전압 Rising 동안 VMODE + 20 mV 로 정의된다.
+Skip Cycle Comparator 에는 내부 Hysteresis 가 40 mV 있다.
+
+PWM Comparator 입력의 전압이 VMODE -20 mV 미만으로 떨어지면
+HO 및 LO 출력이 모두 비활성화된다.
+Controller 는 PWM Comparator Input 에서의 전압이 VMODE +20 mV 으로 증가할 때까지
+Switching Cycle 을 계속 Skip 하여 더 많은 Inductor Current 를 요구한다.
+Skip 되는 Cycle 수는 Frequency Compensation Network 의 부하 및 응답 시간에 따라 다르다.
+Skip Cycle Comparator 의 내부 Hysteresis 는
+긴 Skip Cycle 간격과 짧은 Pulse Burst 를 생성하는데 도움이 된다.
+내부 700k ohm Pull Up 및 100k ohm Pull Down 저항은
+MODE 핀을 디폴트 0.15V 로 설정한다.
+Peak Current Limit Threshold 는 750 mV 로 설정되므로
+기본 Skip Threshold 가 Peak Level 의 약 17% 에 해당한다.
+실제로 Skip Level 은 Slope Compensation 이 추가되어 낮아질 것이다.
+SLOPE 혹은 VCC 핀에 외부 Pull Up 저항을 추가하거나
+외부 Pull Down 저항을 접지에 추가함으로써 Skip Cycle Threshold 를 프로그래밍 할 수 있다.
+Skip Cycle Comparator 는 COMP 전압에 비례하는 PWM Comparator 입력을 모니터하므로
+Bypass 동작이 필요한 경우에 Skip Cycle 동작은 권장되지 않는다.
+
+기존의 Pulse Skipping 동작은 MODE 핀을 접지에 연결하여 수행할 수 있다.
+Skip Cycle Comparator 에서 Negative 20 mV Offset 은
+Skip Cycle Comparator 가 정상 동작에서 Trigger 되지 않도록 보장한다.
+가볍거나 무부하 조건에서 LM5122 는 Regulator 에 필요한 Pulse Width 가
+Device 의 최소 LO On-Time 보다 작으면 LO Pulse 를 건너뛴다.
+Error Amplifier 가 경부하 혹은 무부하 상태에서 Regulation 을 유지하기 위해
+LO 의 평균 Pulse Width 를 찾기 위한 임의적 동작으로 Pulse Skipping 이 나타난다.
+
+
+
+7.4.3. Hiccup Mode Over-Load Protection
+
+어떤 Cycle 동안 Cycle-by-Cycle Current Limit 에 도달하면
+30uA Current 가 나머지 Clock Cycle 동안 RES 콘덴서에 공급된다.
+RES 콘덴서 전압이 1.2V Restart Threshold 를 초과하는 경우
+Hiccup Mode Over Load Protection Sequence 가 시작된다.
+SS 콘덴서는 GND 로 방전되고 LO 및 HO 출력은 모두 Disable 되며
+RES 콘덴서의 전압은 2V Hiccup Counter Lower Threshold 와
+4V Hiccup Counter Upper Threshold 사이에서
+10uA 충전 및 5uA 방전 Current 에 의해 8 배로 위아래로 Ramp 된다.
+8 번째 Cycle 후에 SS 콘덴서는 10uA Soft-Start Current 로 다시 방전되고 충전된다.
+3V Zener Diode 가 RES 콘덴서와 병렬로 연결된 경우
+Regulator 는 Hiccup Mode Off Mode 로 들어가고
+UVLO Shutdown 이 순환될 때까지 다시 시작하지 않는다.
+Hiccup Mode 동작을 사용하지 않을 때 RES 핀을 AGND 에 직접 연결하라.
+
+Figure 26. Hiccup Mode Over-Load Protection
+
+
+
+7.4.4. Slave Mode and SYNCOUT
+
+LM5122 는 하나의 Controller 를 Master 로 구성하고
+다른 모든 Controller 를 Slave 로 구성하여
+Dual(혹은 그 이상) Phase Boost Converter 를 쉽게 구현할 수 있다.
+Slave Mode 는 FB 핀을 VCC 핀에 연결함으로써 활성화된다.
+FB 핀은 초기 전원을 키는중에 Sampling 되며 Slave 구성이 감지되면 상태가 Latch 된다.
+Slave Mode 에서 Error Amplifier 가 활성화되고 높은 임피던스 출력을 가지며,
+10uA 의 Hiccup Mode Off-Time Charging Current 와
+5uA 의 Hiccup Mode Off-Time Discharging Current 가 Disable 되고,
+5uA 의 정상 상태 RES Discharging Current 및
+10uA Soft-Start Charging Current 가 비활성화되면
+30uA Fault-State RES Charging Current 가 35uA 로 변경된다.
+10uA UVLO Hysteresis Current Source 는 Master Mode 와 동일하게 동작한다.
+또한 Slave Mode 에서는 내부 Oscillator 가 비활성화되고 외부 동기화 클록이 필요하다.
+
+SYNCOUT 기능은 180도 Phase Shift 된 클록 출력을 제공하므로
+쉬운 Dual-Phase Interleav 구성이 가능하다.
+Master1 SYNCOUT 을 Slave1 SYNCIN 에 직접 연결하면
+Slave Controller 의 Switching Frequency 가
+180도 Phase Shift 로 Master Controller 에 동기화된다.
+Master Mode 에서 OPT 핀을 GND 에 연결하면
+50% Duty Cycle 의 2 로 나눠진 내부 발진기 클록이 제공되어
+2 개의 Phase Interleave 구성에서 180도 Phase Shift 동작을 달성할 수 있다.
+이 구성에서는 Master Controller 의 Switching Frequency 가 외부 클록 주파수의 절반이다.
+OPT 핀 전압이 2.7V OPT Threshold 보다 높거나 핀이 VCC 에 연결되면 SYNCOUT 은 비활성화되고
+Master Controller 의 Switching Frequency 는 외부 클록 주파수와 동일해진다.
+Master2, Slave1, Slave2 구성의 경우
+외부 동기화 클록을 항상 제공하고 SYNCIN 에 직접 연결해야 한다.
+자세한 내용은 Interleave 된 Boost 구성 섹션을 참조하라.
+
+Table 1. LM5122 Multiphase Configuration
+
+
+
+8. Application and Implementation
+
+NOTE
+
+다음 Application Section 의 정보는 TI 구성 요소 사양의 일부가 아니며
+TI 는 그 정확성이나 완전성을 보증하지 않는다.
+TI 고객은 자신의 목적을 위한 구성 요소의 적합성을 결정할 책임이 있다.
+고객은 System 기능을 확인하기 위해 설계 구현을 검증하고 테스트해야 한다.
+
+
+
+8.1. Application Information
+
+LM5122 Device 는 Step-Up DC-DC Converter 다.
+이 Device 는 일반적으로 낮은 DC 전압을 높은 DC 전압으로 변환하는데 사용된다.
+아래 설계 절차를 사용하여 LM5122 Device 의 Component 값을 선택하라
+혹은 WEBENCH SW 를 사용하여 완전한 Design 을 생성하라.
+WEBENCH SW 는 반복 설계 절차를 사용하고 설계를 생성할 때
+포괄적인 구성 요소 DB 에 접근한다.
+이 섹션에서는 설계 절차에 대해 간단하게 설명한다.
+
+
+
+8.1.1. Feedback Compensation
+
+Boost Regulator 의 Open Loop Response 는
+Modulator Transfer Function 과 Feedback Transfer Function 의 곱으로 정의된다.
+dB Scale 상에서 그래프를 그리면 Open Loop Gain 은
+Modulator Gain 과 Feedback Gain 의합으로 표시된다.
+Embedded Current Loop 가 있는 Power Stage Transfer Function 을 포함하는
+Current Mode Boost Regulator 의 Modulator Transfer Function 은 1 개의 Pole, 1 개의 Zero,
+그리고 1 개의 Right Half Plane(RHP) Zero System 으로 단순화될 수 있다.
+
+Modulator Transfer Function 은 아래와 같다:
+
+V_OUT(s) / V_COMP(s) = A_M x [{1 + s / w_(Z_ESR)} x {1 - s / w_(Z_RHP)} / (1 + s / w_(P_LF))]
+
+A_M(Modulator DC Gain) = [R_LOAD / {R_(S_EQ) x A_S}] x D' / 2
+w_(P_LF)(Load Pole) = 2 / (R_LOAD x C_OUT)
+w_(Z_ESR)(ESR Zero) = 1 / {R_ESR x C_OUT)
+w_(Z_RHP)(RHP Zero) = (R_LOAD x D^2) / L_(IN_EQ)
+L_(IN_EQ) = L_IN / n
+R_(S_EQ) = R_S / n
+n 은 phase 의 숫자
+
+COUT(RESR) 의 ESR 이 충분히 작고 RHP Zero Frequency 가 Target Crossover Frequency 에서 멀다면
+Modulator Transfer Function 은 1 개의 Pole System 으로 더 단순화될 수 있으며
+Voltage Loop 는 2 개의 Loop Compensation 구성 요소인 RCOMP 및 CCOMP 만으로 폐쇄되어
+Crossover Frequency 에 Single Pole Response 를 남긴다.
+Crossover Frequency 에서 Single Pole Response 는
+90 도의 Phase Margin 을 갖는 매우 안정한 Loop 를 생성한다.
+
+Feedback Transfer Function 은 Feedback 저항 분배기와
+Error Amplifier 의 Loop Compensation 을 포함한다.
+RCOMP, CCOMP 및 옵션 CHF 는 Error Amplifier Gain 및 Phase 특성을 구성하고
+원점에 기둥을 만들고 Low Frequency Zero 와 High Frequency Pole 을 만든다.
+
+Feedback Transfer Function 은 아래와 같이 정의된다:
+
+-V_COMP / V_OUT = A_FB x [{1 + s / w_(Z_EA)} / {s x {1 + s / w_(P_EA)}}]
+
+A_FB(Feedback DC Gain) = 1 / {R_(FB2) x (C_COMP + C_HF)}
+w_(Z_EA)(Low Frequency Zero) = 1 / (R_COMP x C_COMP)
+w_(P_EA)(High Frequency Zero) = 1 / (R_COMP x C_HF)
+
+원점의 Pole 은 출력의 정상 상태 오차를 최소화한다.
+Low Frequency Zero 는 Modulator 의 Load Pole 을 취소하기 위해 배치되어야 한다.
+High Frequency Pole 은 출력 콘덴서 ESR 에 의해 생성된 Zero 를 취소하거나
+Error Amplifier 의 잡음 감수성을 감소시키는데 사용될 수 있다.
+Low Frequency Zero 를 Crossover Frequency 보다 작은 크기의 차수로 배치함으로써
+Crossover Frequency 에서 Phase Boost 의 최대량이 달성될 수 있다.
+CHF 를 추가하면 Feedback Transfer Function 에 Pole 이 추가되므로
+High Frequency Pole 은 Crossover Frequency 를 초과하여 배치해야 한다.
+
+Crossover Frequency(Open Loop Bandwidth)는
+대개 f_SW 의 20 분의 1 에서 5 분의 1 사이에서 선택된다.
+단순화된 공식에서 추정된 Crossover Frequency 는 아래와 같이 정의될 수 있다:
+
+f_CROSS = [R_COMP / {π x R_(S_EQ) x R_(FB2) x A_S x C_OUT}] x D
+D = V_IN / V_OUT
+
+더 높은 Crossover Frequency 의 경우
+R_COMP 는 증가할 수 있고 C_COMP 는 비례적으로 감소할 수 있다.
+반대로 C_COMP 를 비례적으로 증가시키면서 R_COMP 를 줄이면
+Feedback Transfer Function 에서 동일한 Zero Frequency 를 유지하면서 Bandwidth 가 낮아진다.
+
+Modulator Transfer Function 은 Network Analyzer 로 측정할 수 있으며
+Feedback Transfer Function 은 원하는 Open Loop Transfer Function 으로 구성할 수 있다.
+Network Analyzer 를 사용할 수 없는 경우 허용 가능한 성능을 확인하기 위해
+Step Load 과도 특성 검사를 수행할 수 있다.
+Step Load 의 목표는 댐핑된 응답이 있는 최소 Overshoot/Undershoot 를 얻는 것이다.
+
+
+
+8.1.2. Sub-Harmonic Oscillation
+
+Modulator Transfer Function 은 Network Analyzer 로 측정할 수 있으며
+Feedback Transfer Function 은 원하는 Open Loop Transfer Function 으로 구성할 수 있다.
+Network Analyzer 를 사용할 수 없는 경우 허용 가능한 성능을 확인하기 위해
+Step Load 과도 특성 검사를 수행할 수 있다.
+
+Peak Current Mode Regulator 는 50% Duty Cycle 이상으로 동작할 때
+불안정한 동작을 나타낼 수 있다.
+이 동작은 Sub-Harmonic Oscillation 이라고 알려져 있으며
+SW 핀에서 폭이 좁고 넓은 Pulse 가 번갈아 나타나는 특징이 있다.
+Sub-Harmonic Oscillation 은 감지된 Inductor Current 상단에
+추가 Slope Voltage Ramp(Slope Compensation)을 추가하여 방지할 수 있다.
+K >= 0.82 ~ 1.0 을 선택하면 넓은 입력 전압 변화에도 Sub-Harmonic Oscillation 이 제거된다.
+
+Time-Domain Analysis 에서 초기 지점에서 시작하는
+Steady-State Inductor Current 는 같은 지점으로 되돌아 간다.
+초기 섭동(dI_0)에 의해 유발된 종료 사이클 Current Error(dI_1)의 진폭이 
+dI_0 의 진폭보다 작거나 혹은 dI_1 / dI_0 > -1 이라면
+섭동은 몇 주기 후에 자연적으로 사라진다.
+dI_1 / dI_0 < -1 일 때 초기 섭동은 더 이상 사라지지 않으며
+정상 상태에서 Sub-Harmonic Oscillation 을 초래한다.
+
+Figure 27. Effect of Initial Perturbation when dI_1 / dI_0 < -1
+
+dI_1 / dI_0 은 아래와 같이 계산된다:
+
+dI_1 / dI_0 = 1 - (1 / K)
+
+dI_1 / dI_0 과 K 인자 사이의 관계는 아래와 같은 도표로 설명된다.
+
+Figure 28. dI_1 / dI_0 vs K Factor
+
+K 의 절대 최소값은 0.5 이다.
+K < 0.5 일 때, dI_1 의 진폭은 dI_0 의 진폭보다 크며
+초기 섭동은 Sub-Harmonic Oscillation 을 초래한다.
+K = 1 이면 초기 Switching 은 한 번의 Switching Cycle 에서 제거된다.
+이것을 1 Cycle Damping 이라고 한다.
+-1 < dI_1 / dI_0 < 0 일 때, 초기 섭동은 감쇠가 부족하다.
+모든 섭동은 0 < dI_1 / dI_0 < 1 일 때 과도 감쇠가 일어난다.
+
+Frequency Domain 에서 Q 는 Modulator Transfer Function 에서
+Sampling Gain 항의 Quality Factor 로서
+Sub-Harmonic Oscillation 에 대한 경향을 예측하는데 사용되며 아래와 같이 정의된다:
+
+Q = 1 / π(K - 0.5)
+
+Q 와 K Factor 의 관계는 Figure 29 에 나와있다.
+
+Figure 29. Sampling Gain Q vs K Factor
+
+K 의 권장 최소 절대 값은 0.5 다.
+K 가 0.5 보다 작으면 High Gain Peaking 은
+f_SW / 2 에서 Sub-Harmonic Oscillation 을 초래한다.
+K Factor 의 값이 클수록 Crossover Frequency 근처에서 추가적인 Phase Shift 가 발생하지만
+Current Loop 에서 Noise 감수성을 감소시키는 이점이 있다.
+K Factor 의 최대 허용 값은 Table 2 의 Frequency Analysis Formula 에서
+최대 Crossover Frequency 방정식으로 계산할 수 있다.
+
+Table 2. Boost Regulator Frequency Analysis
+
+(1) 종합 방정식은 Inductor Pole 과 f_SW / 2 에서 정점에 도달하는 Gain 을 포함하며
+    이는 Current Mode Control 의 Sampling Effect 로 인해 발생한다.
+    또한 Seramic 콘덴서 C_OUT2(No ESR) 이 C_OUT1 과 병렬로 연결되어 있다고 가정한다.
+    R_ESR1 은 C_OUT1 의 ESR 을 나타낸다.
+
+(2) Multi-Phase Configuration 에서 L_(IN_EQ) = L_IN / n, R_(S_EQ) = R_S / n,
+    R_LOAD = V_OUT / {I_OUT(각 Phase 당) x n},
+    C_OUT = 각 Phase 당 C_OUT x n, n 은 Phase 의 수이다.
+    전류 감지 증폭기 Gain 은 그대로다.
+
+(3) w_(Z_EA) = w_(P_LF), w_(P_EA) = w_(Z_ESR), f_CROSS < w_(Z_RHP) / (2 x π x 10),
+    C_COMP = (R_LOAD x C_OUT) / (4 x R_COMP), D = V_IN / V_OUT 으로 가정한다.
+
+(4) Modulator Phase 특성에서 45 도 Phase Shift 가 발생하는 주파수
+
+
+
+8.1.3. Interleaved Boost Configuration
+
+Interleave 작업은 고효율, 낮은 부품 Stress 및 감소된 입출력 Ripple 을 가진
+단일 출력, High Current Application 에서 많은 이점을 제공한다.
+Dual Phase Interleave 동작의 경우,
+Output Power Path 가 분할되어 각 Phase 의 Input Current 를 1 / 2 로 줄인다.
+입출력 콘덴서의 Ripple Current 는 각 Channel 이
+다른 Channel 과 180 도 위상차로 작동하므로 상당히 감소한다.
+Figure 30 은 정규화된(I_RMS / I_OUT) 출력 콘덴서 Ripple Current 대
+Single Phase 및 Dual Phase Boost Converter 의 Duty Cycle 을 나타내며
+I_RMS 는 Output Current Ripple RMS 에 해당한다.
+
+Figure 30. Normalized Output Capacitor RMS Ripple Current
+
+Dual Phase Interleave 동작을 구성하려면 하나의 Device 를 Master 로 구성하고
+FB 를 VCC 에 연결하여 다른 Device 를 Slave Mode 로 구성해야 한다.
+또한 Master 측의 COMP, UVLO, RES, SS, SYNCOUT 은
+각각 Slave 측의 COMP, UVLO, RES, SS, SYNCIN 에 연결해야 한다.
+Compensation Network 는 Master FB 와 공통 COMP 연결 사이에 연결된다.
+2 개 Power Stage 의 출력 콘덴서는 공통 출력에 함께 연결된다.
+
+Figure 31. Dual Phase Interleaved Boost Configuration
+
+Figure 32 는 Dual Phase Timing Diagram 을 보여준다.
+180도 Phase Shift 는 Master 측의 SYNCOUT 을 Slave 측의 SYNCIN 에 연결함으로써 실현된다.
+
+Figure 32. Dual Phase Configuration and Timing Diagram
+
+각 Channel 은 Figure 33 의 개별 외부 클럭에 의해 동기화된다.
+SYNCOUT 핀은 Figure 34 에서 하나의 외부 클록 소스만 필요로 한다.
+외부 동기화 펄스의 50% Duty Cycle 은 항상 이 Daisy Chain Configuration 과 함께 제공되어야 한다.
+
+Phase 간의 Current Sharing 은 Master Controller 의
+Error Amplifier Output 을 3 개의 Slave Controller 와 공유하여 이뤄진다.
+저항 감지는 Phase Current 의 Balance 를 맞추기 위해 선호되는 Current Sensing 방법이다.
+
+Figure 33. 4-Phase Timing Diagram Individual Clock
+
+Figure 34. 4-Phase Timing Diagram Daisy Chain
+
+
+
+8.1.4. DCR Sensing
+
+최소의 전도 손실로 최저 비용이 요구되는 Application 의 경우,
+Inductor DC 저항(DCR)은 감지 저항을 사용하지 않고 Inductor Current 를 감지하는데 사용된다.
+Figure 35 는 2 개의 DCR Sensing 저항과 하나의 콘덴서를 사용하는 DCR 감지 구성이다.
+
+Figure 35. DCR Sensing
+
+R_CSN 과 C_DCR 선택은 식 21 을 충족해야 한다.
+이 간접 전류 감지 방법은 시간 상수 매칭을 요구하기 때문이다.
+C_DCR 은 일반적으로 0.1uF ~ 2.2uF 의 범위에서 선택된다.
+
+L_IN / R_DCR = C_DCR x R_CSN
+
+R_CSN 값이 작으면 CSN Bias Current 로 인한 전압 강하가 최소화되지만
+R_CSN 의 동적 전력 소모가 증가한다.
+R_CSP 의 DC 전압 강하는 R_CSP 의 동일한 값을 선택하여 보상할 수 있지만
+Current Amplifier 의 Gain(일반적으로 10)은 R_CSP 를 추가함으로써 영향을 받는다.
+DCR 감지 Network 가 있는 Current Amplifier 의 Gain 은 아래와 같이 결정할 수 있다:
+
+A_(CS_DCR) = 12.5k ohm / (1.25k ohm + R_CSP)
+
+DCR 감지의 정확도가 떨어지므로 DCR 감지가 사용되는 경우 FPWM Mode 작동이 권장된다.
+
+
+
+8.1.5. Output Overvoltage Protection
+
+간단한 외부 회로를 추가하여 출력 과전압 보호를 달성할 수 있다.
+Figure 36 의 출력 과전압 보호 회로는
+출력 전압이 Zener Diode 에 설정된 과전압 Threshold 를 초과하면 LM5122 를 Shutdown 시킨다.
+
+Figure 36. Output Overvoltage Protection
+
+
+
+8.1.6. SEPIC Converter Simplified Schematic
+
+Figure 37. Sepic Converter Simplified Schematic
+
+
+
+8.1.7. Non-Isolated Synchronous Flyback Converter Simplified Schematic
+
+Figure 38. Non-Isolated Synchronous Flyback Converter Simplifed Schematic
+
+
+
+8.2. Typical Application
+
+Figure 39. Single Phase Example Schematic
+
+
+
+8.2.1. Design Requirements
+
+
+
+8.2.2. Detailed Design Procedure
+
+8.2.2.1. Timing Resistor R_T
+
+일반적으로 고주파 Application 은 작지만 손실이 더 크다.
+이 예에서 250 kHz 에서의 작동이 작은 크기와 높은 효율 사이의 합리적인 절충안으로 선택된다.
+250 kHz Switching Frequency 에 대한 R_T 값은 아래와 같이 계산된다:
+
+R_T = (9 x 10^9) / f_SW = (9 x 10^9) / 250kHz = 36.0k ohm
+
+R_T 는 36.5k ohm 의 표준 값이 선택된다.
+
+
+
+8.2.2.2. UVLO Divider R_UV2, R_UV1
+
+원하는 시작 전압과 Hysteresis 는 전압 분배기 R_UV2, R_UV1 에 의해 설정된다.
+UVLO Shutdown Voltage 는 Low-Side N-Channel MOSFET Switch 를
+충분히 Enhancem 시킬 수 있을만큼 높아야 한다.
+이 Design 에서 시동 전압은 V_IN(MIN) 보다 0.3V 낮은 8.7V 로 설정된다.
+V_HYS 는 0.5V 로 설정된다.
+결과적으로 V_IN(SHUTDOWN) 8.2V 가 발생한다.
+R_UV2, R_UV1 의 값은 아래와 같이 계사한다:
+
+R_UV2 = V_HYS / I_HYS = 0.5V / 10uA = 50k ohm
+R_UV1 = (1.2V x R_UV2) / {V_IN(STARTUP) - 1.2V} = [(1.2V x 50k ohm) / (8.7V - 1.2V)] = 8k ohm
+
+R_UV2 에 대해 49.9k ohm 의 표준값이 선택된다.
+R_UV1 에 대해 8.06k ohm 의 표준값이 선택된다.
+
+
+
+8.2.2.3. Input Inductor L_IN
+
+Inductor Ripple Current 는 일반적으로 Core Loss 와 Inductor 의 Copper Loss 사이에
+좋은 절충안으로 알려진 최대 부하 전류의 20% ~ 40% 로 설정된다.
+Ripple Current 가 높을수록 Inductor 크기가 작아지지만
+출력 콘덴서에 더 많은 부담이 가해져 출력 Ripple 전압이 잘 발생하게 된다.
+이 예에서 입력 전류의 25% 인 0.25 의 Ripple Ratio(RR)가 선택되었다.
+Switching Frequency 와 일반 출력 전압을 알면 Inductor 값은 아래와 같이 계산할 수 있다:
+
+L_IN = [V_IN / (I_IN x RR)] x (1 / f_SW) x [1 - (V_IN / V_OUT)]
+     = [12V / {(108W / 12V) x 0.25}] x (1 / 250 kHz) x [1 - (12V / 24V)] = 10.7uH
+
+L_IN 에 대해 가장 가까운 표준값 10uH 가 선택되었다.
+
+Inductor 의 포화 전류 정격은 최소 입력 전압 및 최대 부하에서
+계산된 Peak Inudctor Current 보다 커야 한다.
+8.7V 시동 전압은 보수적으로 사용된다.
+
+I_PEAK = I_IN + (1 / 2) x [V_IN / (L_IN x f_SW)] x [1 - (V_IN / V_OUT)]
+       = [(24V x 4.5A) / 8.7V] + (1 / 2) x [8.7V / (10uH x 250kHz)] x [1 - (8.7V / 24V)] = 13.5A
+
+
+
+8.2.2.4. Current Sense Resistor R_S
+
+최대 Peak 입력 전류 성능은 허용 입력을 고려한 낮은 입력 전압 및
+최대 부하에서 필요한 Peak Current 보다 20 ~ 50% 높아야 한다.
+이 예에서 40% 가 Margin 으로 선택된다.
+
+R_S = V_(CS_TH1) / I_PEAK(CL) = 75mV / (13.5A x 1.4) = 3.97m ohm
+
+R_S 에 가장 가까운 표준값 4m ohm 이 선택된다.
+R_S 의 최대 전력 손실은 아래와 같이 계산된다:
+
+R_LOSS(RS) = I^2 x R = (13.5A x 1.4)^2 x 4m ohm = 1.43W
+
+
+
+8.2.2.5. Current Sens Filter R_CSFP, R_CSFN, C_CS
+
+Current Sense Filter 는 옵션이다.
+100pF 의 C_CS 및 100 ohm 의 R_CSFP, R_CSFN 은 일반적인 권장 사항이다.
+CSP 및 CSN 핀은 High Impedance 로 CCS 는 물리적으로 Device 에 가깝게 배치해야 한다.
+
+Figure 40. Current Sense Filter
+
+
+
+8.2.2.6. Slope Compensation Resisitor R_SLOPE
+
+K 값은 최소 입력 전압에서 1 로 선택된다.
+감지된 Inductor Slope Compensation 의 합이
+COMP 출력 고전압보다 작도로 R_SLOPE 를 신중하게 선택해야 한다.
+
+R_SLOPE > (8 x 10^9) / f_SW = (8 x 10^9) / 250kHz = 32k ohm
+R_SLOPE = (L_IN x 6 x 10^9) / [{K x V_OUT - V_IN(MIN)} x R_S x 10]
+        = (10uH x 6 x 10^9) / [(1 x 24V - 9V) x 4m ohm x 10] = 100k ohm
+
+가장 가까운 표준값인 100k ohm 이 R_SLOPE 로 선택된다.
+
+
+
+8.2.2.7. Output Capacitor C_OUT
+
+출력 콘덴서는 출력 전압 Ripple 을 평활화시키고 과도 부하 조건에서 충전 소스를 제공한다.
+출력 콘덴서는 부하가 갑자기 끊어진 경우 출력 전압 Overshoot 를 줄인다.
+
+출력 콘덴서의 Ripple Current 정격을 신중하게 선택해야 한다.
+Boost Regulator 에서 출력은 불연속 전류로 공급되며
+일반적으로 Ripple Current 요구 사항이 높다.
+실제적으로 Ripple Current 요건은 전력 스위치에 가깝게 Bulk Aluminum 콘덴서보다
+높은 품질의 Seramic 콘덴서를 배치함으로써 급격하게 감소될 수 있다.
+
+출력 전압 리플은 출력 콘덴서의 ESR 에 의해 좌우된다.
+병렬 출력 콘덴서는 효과적인 ESR 을 최소화하고 출력 리플 전류를 콘덴서로 분할하는데 좋다.
+
+이 예에서 3 개의 330uF 알루미늄 콘덴서를 사용하여 출력 리플 전류를 공유하고 필요한 전하를 소싱한다.
+최대 출력 리플 전류는 아래와 같이 최소 입력 전압을 통해 간단히 계산할 수 있다:
+
+I_(RIPPLE_MAX(COUT)) = I_OUT / [2 x V_IN(MIN) / V_OUT] = 4.5A / [2 x 9V / 24V] = 6A
+
+출력 콘덴서당 60m ohm 의 ESR 을 가정하면
+최소 입력 전압에서의 출력 전압 리플은 아래와 같이 계산된다:
+
+V_(RIPPLE_MAX(COUT)) = I_OUT / [V_IN(MIN) / V_OUT] x [R_ESR + 1 / (4 x C_OUT x f_SW)]
+                     = 4.5A / (9V / 24V) x [(60m ohm / 3) + 1 / (4 x 3 x 330uF x 250 kHz)] = 0.252V
+
+실제적으로 4 개의 10uF 세라믹 콘덴서가 추가적으로 Bulk 알루미늄 콘덴서보다
+먼저 배치되어 출력 전압 리플을 줄이고 출력 리플 전류를 분리한다.
+
+입력에서 출력까지 고유한 경로로 인해 전압이 빠르게 상승하고
+출력 콘덴서를 충전할 때 무한 돌입 전류가 흐를 수 있다.
+입력 전압 상승의 Slew Rate 는 Hot-Swap 에 의해 제어되거나
+감지 저항 혹은 High-Side N-Channel MOSFET Switch 를 구성하여
+돌입 전류에 대해 입력 전원을 평활하여 시작함으로써 Inductor 를 손상시키지 않도록 한다.
+
+
+
+8.2.2.8. Input Capacitor C_IN
+
+입력 콘덴서는 입력 전압 리플을 평활화한다.
+고품질의 세라믹 콘덴서가 입력 콘덴서로 사용된다고 가정하면
+입력 전압이 출력 전압의 절반일 때 발생하는 최대 입력 전압 리플은 아래와 같이 계산할 수 있다:
+
+V_(RIPPLE_MAX(CIN)) = V_OUT / (32 x L_IN x C_IN x f_SW^2)
+                    = 24V / (32 x 10uH x 4 x 3.3uF x 250kHz^2) = 0.09V
+
+입력 콘덴서의 값은 소스 임피던스, 소스 전원 임피던스의 함수이다.
+소스 전원 공급 장치의 임피던스가 충분히 낮지 않은 경우
+전원을 켤때 Chatter 상태를 방지하기 위해 더 많은 입력 콘덴서가 필요하다.
+
+
+
+8.2.2.9. VIN Filter R_VIN, C_VIN
+
+VIN 핀의 RC Filter(R_VIN, C_VIN)은 옵션이다.
+C_IN 콘덴서가 고품질 세라믹 콘덴서이고
+물리적으로 Device 가까이에 배치되는 경우엔 필요하지 않다.
+이 Filter 는 VIN 핀에 고주파 스위칭 잡음 주입으로 인한 결함을 방지하는데 도움이 된다.
+0.47uF 세라믹 콘덴서가 이 예에서 사용된다.
+3 ohm 의 R_VIN 과 0.47uF 의 C_VIN 이 일반적인 권장 사항이다.
+입력 전압이 8V 보다 낮거나 필요한 Duty Cycle 이 최대 Duty Cycle 한계에 가까울 때
+C_VIN 이 2.2uF ~ 4.7uF 인 더 큰 Filter 가 권장된다.
+
+Figure 41. VIN Filter
+
+
+
+8.2.2.10. Bootstrap Capacitor C_BST and Boost Diode D_BST
+
+BST 와 SW 핀 사이의 Bootstrap 콘덴서는 Gate Current 를 공급하여 각 Cycle 의 Turn-On 동안
+High-Side N-Channel MOSFET Device Gate 를 충전하고 Bootstrap Diode 에 대한 복구 전하를 제공한다.
+이러한 Current Peak 는 수 A 가 될 수 있다.
+Bootstrap 콘덴서의 권장 값은 0.1uF 에 해당한다.
+C_BST 는 우수한 Inductance 로 인한 잠재적인 전압 과도 현상을 최소화하기 위해
+Device 의 핀에 위치한 양질의 낮은 ESR 세라믹 콘덴서가 필요하다.
+Bootstrap 콘덴서의 최소값은 아래와 같이 계산한다:
+
+C_BST = Q_G / ΔV_BST
+
+여기서 QG 는 High-Side N-Channel MOSFET Gate 전하이며
+ΔV_BST 는 C_BST 에서 허용 가능한 전압 저하이며
+이는 일반적으로 VCC 의 5% 혹은 0.15V 미만인 것으로 보수적이다.
+이 예에서 BST 콘덴서(C_BST)의 값은 0.1uF 이다.
+
+D_BST 의 전압 정격은 Peak SW 노드 전압 + 16V 보다 커야 한다.
+Bypass 동작에는 낮은 누설 Diode 가 필수적이다.
+D_BST 의 누설 전류는 BST Charge Pump 가 고온에서
+충분한 High-Side Driver 전원 전압을 유지할만큼 충분히 낮아야 한다.
+낮은 누설 Diode 는 또한 높은 출력 전압 Application 에서
+Shutdown 하는 동안 과도한 VCC 전압의 가능성을 방지한다.
+누설이 심한 경우 Zener VCC Clamp 혹은 Bleed 저항이 필요할 수 있다.
+High-Side Driver 전원 전압은 최소 입력 전압에서
+High-Side N-Channel MOSFET Switch 의 Gate Plateau 보다 커야 한다.
+
+
+
+8.2.2.11. VCC Capacitor C_VCC
+
+VCC 콘덴서의 주요 목적은 LO Driver 및 
+ootstrap Diode 의 Peak 과도 전류를 공급하는 동시에 VCC Regulator 를 안정화시키는 것이다.
+이러한 Peak Current 는 수 A 가 될 수 있다.
+C_VCC 의 값은 C_BST 의 값보다 적어도 10 배 이상 커야 하며
+양질의 낮은 ESR 세라믹 콘덴서여야 한다.
+Trace Inductance 로 인한 전압 과도 현상을 최소화하려면 C_VCC 를 IC 핀에 가깝게 배치애햐 한다.
+이 Design 예에서 4.7uF 의 값이 선택되었다.
+
+
+
+8.2.2.12. Output Voltage Divider R_FB1, R_FB2
+
+R_FB1 와 R_FB2 는 출력 전압 레벨을 설정한다.
+이들 저항의 비율은 아래와 같이 계산한다:
+
+R_FB2 / R_FB1 = (V_OUT / 1.2V) - 1
+
+R_COMP 와 R_FB2 사이의 비율은 Mid Band Gain 인 AFB_MID 를 결정한다.
+R_FB2 의 값이 클수록 R_COMP 에 해당하는 더 큰 값이 필요할 수 있다.
+R_FB2 는 전체 분배기 전력 소비를 작게 유지할만큼 충분히 커야 한다.
+이 예에서 825 ohm 과 직렬로 49.9k ohm 이 High-Side Feedback 저항으로 선택되었으므로
+24V 출력에 대해 2.67k ohm 의 R_FB1 값이 된다.
+
+
+
+8.2.2.13. Soft-Start Capacitor C_SS
+
+Soft-Start Time(t_SS) 는 출력 전압이 입력 전압에서 목표 전압에 도달하는 시간이다.
+Soft-Start 시간은 Soft-Start Capacitor 와 비례할 뿐만 아니라 입력 전압에 따라 달라진다.
+0.1uF 의 C_SS 로 Soft-Start 시간은 아래와 같이 계산된다:
+
+t_SS(MIN) = {(C_SS x 1.2V) / I_SS} x [1 - {V_IN(MAX) / V_OUT}]
+          = [(0.1uF x 1.2V) / 10uA] x [1 - 20V / 24V] = 2ms
+t_SS(MAX) = {(C_SS x 1.2V) / I_SS} x [1 - {V_IN(MIN) / V_OUT}]
+          = [(0.1uF x 1.2V) / 10uA] x [1 - 9V / 24V] = 7.5ms
+
+
+
+8.2.2.14. Restart Capacitor C_RES
+
+Restart 콘덴서는 Restart Delay t_RD Hiccup Mode Off Time t_RES 를 결정한다.
+(Figure 26 을 참조하라)
+t_RD 는 t_SS(MAX0 보다 커야 한다.
+C_RES 의 최소 요구 값은 아래와 같이 낮은 입력 전압에서 계산할 수 있다:
+
+C_RES(MIN) = [I_RES x t_SS(MAX)] / V_RES = (30uA x 7.5ms) / 1.2V = 0.19uF
+
+C_RES 의 표준 값은 0.47uF 에 해당한다.
+
+
+
+8.2.2.15. Low-Side Power Switch Q_L
+
+손실을 줄임으로써 전력 N-Channel MOSFET Device 를 선택하는 것은
+여러 소자의 상대적 효율성을 비교하는 한 가지 방법이다.
+Low-Side N-Channel MOSFET Device 의 손실은
+Conduction Loss 와 Switching Loss 로 분리될 수 있다.
+
+Low-Side Conduction Loss 는 대략 아래와 같이 계산된다:
+
+P_COND(LS) = D x I_IN^2 x R_(DS_ON(LS)) x 1.3
+           = [1 - (V_IN / V_OUT)] x [(I_OUT x V_OUT) / V_IN]^2 x R_(DS_ON(LS)) x 1.3
+
+여기서 D 는 Duty Cycle 이고 1.3 의 계수는 Heating 으로 인한
+저항에 대한 N-Channel MOSFET Device 의 증가를 설명한다.
+대안으로 1.3 의 계수는 제거될 수 있으며
+N-Channel MOSFET Device 의 고온 On 저항은
+N-Channel MOSFET Datasheet 의 R_DS(ON) 대 온도 곡선을 사용하여 추정할 수 있다.
+
+Switching Loss 는 Low-Side N-Channel MOSFET Device 가
+Turn-On 및 Turn-Off 될 때 짧은 Transition 기간 동안 발생한다.
+전이 기간 동안 전류 및 전압 모두 N-Channel MOSFET Device 의 Channel 에 존재한다.
+Low-Side Switching Loss 는 대략 아래와 같이 계산된다:
+
+P_SW(LS) = 0.5 x V_OUT x I_IN x (t_R + t_F) x f_SW
+
+t_R 및 t_F 는 Low-Side N-Channel Device 의 상승 및 하강 시간에 해당한다.
+상승 및 하강 시간은 일반적으로 N-Channel MOSFET Datasheet 에 언급되어 있거나
+Oscilloscope 를 사용하여 경험적으로 관찰할 수 있다.
+
+추가적인 Schottky Diode 는 Low-Side N-Channel MOSFET Switch 와 병렬로 배치할 수 있으며
+SW 노드에서 음의 전압 Spike 를 최소화하기 위해 Source 및 Drain 에 Shoft Connection 을 수행한다.
+
+
+
+8.2.2.16. High-Side Power Switch Q_H and Additional Parallel Schottky Diode
+
+High-Side N-Channel MOSFET Device 의 Loss 는 Conduction Loss,
+Dead Time Loss, Reverse Recovery Loss 로 분리될 수 있다.
+Switching Loss 는 Low-Side N-Channel MOSFET Device 에 대해서만 계산된다.
+High-Side N-Channel MOSFET Device 의 Switching Loss 는 무시할 수 있다.
+High-Side N-Channel MOSFET Device 의 Body Diode 가
+High-Side N-Channel MOSFET Device 전후에 켜지기 때문이다.
+
+High-Side Conduction Loss 는 대략 아래와 같이 계산된다:
+
+P_COND(HS) = (1 - D) x I_IN^2 x R_(DS_ON(HS)) x 1.3
+           = (V_IN / V_OUT) x [(I_OUT x V_OUT) / V_IN]^2 x R_(DS_ON(HS)) x 1.3
+
+Dead-Time Loss 는 아래와 같이 근사값으로 계산될 수 있다:
+
+P_DT(HS) = V_D x I_IN x (t_DLH + t_DHL) x f_SW
+
+* V_D 는 High-Side NMOS Body Diode 의 순방향 전압 강하다.
+
+High-Side N-Channel MOSFET Switch 의 Reverse Recovery 특성은
+특히 출력 전압이 높을 때 효율에 큰 영향을 미친다.
+Small Reverse Recovery Charge 는 Switching Noise 를 최소화하면서
+효율을 증가시키는데 도움이 된다.
+
+Reverse Recovery Loss 는 대략 아래와 같이 계산된다:
+
+P_RR(HS) = V_OUT x Q_RR x f_SW
+
+* Q_RR 은 High-Side N-Channel MOSFET Body Diode 의 Reverse Recovery Charge 에 해당한다.
+
+추가적인 Schottky Diode 를 High-Side Switch 와 병렬로 배치하여 효율을 향상시킬 수 있다.
+일반적으로 이 병렬 Schottky Diode 의 전력 정격은 Diode 가 Dead-Time 동안만
+전도하기 때문에 Side Switch 보다 낮을 수 있다.
+Bypass 작동이 요구되면 Hiccup Mode 작동이 필요하거나 Switching 전에 어떤 부하가 존재한다면
+병렬 다이오드의 정격 전력은 High-Side Switch 와 동일하거나 더 높아야 한다.
+
+
+
+8.2.2.17. Snubber Components
+
+High-Side N-Channel MOSFET Device 의 저항-콘덴서 Snubber Network 는
+Switching Node 에서 Ringing 및 Spike 를 줄인다.
+과도한 Ringing 및 Spike 는 출력 전압에 오작동할 수 있으며 Couple Noise 가 발생할 수 있다.
+Snubber 값을 선택하는 것은 경험적 방법을 통해 잘 수행됨을 알 수 있다.
+먼저 Snubber 연결의 Lead 가 매우 짧은지 확인한다.
+저항 값을 5 ~ 50 ohm 으로 시작한다.
+Snubber 콘덴서의 값을 높이면 감쇠가 더 커지지만 Snubber Loss 가 더 커진다.
+과부하시 Switch Waveform 에서 Spike 의 적절한 감쇠를 제공하는 Snubber 콘덴서의 최소값을 선택하라.
+최적화된 Layout 에서는 Snubber 가 필요하지 않을 수 있다.
+
+
+
+8.2.2.18. Loop Compensation Components C_COMP, R_COMP, C_HF
+
+R_COMP, C_COMP, C_HF 는 Error Amplifier Gain 및
+Phase 특성을 구성하여 안정적인 전압 Loop 를 생성한다.
+빠른 시작을 위해 다음의 4 단계를 따르라:
+
+1. f_CROSS 를 선택한다.
+
+RHP 의 1/4 혹은 Switching Frequency 의 1/10 중 낮은 쪽에서
+Crossover Frequency(f_CROSS) 를 선택한다.
+
+f_SW / 10 = 25 kHz
+f_(Z_RHP) / 4 = (R_LOAD x d^2) / (4 x 2π x L_(IN_EQ))
+              = [(V_OUT / I_OUT) x (V_IN / V_OUT)^2] / (4 x 2π x L_(IN_EQ)) = 5.3 kHz
+
+Crossover Frequency 의 5.3 kHz 는 2 개 사이에서 선택된다.
+입력 전압 범위가 넓은 경우 최소 입력 전압에서 RHP Zero 를 고려해야 한다.
+
+2. 필요한 R_COMP 를 결정한다.
+
+계산된 f_CROSS 로 R_COMP 를 아래와 같이 구할 수 있다:
+
+R_COMP = f_CROSS x π x R_S x R_FB2 x 10 x C_OUT x (V_OUT / V_IN) = 68.5k ohm
+
+R_COMP 에 대한 표준값은 68.1k ohm 이다.
+
+3. Load Pole 을 취소하기 위해 C_COMP 를 결정한다.
+   Load Pole Frequency 의 2 배에 해당하는 곳에 Error Amplifier Zero 를 배치하라.
+   R_COMP 를 알면 C_COMP 는 아래와 같이 계산할 수 있다:
+
+C_COMP = (R_LOAD x C_OUT) / (4 x R_COMP) = 20.2nF
+
+C_COMP 에 대한 표준값은 22nF 로 선택된다.
+
+4. ESR Zero 를 막기 위해 C_HF 를 결정한다.
+
+R_COMP, R_ESR, C_COMP 를 알면 C_HF 는 아래와 같이 계산할 수 있다:
+
+C_HF = (R_ESR x C_OUT x C_COMP) / (R_COMP x C_COMP - R_ESR x C_OUT) = 307pF
+
+C_HF 에 대한 표준값은 330pF 로 선택된다.
+
+
+
+8.2.3. Application Curve
+
+Figure 42. Clock Synchronization
+
+Figure 43. Forced PWM
+
+Figure 44. Pulse Skip
+
+Figure 45. Skip Cycle
+
+Figure 46. Loop Response
+
+Figure 47. Start-Up
+
+
+
+9. Power Supply Recommendations
+
+LM5122 는 전원 관리 소자다.
+Device 의 전원 공급 장치는 지정된 입력 범위 내의 모든 DC 전압 소스다.
+
+
+
+10. Layout
+
+10.1. Layout Guidelines
+
+Boost Regulator 에서 기본 Switching Loop 는
+출력 콘덴서와 N-Channel MOSFET 전력 Switch 로 구성된다.
+이 Loop 의 영역을 최소화하면 Stray Inductance 가 감소하고 Noise 가 최소화된다.
+특히, Bulk 알루미늄 출력 콘덴서보다 먼저 이 Loop 에 가깝게 고품질의 세라믹 출력 콘덴서를 배치하면
+알루미늄 콘데서의 출력 전압 리플 및 리플 전류를 최소화 할 수 있다.
+
+High-Side Switch 의 dv/dt 유도 Turn-On 을 방지하기 위해
+HO 및 SW 는 Low Inductance 경로와 Short 한 경로를 통해
+High-Side Synchronous N-Channel MOSFET Switch 의 Gate 및 Source 에 연결되어야 한다.
+FPWM Mode 에서 dv/dt 유도된 Turn-On 은 Low-Side Switch 에서 발생할 수 있다.
+LO 및 PGND 는 Short 된 Low Inductance Paths 를 통해
+Low-Side N-Channel MOSFET 의 Gate 및 Source 에 연결되어야 한다.
+전원 접지 연결은 모두 Single Point 에 연결해야 한다.
+또한 Noise 에 민감한 Low Power Ground 연결은 모두 AGND 핀 가까이에 연결되어야하며
+Single Connection 은 Single Point PGND 에 연결되어야 한다.
+CSP 및 CSN 은 높은 임피던스 핀 및 잡음에 민감하다.
+CSP 및 CSN Trace 는 Kelvin 연결과 함께 가능한 한 짧게 전류 감지 저항에 연결해야 한다.
+필요한 경우 100pF 세라믹 필터 콘덴서를 Device 가까이에 두어라.
+MODE 핀은 High 임피던스 및 잡음에 민감하다.
+MODE 핀에서 외부 Pull-Up 혹은 Pull-Down 저항을 사용하는 경우
+저항은 Device 가까이에 배치해야 한다.
+VCC, VIN 및 BST 콘덴서는 가능한한 물리적으로 소자에 가까이 있어야 한다.
+
+LM5122 는 방열을 돕기 위해 노출된 열 Pad 를 가지고 있다.
+노출된 Pad 아래에 여러 개의 경로(via)를 추가하면 Device 에서 열을 전도하는데 도움이 된다.
+주변 온도에 대한 접합부는 Application 에 따라 다르다.
+가장 중요한 변수는 PCB 의 구리 면적, 노출 Pad 아래의 via 의 갯수 및 강제 공냉의 양이다.
+Device 노출 Pad 에서 PCB Solder 연결의 무결성이 중요하다.
+많은 양의 공백은 열 방출 용량을 크게 줄인다.
+가장 높은 전력 소모 구성 요소는 2 개의 전원 스위치다.
+노출된 Pad 가 있는 N-Channel MOSFET Switch 를 선택하면
+이러한 Device 의 전력 손실을 줄일 수 있다.
+
+
+
+10.2. Layout Example
+
+Figure 48. Power Path Layout
+
+
+
+11. Device and Documentation Support
+
+11.1. Related Links
+
+아래 표는 빠른 Access Link 를 나열한다.
+카테고리에는 기술 문서, 지원 및 커뮤니티 리소스,
+도구 및 SW, 샘플 혹은 구매에 대한 빠른 Access 가 포함된다.
+
+Table 3. Related Links
+
+
+
+11.2. Community Resources
+
+다음 링크는 TI 커뮤니티 리소스에 연결된다.
+각 링크에는 내용이 있는 그대로 제공된다.
+이들은 TI 사양을 구성하지 않으며 반드시 TI 의 견해를 반영하지 않는다;
+TI 의 이용 약관을 참조하라.
+
+* TI E2E Online Community
+
+TI 의 Engineer 2 Engineer(E2E) 커뮤니티다.
+Engineer 간의 협업을 촉진하기 위해 만들어졌다.
+e2e.ti.com 에서 질문을 하고 지식을 공유하고 아이디어를 탐구하고
+동료 엔지니어들과 함께 문제를 해결할 수 있다.
+
+* Design Support
+
+TI 의 설계는 설계 지원 도구 및 기술 지원 연락처 정보와 함께
+유용한 E2E Forum 을 신속하게 찾을 수 있다.
+
+
+
+11.3. Trademarks
+
+E2E 는 Texas Instruments 의 상표다.
+WEBENCH 는 Texas Instruments 의 등록 상표다.
+다른 모든 상표는 해당 소유자의 재산이다.
+
+
+
+11.4. Electrostatic Discharge Caution
+
+이 소자들은 내장된 ESD 보호 기능이 제한적이다.
+MOS Gate 에 대한 정전기 손상을 방지하기 위해 Lead 를 함께 단락시키거나
+Storage 혹은 취급 중에 Conductive Foam 에 Device 를 배치해야 한다.
+
+
+
+11.5. Glossary
+
+SLYZ022 - TI Glossary
+http://www.ti.com/lit/ml/slyz022j/slyz022j.pdf
+
+이 용어집은 용어등의 정의를 나열하고 설명한다.
+
+
+
+12. Mechanical Packaging, and Orderable Information
+
+아래는 기계, 포장 및 주문 정보를 포함한다.
+이 정보는 지정된 Device 에서 사용할 수 있는 최신 데이터다.
+이 데이터는 이 문서의 사전 통보 및 개정없이 변경될 수 있다.
+이 Datasheet 의 브라우저 기반 버전은 왼쪽 탐색을 참조하라.
+
+* PACKAGING INFORMATION

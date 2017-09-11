@@ -1,0 +1,168 @@
+Analog Devices ADF4350/ADF4351 device driver
+
+Required properties:
+	- compatible: Should be one of
+		* "adi,adf4350": When using the ADF4350 device
+		* "adi,adf4351": When using the ADF4351 device
+	- reg: SPI chip select numbert for the device
+	- spi-max-frequency: Max SPI frequency to use (< 20000000)
+	- clocks: From common clock binding. Clock is phandle to clock for
+		ADF435x Reference Clock (CLKIN).
+
+Optional properties:
+	- gpios:	 GPIO Lock detect - If set with a valid phandle and GPIO number,
+			pll lock state is tested upon read.
+	- adi,channel-spacing: Channel spacing in Hz (influences MODULUS).
+	- adi,power-up-frequency:	If set in Hz the PLL tunes to
+			the desired frequency on probe.
+	- adi,reference-div-factor: If set the driver skips dynamic calculation
+			and uses this default value instead.
+	- adi,reference-doubler-enable: Enables reference doubler.
+	- adi,reference-div2-enable: Enables reference divider.
+	- adi,phase-detector-polarity-positive-enable: Enables positive phase
+			detector polarity. Default = negative.
+	- adi,lock-detect-precision-6ns-enable: Enables 6ns lock detect precision.
+			Default = 10ns.
+	- adi,lock-detect-function-integer-n-enable: Enables lock detect
+			for integer-N mode. Default = factional-N mode.
+	- adi,charge-pump-current: Charge pump current in mA.
+			Default = 2500mA.
+	- adi,muxout-select: On chip multiplexer output selection.
+			Valid values for the multiplexer output are:
+			0: Three-State Output (default)
+			1: DVDD
+			2: DGND
+			3: R-Counter output
+			4: N-Divider output
+			5: Analog lock detect
+			6: Digital lock detect
+	- adi,low-spur-mode-enable: Enables low spur mode.
+			Default = Low noise mode.
+	- adi,cycle-slip-reduction-enable: Enables cycle slip reduction.
+	- adi,charge-cancellation-enable: Enabled charge pump
+			charge cancellation for integer-N modes.
+	- adi,anti-backlash-3ns-enable: Enables 3ns antibacklash pulse width
+			 for integer-N modes.
+	- adi,band-select-clock-mode-high-enable: Enables faster band
+			selection logic.
+	- adi,12bit-clk-divider: Clock divider value used when
+			adi,12bit-clkdiv-mode != 0
+	- adi,clk-divider-mode:
+			Valid values for the clkdiv mode are:
+			0: Clock divider off (default)
+			1: Fast lock enable
+			2: Phase resync enable
+	- adi,aux-output-enable: Enables auxiliary RF output.
+	- adi,aux-output-fundamental-enable: Selects fundamental VCO output on
+			the auxiliary RF output. Default = Output of RF dividers.
+	- adi,mute-till-lock-enable: Enables Mute-Till-Lock-Detect function.
+	- adi,output-power: Output power selection.
+			Valid values for the power mode are:
+			0: -4dBm (default)
+			1: -1dBm
+			2: +2dBm
+			3: +5dBm
+	- adi,aux-output-power: Auxiliary output power selection.
+			Valid values for the power mode are:
+			0: -4dBm (default)
+			1: -1dBm
+			2: +2dBm
+			3: +5dBm
+
+
+Example:
+		lo_pll0_rx_adf4351: adf4351-rx-lpc@4 {
+			compatible = "adi,adf4351";
+			reg = <4>;
+			spi-max-frequency = <10000000>;
+			clocks = <&clk0_ad9523 9>;
+			clock-names = "clkin";
+			adi,channel-spacing = <10000>;
+			adi,power-up-frequency = <2400000000>;
+			adi,phase-detector-polarity-positive-enable;
+			adi,charge-pump-current = <2500>;
+			adi,output-power = <3>;
+			adi,mute-till-lock-enable;
+		};
+
+
+
+/*
+
+Analog Devices ADF4350 / ADF4351 장치 드라이버
+
+필수 속성 :
+- 호환 가능 : 다음 중 하나 여야합니다.
+* "adi, adf4350": ADF4350 장치를 사용할 때
+* "adi, adf4351": ADF4351 장치를 사용할 때
+- reg : 장치의 SPI 칩 선택 번호
+- spi-max-frequency : 사용할 최대 SPI 주파수 (<20000000)
+- 클럭 : 공통 클록 바인딩에서. 클럭은 ADF435x 기준 클록 (CLKIN)을위한 클럭 간 페어이다.
+
+선택적 속성 :
+- gpios : GPIO 잠금 감지 - 유효한 phandle 및 GPIO 번호로 설정되면, pll 잠금 상태는 읽기시 테스트됩니다.
+- adi, 채널 간격 : 채널 간격 (Hz) (MODULUS에 영향).
+- adi, power-up-frequency : Hz로 설정하면 PLL은 프로브에서 원하는 주파수로 튜닝됩니다.
+- adi, reference-div-factor : 설정된 경우 드라이버가 동적 계산을 건너 뛰고 대신이 기본값을 사용합니다.
+- adi, reference-doubler-enable : 참조 doubler를 활성화합니다.
+- adi, reference-div2-enable : 기준 디바이더를 사용합니다.
+- adi, phase-detector-polarity-positive-enable : 양의 위상 검출기 극성을 활성화합니다. 기본값 = 음수입니다.
+- adi, lock-detect-precision-6ns-enable : 6ns의 잠금 감지 정밀도를 사용합니다.
+기본값은 10ns입니다.
+- adi, lock-detect-function-integer-n-enable : 정수 N 모드에 대한 잠금 검색을 활성화합니다. 기본값은 factional-N 모드입니다.
+- adi, 차지 펌프 전류 : mA 단위의 차지 펌프 전류.
+기본값 = 2500mA.
+- adi, muxout-select : 온칩 멀티플렉서 출력 선택.
+멀티플렉서 출력의 유효한 값은 다음과 같습니다.
+0 : 3- 상태 출력 (기본값)
+1 : DVDD
+2 : DGND
+3 : R 카운터 출력
+4 : N- 분배기 출력
+5 : 아날로그 잠금 감지
+6 : 디지털 잠금 장치 감지
+- adi, 낮은 스퍼 모드 사용 : 낮은 스퍼 모드를 사용합니다.
+기본값 = 낮은 노이즈 모드.
+- adi, cycle-slip-reduction-enable : 사이클 슬립 감소를 활성화합니다.
+- adi, charge-cancellation-enable : 정수 -N 모드의 경우 차지 펌프 충전 취소를 사용할 수 있습니다.
+- adi, anti-backlash-3ns-enable : 정수 -N 모드의 경우 3ns의 정전기 방지 펄스 폭을 활성화합니다.
+- adi, 대역 선택 - 클럭 모드 - 고지원 : 빠른 대역 선택 논리를 가능하게합니다.
+- adi, 12bit-clk-divider : adi, 12bit-clkdiv-mode! = 0 일 때 사용되는 클럭 분배기 값
+- adi, clk-divider-mode :
+clkdiv 모드의 유효한 값은 다음과 같습니다.
+0 : 클럭 분배기 꺼짐 (기본값)
+1 : 빠른 잠금 활성화
+2 : 위상 재 동기화 활성화
+- adi, aux-output-enable : 보조 RF 출력을 활성화합니다.
+-adi, aux-output-fundamental-enable : 보조 RF 출력에서 ​​기본적인 VCO 출력을 선택합니다. 기본값 = RF 분배기의 출력.
+- adi, mute-till-lock-enable : Mute-Till-Lock-Detect 기능을 사용합니다.
+- adi, 출력 전력 : 출력 전력 선택.
+전원 모드의 유효한 값은 다음과 같습니다.
+0 : -4dBm (기본값)
+1 : -1dBm
+2 : + 2dBm
+3 : + 5dBm
+- 보조 출력 전력 : 보조 출력 전원 선택.
+전원 모드의 유효한 값은 다음과 같습니다.
+0 : -4dBm (기본값)
+1 : -1dBm
+2 : + 2dBm
+3 : + 5dBm
+
+
+Example:
+		lo_pll0_rx_adf4351: adf4351-rx-lpc@4 {
+			compatible = "adi,adf4351";
+			reg = <4>;
+			spi-max-frequency = <10000000>;
+			clocks = <&clk0_ad9523 9>;
+			clock-names = "clkin";
+			adi,channel-spacing = <10000>;
+			adi,power-up-frequency = <2400000000>;
+			adi,phase-detector-polarity-positive-enable;
+			adi,charge-pump-current = <2500>;
+			adi,output-power = <3>;
+			adi,mute-till-lock-enable;
+		};
+
+*/

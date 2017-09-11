@@ -1,0 +1,54 @@
+Analog TV Connector
+===================
+
+Required properties:
+- compatible: "composite-video-connector" or "svideo-connector"
+
+Optional properties:
+- label: a symbolic name for the connector
+
+Required nodes:
+- Video port for TV input
+
+Example
+-------
+
+tv: connector {
+	compatible = "composite-video-connector";
+	label = "tv";
+
+	port {
+		tv_connector_in: endpoint {
+			remote-endpoint = <&venc_out>;
+		};
+	};
+};
+
+/*
+아날로그 TV 커넥터
+===========
+
+필수 속성 :
+- 호환 가능 : "복합 비디오 커넥터"또는 "svideo 커넥터"
+
+선택적 속성 :
+- label : 커넥터의 기호 이름
+
+필수 노드 :
+- TV 입력 용 비디오 포트
+
+Example
+-------
+
+tv: connector {
+	compatible = "composite-video-connector";
+	label = "tv";
+
+	port {
+		tv_connector_in: endpoint {
+			remote-endpoint = <&venc_out>;
+		};
+	};
+};
+
+*/

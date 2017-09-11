@@ -1,0 +1,119 @@
+* USB2 ChipIdea USB controller for ci13xxx
+
+Required properties:
+- compatible: should be one of:
+	"fsl,imx27-usb"
+	"lsi,zevio-usb"
+	"qcom,ci-hdrc"
+	"chipidea,usb2"
+	"xlnx,zynq-usb-2.20a"
+- reg: base address and length of the registers
+- interrupts: interrupt for the USB controller
+
+필수 속성 :
+- compatible : 다음 중 하나 여야합니다.
+"fsl, imx27-usb"
+"lsi, zevio-usb"
+"qcom, ci-hdrc"
+"chipidea, usb2"
+"xlnx, zynq-usb-2.20a"
+- reg : 레지스터의 기본 주소와 길이
+- interrupts : USB 컨트롤러의 인터럽트
+
+
+Recommended properies:
+- phy_type: the type of the phy connected to the core. Should be one
+  of "utmi", "utmi_wide", "ulpi", "serial" or "hsic". Without this
+  property the PORTSC register won't be touched.
+- dr_mode: One of "host", "peripheral" or "otg". Defaults to "otg"
+권장 사항 :
+- phy_type : 코어에 연결된 phy 유형입니다. "utmi", "utmi_wide", "ulpi", "serial"또는 "hsic"중 하나 여야합니다. 이 속성이 없으면 PORTSC 레지스터는 건드리지 않습니다.
+- dr_mode : "host", "peripheral"또는 "otg"중 하나입니다. 기본값은 "otg"입니다.
+
+Deprecated properties:
+- usb-phy:      phandle for the PHY device. Use "phys" instead.
+- fsl,usbphy: phandle of usb phy that connects to the port. Use "phys" instead.
+사용되지 않는 속성 :
+- usb-phy : phy 장치에 대한 phandle. 대신 "phys"를 사용하십시오.
+- fsl, usbphy : 포트에 연결하는 usb phy의 phandle. 대신 "phys"를 사용하십시오.
+
+
+Optional properties:
+- clocks: reference to the USB clock
+- phys: reference to the USB PHY
+- phy-names: should be "usb-phy"
+- vbus-supply: reference to the VBUS regulator
+- maximum-speed: limit the maximum connection speed to "full-speed".
+- tpl-support: TPL (Targeted Peripheral List) feature for targeted hosts
+- itc-setting: interrupt threshold control register control, the setting
+  should be aligned with ITC bits at register USBCMD.
+- ahb-burst-config: it is vendor dependent, the required value should be
+  aligned with AHBBRST at SBUSCFG, the range is from 0x0 to 0x7. This
+  property is used to change AHB burst configuration, check the chipidea
+  spec for meaning of each value. If this property is not existed, it
+  will use the reset value.
+- tx-burst-size-dword: it is vendor dependent, the tx burst size in dword
+  (4 bytes), This register represents the maximum length of a the burst
+  in 32-bit words while moving data from system memory to the USB
+  bus, the value of this property will only take effect if property
+  "ahb-burst-config" is set to 0, if this property is missing the reset
+  default of the hardware implementation will be used.
+- rx-burst-size-dword: it is vendor dependent, the rx burst size in dword
+  (4 bytes), This register represents the maximum length of a the burst
+  in 32-bit words while moving data from the USB bus to system memory,
+  the value of this property will only take effect if property
+  "ahb-burst-config" is set to 0, if this property is missing the reset
+  default of the hardware implementation will be used.
+- extcon: phandles to external connector devices. First phandle should point to
+  external connector, which provide "USB" cable events, the second should point
+  to external connector device, which provide "USB-HOST" cable events. If one
+  of the external connector devices is not required, empty <0> phandle should
+  be specified.
+- phy-clkgate-delay-us: the delay time (us) between putting the PHY into
+  low power mode and gating the PHY clock.
+
+선택적 속성 :
+- clocks : USB 클럭에 대한 참조
+- phys : USB PHY에 대한 참조
+- phy-names : "usb-phy"여야합니다.
+- vbus-supply : VBUS 레귤레이터에 대한 참조
+- 최대 속도 : 최대 연결 속도를 "full-speed"로 제한하십시오.
+- tpl-support : 대상 호스트의 TPL (Targeted Peripheral List) 기능
+- itc 설정 : 인터럽트 임계 값 제어 레지스터 제어, 설정은 레지스터 USBCMD의 ITC 비트와 정렬되어야합니다.
+- ahb-burst-config : 공급 업체에 따라 다르며 SBUSCFG에서 필수 값이 AHBBRST와 정렬되어야하며 범위는 0x0에서 0x7까지입니다. 이 속성은 AHB 버스트 구성을 변경하는 데 사용되며 각 값의 의미에 대해 chipidea 사양을 확인하십시오. 이 특성이 존재하지 않으면 재설정 값을 사용합니다.
+- tx-burst-size-dword : 공급 업체에 따라 다르며 dx (4 바이트)의 tx 버스트 크기입니다.이 레지스터는 시스템 메모리에서 USB 버스로 데이터를 이동하는 동안 32 비트 단어로 된 버스트의 최대 길이를 나타냅니다 이 property의 값은 property "ahb-burst-config"가 0으로 설정된 경우에만 유효합니다.이 property가 없으면 하드웨어 구현의 리셋 기본값이 사용됩니다.
+- rx-burst-size-dword : 공급 업체에 따라 다르며 rx 버스트 크기는 dword (4 바이트)로,이 레지스터는 USB 버스에서 시스템 메모리로 데이터를 이동하는 동안 32 비트 단어로 버스트의 최대 길이를 나타냅니다 이 property의 값은 property "ahb-burst-config"가 0으로 설정된 경우에만 유효합니다.이 property가 없으면 하드웨어 구현의 리셋 기본값이 사용됩니다.
+- extcon : 외부 커넥터 장치에 연결합니다. 첫 번째 phandle은 "USB"케이블 이벤트를 제공하는 외부 커넥터를 가리켜 야하고 두 번째는 "USB-HOST"케이블 이벤트를 제공하는 외부 커넥터 장치를 가리켜 야합니다. 외부 커넥터 장치 중 하나가 필요하지 않은 경우 빈 <0> phandle을 지정해야합니다.
+- phy-clkgate-delay-us : PHY를 저전력 모드로 설정하고 PHY 클럭을 게이팅하는 것 사이의 지연 시간 (us).
+
+
+i.mx specific properties
+- fsl,usbmisc: phandler of non-core register device, with one
+  argument that indicate usb controller index
+- disable-over-current: disable over current detect
+- external-vbus-divider: enables off-chip resistor divider for Vbus
+
+i.mx 특정 속성
+- fsl, usbmisc : 비 핵심 레지스터 장치의 phandler이며, 하나의 인수는 usb 컨트롤러 인덱스를 나타냅니다.
+- disable-over-current : 과전류 감지 비활성화
+- external-vbus-divider : Vbus를위한 오프 칩 저항 분배기를 가능하게한다.
+
+Example:
+
+	usb@f7ed0000 {
+		compatible = "chipidea,usb2";
+		reg = <0xf7ed0000 0x10000>;
+		interrupts = <GIC_SPI 11 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&chip CLKID_USB0>;
+		phys = <&usb_phy0>;
+		phy-names = "usb-phy";
+		vbus-supply = <&reg_usb0_vbus>;
+		gadget-itc-setting = <0x4>; /* 4 micro-frames */
+		 /* Incremental burst of unspecified length */
+     / * 지정되지 않은 길이의 증분 버스트 * /
+		ahb-burst-config = <0x0>;
+		tx-burst-size-dword = <0x10>; /* 64 bytes */
+		rx-burst-size-dword = <0x10>;
+		extcon = <0>, <&usb_id>;
+		phy-clkgate-delay-us = <400>;
+	};

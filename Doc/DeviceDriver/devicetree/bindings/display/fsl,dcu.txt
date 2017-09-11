@@ -1,0 +1,49 @@
+Device Tree bindings for Freescale DCU DRM Driver
+
+Required properties:
+- compatible:		Should be one of
+	* "fsl,ls1021a-dcu".
+	* "fsl,vf610-dcu".
+
+- reg:			Address and length of the register set for dcu.
+- clocks:		From common clock binding: handle to dcu clock.
+- clock-names:		From common clock binding: Shall be "dcu".
+- big-endian		Boolean property, LS1021A DCU registers are big-endian.
+- fsl,panel:		The phandle to panel node.
+
+Examples:
+dcu: dcu@2ce0000 {
+	compatible = "fsl,ls1021a-dcu";
+	reg = <0x0 0x2ce0000 0x0 0x10000>;
+	clocks = <&platform_clk 0>;
+	clock-names = "dcu";
+	big-endian;
+	fsl,panel = <&panel>;
+};
+
+/*
+
+프리 스케일 DCU DRM 드라이버를위한 디바이스 트리 바인딩
+
+필수 속성 :
+- 호환 가능 : 다음 중 하나 여야합니다.
+* "fsl, ls1021a-dcu".
+* "fsl, vf610-dcu".
+
+- reg : dcu에 설정된 레지스터의 주소와 길이.
+- 클럭 : 공통 클록 바인딩에서 : dcu 클럭으로 처리합니다.
+- clock-names : 공통 시계 바인딩에서 : "dcu"가되어야합니다.
+- big-endian Boolean property, LS1021A DCU 레지스터는 big-endian입니다.
+- fsl, panel : 패널 노드에 대한 phandle.
+
+Examples:
+dcu: dcu@2ce0000 {
+	compatible = "fsl,ls1021a-dcu";
+	reg = <0x0 0x2ce0000 0x0 0x10000>;
+	clocks = <&platform_clk 0>;
+	clock-names = "dcu";
+	big-endian;
+	fsl,panel = <&panel>;
+};
+
+*/

@@ -1,0 +1,69 @@
+* UPISEMI us5182d I2C ALS and Proximity sensor
+
+Required properties:
+- compatible: must be "upisemi,usd5182"
+- reg: the I2C address of the device
+
+Optional properties:
+- upisemi,glass-coef: glass attenuation factor - compensation factor of
+                      resolution 1000 for material transmittance.
+- upisemi,dark-ths: array of 8 elements containing 16-bit thresholds (adc
+                    counts) corresponding to every scale.
+- upisemi,upper-dark-gain: 8-bit dark gain compensation factor(4 int and 4
+                           fractional bits - Q4.4) applied when light > threshold
+- upisemi,lower-dark-gain: 8-bit dark gain compensation factor(4 int and 4
+                           fractional bits - Q4.4) applied when light < threshold
+
+If the optional properties are not specified these factors will default to the
+values in the below example.
+The glass-coef defaults to no compensation for the covering material.
+The threshold array defaults to experimental values that work with US5182D
+sensor on evaluation board - roughly between 12-32 lux.
+There will be no dark-gain compensation by default when ALS > thresh
+(0 * dark-gain), and a 1.35 compensation factor when ALS < thresh.
+
+Example:
+
+    usd5182@39 {
+                compatible = "upisemi,usd5182";
+                reg = <0x39>;
+                upisemi,glass-coef = < 1000 >;
+                upisemi,dark-ths = /bits/ 16 <170 200 512 512 800 2000 4000 8000>;
+                upisemi,upper-dark-gain = /bits/ 8 <0x00>;
+                upisemi,lower-dark-gain = /bits/ 8 <0x16>;
+    };
+
+
+
+/*
+
+* UPISEMI us5182d I2C ALS 및 근접 센서
+
+필수 속성 :
+- 호환 : "upisemi, usd5182"여야합니다.
+- reg : 장치의 I2C 주소
+
+선택적 속성 :
+- upisemi, glass-coef : (glass attenuation factor)유리 감쇠 계수 - 재료 투과율에 대한 분해능 1000의 보상 계수.
+- upisemi, dark-ths : 모든 스케일에 해당하는 16 비트 임계 값 (adc 카운트)을 포함하는 8 개 요소의 배열입니다.
+- upisemi, upper-dark-gain : light> threshold 일 때 적용되는 8 비트 다크 게인 보정 계수 (4 int 및 4 fractional 비트 - Q4.4)
+- upisemi, lower-dark-gain : 8 비트 다크 게인 보정 계수 (4 int 및 4 fractional 비트 - Q4.4)
+
+선택적 속성을 지정하지 않으면 이러한 요소는 기본적으로 아래 예제의 값으로 설정됩니다.
+glass-coef는 기본적으로 덮개 재질에 대한 보정을하지 않습니다.
+임계 값 배열의 기본값은 평가 보드의 US5182D 센서에서 작동하는 실험 값입니다 (대략 12-32 럭스 사이).
+ALS> thresh (0 * dark-gain) 일 때 dark-gain 보상은 없으며 ALS <thresh 일 때 1.35 보정 계수가됩니다.
+
+Example:
+
+    usd5182@39 {
+                compatible = "upisemi,usd5182";
+                reg = <0x39>;
+                upisemi,glass-coef = < 1000 >;
+                upisemi,dark-ths = /bits/ 16 <170 200 512 512 800 2000 4000 8000>;
+                upisemi,upper-dark-gain = /bits/ 8 <0x00>;
+                upisemi,lower-dark-gain = /bits/ 8 <0x16>;
+    };
+
+
+*/

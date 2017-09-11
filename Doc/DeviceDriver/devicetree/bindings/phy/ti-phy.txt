@@ -1,0 +1,671 @@
+TI PHY: DT DOCUMENTATION FOR PHYs in TI PLATFORMs
+
+OMAP CONTROL PHY
+
+Required properties:
+ - compatible: Should be one of
+ "ti,control-phy-otghs" - if it has otghs_control mailbox register as on OMAP4.
+ "ti,control-phy-usb2" - if it has Power down bit in control_dev_conf register
+                        e.g. USB2_PHY on OMAP5.
+ "ti,control-phy-pipe3" - if it has DPLL and individual Rx & Tx power control
+                        e.g. USB3 PHY and SATA PHY on OMAP5.
+ "ti,control-phy-pcie" - for pcie to support external clock for pcie and to
+			set PCS delay value.
+			e.g. PCIE PHY in DRA7x
+ "ti,control-phy-usb2-dra7" - if it has power down register like USB2 PHY on
+                        DRA7 platform.
+ "ti,control-phy-usb2-am437" - if it has power down register like USB2 PHY on
+                        AM437 platform.
+ - reg : register ranges as listed in the reg-names property
+ - reg-names: "otghs_control" for control-phy-otghs
+	      "power", "pcie_pcs" and "control_sma" for control-phy-pcie
+	      "power" for all other types
+
+OMAP 컨트롤 PHY
+
+필수 속성 :
+  - 호환 가능 : 다음 중 하나 여야합니다.
+  "ti, control-phy-otghs"- OMAP4와 같은 otghs_control 메일 박스 등록이있는 경우.
+  "ti, control-phy-usb2"- control_dev_conf에 전원 꺼짐 비트가 있으면 OMAP5에 e.g. USB2_PHY를 등록하십시오.
+  "ti, control-phy-pipe3"- DPLL 및 개별 Rx & Tx 전원 컨트롤이있는 경우 OMAP5에 e.g. USB3 PHY 및 SATA PHY가 있습니다.
+  "ti, control-phy-pcie"- pcie가 pcie의 외부 클럭을 지원하고 PCS 지연 값을 설정합니다. DRA7x의 PCIE PHY
+  "ti, control-phy-usb2-dra7"- DRA7 플랫폼의 USB2 PHY와 같은 전원 차단 레지스터가있는 경우.
+  "ti, control-phy-usb2-am437"- AM437 플랫폼에서 USB2 PHY와 같은 전원 차단 레지스터가있는 경우.
+  - reg : reg-names 등록 정보에 나열된 범위를 등록합니다.
+  - reg-names : 다른 모든 유형의 경우 control-phy-pcie "power"에 대한 "power", "pcie_pcs"및 "control_sma"에 대한 "otghs_control"
+
+
+omap_control_usb: omap-control-usb@4a002300 {
+        compatible = "ti,control-phy-otghs";
+        reg = <0x4a00233c 0x4>;
+        reg-names = "otghs_control";
+};
+
+OMAP USB2 PHY
+
+Required properties:
+ - compatible: Should be "ti,omap-usb2"
+	       Should be "ti,dra7x-usb2" for the 1st instance of USB2 PHY on
+	       DRA7x
+	       Should be "ti,dra7x-usb2-phy2" for the 2nd instance of USB2 PHY
+	       in DRA7x
+ - reg : Address and length of the register set for the device.
+ - #phy-cells: determine the number of cells that should be given in the
+   phandle while referencing this phy.
+ - clocks: a list of phandles and clock-specifier pairs, one for each entry in
+   clock-names.
+ - clock-names: should include:
+   * "wkupclk" - wakeup clock.
+   * "refclk" - reference clock (optional).
+
+필수 속성 :
+  - 호환 : "ti, omap-usb2"여야합니다.
+DRA7x에서 USB2 PHY의 첫 번째 인스턴스에 대해 "ti, dra7x-usb2"여야합니다.
+DRA7x에서 USB2 PHY의 두 번째 인스턴스에 대해 "ti, dra7x-usb2-phy2"여야합니다.
+  - reg : 장치에 설정된 레지스터의 주소와 길이.
+  - # phy-cells :이 phy를 참조하면서 phandle에 주어져야하는 셀의 수를 결정합니다.
+  - clocks : clock-names의 각 항목에 대한 하나 인 phandles 및 clock-specifier 쌍의 목록입니다.
+  - clock-names : 다음을 포함해야합니다.
+    * "wkupclk"- wakeup clock.
+    * "refclk"- reference clock (optional).
+
+
+
+Deprecated properties:
+ - ctrl-module : phandle of the control module used by PHY driver to power on
+   the PHY.
+
+Recommended properies:
+- syscon-phy-power : phandle/offset pair. Phandle to the system control
+  module and the register offset to power on/off the PHY.
+
+This is usually a subnode of ocp2scp to which it is connected.
+
+사용되지 않는 속성 :
+  - ctrl-module : PHY의 전원을 켜기 위해 PHY 드라이버가 사용하는 제어 모듈의 phandle.
+
+권장 사항 :
+- syscon-phy-power : phandle / offset 쌍. PHY를 켜고 끌 수있는 레지스터 오프셋과 시스템 제어 모듈을 연결합니다.
+
+이것은 일반적으로 연결된 ocp2scp의 하위 노드입니다.
+
+usb2phy@4a0ad080 {
+	compatible = "ti,omap-usb2";
+	reg = <0x4a0ad080 0x58>;
+	ctrl-module = <&omap_control_usb>;
+	#phy-cells = <0>;
+	clocks = <&usb_phy_cm_clk32k>, <&usb_otg_ss_refclk960m>;
+	clock-names = "wkupclk", "refclk";
+};
+
+TI PIPE3 PHY
+
+Required properties:
+ - compatible: Should be "ti,phy-usb3", "ti,phy-pipe3-sata" or
+   "ti,phy-pipe3-pcie. "ti,omap-usb3" is deprecated.
+ - reg : Address and length of the register set for the device.
+ - reg-names: The names of the register addresses corresponding to the registers
+   filled in "reg".
+ - #phy-cells: determine the number of cells that should be given in the
+   phandle while referencing this phy.
+ - clocks: a list of phandles and clock-specifier pairs, one for each entry in
+   clock-names.
+ - clock-names: should include:
+   * "wkupclk" - wakeup clock.
+   * "sysclk" - system clock.
+   * "refclk" - reference clock.
+   * "dpll_ref" - external dpll ref clk
+   * "dpll_ref_m2" - external dpll ref clk
+   * "phy-div" - divider for apll
+   * "div-clk" - apll clock
+
+TI PIPE3 PHY
+
+필수 속성 :
+  - compatible : "ti, phy-usb3", "ti, phy-pipe3-sata"또는 "ti, phy-pipe3-pcie"이어야합니다. "ti, omap-usb3"은 더 이상 사용되지 않습니다.
+  - reg : 장치에 설정된 레지스터의 주소와 길이.
+  - reg-names : "reg"로 채워진 레지스터에 해당하는 레지스터 주소의 이름.
+  - # phy-cells :이 phy를 참조하면서 phandle에 주어져야하는 셀의 수를 결정합니다.
+  - clocks : clocks 이름의 각 항목에 대한 하나 인 phandles 및 clock-specifier 쌍의 목록입니다.
+  - clock-names : 다음을 포함해야합니다.
+    * "wkupclk"- wakeup clock.
+    * "sysclk"- system clock.
+    * "refclk"- reference clock.
+    * "dpll_ref"- 외부 dpll ref clk
+    * "dpll_ref_m2"- 외부 dpll ref clk
+    * "phy-div"- apll의 divider
+    * "div-clk"- apll clock
+
+Optional properties:
+ - id: If there are multiple instance of the same type, in order to
+   differentiate between each instance "id" can be used (e.g., multi-lane PCIe
+   PHY). If "id" is not provided, it is set to default value of '1'.
+ - syscon-pllreset: Handle to system control region that contains the
+   CTRL_CORE_SMA_SW_0 register and register offset to the CTRL_CORE_SMA_SW_0
+   register that contains the SATA_PLL_SOFT_RESET bit. Only valid for sata_phy.
+ - syscon-pcs : phandle/offset pair. Phandle to the system control module and the
+   register offset to write the PCS delay value.
+선택적 속성 :
+  - id : 동일한 유형의 인스턴스가 여러 개있는 경우 각 인스턴스를 구별하기 위해 "id"를 사용할 수 있습니다 (www., 다중 레인 PCIe PHY). "id"가 제공되지 않으면 기본값 인 '1'로 설정됩니다.
+  - syscon-pllreset : CTRL_CORE_SMA_SW_0 레지스터가 포함 된 시스템 제어 영역을 처리하고 CTRL_CORE_SMA_SW_0에 오프셋을 등록합니다.
+    레지스터에는 SATA_PLL_SOFT_RESET 비트가 들어 있습니다. sata_phy에만 유효합니다.
+  - syscon-pcs : phandle / offset 쌍. PCS 지연 값을 기록하기 위해 시스템 제어 모듈과 레지스터 오프셋에 파들하십시오.
+
+Deprecated properties:
+ - ctrl-module : phandle of the control module used by PHY driver to power on
+   the PHY.
+사용되지 않는 속성 :
+  - ctrl-module : PHY의 전원을 켜기 위해 PHY 드라이버가 사용하는 제어 모듈의 phandle.
+
+Recommended properies:
+ - syscon-phy-power : phandle/offset pair. Phandle to the system control
+   module and the register offset to power on/off the PHY.
+
+This is usually a subnode of ocp2scp to which it is connected.
+
+권장 사항 :
+  - syscon-phy-power : phandle / offset 쌍. PHY를 켜거나 끌 수있는 레지스터 오프셋과 시스템 제어 모듈을 연결합니다.
+
+이것은 일반적으로 연결된 ocp2scp의 하위 노드입니다.
+
+usb3phy@4a084400 {
+	compatible = "ti,phy-usb3";
+	reg = <0x4a084400 0x80>,
+	      <0x4a084800 0x64>,
+	      <0x4a084c00 0x40>;
+	reg-names = "phy_rx", "phy_tx", "pll_ctrl";
+	ctrl-module = <&omap_control_usb>;
+	#phy-cells = <0>;
+	clocks = <&usb_phy_cm_clk32k>,
+		 <&sys_clkin>,
+		 <&usb_otg_ss_refclk960m>;
+	clock-names =	"wkupclk",
+			"sysclk",
+			"refclk";
+};
+
+sata_phy: phy@4A096000 {
+	compatible = "ti,phy-pipe3-sata";
+	reg = <0x4A096000 0x80>, /* phy_rx */
+	      <0x4A096400 0x64>, /* phy_tx */
+	      <0x4A096800 0x40>; /* pll_ctrl */
+	reg-names = "phy_rx", "phy_tx", "pll_ctrl";
+	ctrl-module = <&omap_control_sata>;
+	clocks = <&sys_clkin1>, <&sata_ref_clk>;
+	clock-names = "sysclk", "refclk";
+	syscon-pllreset = <&scm_conf 0x3fc>;
+	#phy-cells = <0>;
+
+TI Keystone SerDes PHY
+======================
+
+Required properties:
+ - compatible: should be one of
+	* "ti,keystone-serdes-gbe"
+	* "ti,keystone-serdes-xgbe"
+	* "ti,keystone-serdes-pcie"
+ - reg:
+	* base address and length of the SerDes register set
+ - num-lanes:
+	* Number of lanes in SerDes.
+
+Optional properties:
+ - syscon-peripheral:
+	* Handle to the subsystem register region of the peripheral
+	  inside which the SerDes exists.  Required for 10gbe.
+ - syscon-link:
+	* Handle to the Link register region of the peripheral inside
+	  which the SerDes exists.  Example: it is the PCSR register
+	  region in the case of 10gbe.  Required for 10gbe.
+ - rx-force-enable:
+	* Include this property if receiver attenuation and boost are
+	  to be configured with specific values defined in rx-force.
+ - link-rate-kbps:
+	* SerDes link rate to be configured, in kbps.
+
+
+For gbe and 10gbe SerDes, it is optional to represent each lane as
+a sub-node, which can be enabled or disabled individually using
+the "status" property.  If a lane is not represented by a node, the
+lane is disabled.
+
+Required properties (lane sub-node):
+ - #phy-cells:
+	* From the generic phy bindings, must be 0;
+ - reg:
+	* lane number
+
+Optional properties (lane sub-node):
+ - control-rate:
+	* Lane control rate
+		0: full rate
+		1: half rate
+		2: quarter rate
+ - rx-start:
+	* Initial lane rx equalizer attenuation and boost configurations.
+	* Must be array of 2 integers.
+ - rx-force:
+	* Forced lane rx equalizer attenuation and boost configurations.
+	* Must be array of 2 integers.
+ - tx-coeff:
+	* Lane c1, c2, cm, attenuation and regulator output voltage
+	  configurations.
+	* Must be array of 5 integers.
+ - loopback:
+	* Include this property to enable loopback at the SerDes
+	  lane level.
+
+TI Keystone SerDes PHY
+==========
+
+필수 속성 :
+  - 호환 가능 : 다음 중 하나 여야합니다.
+* "ti, keystone-serdes-gbe"
+* "ti, keystone-serdes-xgbe"
+* "ti, keystone-serdes-pcie"
+  - reg :
+* SerDes 레지스터 세트의 기본 주소 및 길이
+ - num-lanes:
+* SerDes의 레인 수.
+
+선택적 속성 :
+  - syscon-peripheral :
+* SerDes가있는 주변 장치의 하위 시스템 레지스터 영역을 처리합니다. 10gbe에 필요합니다.
+  - syscon-link :
+* SerDes가있는 주변 장치의 링크 레지스터 영역을 처리합니다. 예 : PCSR 레지스터입니다.
+지역 10gbe의 경우. 10gbe에 필요합니다.
+  - rx-force-enable :
+* 수신기 감쇠 및 부스트가 rx-force에 정의 된 특정 값으로 구성되는 경우이 속성을 포함합니다.
+  - 링크 속도 - kbps :
+* 구성된 SerDes 링크 속도 (kbps).
+
+gbe 및 10Gbe SerDes의 경우 각 레인을 하위 노드로 표시하는 것은 선택 사항이며 "status"속성을 사용하여 개별적으로 활성화 또는 비활성화 할 수 있습니다. 노드가 레인을 나타내지 않으면 레인이 비활성화됩니다.
+
+필수 속성 (차선 하위 노드) :
+  - # phy-cells :
+* 일반 phy 바인딩에서 0이어야합니다.
+  - reg :
+* lane number
+
+선택적 속성 (차선 하위 노드) :
+  - 제어 속도 :
+* Lane control rate
+		0: full rate
+		1: half rate
+		2: quarter rate
+  - rx-start :
+* 초기 레인 rx equalizer attenuation(감쇠) 및 부스트 구성.
+* 2 정수 배열이어야합니다.
+  - rx-force :
+* 강제 차선 rx equalizer attenuation(감쇠) 및 부스트 구성.
+* 2 정수 배열이어야합니다.
+  - tx-coeff :
+* 레인 c1, c2, cm, attenuation(감쇠) 및 regulator 출력 전압 구성.
+* 5 개의 정수 배열이어야합니다.
+  - 루프백 :
+** SerDes lane level에서 루프백을 활성화하려면이 속성을 포함하십시오.
+
+
+Example for Keystone K2E GBE:
+-----------------------------
+
+gbe_serdes0: phy@232a000 {
+	compatible		= "ti,keystone-serdes-gbe";
+	reg			= <0x0232a000 0x2000>;
+	link-rate-kbps		= <1250000>;
+	num-lanes		= <4>;
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	serdes0_lane0: lane@0 {
+		status		= "ok";
+		/*loopback;*/
+		#phy-cells	= <0>;
+		reg		= <0>;
+		control-rate	= <2>; /* quart */
+		rx-start	= <7 5>;
+		rx-force	= <1 1>;
+		tx-coeff	= <0 0 0 12 4>; /* c1 c2 cm att vreg */
+	};
+	serdes0_lane1: lane@1 {
+		status		= "ok";
+		/*loopback;*/
+		#phy-cells	= <0>;
+		reg		= <1>;
+		control-rate	= <2>; /* quart */
+		rx-start	= <7 5>;
+		rx-force	= <1 1>;
+		tx-coeff	= <0 0 0 12 4>; /* c1 c2 cm att vreg */
+	};
+	serdes0_lane2: lane@2 {
+		status		= "disabled";
+		/*loopback;*/
+		#phy-cells	= <0>;
+		reg		= <2>;
+		control-rate	= <2>; /* quart */
+		rx-start	= <7 5>;
+		rx-force	= <1 1>;
+		tx-coeff	= <0 0 0 12 4>; /* c1 c2 cm att vreg */
+	};
+	serdes0_lane3: lane@3 {
+		status		= "disabled";
+		/*loopback;*/
+		#phy-cells	= <0>;
+		reg		= <3>;
+		control-rate	= <2>; /* quart */
+		rx-start	= <7 5>;
+		rx-force	= <1 1>;
+		tx-coeff	= <0 0 0 12 4>; /* c1 c2 cm att vreg */
+	};
+};
+
+gbe_serdes1: phy@2324000 {
+	compatible		= "ti,keystone-serdes-gbe";
+	reg			= <0x02324000 0x2000>;
+	link-rate-kbps		= <1250000>;
+	num-lanes		= <4>;
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	serdes1_lane0: lane@0 {
+		status		= "disabled";
+		/*loopback;*/
+		#phy-cells	= <0>;
+		reg		= <0>;
+		control-rate	= <2>; /* quart */
+		rx-start	= <7 5>;
+		rx-force	= <1 1>;
+		tx-coeff	= <0 0 0 12 4>; /* c1 c2 cm att vreg */
+	};
+	serdes1_lane1: lane@1 {
+		status		= "disabled";
+		/*loopback;*/
+		#phy-cells	= <0>;
+		reg		= <1>;
+		control-rate	= <2>; /* quart */
+		rx-start	= <7 5>;
+		rx-force	= <1 1>;
+		tx-coeff	= <0 0 0 12 4>; /* c1 c2 cm att vreg */
+	};
+	serdes1_lane2: lane@2 {
+		status		= "disabled";
+		/*loopback;*/
+		#phy-cells	= <0>;
+		reg		= <2>;
+		control-rate	= <2>; /* quart */
+		rx-start	= <7 5>;
+		rx-force	= <1 1>;
+		tx-coeff	= <0 0 0 12 4>; /* c1 c2 cm att vreg */
+	};
+	serdes1_lane3: lane@3 {
+		status		= "disabled";
+		/*loopback;*/
+		#phy-cells	= <0>;
+		reg		= <3>;
+		control-rate	= <2>; /* quart */
+		rx-start	= <7 5>;
+		rx-force	= <1 1>;
+		tx-coeff	= <0 0 0 12 4>; /* c1 c2 cm att vreg */
+	};
+};
+
+netcp: netcp@24000000 {
+	...
+
+	netcp-devices {
+		...
+
+		gbe@200000 { /* ETHSS */
+			...
+
+			gbe0: interface-0 {
+				phys = <&serdes0_lane0>;
+				...
+			};
+			gbe1: interface-1 {
+				phys = <&serdes0_lane1>;
+				...
+			};
+
+			...
+		};
+
+		...
+	};
+};
+
+Example for Keystone PCIE:
+--------------------------
+
+	pcie0_phy: phy@2320000 {
+		compatible = "ti,keystone-serdes-pcie";
+		reg = <0x02320000 0x4000>;
+		link-rate-kbps = <5000000>;
+		num-lanes = <2>;
+	};
+
+No SerDes phy handle needed in PCIe controller node
+since the SerDes PHY provider driver performs all
+the configurations needed for PCIe.
+SerDes PHY 제공자 드라이버가 PCIe에 필요한 모든 구성을 수행하기 때문에 PCIe 컨트롤러 노드에는 SerDes phy handle이 필요하지 않습니다.
+
+Example for K2E 10GBE:
+----------------------
+
+Define the syscon regmaps for 10gbe subsystem:
+10gbe 서브 시스템에 대한 syscon regmaps를 정의하십시오.
+
+xgbe_subsys: subsys@2f00000 {
+	status		= "ok";
+	compatible	= "syscon";
+	reg		= <0x02f00000 0x100>;
+};
+
+Define the syscon regmaps for 10gbe pcsr:
+10gbe pcsr에 대한 syscon regmaps를 정의하십시오.
+
+xgbe_pcsr: pcsr@2f00000 {
+	status		= "ok";
+	compatible	= "syscon";
+	reg		= <0x02f00600 0x100>;
+};
+
+Define the 10gbe SerDes node:
+10gbe SerDes 노드를 정의하십시오.
+
+xgbe_serdes: phy@231e000 {
+	status			= "ok";
+	compatible		= "ti,keystone-serdes-xgbe";
+	reg			= <0x0231e000 0x2000>;
+	link-rate-kbps		= <10312500>;
+	num-lanes		= <2>;
+	syscon-peripheral	= <&xgbe_subsys>;
+	syscon-link		= <&xgbe_pcsr>;
+	#address-cells  = <1>;
+	#size-cells     = <0>;
+
+	xserdes_lane0: lane@0 {
+		status		= "ok";
+		#phy-cells	= <0>;
+		reg		= <0>;
+		control-rate	= <0>; /* full */
+		rx-start	= <7 5>;
+		rx-force	= <1 1>;
+		tx-coeff	= <2 0 0 12 4>; /* c1 c2 cm att vreg */
+	};
+	xserdes_lane1: lane@1 {
+		status		= "ok";
+		#phy-cells	= <0>;
+		reg		= <1>;
+		control-rate	= <0>; /* full */
+		rx-start	= <7 5>;
+		rx-force	= <1 1>;
+		tx-coeff	= <2 0 0 12 4>; /* c1 c2 cm att vreg */
+	};
+};
+
+Then the 10gbe SerDes PHY can be used in the 10gbe switch node:
+10Gbe 스위치 노드에서 10Gbe SerDes PHY를 사용할 수 있습니다.
+
+netcpx: netcpx@2f00000 {
+
+	...
+
+	netcp-devices {
+
+		...
+
+		xgbe@2f00000 {
+
+			...
+
+			xgbe0: interface-0 {
+				phys = <&xserdes_lane0>;
+				...
+			};
+			xgbe1: interface-1 {
+				phys = <&xserdes_lane1>;
+				...
+			};
+
+			...
+		};
+	};
+
+	...
+
+};
+
+TI Keystone 10gbe SerDes PHY
+============================
+
+For 10gbe, there is an option of using an 10gbe MCU firmware.
+When the firmware is enabled, the individual lanes can be configured
+with the following in a mcu-firmware sub-node under the 10gbe SerDes
+10gbe의 경우, 10gbe MCU 펌웨어를 사용할 수 있습니다.
+펌웨어가 활성화되면 개별 레인은 10Gbe SerDes 노드 아래의 MCU 펌웨어 하위 노드에서 다음과 같이 구성 할 수 있습니다.
+
+node:
+
+lane:		Lane number.
+		- 0 -> Lane 0 (default)
+		- 1 -> Lane 1
+rate:		Link rate:
+		- 0 -> 1G/10G (default)
+		- 1 -> Force 1G
+		- 2 -> Force 10G
+autonegotiate:	Set to enable link rate autonegotiation when rate == 1G/10G.
+				속도가되면 link rate autonegotiation 기능을 사용하도록 설정합니다.
+		- 0 -> disabled (default)
+		- 1 -> enabled
+tx_pause:	Enable TX pause frame generation.
+			TX 일시 중지 프레임 생성을 활성화합니다.
+		- 0 -> disabled (default)
+		- 1 -> enabled
+rx_pause:	Enable RX pause frame generation.
+			RX 일시 중지 프레임 생성 사용
+		- 0 -> disabled (default)
+		- 1 -> enabled
+10g_train:	Enable 10G link training.
+			10G link training을 활성화하십시오.
+		- 0 -> disabled (default)
+		- 1 -> enabled
+fec:		Enable Forward Error Correction.
+			전달 오류 수정 사용.
+		- 0 -> disabled (default)
+		- 1 -> enabled
+
+When 10gbe MCU firmware is used, the regular SerDes lane
+bindings should be disabled. 10gbe MCU firmware and regular
+SerDes lane bindings are mutually exclusive. See "Example:
+for Enabling K2E 10-GBE MCU Firmware" below.
+10gbe MCU 펌웨어를 사용하는 경우 일반 SerDes 레인 바인딩을 비활성화해야합니다. 
+10gbe MCU 펌웨어와 일반 SerDes 레인 바인딩은 상호 배타적입니다. 
+아래의 "예 : K2E 10-GBE MCU 펌웨어 활성화"를 참조하십시오.
+
+Example for Keystone K2E 10-GBE MCU Firmware Bindings:
+키스톤 K2E 10-GBE MCU 펌웨어 바인딩 예제 :
+------------------------------------------------------
+
+xgbe_serdes: phy@231e000 {
+
+	status		= "disabled";
+
+	...
+
+	xserdes_lane0: lane@0 {
+		status		= "disabled";
+		#phy-cells	= <0>;
+		reg		= <0>;
+		control-rate	= <0>; /* full */
+		rx-start	= <7 5>;
+		rx-force	= <1 1>;
+		tx-coeff	= <2 0 0 12 4>; /* c1 c2 cm att vreg */
+	};
+	xserdes_lane1: lane@1 {
+		status		= "disabled";
+		#phy-cells	= <0>;
+		reg		= <1>;
+		control-rate	= <0>; /* full */
+		rx-start	= <7 5>;
+		rx-force	= <1 1>;
+		tx-coeff	= <2 0 0 12 4>; /* c1 c2 cm att vreg */
+	};
+
+	mcu-firmware {
+		status = "disabled";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		lane@0 {
+			status = "disabled";
+			reg = <0>;
+			rate = <0>; /* 0 = default
+				       1 = 1g
+				       2 = 10g */
+			autonegotiate;
+			/*tx_pause;*/
+			/*rx_pause;*/
+			10g_train;
+			/*fec;*/
+		};
+		lane@1 {
+			status = "disabled";
+			reg = <1>;
+			rate = <0>; /* 0 = default
+				       1 = 1g
+				       2 = 10g */
+			autonegotiate;
+			/*tx_pause;*/
+			/*rx_pause;*/
+			10g_train;
+			/*fec;*/
+		};
+	};
+};
+
+Example for Enabling K2E 10-GBE MCU Firmware:
+K2E 10-GBE MCU 펌웨어 활성화 예제 :
+---------------------------------------------
+
+&xgbe_serdes {
+	status		= "ok";
+
+	xserdes_lane0: lane@0 {
+		status		= "disabled";
+	};
+	xserdes_lane1: lane@1 {
+		status		= "disabled";
+	};
+
+	mcu-firmware {
+		status = "ok";
+
+		lane@0 {
+			status = "ok";
+		};
+
+		lane@1 {
+			status = "ok";
+		};
+	};
+};

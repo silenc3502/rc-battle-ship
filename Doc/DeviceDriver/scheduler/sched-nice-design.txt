@@ -1,0 +1,153 @@
+This document explains the thinking about the revamped and streamlined
+nice-levels implementation in the new Linux scheduler.
+
+이 문서는 새로운 Linux 스케줄러에서 개선되고 간소화 된 nice-level 구현에 대한 생각을 설명합니다.
+
+Nice levels were always pretty weak under Linux and people continuously
+pestered us to make nice +19 tasks use up much less CPU time.
+
+리눅스에서는 좋은 수준이었고 사람들은 지속적으로 멋진 +19 작업으로 CPU 시간을 줄였습니다.
+
+Unfortunately that was not that easy to implement under the old
+scheduler, (otherwise we'd have done it long ago) because nice level
+support was historically coupled to timeslice length, and timeslice
+units were driven by the HZ tick, so the smallest timeslice was 1/HZ.
+
+불행히도 이전 스케줄러에서는 구현하기가 쉽지 않았습니다 (그렇지 않은 경우 오래 전에 했었습니다). 좋은 수준의 지원은 역사적으로 타임 라인 길이와 결합되어 있었고 타임 슬라이스 단위는 HZ 틱에 의해 결정 되었기 때문에 가장 작은 타임 슬라이스는 1 / HZ.
+
+In the O(1) scheduler (in 2003) we changed negative nice levels to be
+much stronger than they were before in 2.4 (and people were happy about
+that change), and we also intentionally calibrated the linear timeslice
+rule so that nice +19 level would be _exactly_ 1 jiffy. To better
+understand it, the timeslice graph went like this (cheesy ASCII art
+alert!):
+
+O (1) 스케줄러 (2003 년)에서는 2.4에서 이전보다 훨씬 좋은 부정적인 수준을 변경했으며, 사람들은 그 변화에 대해 만족했습니다. 또한 선형 타임 슬라이스 규칙을 의도적으로 조정하여 멋진 +19 레벨은 정확합니다. 더 잘 이해하기 위해 타임 라인 그래프는 다음과 같이 나타납니다 (ASCII art alert!) :
+
+
+                   A
+             \     | [timeslice length]
+              \    |
+               \   |
+                \  |
+                 \ |
+                  \|___100msecs
+                   |^ . _
+                   |      ^ . _
+                   |            ^ . _
+ -*----------------------------------*-----> [nice level]
+ -20               |                +19
+                   |
+                   |
+
+So that if someone wanted to really renice tasks, +19 would give a much
+bigger hit than the normal linear rule would do. (The solution of
+changing the ABI to extend priorities was discarded early on.)
+
+그래서 만약 누군가가 정말로 작업을 재검토하고 싶다면, +19는 일반적인 선형 규칙보다 훨씬 큰 히트를 줄 것입니다. 
+(우선 순위를 확장하기 위해 ABI를 변경하는 해결책은 초기에 폐기되었습니다.)
+
+This approach worked to some degree for some time, but later on with
+HZ=1000 it caused 1 jiffy to be 1 msec, which meant 0.1% CPU usage which
+we felt to be a bit excessive. Excessive _not_ because it's too small of
+a CPU utilization, but because it causes too frequent (once per
+millisec) rescheduling. (and would thus trash the cache, etc. Remember,
+this was long ago when hardware was weaker and caches were smaller, and
+people were running number crunching apps at nice +19.)
+
+이 방법은 어느 정도 시간이 걸렸지 만 나중에 HZ = 1000으로 설정하면 1 초의 시간이 1msec가되어 
+0.1 %의 CPU 사용을 의미하므로 약간 과한 느낌이 들었습니다. 과도한 _not_은 CPU 사용량이 너무 작기 때문에 
+너무 많지는 않지만 너무 자주 (밀리 초당 한 번) 다시 스케줄링이 발생하기 때문에 _not_이 지나치지 않습니다. 
+(하드웨어를 약하게 만들었고 캐시가 작았을 때 사람들은 멋진 +19에서 숫자 계산 응용 프로그램을 실행 했었다는 것을 기억하십시오.)
+
+So for HZ=1000 we changed nice +19 to 5msecs, because that felt like the
+right minimal granularity - and this translates to 5% CPU utilization.
+But the fundamental HZ-sensitive property for nice+19 still remained,
+and we never got a single complaint about nice +19 being too _weak_ in
+terms of CPU utilization, we only got complaints about it (still) being
+too _strong_ :-)
+
+따라서 HZ = 1000의 경우 최적의 최소 세분성을 느낄 수 있으므로 +19에서 5msec로 변경했습니다. 
+이는 CPU 사용률을 5 %로 나타냅니다. 그러나 nice + 19에 대한 기본적인 HZ 민감한 속성은 여전히 남아 있으며 
+CPU 사용률 측면에서 nice +19에 대한 단일 불만은 결코 얻지 못했습니다. 우리는 단지 (너무) 여전히 불만을 가지고 있습니다 :-)
+
+To sum it up: we always wanted to make nice levels more consistent, but
+within the constraints of HZ and jiffies and their nasty design level
+coupling to timeslices and granularity it was not really viable.
+
+요약하자면, 우리는 언제나 멋진 레벨을보다 일관되게 만들고 싶었습니다. 그러나 HZ와 jiffies의 제약과 타임 라인과 세분성에 대한 그들의 불쾌한 디자인 레벨 커플 링 내에서 그것은 실제로 실행 가능하지 않았습니다.
+
+The second (less frequent but still periodically occurring) complaint
+about Linux's nice level support was its assymetry around the origo
+(which you can see demonstrated in the picture above), or more
+accurately: the fact that nice level behavior depended on the _absolute_
+nice level as well, while the nice API itself is fundamentally
+"relative":
+
+리눅스의 수준 높은 지원에 대한 두 번째 (빈번하지는 않지만 여전히 주기적으로 발생하는) 
+불만은 원래 그림 (위 그림에서 볼 수 있습니다) 또는 더 정확하게는 멋진 수준 동작이 _absolute_nice 수준에 달려 있다는 
+사실에 대한 비난입니다. 좋은 API 자체는 근본적으로
+"상대적인":
+
+   int nice(int inc);
+
+   asmlinkage long sys_nice(int increment)
+
+(the first one is the glibc API, the second one is the syscall API.)
+Note that the 'inc' is relative to the current nice level. Tools like
+bash's "nice" command mirror this relative API.
+
+(첫 번째 것은 glibc API이고, 두 번째 것은 syscall API입니다.) 
+'inc'는 현재 nice 수준과 관련이 있습니다. bash의 "nice"명령과 같은 도구는이 상대 API를 반영합니다.
+
+With the old scheduler, if you for example started a niced task with +1
+and another task with +2, the CPU split between the two tasks would
+depend on the nice level of the parent shell - if it was at nice -10 the
+CPU split was different than if it was at +5 or +10.
+
+예전의 스케줄러를 사용하여, 예를 들어 + 1의 niced 작업을 시작하고 +2의 다른 작업을 시작한 경우, 두 작업 간의 CPU 분할은 상위 쉘의 멋진 수준에 달려 있습니다. 스플릿은 +5 또는 +10에있는 것보다 다릅니다.
+
+A third complaint against Linux's nice level support was that negative
+nice levels were not 'punchy enough', so lots of people had to resort to
+run audio (and other multimedia) apps under RT priorities such as
+SCHED_FIFO. But this caused other problems: SCHED_FIFO is not starvation
+proof, and a buggy SCHED_FIFO app can also lock up the system for good.
+
+리눅스의 수준 높은 지원에 대한 세 번째 불만은 부정적인 수준이 '펀치감이 충분하지 않다'는 점이었습니다. 따라서 많은 사람들이 SCHED_FIFO와 같은 RT 우선 순위에서 오디오 (및 기타 멀티미디어) 앱을 실행해야했습니다. 그러나 이것은 다른 문제를 일으켰습니다. SCHED_FIFO는 기아 상태의 증거가 아니며, 버그가있는 SCHED_FIFO 앱도 시스템을 양호하게 잠글 수 있습니다.
+
+The new scheduler in v2.6.23 addresses all three types of complaints:
+
+To address the first complaint (of nice levels being not "punchy"
+enough), the scheduler was decoupled from 'time slice' and HZ concepts
+(and granularity was made a separate concept from nice levels) and thus
+it was possible to implement better and more consistent nice +19
+support: with the new scheduler nice +19 tasks get a HZ-independent
+1.5%, instead of the variable 3%-5%-9% range they got in the old
+scheduler.
+
+v2.6.23의 새로운 스케줄러는 다음 세 가지 유형의 불만 사항을 모두 해결합니다.
+
+첫 번째 불만 사항을 해결하기 위해 (적절한 수준의 "펀치"가 아님), 스케줄러는 '타임 슬라이스'및 HZ 개념과 분리되었으며 
+(입체 성은 멋진 수준과는 별도의 개념으로 만들어 짐) 더 나은 구현을 가능하게했습니다. 
+보다 일관성있는 nice +19 지원 : 새로운 스케줄러로 +19 작업은 기존 스케줄러에있는 3 % -5 % -9 % 범위 
+대신 HZ 독립 1.5 %를 얻습니다.
+
+To address the second complaint (of nice levels not being consistent),
+the new scheduler makes nice(1) have the same CPU utilization effect on
+tasks, regardless of their absolute nice levels. So on the new
+scheduler, running a nice +10 and a nice 11 task has the same CPU
+utilization "split" between them as running a nice -5 and a nice -4
+task. (one will get 55% of the CPU, the other 45%.) That is why nice
+levels were changed to be "multiplicative" (or exponential) - that way
+it does not matter which nice level you start out from, the 'relative
+result' will always be the same.
+
+두 번째 불만 사항을 해결하기 위해 새로운 스케줄러는 절대적인 수준에 관계없이 nice (1)가 작업에 동일한 CPU 사용률 효과를 갖도록 만듭니다. 그래서 새로운 스케줄러에서 nice +10과 nice 11 작업을 실행하면 nice -5와 nice -4 작업을 실행하는 것과 동일한 CPU 사용률이 "split"됩니다. (하나는 CPU의 55 %, 다른 하나는 45 %를 얻습니다.) 그래서 멋진 레벨이 "곱셈 적"(또는 지수 적)으로 변경된 것입니다 - 당신이 시작한 멋진 레벨, 상대방 결과 '는 항상 동일합니다
+
+The third complaint (of negative nice levels not being "punchy" enough
+and forcing audio apps to run under the more dangerous SCHED_FIFO
+scheduling policy) is addressed by the new scheduler almost
+automatically: stronger negative nice levels are an automatic
+side-effect of the recalibrated dynamic range of nice levels.
+
+세 번째 불만 사항 (충분히 펀치가 아니며보다 위험한 SCHED_FIFO 예약 정책 하에서 오디오 앱을 실행하도록 강제하는 부정적인 수준)은 새로운 스케줄러에 의해 거의 자동으로 처리됩니다. 즉, 부정적인 수준이 강하면 리 밸런싱 된 자동 부작용이 자동으로 발생합니다 좋은 수준의 동적 범위.

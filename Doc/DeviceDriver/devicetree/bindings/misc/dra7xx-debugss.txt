@@ -1,0 +1,33 @@
+Texas Instruments Debug Sub-System (DebugSS) module for DRA7xx devices
+
+Required properties:
+- compatible : Should be "ti,dra7xx-debugss"
+
+Optional properties:
+- clocks : the clocks feeding the Debug sub-system.
+- clocks-names : clock name strings correspond to the clocks
+		 defined above. These strings are used inside
+		 module source code to identify the respective
+                 clocks
+
+Documentation:
+http://www.ti.com/lit/ds/symlink/dra746.pdf
+
+
+DRA7xx 디바이스 용 Texas Instruments 디버그 서브 시스템 (DebugSS) 모듈
+
+필수 속성 :
+- 호환 : "ti, dra7xx-debugss"여야합니다.
+
+선택적 속성 :
+- clocks : Debug 서브 시스템에 공급되는 clocks.
+- clocks-names : clock name strings 은 위에 정의 된 clock 에 해당합니다. 이 문자열은 모듈 소스 코드 내에서 각각의 클럭을 식별하는 데 사용됩니다
+
+
+Examples:
+
+debugss: debugss {
+        compatible = "ti,dra7xx-debugss";
+        clocks = <&sys_clkin1>;
+        clock-names = "sysclockin1";
+};

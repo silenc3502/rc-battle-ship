@@ -1,0 +1,61 @@
+Some properties contain an ordered list of 1 or more datum which are
+normally accessed by index.  However, some devices will have multiple
+values which are more naturally accessed by name.  Device nodes can
+include a supplemental property for assigning names to each of the list
+items.  The names property consists of a list of strings in the same
+order as the data in the resource property.
+일부 속성에는 일반적으로 인덱스에 의해 액세스되는 1 개 이상의 데이텀의 정렬 된 목록이 포함됩니다.
+그러나 일부 장치는 더 자연스럽게 name으로 액세스되는 여러 값을 갖습니다. 장치 노드는 각 목록 항목에
+ name을 할당하기위한 보충 속성을 포함 할 수 있습니다. names 속성은 리소스 속성의 데이터와 같은 순서로 문자열 목록으로 구성됩니다.
+
+The following supplemental names properties are defined.
+다음 보조 이름 속성이 정의되어 있습니다.
+
+Resource Property	Supplemental Names Property
+-----------------	---------------------------
+reg			reg-names
+clocks			clock-names
+interrupts		interrupt-names
+
+Usage:
+
+The -names property must be used in conjunction with the normal resource
+property. If not it will be ignored.
+
+-names 특성은 일반적으로 자원 등록 정보와 함께 사용할 필요가 있습니다.
+그렇지 않으면 무시됩니다.
+
+Examples:
+
+l4-abe {
+	compatible = "simple-bus";
+	#address-cells = <2>;
+	#size-cells = <1>;
+	ranges = <0 0 0x48000000 0x00001000>, /* MPU path */
+		 <1 0 0x49000000 0x00001000>; /* L3 path */
+	mcasp {
+		compatible = "ti,mcasp";
+		reg = <0 0x10 0x10>, <0 0x20 0x10>,
+		      <1 0x10 0x10>, <1 0x20 0x10>;
+		reg-names = "mpu", "dat",
+			    "dma", "dma_dat";
+		interrupts = <11>, <12>;
+		interrupt-names = "rx", "tx";
+	};
+
+	timer {
+		compatible = "ti,timer";
+		reg = <0 0x40 0x10>, <1 0x40 0x10>;
+		reg-names = "mpu", "dma";
+	};
+};
+
+
+usb {
+	compatible = "ti,usb-host";
+	reg = <0x4a064000 0x800>, <0x4a064800 0x200>,
+	      <0x4a064c00 0x200>;
+	reg-names = "config", "ohci", "ehci";
+	interrupts = <14>, <15>;
+	interrupt-names = "ohci", "ehci";
+};

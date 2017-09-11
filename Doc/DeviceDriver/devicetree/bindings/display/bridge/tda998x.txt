@@ -1,0 +1,114 @@
+Device-Tree bindings for the NXP TDA998x HDMI transmitter
+
+Required properties;
+  - compatible: must be "nxp,tda998x"
+
+  - reg: I2C address
+
+Optional properties:
+  - interrupts: interrupt number and trigger type
+	default: polling
+
+  - pinctrl-0: pin control group to be used for
+	screen plug/unplug interrupt.
+
+  - pinctrl-names: must contain a "default" entry.
+
+  - video-ports: 24 bits value which defines how the video controller
+	output is wired to the TDA998x input - default: <0x230145>
+
+  - audio-ports: array of 8-bit values, 2 values per one DAI[1].
+	The first value defines the DAI type: TDA998x_SPDIF or TDA998x_I2S[2].
+	The second value defines the tda998x AP_ENA reg content when the DAI
+	in question is used. The implementation allows one or two DAIs. If two
+	DAIs are defined, they must be of different type.
+
+[1] Documentation/sound/alsa/soc/DAI.txt
+[2] include/dt-bindings/display/tda998x.h
+
+Example:
+
+#include <dt-bindings/display/tda998x.h>
+
+	tda998x: hdmi-encoder {
+		compatible = "nxp,tda998x";
+		reg = <0x70>;
+		interrupt-parent = <&gpio0>;
+		interrupts = <27 2>;		/* falling edge */
+		pinctrl-0 = <&pmx_camera>;
+		pinctrl-names = "default";
+		video-ports = <0x230145>;
+
+		#sound-dai-cells = <2>;
+			     /*	DAI-format	AP_ENA reg value */
+		audio-ports = <	TDA998x_SPDIF	0x04
+				TDA998x_I2S	0x03>;
+
+	};
+
+/*
+NXP TDA998x HDMI 송신기의 장치 트리 바인딩
+
+필수 속성;
+- 호환 가능 : "nxp, tda998x"여야합니다.
+
+
+- 등록 : I2C 주소
+
+옵션 속성 :
+- 인터럽트 : 인터럽트 번호와 트리거 유형
+
+기본값 : 폴링
+
+ - pinctrl-0 : 스크린 플러그 / 언플러그 인터럽트에 사용하는 핀 제어 그룹.
+
+- pinctrl-names : "default"항목을 포함해야합니다.
+
+- video-ports : 비디오 컨트롤러의 정의 방법을 정의하는 24 비트 값
+
+"기본"항목.
+
+- 비디오 포트 : 비디오 컨트롤러의 정의 방법을 정의하는 24 비트 값
+출력은 TDA998x 입력 - 기본값 : <0x230145>
+
+- audio-ports : 8 비트 값의 배열 한 DAI [1] 당 2 개의 값.
+
+첫 번째 값은 DAI 유형을 정의합니다 : TDA998x_SPDIF 또는 TDA998x_I2S [2].
+
+값은 DAI 유형을 정의합니다 (TDA998x_SPDIF 또는 TDA998x_I2S [2]).
+
+두 번째 값은 tda998x AP_ENA reg를 정의합니다.
+
+두 번째 값은 문제의 DAI가 사용되는 경우의 tda998x AP_ENA reg의 내용을 정의합니다. 
+
+이 구현은 하나 또는 두 개의 DAI가 허용됩니다. 
+
+두 DAI가 정의되어있는 경우 다른 유형이어야합니다.
+
+Example:
+
+#include <dt-bindings/display/tda998x.h>
+
+	tda998x: hdmi-encoder {
+		compatible = "nxp,tda998x";
+		reg = <0x70>;
+		interrupt-parent = <&gpio0>;
+		interrupts = <27 2>;		
+
+/* falling edge */
+		pinctrl-0 = <&pmx_camera>;
+		pinctrl-names = "default";
+		
+
+video-ports = <0x230145>;
+
+		#sound-dai-cells = <2>;
+			     /*	DAI-format	AP_ENA reg 
+
+value */
+		audio-ports = <	TDA998x_SPDIF	0x04
+				TDA998x_I2S	0x03>;
+
+	};
+
+*/

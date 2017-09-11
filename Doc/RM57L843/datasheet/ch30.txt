@@ -1,0 +1,1677 @@
+Chapter 31.
+
+Inter-Integrated Circuit(I2C) Module
+
+이 Chapter 는 Inter-Integrated Circuit(I2C) Module 을 설명한다.
+I2C 는 TI(Texas Instruments) Microcontroller 와
+Philips Semiconductor I2C-Bus 규격 Version 2.1 호환 장치간에
+Interface 를 제공하고 I2Cbus 에 의해 연결되는 Multi-Master 통신 Module 이다.
+이 Module 은 모든 Slave 혹은 Master I2C 호환 장치를 지원한다.
+
+
+
+31.1 Overview
+
+I2C 는 아래 기능을 가지고 있다:
+
+* Philips I2C Bus 규격 v2.1 을 준수한다
+  (I2C 규격, 필리습 문서 번호 9398 393 40011)
+  - Bit/Byte 형식으로 전송
+  - 7 비트 및 10 비트 Device Addressing Modes
+  - General Call
+  - START byte
+  - Multi-Master Transmitter / Slave Receiver Mode
+  - Multi-Master Receiver / Slave Transmitter Mode
+  - Combined Master Transmit/Receive and Receive/Transmit Mode
+  - 10 Kbps ~ 400 Kbps 의 전송 속도(Phillips Fast-Mode Rate)
+* Free Data Format
+* 2개의 DMA Event(Transmit 와 Receive)
+* DMA Event 활성화/비활성화 능력
+* CPU 에 의해 사용할 수 있는 7개의 Interrupt
+* 최대 6.7 Mhz 를 가지고 VBUS 주파수로 동작
+* 6.7 MHz ~ 13.3 MHz 사이의 Module 주파수로 동작
+* Module 활성화/비활성화 기능
+* SDA 와 SCL 은 GPIO 로 선택적인 구성을 할 수 있다.
+* 출력의 Slew Rate(입력 전압과 출력 전압의 차이에 따른 비율) 제어
+* 출력의 Open Drain 제어
+* 프로그래밍 가능한 입력상에 Pull-Up/Pull-Down 기능
+* NACK Mode 무시하기를 지원
+
+Note:	이 I2C Module 은 아래를 지원하지 않는다:
+
+	* HS(High-Speed) Mode
+	* C-Bus 호환 Mode
+	* 10 비트 Address Mode 에 결합된 형식
+	  (I2C 는 Slave Address 의 2번째 Byte 를 Slave Address 의 1번째 Byte 를 송신할 때마다 송신한다)
+
+
+
+31.1.1 I2C Module 소개
+
+I2C Module 은 모든 Slave 혹은 Master I2C 호환 Device 를 지원한다.
+Figure 31-1 은 하나의 Device 에서 다른 Device 로
+양방향 전송을 위해 연결된 다수의 I2C Serial Ports 의 예를 보여준다.
+
+
+
+31.1.2 Functional Overview
+
+I2C Module 은 다수의 Master Device 를 지원하는 Serial Bus 이다.
+Multimaster Mode 에서, 하나 이상의 Device 는 동일한 Bus 에 연결될 수 있고 Bus 를 제어할 수 있다.
+Bus 상에 각 I2C Device 는 고유 주소에 의해 식별되고
+Device 의 기능에 따라 Transmitter 혹은 Receiver 로서 동작할 수 있다.
+추가적으로 송신기 혹은 수신기가 되어 Data 를 전송할 때,
+I2C Bus 에 연결된 Device 는 Master 혹은 Slave 로 간주될 수 있다.
+
+Note: Master Device 는 Bus 상에 Data 전송을 시작하고 이동을 허용하는 Clock Signal 을 생성하는 Device 이다.
+      송신 동안, Master 에 의해 address 되는 모든 Device 는 Slave 로 간주된다.
+
+Data 는 Figure 31-2 에 보여지듯이 SDA(Serial Data pin) 와
+SCL(Serial Clock Pin) 을 사용하는 I2C Module Interface 장치로 전달된다.
+이러한 2개의 와이어는 Device 와 I2C Bus 에 연결된 다른 Device 들 간에 정보를 운반한다.
+Device 상에 SDA 와 SCL Pin 은 모두 양방향이다.
+이들은 Pull-Up Register 를 통해 양의 공급 전압에 연결되어야 한다.
+Bus 가 free 할 때, 이 핀들은 모두 High 이다.
+두 핀의 Driver 는 Wired-AND 기능을 수행하기 위한 Open-Drain 구성을 갖는다.
+
+Device 는 ACK 를 생성하는 능력이 없는 Non-Compliant I2C Device 로부터
+생성된 NACK 를 무시하도록 입력할 수 있는 특수한 Mode 를 가진다.
+
+I2C Module 은 아래 기본 Block 으로 구성된다:
+
+* Serial Interface: 하나의 Data Pin(SDA) 와 하나의 Clock Pin(SCL)
+* Device Register Interface
+  - SDA Pin 과 CPU 혹은 DMA 를 오가는 송수신된 Data 를 일시적으로 유지하기 위한 Data Registers
+  - 제어와 상태 Registers
+* I2C Module 이 구동되는 Input Clock 을 분할하기 위한 Prescaler
+* I2C Module Register 에 접근하기 위한 DMA 와 CPU 를 활성화 하기 위한 Peripheral Bus Interface
+* I2C Module(Master 로 구성되었다면) 과 다른 Master 간에 중재를 처리할 Arbitrator(중재자)
+* Interrupt 생성 Logic(Interrupt 는 CPU 로 송신 될 수 있음)
+* 서로 다른 Clock Speed 의 Masters 간에 Data 전송을 동기화하고
+  I2C Input Clock(System Module 에서 오는) 과 SCL Pin 상에 Clock 을 동기화하는 Clock Synchronizer
+* 직렬 핀 2개에 각각 존재하는 Noise Filter
+* DMA 전송을 위한 I2C Module 에서 Data 수신 및 Data 송신을 동기화하는 DMA Event 생성 Logic
+
+Figure 31-2 에서, CPU 혹은 DMA 는 I2CDXR 에 전송할 Data 를 기록하고 I2CDRR 에서 수신된 Data 를 read 한다.
+I2C Module 이 송신기로 설정된 경우, I2CDXR 에 기록된 Data 는
+I2CXSR 에 복사되고 한 번에 하나의 Bit 가 Shift 된다.
+I2C Module 이 수신기로 설정된 경우, I2CRSR 로 수신된 Data 가 Shift 되고 I2CDRR 에 복사된다.
+I2C 기능이 필요하지 않을 때, Pin 은 GPIO(General-Purpose Input/Output) Pin 으로 제어될 수 있다.
+각 Pin 의 I/O 구조는 아래와 같다:
+
+* 프로그래밍 가능한 출력의 Slew Rate(입력 전압과 출력 전압의 차이에 따른 비율) 제어
+* Open Drain Mode
+* Input 상에서 프로그래밍 가능한 Pull-Up/Pull-Down 기능
+
+Figure 31-2. Simple I2C Block Diagram
+
+
+
+31.1.3 Clock Generation
+
+Figure 31-3 에서 보여지듯이, I2C Module 은 Module Clock 과 Master Clock 을 생성하기 위한
+Device Clock Generator 로부터 생성된 Input Clock 을 사용한다.
+I2C Input Clock 은 Device Peripheral Clock(VBUS_CLK) 이다.
+Clock 은 Module Clock 과 Master Clock 을 생성하기 위해 I2C Module 내에서 2번 더 분주된다.
+
+Figure 31-3. Clocking Diagram for the I2C Module
+
+Module Clock 은 I2C Module 이 작동하는 주파수를 결정한다.
+I2C Module 에 있는 프로그래밍 가능한 Prescaler 는 Module Clock 을 생성하기 위해 Input Clock 을 분주한다.
+분주할 값을 결정하기 위해 Prescaler Register I2CPSC 의 I2CPSC Field 를 초기화한다.
+그 결과 주파수는 아래와 같다:
+
+ModuleClockFrequency = I2CInputClockFrequency / (12CPSC + 1)
+
+Module Clock 주파수는 6.7 MHz 및 13.3 MHz 사이어야 한다.
+I2C Module 이 Reset 상태(I2CMDR 에 있는 IRS = 0)인 동안 Prescaler 는 초기화 될 수 있다.
+Prescale 된 주파수는 IRS 가 1 로 변경된 경우에만 적용된다.
+I2CPSC 값을 변경하는 것은 IRS 가 1 인 동안 아무런 효과가 없다.
+
+I2C Module 이 I2C Bus 상에서 Master 로 설정되면, Master Clock 은 SCL Pin 상에서 나타난다.
+이 Clock 은 I2C Module 과 Slave 간의 통신 타이밍을 제어한다.
+Figure 31-3 에 보이듯이, I2C Module 에 있는 2 번째 Clock 분주기는
+Master Clock 을 생성하기 위해 Module Clock 을 분주한다.
+Clock 분주기는 I2CCKL 를 Module Clock Signal 의 낮은 부분을 분주하고
+I2CCKH 를 Module Clock Signal 의 높은 부분을 분주하는데 사용한다.
+
+그 결과 주파수는 아래와 같다.
+
+MasterClockFrequency = ModuleClockFrequency / {(I2CCKL + d) + (I2CCKH + d)}
+
+MasterClockFrequency = I2CInputClockFrequency / [(12CPSC + 1) * {(I2CCKL + d) + (I2CCKH + d)}]
+
+d 값은 I2CPSC 의 값에 의존한다.
+
+Note: 위에서 정의된 Master Clock 주파수는 상승/하강 시간 및
+      Module 내에 있는 Synchronizer 의 Latency 를 포함하지 않는다.
+      실제 전송 속도는 위의 식으로부터 산출된 값보다 더 느릴 것이다.
+      또한 SCL 동기화가 일어날 경우 SCL 동기화 특성상
+      SCL Clock 주기를 변경할 수 있다.
+
+
+
+31.2 I2C Module Operation
+
+아래 Section 은 I2C Module 이 어떻게 동작하는지에 대해 설명한다.
+
+
+
+31.2.1 Input and Output Voltage Levels
+
+각각의 전송된 Data Bit 에 대한 하나의 Clock Pulse 는 Master Device 에 의해 생성된다.
+I2C-Bus 에 연결될 수 있는 다양한 서로 다른 기술을 가진 Devices 때문에
+Logic 0(Low) 와 Logic 1(High) 의 레벨이 고정되지 않고 VCCIO 의 연관된 Level 에 의존한다.
+세부 사항에 대해서는 Device 명세 Data sheet 를 참조하라!
+
+
+
+31.2.2 I2C Module Reset Conditions
+
+I2C Module 은 아래 2 가지 방법으로 Reset 할 수 있다:
+
+* Global Peripheral Reset 을 통해 할 수 있다.
+  Device Reset 은 Global Peripheral Reset 을 야기한다.
+* I2C Mode Register(I2CMDR) 에 있는 IRS Bit 를 clear 함으로써 수행할 수 있다.
+  Global Peripheral Reset 이 제거되면, Reset 상태로 I2C Module 을 유지하도록 IRS 비트는 0 으로 clear 된다.
+
+
+
+31.2.3 I2C Module Data Validity
+
+Clock 이 High 로 떠 있는 동안 SDA 상에 Data 는 안정적이어야 한다.
+Figure 31-4 를 참조하라!
+Clock 신호가 Low 일 때 Data Line 의 High 혹은 Low 상태는 SDA 만 변경할 수 있다.
+
+Figure 31-4. Bit Transfer on the I2C Bus
+
+
+
+31.2.4 I2C Module Start and Stop Conditions
+
+START 와 STOP 조건은 Master I2C Module 에 의해 생성된다.
+
+* START 조건은 SCL 이 High 인 동안 SDA Line 이 High 에서 Low 로 전이하는 것으로 정의된다.
+  Master 는 Data 전송의 시작을 표시하기 위해 이 조건에서 구동된다.
+  Bus 는 START 조건 이후 Busy 로 간주되고 I2CSR 에 있는 Bus Busy 비트(BB) 는 1로 설정된다.
+* STOP 조건은 SCL 이 High 인 동안 SDA Line 이 Low 에서 High 로 전이하는 것으로 정의된다.
+  Master 는 Data 전송의 끝을 표시하기 위해 이 조건에서 구동된다.
+  Bus 는 STOP 조건 이후 Free 로 간주되고 그러므로 I2CSR 내에 BB 비트는 0 으로 clear 된다.
+
+Figure 31-5. I2C Module START and STOP Conditions
+
+START 조건으로 Data 전송을 시작하는 I2C Module 을 위해
+I2CMDR 에 있는 Master Mode Bit(MST) 와 START Condition Bit(STT) 모두가 반드시 1 로 설정되어야 한다.
+STOP 조건으로 Data 전송을 끝내는 I2C Module 을 위해
+STOP Condition Bit(STP) 는 반드시 1 로 설정되어야 한다.
+BB Bit 가 1 로 설정되고, STT Bit 가 1 로 설정되는 경우, 반복되는 START 조건이 생성된다.
+
+
+
+31.2.5 Serial Data Formats
+
+I2C Module 은 Byte Data Format 으로 동작한다.
+SDA Line 에 넣은 각 Message 는 2 ~ 8 비트 이다.
+송신 혹은 수신 할 수 있는 Message 의 수는 무제한이다.
+데이터는 최상위 비트(MSB) 를 처음(Figure 31-6)으로 전송한다.
+수신기 Mode 인 경우 각 Message 는 I2C 에서 비트를 받았음을 알림으로써 이어진다.
+I2C Module 은 Little Endian System 을 지원하지 않는다.
+
+Figure 31-6. I2C Module Data Transfer
+
+START 조건(S) 이후에 첫 번째 Byte 는 항상 7 비트 주소 + R/W 비트
+혹은 8 개의 Data 비트를 포함하는 8 비트로 구성된다.
+첫 번째 Byte 의 8 번째 비트, R/W 는 Data 의 방향을 결정한다.
+R/W 비트가 0 이라면, Master 는 선택된 Slave 에 Data 를 Write(송신) 한다.
+R/W 비트가 1 이라면, Master 는 Slave Device 로부터 Data 를 Read(수신) 한다.
+확인 응답 Mode 에서, 응답(ACK) 비트를 위한 별도의 전용 비트는 각 Message 뒤에 삽입된다.
+
+I2C Module 은 아래의 형식을 지원한다:
+
+* 7 비트 Addressing Format(Figure 31-7)
+* 10 비트 Addressing Format(Figure 31-8)
+* 반복적 START 조건에서 7 비트/10 비트 Addressing Format(Figure 31-9)
+* Free-Data Format(Figure 31-10)
+
+
+
+31.2.5.1 7-Bit Addressing Format
+
+7 비트 Addressing Format(Figure 31-7) 에서,
+START 조건 이후의 첫 번째 Byte 는 R/W 비트(LSB 에 있는) 다음에 7 비트 Slave Address 로 구성된다.
+R/W 비트는 Data 전송의 방향을 결정한다:
+
+* R/W = 0:
+  Master 가 Slave 에 Data 를 Write(송신) 한다.
+* R/W = 1:
+  Master 가 Slave 로부터 Data 를 Read(수신) 한다.
+
+확인 응답(ACK) 전용 별도의 Clock Cycle 은 각 Byte 다음에 삽입된다.
+ACK 가 Master 로부터의 첫 번째 Byte 이후 Slave 에 의해 삽입된 경우,
+송신기(R/W 비트에 따라 Master 혹은 Slave)로부터 오는 Data 의 n 비트를 따른다.
+Device I2C 는 I2CMDR 의 BC(Bit Count) Field 로 n 이 숫자 2 ~ 8 사이가 되게 프로그램 할 수 있다.
+Data Bit 가 전송된 이후, 수신기는 ACK 비트를 삽입한다.
+
+7 비트 Addressing Format 을 선택하려면,
+I2CMDR 의 Expanded Address Enable(XA) 비트에 0 을 기록하고
+Free Data Format Mode 가 Off(I2CMDR 에 있는 FDF = 0) 되어 있는지 확인해야 한다.
+
+Figure 31-7. I2C Module 7-Bit Addressing Format
+
+
+
+31.2.5.2 10-Bit Addressing Format
+
+10 비트 Addressing Format 은 7 비트 Addressing Format 과 유사하지만,
+Master 는 별도로 Slave Address 2 개의 Byte 를 송신한다.
+10 비트 Addressing Format(Figure 31-8) 에서,
+첫 번째 Byte 는 10 비트 Slave Address 의 MSB 2 개와 R/W 비트인 11110b 이다.
+ACK 비트는 각 Byte 뒤에 삽입된다.
+두 번째 Byte 는 10 비트 Slave Address 의 나머지 8 비트이다.
+Slave 는 각각의 Byte 2개를 전송한 이후 받았음을 알려줘야 한다.
+Master 가 Slave 에 2 번째 Byte 를 기록하면,
+Master 는 Data 를 기록 하거나 혹은 반복되는 START 조건을 사용하여 Data 방향을 변경할 수 있다.
+
+10 비트 Addressing Format 을 선택하려면,
+I2CMDR 의 Expanded Address Enable(XA) 비트에 1 을 기록하고
+Free Data Format Mode 가 Off(I2CMDR 에 있는 FDF = 0) 되어 있는지 확인해야 한다.
+
+Figure 31-8. I2C Module 10-bit Addressing Format
+
+
+
+31.2.5.3 Using the Repeated START Condition
+
+각 Byte 의 끝에서, Master 는 다른 START 조건(Figure 31-9)을 구동할 수 있다.
+이 기능을 사용하여, Matser 는 STOP 조건을 생성하기 이전에
+몇개의 Data Byte 든 송신/수신을 할 수 있다.
+Data Byte 의 길이는 2 ~ 8 비트가 될 수 있다.
+반복되는 START 조건은 7 비트 Addressing, 10 비트 Addressing 혹은 Free Data Format 을 사용할 수 있다.
+
+Figure 31-9. I2C Module 7-Bit Addressing Format with Repeated START
+
+
+
+31.2.5.4 Free Data Format
+
+이 Format(Figure 31-10) 에서, START 조건 이후 첫 번째 Byte 는 Data Byte 이다.
+8 비트의 Data 다음에 ACK 비트가 삽입된다.
+주소 혹은 Data 방향 비트는 전송되지 않는다.
+그러므로, 송신기 및 수신기 모두가 없는 Data Format 을 지원한다.
+데이터 전송(송수신)의 방향은 전송하는 방향으로 일정하게 유지된다.
+
+Free Data Format 을 선택하려면 I2CMDR 의 Free Data Format(FDF) 비트에 1 을 기록하면 된다.
+Free Data Format 은 Digital Loop Back Mode 에서 지원되지 않는다.
+
+Figure 31-10. I2C Module in Free Data Format
+
+
+
+31.2.6 NACK Bit Generation
+
+I2C Module 이 Receiver(Master 혹은 Slave) 가 되면
+이것은 송신기에 의해 전송된 비트를 무시하거나 잘 받았음을 알려줄 수 있다.
+새로운 비트를 무시하려면,
+I2C Module 은 Bus 상에서 잘 받았음을 알려주는 Cycle 동안
+No-Acknowledge(NACK) 비트를 보내야 한다.
+Table 31-1 은 NACK 가 발생 될 수 있는 다양한 방법을 요약한다.
+
+Table 31-1. Ways to Generate a NACK Bit
+
+* I2C Module Condition - Slave Receiver Mode
+
+Basic NACK Bit Generation Options:
+
+Data 전송을 비활성화(STT = 0)
+Overrun 조건을 허용(RSFULL = 1)
+Module 을 Reset(IRS = 0)
+
+Additional Option:
+
+수신하고자하는 마지막 Data Bit 의 Rising Edge 이전에 NACKMOD 비트를 설정한다.
+
+* I2C Module Condition - Master Receiver Mode and Repeat Mode(RM = 1)
+
+Basic NACK Bit Generation Options:
+
+STOP 조건을 생성한다(STP = 1)
+Module 을 Reset 한다(IRS = 0)
+
+Additional Option:
+
+수신하고자하는 마지막 Data Bit 의 Rising Edge 이전에 NACKMOD 비트를 설정한다.
+
+* I2C Module Condition - Master Receiver Mode with Non-Repeat Mode(RM = 0)
+
+Basic NACK Bit Generation Options:
+
+STP = 1 이라면, 내부 Data Counter 가 0 으로 Count Down 되고 STOP 조건을 강제할 수 있다.
+STP = 0 이라면, STOP 조건을 생성하기 위해 STP = 1 로 만든다.
+Moudle 을 Reset 한다(IRS = 0)
+
+Additional Option:
+
+수신하고자하는 마지막 Data Bit 의 Rising Edge 이전에 NACKMOD 비트를 설정한다.
+
+일부 Application 에서 Slave 는 ACK 신호를 생성할 수 없다.
+I2CEMDR Register 에 있는 IGNACK 비트가 설정되면,
+결과로서 NACK 는 무시될 것이고 I2C Block 은 Data 전송을 계속 할 것이다.
+
+
+
+31.3 I2C Operation Modes
+
+31.3.1 Master Transmitter Mode
+
+모든 Master 는 이 Mode 에서 시작한다.
+I2C Module 은 Master 이며 제어 정보와 Data 를 Slave 에 전송한다.
+이 Mode 에서, Figure 31-7, Figure 31-8, Figure 31-9 에서 보여진
+Addressing Format 중 하나로 조립된 Data 는 SDA pin 으로 Shift Out 되고
+SCL Pin 에서 자체 생성된 Clock Pulse 로 동기화된다.
+Clock Pulse 는 금지되고 Byte 가 전송된 이후
+Device 의 중재가 필요(XSMT = 0)하면 SCL Pin 을 Low 로 유지한다.
+
+Note: I2C 가 동시에 Master 2개의 전송을 설정한다면,
+      두 번째 Master 전송을 수행하기 전에 MST 와 BB 가 Reset 될 때까지 기다린다.
+
+MST 대기 실패와 BB 리셋은 문제가 발생될 두 번째 전송상에서
+start 조건을 방지할 것이고 Bus BB 는 설정되지 않을 것이다.
+일반적으로 첫 번째 전송의 끝은 BB 를 Polling 함으로써 처리된다.
+그러나, MST 비트는 BB 비트와 동일한 순간에 Reset 되지 않는다.
+그 결과 MST 의 Resetting 이전에 두 번째 Master 전송이 시작되면,
+두 번째 전송을 위한 MST 비트는 Reset 된다.
+자신을 Master 로 인식하는 I2C 를 방지하므로 Bus 점유를 실패한다.
+
+
+
+31.3.2 Master Receiver Mode
+
+이 Mode 에서, I2C Module 은 Master 이고 Slave 로부터 Data 를 수신한다.
+이 Mode 는 Master Transmitter Mode(I2C Module 은 Slave 에 Command 를 전송)에서만 입력될 수 있다.
+Slave Address Byte 와 R/W 비트가 전송(R/W 비트가 1 이 라면)된 이후에
+Figure 31-7, Figure 31-8, Figure 31-9 에 보여지는
+Addressing Format 중 하나로 Master Receiver Mode 에 진입한다.
+SDA 핀 상에 수신된 Serial Data 비트는 SCL 핀상에 자체 생성 Clock Pulses 로 Shift 된다.
+Clock Pulse 가 금지되고 Byte가 수신된 이후
+Device 의 중재가 필요(FSFULL = 1)하면 SCL 을 High 로 유지한다.
+전송의 끝에서, Master-Receiver 는 Slave 에서 Clocked Out 된 마지막 Byte 에
+Acknowledge 를 생성하지 않으므로써 Slave-Transmitter 에게 Data 의 끝이라는 신호를 보낸다.
+Slave-Transmitter 는 STOP 조건 혹은 반복적 START 조건을 생성하기 위해
+Master-Receiver 를 허용하는 Data Line 을 해제한다.
+
+많은 Application 에서, Message 의 크기가 Message 자체의 초기 Byte 이다.
+Message 의 크기가 송/수신이 시작되기 전에 Master 에게 알려지지 않기 때문에
+수신이 완료되면 Master 는 stop 조건을 강제하기 위해 repeat mode 를 사용한다.
+repeat mode 는 RM 비트를 1 로 설정함으로써 활성화된다.
+수신측에서 이중 버퍼 구현에 기반하여
+(message -1) 번째 Data 를 읽은 후 Master 는 stop 조건(STP = 1) 을 생성해야 한다.
+
+
+
+31.3.3 Slave Transmitter Mode
+
+이 Mode 에서 I2C Module 은 Slave 이고 Master 에게 Data 를 전송한다.
+이 모드는 Slave Receiver Mode
+(I2C Module 은 반드시 Master 로부터 첫 Command 를 수신해야만함) 에서만 진입할 수 있다.
+Slave Address Byte 가 자신의 주소 및
+R/W 비트가 송신(R/W 비트가 1 로 설정되어있는 경우)된 것과 동일한 경우
+Figure 31-7, Figure 31-8, Figure 31-9 에 보여지는
+Addressing Format 중 어느 하나의 Slave Transmitter Mode 에 들어간다.
+Slave Transmitter 는 Master Device 에 의해 생성되는
+Clock Pulse 와 SDA Pin 상에 Serial Data 출력을 Shift 한다.
+Slave Device 는 Clock 을 생성하지 않지만,
+Byte 가 전송된 이후 Device 의 중재가 필요(XSMT = 0)하면 SCL Pin 을 Low 로 유지한다.
+
+
+
+31.3.4 Slave Receiver Mode
+
+이 Mode 에서, I2C Module 은 Slave 이고, Master 로부터 Data 를 수신한다.
+모든 Slave 는 이 Mode 에서 시작한다.
+SDA Pin 상에서 수신된 직렬 Data 비트는 Master Device 에 의해 생성된 Clock Pulse 로 Shift 된다.
+Slave Device 는 Clock 을 생성하지 않지만, 
+Byte 가 전송된 이후 Device 의 중재가 필요한동안(RSFULL = 1) SCl Pin 을 Low 로 유지한다.
+
+
+
+31.3.5 Low Power Mode
+
+I2C Module 은 (Peripheral Central Resource(PCR) Module 의
+Peripheral Power Down Set Register 에 기록함으로써)
+System 에 의해 시작하는 Global Low Power Mode 에 의해 Low Power Mode 에 배치될 수 있다.
+
+사실상, Low Power Mode 는 Module 에 모든 Clock 을 종료한다.
+Global Low Power Mode 에서, 어떤 Register 도 SW 를 볼 수 없다;
+Register 에 어떠한 값도 쓸 수 없고 Register 에 있는 어떠한 값도 읽을 수 없다.
+
+
+
+31.3.6 Free Run Mode
+
+FREE 비트(I2CMDR 에 14 번 비트)가 1 로 설정된 경우 I2C Module 은 Free Run Mode 로 설정될 수 있다.
+이 비트는 주로 SW 를 디버깅 할 때 breakpoint 를 만나는 에뮬레이터에서 사용된다.
+FREE 비트를 0 으로 설정하면, I2C 는 SCL 이 High  혹은 Low 인지에 따라 다르게 반응한다.
+SCL 이 Low 라면, I2C 가 즉각 정지하고, I2C Master 송신기 혹은 수신기이든간에 SCL Low 구동을 유지한다.
+SCL 이 High 라면, I2C 는 SCL 이 Low 가 될 때까지 기다리고 Low 가 되면 정지한다.
+I2C 가 Slave 라면, 송/수신이 완료되면 정지한다.
+
+
+
+31.3.7 Ignore NACK Mode
+
+I2C Module 은 I2CEMDR Register 에 있는 IGNACK 비트를 설정함으로써 NACK Mode 를 무시하도록 배치할 수 있다.
+이 Mode 는 적절한 ACK 신호를 생성할 수 없는 Slave Device 로부터
+NACK 를 무시하기 위해 Master 송신기로 설정된 I2C Module 을 허용한다.
+
+
+
+31.4 I2C Module Integrity
+
+아래 Section 은 I2C Module 이 신호와 명령 사이의 우선 순위와 순서를 유지하는 방법에 대해 논의한다.
+
+
+
+31.4.1 Arbitration
+
+두 개 이상의 Master 송신기가 동시에 동일한 Bus 에 전송을 시작하면 Arbitration Procedure 가 호출된다.
+Figure 31-11 은 장치 2 개 간의 Arbitration Procedure 를 보여준다.
+Arbitration Procedure 는 경쟁하는 송신기들에 의해 SDA Bus 상에 나타난 Data 를 사용한다.
+High 를 생성하는 첫번째 Master 송신기는 Low 를 생성하는 다른 Master 에 의해 기각된다.
+Arbitration Procedure 는 가장 낮은 Binary 값으로 Serial Data Stream 을 송신하는 Device 에 우선 순위를 준다.
+Slave Receiver Mode 로 전환 중재를 잃은 Master Transmitter 는
+Arbitration Lost(AL) Flag 를 설정하고 Arbitration-Lost Interrupt 를 생성한다.
+다른 Master Module 에 의해 전송된 Data 를 회수하고 I2C 는 Master Module 로부터 Data 를 지속적으로 수신한다.
+둘 이상의 Device 가 동일한 첫 번째 Byte 를 전송해야 후속 Byte 중재를 계속한다.
+
+Serial 전송을 하는 동안, 반복적 START 조건 혹은 STOP 조건이 I2C Bus 에 전송될 때
+Arbitration Procedure 가 여전히 진행된다면, 관련된 Master Transmitter 는
+Format Frame 내에 동일한 위치에서 반복적 START 조건 혹은 STOP 조건을 전송한다.
+즉 Arbitration 은 아래 조건 사이에서 허용되지 않는다:
+
+* 반복되는 START 조건과 Data 비트
+* STOP 조건과 Data 비트
+* 반복적 START 조건과 STOP 조건
+  Slave 는 Arbitration Procedure 에 관여하지 않는다.
+
+Figure 31-11. Arbitration Procedure Between Two Master Transmitters
+
+
+
+31.4.2 I2C Clock Generation and Synchronization
+
+정상적인 환경에서 하나의 Master Device 는 Clock Signal 과 SCL 을 생성한다.
+Arbitration Procedure 동안, 두 개 이상의 Master Device 가
+Data 출력을 비교할 수 있도록 Clock 을 동기화해야 한다.
+Figure 31-12 는 Clock 동기화를 보여준다.
+SCL Line 의 Wired-AND 속성은 다른 Device 보다
+먼저 SCL 에 낮은 주기를 발생시키는 Device 를 우선함을 의미한다.
+High 에서 Low Transition(전이)에서, 다른 Device 의 Clock Generator 는 그들의 Low 주기에서 시작해야만 한다.
+SCL Line 은 가장긴 Low 주기의 Device 에 의해 Low 로 유지된다.
+그들의 Low 주기를 끝내기 위한 다른 Device 는
+그들의 High 주기가 시작되기 이전에 해제될 SCL Line 을 위해 기다려야 한다.
+가장 느린 Device 가 Low 주기의 길이를 결정하고 가장 빠른 Device 가 High 주기의 길이를 결정하여
+SCL 상에서 동기화된 신호를 얻을 수 있다.
+
+Device 가 긴 시간 동안 Clock Line 을 Pull Down 할 경우,
+결과로 모든 Clock Generator 는 대기 상태로 진입해야 한다.
+이러한 방식으로, Slave 는 빠른 Master 를 느리게하고 느린 Device 는
+수신된 Byte를 저장하기 이한 혹은 송신할 Byte를 준비하기에 충분한 시간을 생성한다.
+
+Note: I2C Protocol Fault
+
+다음 조건은 Philips I2C 명세, v2.1(I2C 명세, Philips 문서 번호 9398 393 40011) 에
+정의된 Clock Spec 을 위반하며 I2C Protocol 오류가 발생할 것이다.
+I2CCLKH = 2, I2CCLKL = 2, I2CPSC = 2 이다.
+이것은 SCL 이 High 인 동안 SDA Data 전이의 발생을 야기한다.
+
+Figure 31-12. Synchronization of Two I2C Clock Generators During Arbitration
+
+
+
+31.4.3 Prescaler
+
+I2C Module 은 Module Clock 에 의해 구동된다.
+Clock 은 I2C Prescaler Block 에 의해 생성된다.
+8 비트 Register, I2CPSC 로 구성된 Prescaler Block 은
+6.7 MHz ~ 13.3 MHz 사이의 Module Clock 을 얻기 위해
+Device Peripheral Clock(VBUS_CLK) 를 분주하는데 사용된다.
+
+
+
+31.4.4 Noise Filter
+
+Noise Filter 는 50 ns 이하인 모든 잡음을 억제하기 위해 사용된다.
+이것은 Module Clock 이 각각 6.7 MHz 와 13.3 MHz 의 상한값과 하한값을 가진,
+하나의 Module Clock 의 잡음을 억제하도록 설계되었다.
+
+
+
+31.5 Operational Information
+
+아래 Section 에서 I2C Module 이 작동하는 방법에 대한 자세한 정보를 제공한다.
+
+
+
+31.5.1 I2C Module Interrupts
+
+I2C Module 은 7 종류의 Interrupt 를 생성한다.
+7 개의 Interrupt 는 Interrupt Mask Register(I2CIMR) 에 있는 7 개의 Interrupt Mask 비트와
+Status Register(I2CSR) 에 있는 7 개의 Interrupt Flag 비트를 수반한다.
+
+
+
+31.5.1 I2C Module Interrupts
+
+I2C Module 은 아래에 기술된 Interrupt Request 를 생성한다.
+모든 Request 는 CPU 에 Interrupt 를 요청하는 단일 I2C 로 Arbiter 를 통해 다중화된다.
+각 Interrupt 요청은 Flag 비트와 Enable 비트를 가지고 있다.
+Interrupt 는 예상된 Interrupt 조건의 발생 이전에 사용하도록 설정해야 한다.
+지정된 Event 중 하나가 발생하면 Flag 비트가 설정된다.
+해당 Enable 비트가 0 인 경우, Interrupt 요청은 차단된다.
+Enable 비트가 1 인 경우, Interrupt 요청은 I2C Interrupt Request 로서 CPU 에 전송된다.
+대안으로, CPU 는 Table 31-2 에 나타난 모든 비트를 폴링할 수 있다.
+
+Table 31-2. Interrupt Requests Generated by I2C Module
+
+AL	Arbitration-lost interrupt
+
+	I2C Module 이 다른 Master 송신기와 arbitration contest 를 잃은 경우 생성된다.
+
+NACK	No-acknowledge interrupt
+
+	Master I2C 가 Receiver 로부터 Acknowledge 를 수신하지 않았을 때 생성된다.
+	
+ARDY	Register-access-ready interrupt
+
+	이전에 프로그램된 Address, Data, 그리고 Command 가 수행되었고 상태 비트가 갱신되었다면 생성된다.
+	Interrupt 는 I2C Register 에 접근할 준비가 되었음을 Device 에 알리기 위해 사용된다.
+
+RXRDY	Receive-data-ready interrupt
+
+	Receive-Shift Register(I2CSR) 에 수신된 Data 가 Data Receive Register(I2CDRR) 로 복사되었다면 생성된다.
+	RXRDY 비트는 I2CDRR 에 읽을 수신된 Data 를 결정하기 위한 Device 에 의해 폴링될 수 있다.
+
+TXRDY	Transmit-data-ready interrupt
+
+	송신된 Data 가 Data Transmit Register(I2CDXR) 로부터 Transmit-Shift Register(I2CXSR) 로 복사되었다면 생성된다.
+	TXRDY 비트는 I2CDXR 에 기록할 다음 Data 를 결정하기 위한 Device 에 의해 폴링될 수 있다.
+
+SCD	Stop-condition-detect interrupt
+
+	STOP 조건이 감지되면 생성된다.
+
+AAS	Address-as-slave interrupt
+
+	I2C 가 자신의 Slave Address 혹은 모두 0 인 주소를 인식할 때 발생한다.
+
+Interrupt Vector Register(I2CIVR) 은 가장 높은 우선 순위의 Interrupt 를
+지연하고 활성했음을 나타내는 Binary-Coded-Interrupt Vector 를 포함한다.
+I2CIVR 을 read 할 때, 그들의 Interrupt 가 활성화되었다면,
+AL, NACK, 그리고 SCD 를 위한 해당 Interrupt Flags 는 자동적으로 clear 된다.
+I2CIVR 을 읽는 것은 AAS, ARDY, RXRDY 혹은 TXRDY Interrupt 지연 Flags 를 clear 하지 않을 것이다.
+이 4개의 Flags 를 clear 하는 방법은 Section 31.6.3 을 참조하라!
+
+하나 이상의 Interrupt 가 대기중인 경우, I2C Interrupt 를 재 활성화 한다면
+다음으로 가장 높은 우선 순위를 가진 지연된 Interrupt 를 위한 새로운 Interrupt 가 생성될 것이다.
+
+Transmit Interrupt 는 Master Transmitter Mode 에서 START 조건 이후에 생성된다.
+이것은 START 조건을 따르는 Slave Address 에 Slave 가 ACK 를 반환하지 않을지라도
+CPU 가 Interrupt 를 얻을 것임을 보장한다.
+
+I2C 가 Slave Transmitter 로서 Interrupt 를 생성하도록 설정되었고
+Backward(역방향) 호환 Mode(BCM) 비트를 1 로 설정하였다면
+여분의 Transmit Interrupt 가 발생하고 이것을 주의하는 것은 중요하다.
+Application 은 I2CDXR 에 다른 Byte 를 Load 할지 여부를 결정하기 위해 Master 로부터 ACK 를 모니터링 해야한다.
+
+
+
+31.5.2 DMA Controller Events
+
+I2C Module 은 I2CDRR 로부터 수신된 Data(I2CREVNT 를 동기적으로 읽고,
+Transmit Buffer I2CDXR 에 동기적으로 Data(I2CWEVNT) 를 기록하기 위해
+DMA Controller 를 사용하는 2개의 Event 를 가진다.
+read 와 write Event 는 각각 I2CXRDY(I2CXINT) 와 I2CRRDY(I2CRINT) 와 동일한 타이밍을 가진다.
+
+CPU 혹은 DMA Controller 는 I2CDRR 로부터 수신된 Data 를 read 하고 I2CDXR 에 송신될 Data 를 write 한다.
+DMA Controller 는 I2CDRR Register 를 read 할 때, RXRDY 비트는 자동적으로 clear 되고
+DMA Controller 가 I2CDXR Register 에 write 할 때, TXRDY 비트는 자동적으로 clear 된다.
+
+I2C Module 이 Transmitter(송신기)로 설정된 경우
+I2CDXR 에 기록된 Data 는 I2CXSR 에 복사되고 SDA Pin 으로부터 Shift Out 된다.
+I2C Module 이 Receiver 로 설정된 경우,
+CPU 혹은 DMA Controller 에 의해 read 할 수 있는
+수신된 Data 는 ICRSR(?)로 Shift 되고 I2CDRR 에 복사된다.
+
+Transmit Event(I2CWEVNT)는 Master Transmitter Mode 에서 START 조건 이후에 생성된다.
+이것은 Slave 가 START 조건 다음에 Slave Address 에 ACK 를 반환하지 않을지라도
+DMA 가 Event 를 얻는 것을 보장한다.
+
+Note:   예기치 않은 DMA 송/수신 Event
+
+	예기치 않은 DMA 송신 Event(ICXEVT) 와 DMA 수신 Event(ICXRDY) 는
+	10 비트 Master Transmit, Repeat Mode 에서 생성된다.
+	이 Event 는 start 조건 이후 즉시 Address 의 첫 번째 비트가 송신되기 이전에 발생한다.
+	이 경우에, DMA 동작은 ACK 를 수신하는 Slave 없이 개시될 수 없다.
+
+
+
+31.5.3 I2C Enable/Disable
+
+I2C Module 은 I2C Module Register(I2CMDR) 에 있는
+I2C Reset Enable 비트(IRS) 를 활성화하거나 비활성화할 수 있다.
+이 두 가지 방법 중 하나로 발생한다:
+
+* I2CMDR 에 I2C Reset 비트(IRS) 에 0 을 기록한다.
+  모든 상태 비트는 기본값으로 강제되고 IRS 가 1 로 변경될 때까지 I2C Mode 는 비활성화된다.
+  SDA 와 SCL Pin 은 High Impedance 상태에 있다.
+
+* PORRST Pin 을 Low 로 구동함으로써 Device Reset 을 시작한다.
+  전체 Device 를 Reset 하고 Pin 이 해제되고 High 로 구동되기 전까지 Reset State 를 유지한다.
+  PORRST 가 해제되면, 모든 I2C Module Register 는 그들의 기본값으로 Reset 된다.
+  I2C Module 을 Reset 하는 IRS 비트가 0 으로 강제된다.
+  IRS 비트에 1 이 기록되기 전까지 I2C Module 은 Reset State 를 유지한다.
+
+I2C Module 이 설정되는 동안 IRS 는 0 이어야 한다.
+IRS 를 0 으로 강제하여 전력을 절약하는데 사용할 수 있고 또한 Error 조건을 clear 하는데 사용할 수 있다.
+
+
+
+31.5.4 General Purpose I/O
+
+I2C Pin 모두는 I2C Pin Control Registers(I2CPFNC, I2CDIR, I2CDOUT, 그리고 I2CDIN) 을 통해
+General-Purpose I/O Pin 으로 프로그램될 수 있다.
+
+I2C Module 이 사용되지 않는 경우,
+I2C Pin 은 General Purpose Input 혹은 General Purpose Output 핀으로 프로그램될 수 있다.
+이 기능은 I2CDIR 과 I2CPFNC Register 에서 제어된다.
+각 Pin 이 I2C Pin 혹은 GIO Pin 으로 프로그램될 수 있음을 주의하라!
+
+I2C 기능이 사용된다면 Application SW 는
+각 Pin 이 GIO Pin 이 아닌 I2C Pin 으로 설정되었음 보증해야 하며
+그렇지 않다면 다른 예기치 않은 동작이 발생할 것이다.
+
+
+
+31.5.5 Pull Up/Pull Down Function
+
+I2C Module Pin 은 외부에 연결되지 않은 Pin 을 남겨둘 수 있도록
+Active Pull Up 혹은 Active Pull Down 중 하나를 가질 수 있다.
+Pin 은 I2CPDIS Register 에 있는 해당 비트에 기록함으로써
+Active Pull Function 활성화 혹은 비활성하도록 프로그램 될 수 있다.
+Pin 상에 기본적인 Internal Pull(Pull-Up, Pull-Down 혹은 Pull 없음)을 위한 장치별 Data Sheet 를 참조하라.
+
+Pin 상에서 Pull 은 Data Sheet 에 지정된 기본적인 Internal Pull 이 아닌 다른 설정으로 프로그래밍 할 수 있다.
+Pin 은 I2CPSEL Register 에 있는 해당 비트에 기록함으로써
+Active Pull Up 혹은 Active Pull Down 기능을 프로그램 할 수 있다.
+I2CPDIS Register 에서 Pull Enabled 가 프로그램되면 Pull Up/Pull Down 기능은 Pin 상에서 활성화된다.
+
+양방향 핀이 출력으로 구성되어 있는 경우 Pull Up/Pull Down 기능은 비활성화된다.
+System Reset 에서, 모든 Pin 의 Pull Up 기능은 비활성화된다.
+Pull Up/Pull Dwon 에 의해 공급되는 전류에 대해서는 장치별 Data Sheet 를 참조하라!
+
+
+
+31.5.6 Open Drain Function
+
+Output Pin 으로 구성된다면 I2C Pin 은 Open Drain 기능을 포함하도록 프로그램 될 수 있다.
+I2CPDR Register 의 해당 비트에 기록함으로써 수행된다.
+Open Drain 기능이 활성화되면, Data Output Register 에 기록된 Low 값(0)은 Pin 을 Low Output Voltage 로 강제하며,
+이에 반해 Data Output Register 에 기록된 High 값(1)은 Pin 을 High-Impedance 상태로 강제한다.
+Pin 이 Input Pin 으로 설정되면 Open Drain 기능이 비활성화된다.
+
+
+
+31.6 I2C Control Registers
+
+Table 31-3 은 Control Register 의 요약을 제공한다.
+Register 의 상위 워드(상위 16 비트)는 모두 0 으로 읽는다.
+이 비트에 write 는 아무런 영향이 없다.
+Control Register 에 대한 기본 주소는 I2C1 에 대해 FFF7 D400 이고 I2C2 에 대해 FFF7 D500 이다.
+
+Table 31-3. I2C Control Registers
+
+
+
+31.6.1 I2C Own Address Manager(I2COAR)
+
+16 비트 Memory Map 된 I2C 자신의 Address Register 는 자신의 Address 를 지정하는데 사용된다.
+Figure 31-13 과 Table 31-4 는 이 Register 에 대해 설명한다.
+
+Figure 31-13. I2C Own Address Manager Register(I2COAR) [offset = 00]
+
+Table 31-4. I2C Own Address Manager Register(I2COAR) Field Descriptions
+
+9-0	Own Address
+
+	이 비트는 I2C Module 의 Bus Address 를 반영한다.
+	I2CMDR 에 8 번째 비트인 Expand Address(XA)가 1 로 설정된다면,
+	I2C 는 Expand Address Mode(10 비트 Addressing Mode)로 확장한다.
+	7 혹은 10 비트 Address Mode 에서, 모든 10 비트는 모두 read 할 수 있고 write 할 수 있다.
+	비트 7, 8, 9 는 10 비트 Address Mode 에서만 사용된다.
+	Table 31-5 는 이 비트에 대한 올바른 Mode 를 제공한다.
+	User 가 System 에 있는 다른 구성 요소와 겹치지 않는 선에서
+	어떠한 값이든 I2C Own Address 를 프로그램할 수 있음을 주의하라!
+
+Table 31-5. Correct Mode for OA Bits
+
+
+
+31.6.2 I2C Interrupt Mask Register(I2CIMR)
+
+7 비트 Memory Map 된 I2C Interrupt Mask Register 는
+Interrupt 를 활성화/비활성화하기 위해 Device 에 의해 사용된다.
+Figure 31-14 와 Table 31-6 은 이 Register 에 대해 설명한다.
+
+Table 31-6. I2C Interrupt Mask Register(I2CIMR) Field Descriptions
+
+AASEN			Slave Interrupt 활성화 주소
+		0	AASEN Interrupt 비활성화
+		1	AASEN Interrupt 활성화
+
+SCDEN			Stop Condition Interrupt 활성화
+		0	SCDEN Interrupt 비활성화
+		1	SCDEN Interrupt 활성화
+
+TXRDYEN			Transmit Data Ready Interrupt 활성화
+		0	TXRDYEN Interrupt 비활성화
+		1	TXRDYEN Interrupt 활성화
+
+RXRDYEN			Receive Data Ready Interrupt 활성화
+		0	RXRDYEN Interrupt 비활성화
+		1	RXRDYEN Interrupt 활성화
+
+ARDYEN			Register Access Ready Interrupt 활성화
+		0	ARDYEN Interrupt 비활성화
+		1	ARDYEN Interrupt 활성화
+
+NACKEN			No Acknowledgement Interrupt 활성화
+		0	NACKEN Interrupt 비활성화
+		1	NACKEN Interrupt 활성화
+
+ALEN			Arbitration Lost Interrupt 활성화
+		0	ALEN Interrupt 비활성화
+		1	ALEN Interrupt 활성화
+
+
+
+31.6.3 I2C Status Register(I2CSTR)
+
+Figure 31-15 와 Table 31-7 은 이 Register 에 대해 설명한다.
+
+Figure 31-15. I2C Status Register(I2CSR) [offset = 08h]
+
+Table 31-7. I2C Status Register(I2CSTR) Field Descriptions
+
+SDIR			Slave Direction
+
+			이 비트를 1 로 설정하면 I2C Slave 가 송신기임을 나타낸다.
+			이 비트를 0 으로 clear 하면
+			I2C 가 Master Transmitter/Receiver 혹은 Slave Receiver 임을 나타낸다.
+			이 비트는 또한 STOP 혹은 START condition 에 의해 clear 된다.
+			DLB Mode 에서(구성은 Master-Transmitter, Slave-Receiver), 이 비트는 0 으로 clear 된다.
+
+			이 비트에 1 을 write 하면 clear 된다.
+
+		0	I2C 는 Master Transmitter/Receiver 혹은 Slave Receiver 이다.
+		1	I2C 는 Slave Transmitter 이다.
+
+NACKSNT			No Acknowledge Sent
+
+			NACKMOD 비트가 1 로 설정되었기 때문에 No Acknowledgement(NACK)가
+			전송되지 않았음을 나타내기 위해 이 비트는 1 로 설정된다.
+
+			이 비트에 1 을 write 하면 clear 된다.
+
+		0	NACK 가 전송되지 않았음
+		1	NACKMOD 가 1 로 설정되었기 때문에 NACK 가 전송되었음
+
+BB			Bus Busy
+
+			이 비트는 Serial Bus 의 상태를 나타낸다.
+
+			START Condition 의 수신 혹은
+			I2C 가 I2CSCL 상에 Low State 를 감지하면, Device 는 BB = 1 로 설정한다.
+			다른 I2C Devices 간에 Transaction 동안 nIRS 가 1 로 설정되었다면,
+			BB 비트를 SCL 혹은 START condition 의 첫 번째 Falling Edge 에서 설정한다.
+			STOP Condition 수신 이후에 BB 는 0 으로 clear 된다.
+			I2C 가 Reset(nIRS = 0) 되면 BB 는 SCL State 에 관계 없이 0 으로 유지된다.
+
+		0	Bus 가 Free
+		1	Bus 가 Busy
+
+RSFULL			Receiver Shift Full
+
+			Receiver 가 Overrun 했음을 나타내기 위해 이 비트는 1 로 설정된다.
+
+			Receive Shift Register 가 가득차고 I2CDRR 에 Receive Shift Register 를 전송하므로
+			I2CDRR 를 read 하지 않았다면 Overrun 이 발생한다.
+			I2CDRR 의 내용은 손실되지 않는다.
+			I2C Core Logic 은 read Access 를 위한 I2CDRR 을 유지한다.
+			Master-Repeat-Mode 에서 I2C 가 Byte Data 를 수신하면 이 비트를 설정한다.
+			이 경우에 RXRDY 와 RSFULL 간에 차이는 없다.
+			I2C Master 는 수신된 Data 가 I2CDRR 혹은
+			Receive Shift Register 에 있는한 전송을 계속하지 않을 것이다.
+
+			I2C 를 Resetting(IRS = 0) 하거나 Device 를 Restting 하거나
+			혹은 I2CDRR 을 읽을 때 RSFULL 은 clear 된다.
+
+		0	Overrun 이 발생하지 않는다.
+		1	Overrun 이 발생한다.
+
+XSMT			Transmit Shift Empty
+
+			이 비트는 0 으로 clear 된 것은 Transmiter 에 Underflow 가 발생했음을 나타낸다.
+			Transmit Shift Register 가 비었고 I2CDXR 에서 Transmit Shift Register 로
+			마지막 전송 이후 I2CDXR 에 아무것도 load 되지 않았다면 Underflow 가 발생한다.
+			I2C Core Logic 은 I2CDXR Write Access 를 기다린다.
+
+			I2C Block(IRS = 0)을 Resetting 함으로써 혹은 Device 를 Resetting 함으로써
+			I2CDXR 에 writing 한 결과로서 XMSTn 을 1 로 설정한다.
+
+			Repeat Mode 에서, Master Transmitter Mode 에 있는 I2C 가
+			XSMTn = 0(추가 작업을 기다림) 으로 전송을 유지하고
+			STT 혹은 STP 비트를 설정하면, XSMTn 은 HW 에 의해 1 로 설정된다.
+
+		0	Underflow 가 발생된다.
+		1	Underflow 가 발생되지 않는다.
+
+AAS			Address as Slave
+
+			비트에 1 을 writing 함으로써 혹은 I2CIVR Register 를 reading 함으로써
+			이 비트는 clear 되지 않는다.
+
+		0	STOP Condition 혹은 I2COAR 과 매치되지 않는 모든 Address Byte 를 감지함으로써
+			이 비트는 clear 된다.
+		1	이것 자체의 Slave Address 혹은 모두 0 인 주소(General Call)를 인식할 경우
+			이 비트는 1 로 설정된다.
+
+AD0			Address Zero Status
+
+		0	START 혹은 STOP Condition 이 감지되었다.
+			General Call 이 감지되지 않았다.
+		1	모두 0 인 주소(General Call)이 감지되었다.
+
+SCD			Stop Condition Detect Interrupt Flag
+
+			I2C 가 STOP Condition 을 수신하거나 송신하면 이 비트는 1 로 설정된다.
+
+			이 비트에 1 을 writing 함으로써 혹은 i2CIVR 로부터 0x0006 값을 reading 함으로써
+			이 비트는 0 으로 clear 된다.
+			이 비트에 1 을 writing 하는 것은 I2CIVR 로부터 0x0006 값을 clear 한다.
+
+		0	STOP Condition 을 보내거나 수신하지 않았다.
+		1	STOP Condition 을 보내거나 수신했다.
+
+TXRDY			Transmit Data Ready Interrupt Flag
+
+			이 비트를 1 로 설정하는 것은 Transmit Data Register 인 I2CDXR 에 있는 Data 를
+			Transmit Shift Regsteri 로 복사하였음을 나타낸다.
+			이 비트는 다음에 I2CDXR 로 전송된 Data 를 write 할 때를 나타내기 위해
+			Device 에 의해 폴링될 수 있다.
+			이 비트에 1 을 writing 하는 것은 이것을 설정할 것이다.
+
+			이 비트는 0 으로 clear 되고 I2CDXR 이 기록될 때
+			I2CIVR 에 있는 Code 0x0005 는 clear 된다.
+			I2CIVR Register 를 reading 하여 이 비트를 clear 할 수 없다.
+
+		0	I2CDXR 은 전송할 Data 를 포함한다.
+		1	I2CDXR 이 비었다.
+
+RXRDY			Receive Data Ready Interrupt Flag
+
+			이 비트를 1 로 설정하는 것은 Receive Shift Register 에 있는 Data 를
+			Data Receive Register(I2CDRR)로 복사하였음을 나타낸다.
+			이 비트는 I2CDRR 에 있는 수신된 Data 를 read 할 때를 나타내기 위해
+			Device 에 의해 폴링될 수 있다.
+
+			이 비트에 1 을 기록하거나 I2CDRR 로부터 reading 하는 것은 이 비트를 clear 할 것이고
+			또한 I2CIVR 로부터 Code 0x0004 를 clear 할 것이다.
+			I2CIVR Register 를 reading 하여 이 비트를 clear 할 수 없다.
+
+		0	I2CDRR 이 read 되었다.
+		1	수신된 Data 가 I2CDRR 에 기록되었다.
+
+ARDY			Register Access Ready Interrupt Flag
+
+			이전에 프로그램된 Address, Data, 그리고 Command 가 수행되었고
+			Status 비트가 갱신될 때 이 비트에 1 을 설정한다.
+			Flag 는 I2C Register 가 다시 Access 될 준비가 되었음을 나타내기 위해
+			Device 에 의해 사용된다.
+
+			Transmit Mode 에서 I2CDXR 에 Data 를 writing 하고,
+			Receive Mode 에서 I2CDRR 로부터 Data 를 reading 하고,
+			혹은 STT 나 STP 비트를 설정한다면, 이 비트는 HW 에 의해 자동적으로 clear 된다.
+			이 비트에 1 을 writing 하는 것은 이 비트를 clear 한다.
+			I2CIVR Register 를 reading 하여 이 비트를 clear 할 수 없다.
+
+			STP Register 비트가 설정되지 않은 경우
+			I2CCNT 가 0 을 보내고 RM = 0 인 경우 ARDY 를 설정한다.
+			RM = 1 이라면, ARDY 는 각 Byte 의 끝에 설정한다.
+
+			FDF = 0 인 경우 Slave Address 를 위한 ACK 이후에 ARDY 를 설정한다.
+			FDF = 1 인 경우 어떤 Slave Address 도 존재하지 않는다.
+			그러므로, start condition 을 전송한 이후 ARDY 를 설정한다.
+
+		0	Nonrepeat Mode, (RM = 0): I2C Register 는 Access 될 준비가 안되었다.
+			Repeat Mode, (RM = 1): I2C Register 는 Access 될 준비가 안되었다.
+		1	Nonrepeat Mode, (RM = 0): ICCNT 에 0 을 보낸다.(STP 비트가 설정되지 않았다면)
+			Repeat Mode, (RM = 1): 각 Byte 의 끝이 I2CDXR 로부터 전송된다.
+
+NACK			No Acknowledgement Interrupt
+
+			Master I2C 가 Receiver 로부터 Acknowledge 를 수신하지 않은 경우 이 비트를 1 로 설정한다.
+			I2C 가 Master Mode 에서 No-Acknowledge 를 수신한 경우에만 이 비트를 설정한다.
+			이 비트는 Start byte 이후에 No-Acknowledge 에 의해 설정되지 않는다.
+			Master Start Byte Mode 에서, 첫 번째 Byte 는(모두 0 인 주소)
+			NACK 를 수신하지만 Stop 비트를 clear 하지 않는다.
+
+			이 비트에 1 을 writing 하거나 I2CIVR 로부터 0x0002 값을 reading 하는 것은
+			이 비트를 clear 할 것이다.
+
+		0	Acknowledge 가 감지되었다.
+		1	Acknowledge 가 감지되지 않았거나
+			I2C 가 General Call 에서 작동하지 않았을지라도
+			Acknowledgement 를 수신했다.
+			이 값은 STP 비트를 clear 한다.
+
+AL			Arbitration Lost Interrupt Flag
+
+			Arbitration 을 잃었을 경우 이 비트를 1 로 설정한다.
+
+			이 비트에 1 을 writing 하거나 I2CIVR 로부터 0x0001 값을 reading 하는 것은
+			이 비트를 clear 할 것이다.
+
+		0	Arbitration 의 손실이 검출되지 않았다.
+		1	Master Transmitter Mode 에서 Device 는 Arbitration 을 잃었음을 감지한다.
+			두 개 이상의 Transmitter 가 거의 동시에 전송을 시작하거나
+			BB = 1 인 동안 I2C 가 전송 시작을 시도할 때 이것이 발생한다.
+			Arbitration Lost 로서 이것이 1 로 설정되면, Device 는 Slave Receiver 가 되고
+			I2CMDR 에 있는 MST, STT, 그리고 STP 비트는 0 으로 clear 된다.
+
+
+
+31.6.4 I2C Clock Divider Low Register(I2CCKL)
+
+I2C Clock Divider Low Register 는 I2C Serial Clock Low Time 을 얻기 위해
+Master Clock 을 분주하여 낮추기 위해 사용되는 16 비트 Memory Map 된 Register 이다.
+Figure 31-16 과 Table 31-8 은 이 Register 에 대해 설명한다.
+
+Figure 31-16. I2C Clock Divider Low Register(I2CCKL) [offset = 0Ch]
+
+Table 31-8. I2C Clock Divider Low Register(I2CCKL) Field Descriptions
+
+CLKL	Low Time Clock Division Factor
+
+	SCL Pin 상에 나타날 Master Clock Signal 의 Low Time 부분을 생성하기 위해
+	Module Clock 을 분주하는데 사용된다.
+
+	d 값은 I2CPSC 에 의존한다(Section 31.1.3 을 참조하라)
+	I2C 가 Reset(nIRS = 0) 일 동안 이 Register 는 반드시 설정되어야 한다.
+
+
+
+31.6.5 I2C Clock Control High Register(I2CCKH)
+
+I2C Clock Divider High Register 는 I2C Serial Clock High Time 을 얻기 위해
+Master Clock 을 분주하여 낮추기 위해 사용되는 16 비트 Memory Map 된 Register 이다.
+Figure 31-17 과 Table 31-9 는 이 Register 를 설명한다.
+
+Figure 31-17. I2C Clock Control High Register(I2CCKH) [offset = 10h]
+
+Table 31-9. I2C Clock Control High Register(I2CCKH) Field Descriptions
+
+CLKH	High Time Clock Division Factor
+
+	SCL Pin 상에 나타날 Master Clock Signal 의 High Time 부분을 생성하기 위해
+	Module Clock 을 분주하여 사용된다.
+
+	d 값은 I2CPSC 에 의존한다.(Section 31.1.3 을 참조하라)
+	I2C 가 Reset(nIRS = 0) 일 동안 이 Register 는 반드시 설정되어야 한다.
+
+
+
+31.6.6 I2C Data Count Register(I2CCNT)
+
+I2C Data Count Register 는 수신되거나 송신된 Data Bytes 를 Count 하기 위해 사용되는
+16 비트 Memory Mapped Register 이다.
+이 Register 는 또한 Counter 가 0 에 도달한 이후
+전송을 종료하는 STOP Condition 을 생성하기 위해 사용된다.
+Figure 31-18 과 Table 31-10 은 이 Register 를 설명한다.
+
+Figure 31-18. I2C Data Count Register(I2CCNT) [offset = 14h]
+
+Table 31-10. I2C Data Count Register(I2CCNT) Field Descriptions
+
+CNT		Data Counter
+
+		STOP Condition 이 명시되었다면(STP = 1)
+		이 Down Counter 는 STOP Condition 을 생성하기 위해 사용된다.
+
+		Note: RM 이 1 로 설정되면 ICCNT 를 상관하지 않는다.
+
+	0	Data Counter 가 65536 이다.
+	1	Data Counter 가 1 이다.
+
+
+
+31.6.7 I2C Data Receive Register(I2CDRR)
+
+I2C Data Receive Register 는 수신된 Data 를 read 하기 위한 Device 에 의해 사용되는
+16 비트 Memory Mapped Register 이다.
+Figure 31-19 와 Table 31-11 은 이 Register 를 설명한다.
+
+Figure 31-19. I2C Data Receive Register(I2CDRR) [offset = 18h]
+
+Table 31-11. I2C Data Receive Register(I2CDRR) Field Descriptions
+
+DATARX		Receive Data
+
+		이 Register 로부터 read 하는 것은 RXRDY 비트를 clear 하고
+		I2CIVR Register 로부터 Code 4h 를 clear 한다.
+
+
+
+31.6.8 I2C Slave Address Register(I2CSAR)
+
+I2C Slave Address Register 는 I2C Bus 상에서 통신하기 위한
+Slave Device 의 주소를 명시하는데 사용되는 16 비트 Memory Mapped Register 이다.
+Figure 31-20 과 Table 31-12 는 이 Register 를 설명한다.
+
+Figure 31-20. I2C Slave Address Register(I2CSAR) [offset = 1Ch]
+
+Table 31-12. I2C Slave Address Register(I2CSAR) Field Descriptions
+
+SA		7 혹은 10 비트 프로그래밍 가능한 Slave Address
+
+		양쪽 Mode 에서, 모든 10 비트는 read 할 수 있고 write 할 수 있다.
+		비트 7, 8, 9 는 10 비트 Address Mode 에서만 사용될 수 있다.
+		Table 31-13 은 각 비트에 대한 올바른 Mode 를 보여준다.
+
+Table 31-13. Correct Mode for SA Bits
+
+
+
+31.6.9 I2C Data Transmit Register(I2CDXR)
+
+Figure 31-21 과 Table 31-14 는 이 Register 를 설명한다.
+
+Figure 31-21. I2C Data Transmit Register(I2CDXR) [offset = 20h]
+
+Table 31-14. I2C Data Transmit Register(I2CDXR) Field Descriptions
+
+DATATX		Transmit Data
+
+		이 Register 에 기록된 Data 는 I2C Bus 를 통해 전송될 것이다.
+		이 Register 에 write 하는 것은 TXRDY 비트를 clear 하고
+		I2CIVR Register 로부터 Code 0x05 를 clear 한다.
+
+
+
+31.6.10 I2C Mode Register(I2CMDR)
+
+Figure 31-22 와 Table 31-15 는 이 Register 를 설명한다.
+
+Figure 31-22. I2C Mode Register(I2CMDR) [offset = 24h]
+
+Table 31-15. I2C Mode Register(I2CMDR) Field Descriptions
+
+NACKMOD			No-Acknowledge(NACK) Mode
+
+			이 비트는 Acknowledge(ACK) 혹은 No-Acknowledge(NACK) 를 전송하는데 사용된다.
+			I2C 가 Receiver Mode 인 경우에만 이 비트를 적용할 수 있다.
+			Master Receiver Mode 에서, Internal Data Counter 가 0 으로 감소하면
+			I2C 는 NACK 를 전송한다.
+			NACK 를 전송할 때 Master Receiver I2C 는 전송을 끝낸다.
+			NACKMOD 가 1 인 경우 I2C 는 ICCNT 를 무시한다.
+			NACK 를 전송해야 하면 마지막 데이터 비트의 Rising Edge 이전에
+			NACKMOD 비트는 설정되어야 하고 이 비트는 NACK 전송하면 clear 된다.
+
+		0	Acknowledge Cycle 동안 I2C 가 Transmitter 에게 ACK 를 전송한다.
+		1	Acknowledge Cycle 동안 I2C 가 Transmitter 에게 NACK 를 전송한다.
+
+Free			Free Running Bit
+
+			High Level Language(HLL) Debugger 에서 Breakpoint 를 만나면
+			이 비트는 I2C 의 상태를 결정하기 위해 사용된다.
+
+		0	SCL 이 Low 이라면 I2C 는 즉시 멈추고
+			I2C master 가 Transmitter/Receiver 라면 SCL Low 구동을 유지한다.
+			I2C 가 High 라면, I2C 는 SCL 이 Low 가 될 때까지 기다리고 멈춘다.
+			I2C 가 Slave 라면, 송/수신이 완료될 경우 이것이 정지할 것이다.
+		1	I2C 는 Free 하게 동작한다.
+
+STT			Start Condition
+
+			Start Condition 비트는 STP 비트(Master 전용 Mode)와 함께 작동한다.
+			STT 와 STP 비트는 서로 다른 전송 포맷을 생성하도록 구성되어 있다(Table 31-16 참조)
+			STT 와 STP 비트는 Repeat Mode 를 종료하는데 사용될 수 있다
+			이 비트를 설정 하나의 I2C Module Clock Cycle 을 취한다.
+
+		0	START Condition 이 생성된 이후 STT 를 HW 에 의해 0 으로 Reset 한다.
+		1	STT 를 START Condition 을 생성하는 Device 에 의해 1 로 설정한다.
+			Master Mode 에서, STT 를 1 로 설정하는 것은 START Condition 을 생성한다.
+
+STP			Stop Condition
+
+			1(Master Mode 만) 이 비트는 STOP Condition 을 생성하기 위한
+			CPU 에 의해 1 로 설정될 수 있다.
+			STOP Condition 이 생성된 이후 HW 에 의해 0 으로 Reset 된다.
+			ICCNT 가 0 을 보내고 I2C 가 Non-Repeat Mode(RM = 0) 인 경우 STOP Condition 이 생성된다.
+			Repeat Mode(RM = 1)에서, STP 비트가 1 이라면 STOP Condition 은 생성된다.
+			Transmitter Mode 에서 I2CTXRDY 는 1 이 될 필요가 있다.
+			(즉, I2CDXR 에 Data 를 write 하지 않는 STP 비트를 설정한다)
+
+		0	STOP Condition 이 생성된 이후 STP 를 HW 에 의해 0 으로 Reset 한다.
+		1	STP Condition 을 생성하기 위해 Device 에 의해 STP 를 1 로 설정한다.
+
+MST			Master/Slave Mode Bit
+
+			이 비트는 Module 이 Master 혹은 Slave Mode 로 동작할지 여부를 결정하며
+			세부 사항은 Table 31-17 을 참조하라!
+			이 비트는 STOP Condition 이 생성된 이후 clear 된다.
+			BB 비트는 먼저 clear 되고 MST 비트가 두 번째로 clear 된다.
+			Master Mode 에서 다음 Transaction 을 시작하기 이전에
+			이 비트가 반드시 clear 되었음을 확인해야 한다.
+
+		0	Module 은 Slave Mode 에 있고 Clock 은 Master Device 로 부터 수신된다.
+		1	Module 은 Master Mode 에 있고 이것은 Clock 을 생성한다.
+			전송이 완료되면 이 비트는 clear 된다.
+
+TRX			Transmit/Receive Bit
+
+			이 비트는 I2C 의 Data 전송 방향을 결정한다.
+			Table 31-17 을 참조하라!
+
+		0	Module 은 Receive Mode 에 있고
+			SDA Line 상에 Data 는 Data Register I2CDRR 로 Shift 된다.
+		1	Module 은 Transmit Mode 에 있고
+			I2CDXR 에 있는 Data 는 SDA Line 쪽으로 Shifted Out(출력) 된다.
+
+XA			Expand Address Enable Bit
+
+			이 비트는 Addressing Mode 를 제어한다.
+			XA 가 1 로 설정되면, I2C 는 Master Mode 동작에서 결합된 Format 을 지원하지 않는다.
+			그러나, Slave 로 구성된 경우 I2C 는 정보를 받았음을 알리고 Format 을 지원한다.
+			I2C 가 Slave Mode 에 있다면 이 비트는 설정될 필요가 있다.
+
+		0	Mode 가 7 비트 Addressing Mode 로 설정됨(Normal Address Mode)
+		1	Mode 가 10 비트 Addressing Mode 로 설정됨(Expanded Address Mode)
+
+RM			Repeat Mode Enable Bit(Master Mode Only)
+
+			Module 이 Slave Mode(MST = 0)으로 설정된 경우 이 비트를 신경쓰지 않는다.
+			세부 사항은 Table 31-16 을 참조하라!
+			Data Byte 가 수신될 때마다, 사용자는 더 많은 Data 를 수신할지 여부를 결정한다.
+			이 기능의 Diagram 을 위해 Figure 31-23 을 참조하라.
+
+		0	Mode 가 Repeat Mode 에 있지 않다.
+		1	Repeat Mode 에서, Data 는 연속적으로 ICDXR 로부터 전송되거나
+			ICCNT 값에 관계 없이 STP 비트가 1 로 설정될 때까지 ICDRR 로 수신된다.
+			Module Condition 에 대해 Table 31-16 을 참조하라!
+
+DLB			Digital Loop Back Enable Bit
+
+			이 비트는 I2C 의 Digital Loopback Mode 를 활성화하거나 비활성화한다.
+			이 비트는 Master Transmitter Mode 에 적용된다.
+
+		0	Digital Loopback Mode 를 비활성화함
+		1	Digital Loopback Mode 를 활성화함
+			Digital Loopback Mode 에서, I2CDXR 로부터 전송된 Data 는 I2CDRR 에 수신될 것이다.
+			I2COAR 의 Address 는 SDA 에 출력된다.
+
+nIRS			I2C Reset Enable Bit
+
+			0 을 설정하면, 이 비트는 기본 상태로 이 Module 의 모든 Status Register 를 배치한다.
+			Data 전송중 nIRS 를 Resetting 하면 I2C Bus 를 중지할 수 있다.
+
+		0	I2C 가 Reset 에 있다.
+		1	I2C 가 Reset 에 있지 않다.
+
+STB			Start Byte Mode Enable Bit(Master Mode Only)
+
+			Start Byte Mode 에서 I2C 를 설정하기 위한 CPU 에 의해
+			Start Byte Mode 비트는 1 로 설정된다.
+			I2C 는 I2CSAR 값에 관계 없이 "00000001" 을 전송한다.
+			자세한 내용은 Philips I2C 규격을 참조하라!
+
+		0	Module 이 START Byte Mode 에 있지 않다.
+		1	Module 이 START Byte Mode 에 있다.
+
+FDF			Free Data Format Enable Bit
+
+			이 비트는 Master 와 Slave Mode 모두가 Free Data Format Mode(Table 31-17 참조) 에서
+			Module 을 동작할 수 있게 설정한다.
+			FDF 가 0 이면, Slave Address 에 대한 ACK 이후에 ARDY 가 설정된다.
+			FDF 가 1 이면, Slave Address 가 없다.
+			그러므로, START Condition 이 전송된 이후 ARDY 가 설정된다.
+			FDF Mode 는 Digital Loopback Mode 에서 지원되지 않는다.
+
+		0	Module 이 Free Data Format Mode 에 있지 않다.
+		1	Module 이 Free Data Format Mode 에 있다.
+
+BC			Bit Count
+
+			이 비트는 Data 가 Data Transmit Register 에 기록될 때 Bus 에 전송되는
+			LSB(Acknowledge 비트를 제외) 에서 시작하는 비트들의 수를 정의한다.
+
+			비트 BC0, BC1, BC2 가 모두 0 이라면, Bus 에 전송된 비트의 수는 8 이다.
+			Bit Count 비트가 0 이 아니라면, Bus 에 전송된 비트의 수는 이 값이다.
+			값은 "001" 이 예약되어 있다.
+			예로 n 비트 수(n 이 0 이 아님)를 사용하여 전송을 수행할 때,
+			Data Receive Register 에 있는 n Least Significant Bits 는 유효하고 올바르다.
+			나머지 비트는 무시해야 한다.
+			더 자세한 정보는 Table 31-18 을 참조하라!
+
+Figure 31-23. Typical Timing Diagram of Repeat Mode
+
+Master-Transmitter(repeat mode)
+(이 동작이 BCM 비트와 독립적임을 유의하라!)
+
+Table 31-16. I2C Module Condition, Bus Activity, and Mode
+
+Table 31-17. I2C Module Operating Modes
+
+Table 31-18. Number of Bits Sent on Bus
+
+
+
+31.6.11 I2C Interrupt Vector Register(I2CIVR)
+
+I2C Interrupt Vector Register 는 Interrupt 의 발생을 나타내는데 사용되는
+16 비트 Memory Mapped Register 이다.
+Figure 31-24 와 Table 31-19 는 이 Register 를 설명한다.
+
+Figure 31-24. I2C Interrupt Vector Register(I2CIVR) [offset = 28h]
+
+Table 31-19. I2C Interrupt Vector Register(I2CIVR) Field Descriptions
+
+INTCODE			Interrupt Code Bits
+
+			이것은 Binary Coded Interrupt Vector 는 어떤 Interrupt 가 발생했는지 나타낸다.
+			한 개 이상의 지연된 Interrupt 가 있다면, I2CIVR 을 reading 하는 것은
+			지연된 가장 높은 우선순위의 Interrupt 를 위한 Vector 를 제공한다.
+
+			I2CIVR 을 reading 하는 것은 Interrupt 를 활성화 했기 때문에
+			AL, NACK, 그리고 SCD 를 위한 I2CSTR 에 있는 해당 Flags 를 clear 할 것이다.
+			각각의 지연된 Source(발생원) 를 위해 새로운 Interrupt 가 생성될 것이다.
+
+			I2CIVR 을 reading 하는 것은 AL, NACK, SCD, AAS, RXRDY,
+			그리고 TXRDY 를 위한 INTCODE 를 clear 할 것이다.
+			I2CIVR 을 reading 하는 것은 ARDY 를 위한 INTCODE 를 clear 하지 않을 것이다.
+
+			Certains Codes 를 위한 INTCODE 는
+			I2CSTR 에 있는 해당 Interrupt Flag 비트에 1 을 기록하거나
+			Receive 혹은 Transmit Register 에 reading 및 writing 을 수행함으로써 clear 될 수 있다.
+			세부 사항은 Section 31.6.3 을 참조하라!
+
+			다른 것을 수행하기 이전에 User 는 반드시 I2CIVR 을 read(clear) 해야 하며
+			그렇지 않다면 I2CIVR 은 잘못된 값(Old Interrupt Flag) 를 포함할 것이다.
+
+Table 31-20. Interrupt Codes for INTCODE Bits
+
+
+
+31.6.12 I2C Extended Mode Register(I2CEMDR)
+
+I2C Extended Mode Register 는 추가적인 Mode 선택 비트를 포함하는 16 비트 Memory-Mapped Register 이다.
+Figure 31-25 와 Table 31-21 은 이 Register 를 설명한다.
+
+Figure 31-25. I2C Extended Mode Register(I2CEMDR) [offset = 2Ch]
+
+Table 31-21. I2C Extended Mode Register(I2CEMDR) Field Descriptions
+
+IGNACK			Ignore NACK Mode
+
+		0	NACK Signal 이 Slave 로부터 수신되는 경우,
+			Master Transmitter 는 정상적으로 동작할 것이고,
+			Data 전송을 중단할 것이고, ARDY 와 NACK Status 비트를 설정할 것이다.
+		1	Master Transmitter 는 Slave 로부터 수신된 NACK 를 무시할 것이다.
+
+BCM			Backwards Compatibility Mode
+
+			1 로 설하면, I2C 는 I2C 의 이전 버전과 호환된다.
+			TXRDY 를 설정할 경우 이것은 TXRDY Interrupt 가
+			Slave Transmit Mode 에서 생성되었음을 의미하며
+			I2C 는 더 많은 전송할 Data 를 필요로 한다.
+			다음 Byte Data 를 위한 Interrupt 를 생성한 이후
+			I2C 가 전송의 끝을 인식하기 때문에
+			이 동작은 생성될 여분의 TXRDY Interrupt 를 야기한다.
+
+			BCM 이 0 이고, XSMT = 1 인 경우 Slave Transmit Mode 에서 TXRDY Interrupt 가 생성된다.
+			이 경우에, 이전 Data 로부터 ACK 를 수신한 이후
+			I2C 는 다음 Byte 를 위한 Interrupt 를 생성한다.
+
+		0	I2C 는 Compatibility Mode 에 있지 않다.
+		1	I2C 는 Compatibility Mode 에 있다.
+
+
+
+31.6.13 I2C Prescale Register(I2CPSC)
+
+I2C Prescaler Register 는 6.7 MHz ~ 13.3 MHz 사이의 Module Clock Frequency 를 얻기 위해
+VBUS_CLK 를 분주하는데 사용되는 16 비트 Memory-Mapped Register 이다.
+Figure 31-26 과 Table 31-22 는 이 Register 를 설명한다.
+
+Figure 31-26. I2C Prescale Register(I2CPSC) [offset = 30h]
+
+Table 31-22. I2C Prescale Register(I2CPSC) Field Descriptions
+
+PSC			Prescale
+
+			I2C Module Clock 을 얻기 위해 VBUS Clock 을 분주하는 8 비트 Prescaler 이다.
+			I2C 가 Reset(nIRS = 0) 에 있는 동안 이 Register 는 초기화되어야만 한다.
+			값은 nIRS 의 Rising Edge 에 적용된다.
+			세부 사항은 Section 31.1.3 을 참조하라!
+
+
+
+31.6.14 I2C Peripheral ID Register 1(I2CPID1)
+
+Figure 31-27 과 Table 31-23 은 이 Register 를 설명한다.
+
+Figure 31-27. I2C Peripheral ID Register 1(I2CPID1) [offset = 34h]
+
+Table 31-23. I2C Peripheral ID Register 1(I2CPID1) Field Descriptions
+
+CLASS			Peripheral Class
+
+			이 비트는 Peripheral 의 Class 를 식별한다.
+
+REVISION		Revision Level of the I2C
+
+			이 비트는 I2C 의 Revision Level 을 식별한다.
+
+
+
+31.6.15 I2C Peripheral ID Register 2(I2CPID2)
+
+Figure 31-28 과 Table 31-24 는 이 Register 를 설명한다.
+
+Figure 31-28. I2C Peripheral ID Register 2(I2CPID2) [offset = 38h]
+
+Table 31-24. I2C Peripheral ID Register 2(I2CPID2) Field Descriptions
+
+TYPE			Peripheral Type
+
+			이 비트는 Peripheral 의 Type 을 식별한다.
+
+
+
+31.6.16 I2C DMA Control Register(I2CDMACR)
+
+이 Register 는 Transmit 및 Receive DMA 활성화 비트를 포함한다.
+Figure 31-29 와 Table 31-25 는 이 Register 를 설명한다.
+
+Figure 31-29. I2C DMA Control Register(I2CDMACR) [offset = 3Ch]
+
+Table 31-25. I2C DMA Control Register(I2CDMACR) Field Descriptions
+
+TXDMAEN			Transmit DMA Enable
+
+			이 비트는 System 에 전송할 DMA Event Pin 을 제어한다.
+			이 비트가 1 이라면, DMA Transmit Event 가 활성화되고 DMA 가 발생할 수 있다.
+			이 비트가 0 이라면, DMA Transmit Event 는 비활성화된다.
+			PINFUNC 이 또한 0 으로 clear 되었다면이 비트에 1 을 writing 하는 것은
+			DMA Module 에 TXDMA Request 를 전송할 것이다.
+
+		0	Transmit DMA 가 비활성화됨
+		1	Transmit DMA 가 활성화됨
+
+RXDMAEN			Receive DMA Enable
+
+			이 비트는 System 에서 수신할 DMA Event Pin 을 제어한다.
+			이 비트가 1 인 경우, DMA Receive Event 는 활성화되고 DMA 가 발생할 수 있다.
+			이 비트가 0 인 경우, DMA Receive Event 가 비활성화된다.
+
+		0	Receive DMA 가 비활성화됨
+		1	Receive DMA 가 활성화됨
+
+
+
+31.6.17 I2C Pin Function Register(I2CPFNC)
+
+Figure 31-30 과 Table 31-26 은 이 Register 를 설명한다.
+
+Figure 31-30. I2C Pin Function Register(I2CPFNC) [offset = 48h]
+
+Table 31-26. I2C Pin Function Register(I2CPFNC) Field Descriptions
+
+PINFUNC			SDA and SCL Pin Function
+
+			이 비트는 I2C Pin 혹은 I/O Pin 으로서 SDA 와 SCL Pins Function 여부를 제어한다.
+
+		0	I2C Pin 으로서 SDA 와 SCL Pin Function 이다.	
+		1	I/O Pin 으로서 SDA 와 SCL Pin Function 이다.
+
+
+
+31.6.18 I2C Pin Direction Register(I2CPDIR)
+
+이 Register 는 Input 혹은 Output 으로 General Purpose I/O 가 설정될 경우,
+각각의 I2C Pin 을 독립적으로 설정하기 위해 사용된다.
+Figure 31-31 과 Table 31-27 은 이 Register 를 설명한다.
+
+Figure 31-31. I2C Pin Direction Register(I2CPDIR) [offset = 4Ch]
+
+Table 31-27. I2C Pin Direction Register(I2CPDIR) Field Descriptions
+
+SDADIR			SDA Direction
+
+			GPIO 로 설정되었을 경우 이 비트는 I2C SDA 의 방향을 제어한다.
+
+		0	SDA Pin 기능은 Input 이다.
+		1	SDA Pin 기능은 Output 이다.
+
+SCLDIR			GPIO 로 설정되었을 경우 이 비트는 I2C SCL 의 방향을 제어한다.
+
+		0	SCL Pin 기능은 Input 이다.
+		1	SCL Pin 기능은 Output 이다.
+
+
+
+31.6.19 I2C Data Input Register(I2CDIN)
+
+Figure 31-32 와 Table 31-28 은 이 Register 를 설명한다.
+
+Figure 31-32. I2C Data Input Register(I2CDIN) [offset = 50h]
+
+Table 31-28. I2C Data Input Register(I2CDIN) Field Descriptions
+
+SDAIN			Serial Data In
+
+			이 비트의 값은 SDA Pin 상에 값을 반영한다.
+
+SCLIN			Serial Clock Data In
+
+			이 비트의 값은 SCL Pin 상에 값을 반영한다.
+
+
+
+31.6.20 I2C Data Output Register(I2CDOUT)
+
+이 Register 는 I2C Pin 에 전송된 값을 포함한다.
+Figure 31-33 과 Table 31-29 는 이 Register 를 설명한다.
+
+Figure 31-33. I2C Data Output Register(I2CDOUT) [offset 0x54]
+
+Table 31-29. I2C Data Output Register(I2CDOUT) Feild Descriptions
+
+SDAOUT			SDA Data Output
+
+			SDA Pin 이 PINFUNC = 1 과 함께 I/O Pin 으로 설정되었다면 기능이 활성화 된다.
+			이 비트는 SDA Pin 에 전송된 값을 포함한다.
+
+		0	Pin 이 Low 로 구동됨
+		1	Pin 이 High 로 구동됨
+
+SCLOUT			SCL Data Output
+
+			SCL Pin 이 PINFUNC = 1 과 함께 I/O Pin 으로 설정되었다면 기능이 활성화 된다.
+			이 비트는 SCL Pin 에 전송된 값을 포함한다.
+
+		0	Pin 이 Low 로 구동됨
+		1	Pin 이 High 로 구동됨
+
+
+
+31.6.21 I2C Data Set Register(I2CDSET)
+
+I2CDSET Register 는 I2CDOUT Register 의 별칭이다.
+이 Address 에 쓰여질때,
+비트에 1 을 write 하면 I2CDOUT 에서 상응하는 비트를 1 로 설정하는 반면
+0 을 write 하면 그대로 있게된다.
+Figure 31-34 와 Table 31-30 은 이 Register 를 설명한다.
+
+Figure 31-34. I2C Data Set Register(I2CDSET) [offset = 58h]
+
+Table 31-30. I2C Data Set Register(I2CDSET) Field Description
+
+SDASET			Serial Data Set
+
+			이 비트는 SDA GPIO Pin 을 설정하는데 사용된다.
+
+		0	Read: SDAOUT 의 반환값을 read 한다.
+			Write: 아무런 효과가 없다.
+		1	Read: SDAOUT 의 반환값을 read 한다.
+			Write: SDAOUT 을 Logic High(1)로 설정한다.
+
+SCLSET			Serial Clock Set
+
+			이 비트는 SCL GPIO Pin 을 설정하는데 사용된다.
+
+		0	Read: SCLOUT 의 반환값을 read 한다.
+			Write: 아무런 효과가 없다.
+		1	Read: SCLOUT 의 반환값을 read 한다.
+			Write: SCLOUT 을 Logic High(1)로 설정한다.
+
+
+
+31.6.22 I2C Data Clear Register(I2CDCLR)
+
+I2CDCLR Register 는 I2CDOUT Register 의 별칭이다.
+이 Address 에 쓰여질때,
+비트에 1 을 write 하면 I2CDOUT 에 상응하는 비트를 0 으로 설정하는 반면
+0 을 write 하면 그대로 남아 있게 된다.
+Figure 31-35 와 Table 31-31 은 이 Register 를 설명한다.
+
+Figure 31-35. I2C Data Clear Register(I2CDCLR) [offset = 5Ch]
+
+Table 31-31. I2C Data Clear Register(I2CDSET) Field Descriptions
+
+SDACLR			Serial Data Clear
+
+			이 비트는 SDA GPIO Pin 을 clear 하는데 사용된다.
+
+		0	Read: SDAOUT 의 반환값을 read 한다.
+			Write: 아무런 효과가 없다.
+		1	Read: SDAOUT 의 반환값을 read 한다.
+			Write: SDAOUT 이 Logic Low 로 clear 된다.
+
+SCLCLR			Serial Clock Clear
+
+			이 비트는 SCL GPIO Pin 을 clear 하는데 사용된다.
+
+		0	Read: SCLOUT 의 반환값을 read 한다.
+			Write: 아무런 효과가 없다.
+		1	Read: SCLOUT 의 반환값을 read 한다.
+			Write: SCLOUT 이 Logic Low 로 clear 된다.
+
+
+
+31.6.23 I2C Pin Open Drain Register(I2CPDR)
+
+I2CPDR Register 에 있는 값 1 은 Open Drain 기능에 해당하는 Pin 을 구성한다.
+값 0 은 Pin 의 Open Drain 기능을 비활성화한다.
+Figure 31-36 과 Table 31-32 는 이 Register 를 설명한다.
+
+Figure 31-36. I2C Pin Open Drain Register(I2CPDR) [offset = 60h]
+
+Table 31-32. I2C Pin Open Drain Register(I2CPDR) Field Descriptions
+
+SDAPDR			SDA Pin Open Drain Enable
+
+		0	Open Drain Function 이 비활성화됨
+			(SDAOUT = 0 이라면 Output Voltage 는 VOL 이하이며 SDAOUT = 1 이라면 High-Impedance 다)
+		1	Open Drain Function 이 활성화됨
+			(SDAOUT = 0 이라면 Output Voltage 는 VOL 이하이며 SDAOUT = 1 이라면 VOH 이상이다)
+
+SCLPDR			SCL Pin Open Drain Enable
+
+		0	Open Drain Function 이 비활성화됨
+			(SCLOUT = 0 이라면 Output Voltage 가 VOL 이하이며 SCLOUT = 1 이라면 High-Impedance 다)
+		1	Open Drain Function 이 활성화됨
+			(SCLOUT = 0 이라면 Output Voltage 가 VOL 이하이며 SCLOUT = 1 이라면 VOH 이상이다)
+
+
+
+31.6.24 I2C Pull Disable Register(I2CPDIS)
+
+I2CPDIS Register 에 있는 값은 Pin 의 Pull 제어 기능을 활성화 하거나 비활성화 한다.
+I2CPDIS Register 에 있는 0 은 해당 핀의 Pull Function 을 활성화 하는 반면 1 은 Pull 기능을 비활성화 한다.
+Figure 31-37 과 Table 31-33 은 이 Register 를 설명한다.
+
+Figure 31-37. I2C Pull Disable Register(I2CPDIS) [offset = 64h]
+
+Table 31-33. I2C Pull Disable Register(I2CPDIS) Field Descriptions
+
+SDAPDIS			SDA Pull Disable
+
+		0	Pull 기능이 활성화됨
+		1	Pull 기능이 비활성화됨
+
+SCLPDIS			SCL Pull Disable
+
+		0	Pull 기능이 활성화됨
+		1	Pull 기능이 비활성화됨
+
+
+
+31.6.25 I2C Pull Select Register(I2CPSEL)
+
+I2CPSEL Register 에 있는 값은 해당 Pin 의 Pull Up 혹은 Pull Down 을 선택한다.
+I2CPSEL Register 에 있는 0 은 해당 핀의 Pull Down Function 을 활성화 하는 반면
+1 은 해당 핀의 Pull Up Function 을 활성화한다.
+Figure 31-38 과 Table 31-34 는 이 Register 를 설명한다.
+
+Figure 31-38. I2C Pull Select Register(I2CPSEL) [offset = 68h]
+
+Table 31-34. I2C Pull Select Register(I2CPSEL) Field Descriptions
+
+SDAPSEL			SDA Pull Select
+
+		0	Pull Down Function 이 활성화됨
+		1	Pull Up Function 이 활성화됨
+
+SCLPSEL			SCL Pull Select
+
+		0	Pull Down Function 이 활성화됨
+		1	Pull Up Function 이 활성화됨
+
+
+
+31.6.25.1 Summary
+
+Input Buffer, Output Buffer, 그리고 Pull 제어의 동작을 Table 31-35 에 요약하였다.
+
+Table 31-35. Input Buffer, Output Buffer, and Pull Control Behavior as GPIO Pins
+
+
+
+31.6.26 I2C Pins Slew Rate Select Register(I2CSRS)
+
+이 Register 는 I2C Pin 에서 Signal 의 Slew Rate 를 제어한다.
+Figure 31-39 와 Table 31-36 은 이 Register 를 설명한다.
+
+Figure 31-39. I2C Pins Slew Rate Select Register(I2CSRS) [offset = 6Ch]
+
+Table 31-36. I2C Pins Slew Rate Select Register(I2CSRS) Field Descriptions
+
+SDASRS			SDA Slew Rate Select
+
+		0	Slow Buffer 가 선택됨
+		1	Normal Buffer 가 선택됨
+
+SCLSRS			SCL Slew Rate Select
+
+		0	Slow Buffer 가 선택됨
+		1	Normal Buffer 가 선택됨

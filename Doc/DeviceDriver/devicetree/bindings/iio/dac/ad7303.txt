@@ -1,0 +1,50 @@
+Analog Devices AD7303 DAC device driver
+
+Required properties:
+	- compatible: Must be "adi,ad7303"
+	- reg: SPI chip select number for the device
+	- spi-max-frequency: Max SPI frequency to use (< 30000000)
+	- Vdd-supply: Phandle to the Vdd power supply
+
+Optional properties:
+	- REF-supply: Phandle to the external reference voltage supply. This should
+	  only be set if there is an external reference voltage connected to the REF
+	  pin. If the property is not set Vdd/2 is used as the reference voltage.
+
+Example:
+
+		ad7303@4 {
+			compatible = "adi,ad7303";
+			reg = <4>;
+			spi-max-frequency = <10000000>;
+			Vdd-supply = <&vdd_supply>;
+			adi,use-external-reference;
+			REF-supply = <&vref_supply>;
+		};
+
+
+/*
+Analog Devices AD7303 DAC 디바이스 드라이버
+
+필수 속성 :
+- 호환 : "adi, ad7303"이어야합니다.
+- reg : 장치의 SPI 칩 선택 번호
+- spi-max-frequency : 사용할 최대 SPI 주파수 (<30000000)
+- Vdd 공급 : Vdd 전원 공급 장치에 대한 Phandle
+
+선택 속성 :
+- REF 공급 : 외부 기준 전압 공급 장치로 파들 레 (Phandle). REF 핀에 연결된 외부 기준 전압이있는 경우에만 설정해야합니다. 
+	특성이 설정되지 않으면 Vdd / 2가 기준 전압으로 사용됩니다.
+
+Example:
+
+		ad7303@4 {
+			compatible = "adi,ad7303";
+			reg = <4>;
+			spi-max-frequency = <10000000>;
+			Vdd-supply = <&vdd_supply>;
+			adi,use-external-reference;
+			REF-supply = <&vref_supply>;
+		};
+
+*/

@@ -1,0 +1,33 @@
+Broadcom BCM63138 Processor Monitor Bus binding
+===============================================
+
+Please also refer to reset.txt in this directory for common reset
+controller binding usage.
+
+Require properties:
+
+- compatible: must be "brcm,bcm63138-pmb"
+- reg: base register address and size for this bus controller
+- #reset-cells: must be 2 first cell is the address within the bus instance designated
+  by the phandle, and the second is the number of zones for this peripheral
+
+Broadcom BCM63138 프로세서 모니터 버스 바인딩
+===================================================================
+
+공통 재설정 제어기 바인딩 사용에 대해서는이 디렉토리의 reset.txt를 참조하십시오.
+
+속성 필요 :
+
+- 호환 가능 : "brcm, bcm63138-pmb"여야합니다.
+- reg :이 버스 컨트롤러의 기본 레지스터 주소 및 크기
+- # reset-cells : 2이어야 함 첫 번째 셀은 phandle에 의해 지정된 버스 인스턴스 내의 주소이고 두 번째 셀은이 주변 장치의 영역 수입니다.
+
+
+
+
+Example:
+	pmb0: reset-controller@4800c0 {
+		compatible = "brcm,bcm63138-pmb";
+		reg = <0x4800c0 0x10>;
+		#reset-cells = <2>;
+	};

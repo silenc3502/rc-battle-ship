@@ -1,0 +1,132 @@
+﻿Broadcom VC4 (VideoCore4) GPU
+
+The VC4 device present on the Raspberry Pi includes a display system
+with HDMI output and the HVS (Hardware Video Scaler) for compositing
+display planes.
+
+Required properties for VC4:
+- compatible:	Should be "brcm,bcm2835-vc4"
+
+Required properties for Pixel Valve:
+- compatible:	Should be one of "brcm,bcm2835-pixelvalve0",
+		  "brcm,bcm2835-pixelvalve1", or "brcm,bcm2835-pixelvalve2"
+- reg:		Physical base address and length of the PV's registers
+- interrupts:	The interrupt number
+		  See bindings/interrupt-controller/brcm,bcm2835-armctrl-ic.txt
+
+Required properties for HVS:
+- compatible:	Should be "brcm,bcm2835-hvs"
+- reg:		Physical base address and length of the HVS's registers
+- interrupts:	The interrupt number
+		  See bindings/interrupt-controller/brcm,bcm2835-armctrl-ic.txt
+
+Required properties for HDMI
+- compatible:	Should be "brcm,bcm2835-hdmi"
+- reg:		Physical base address and length of the two register ranges
+		  ("HDMI" and "HD", in that order)
+- interrupts:	The interrupt numbers
+		  See bindings/interrupt-controller/brcm,bcm2835-armctrl-ic.txt
+- ddc:		phandle of the I2C controller used for DDC EDID probing
+- clocks:	a) hdmi: The HDMI state machine clock
+		b) pixel: The pixel clock.
+
+Optional properties for HDMI:
+- hpd-gpios:	The GPIO pin for HDMI hotplug detect (if it doesn't appear
+		  as an interrupt/status bit in the HDMI controller
+		  itself).  See bindings/pinctrl/brcm,bcm2835-gpio.txt
+
+Example:
+pixelvalve@7e807000 {
+	compatible = "brcm,bcm2835-pixelvalve2";
+	reg = <0x7e807000 0x100>;
+	interrupts = <2 10>; /* pixelvalve */
+};
+
+hvs@7e400000 {
+	compatible = "brcm,bcm2835-hvs";
+	reg = <0x7e400000 0x6000>;
+	interrupts = <2 1>;
+};
+
+hdmi: hdmi@7e902000 {
+	compatible = "brcm,bcm2835-hdmi";
+	reg = <0x7e902000 0x600>,
+	      <0x7e808000 0x100>;
+	interrupts = <2 8>, <2 9>;
+	ddc = <&i2c2>;
+	hpd-gpios = <&gpio 46 GPIO_ACTIVE_HIGH>;
+	clocks = <&clocks BCM2835_PLLH_PIX>,
+		 <&clocks BCM2835_CLOCK_HSM>;
+	clock-names = "pixel", "hdmi";
+};
+
+vc4: gpu {
+	compatible = "brcm,bcm2835-vc4";
+};
+
+
+/*
+
+Broadcom VC4 (VideoCore4) GPU
+
+Raspberry Pi에있는 VC4 장치에는 HDMI 출력이있는 디스플레이 시스템과 디스플레이 평면을 합성하기위한 HVS (하드웨어 비디오 스케일러)가 있습니다.
+
+VC4의 필수 속성 :
+- 호환 가능 : "brcm, bcm2835-vc4"이어야합니다.
+
+픽셀 밸브의 필수 속성 :
+- 호환 : "brcm, bcm2835-ixelvalve0"중 하나 여야합니다.
+"brcm, bcm2835-pixelvalve1"또는 "brcm, bcm2835-pixelvalve2"
+- reg : PV의 레지스터의 물리적 인 기본 주소와 길이
+- interrupts : 인터럽트 번호
+bindings / interrupt-controller / brcm, bcm2835-armctrl-ic.txt를 참조하십시오.
+
+HVS의 필수 속성 :
+- 호환 가능 : "brcm, bcm2835-hvs"여야합니다.
+- reg : HVS 레지스터의 물리적 인 기본 주소와 길이
+- interrupts : 인터럽트 번호
+bindings / interrupt-controller / brcm, bcm2835-armctrl-ic.txt를 참조하십시오.
+
+HDMI의 필수 속성
+- 호환 : "brcm, bcm2835-hdmi"여야합니다.
+- reg : 두 개의 레지스터 범위의 물리적 기본 주소 및 길이
+( "HDMI"및 "HD"순으로)
+- 인터럽트 : 인터럽트 번호
+bindings / interrupt-controller / brcm, bcm2835-armctrl-ic.txt를 참조하십시오.
+- ddc : DDC EDID 프로빙에 사용되는 I2C 컨트롤러의 phandle
+- 클럭 : a) hdmi : HDMI 상태 머신 클럭
+b) 픽셀 : 픽셀 클럭.
+
+HDMI의 선택적 속성 :
+- hpd-gpios : HDMI 핫 플러그 ​​감지 용 GPIO 핀 (HDMI 컨트롤러 자체에 인터럽트 / 상태 비트로 나타나지 않는 경우). bindings / pinctrl / brcm, bcm2835-gpio.txt를 참조하십시오.
+
+Example:
+pixelvalve@7e807000 {
+	compatible = "brcm,bcm2835-pixelvalve2";
+	reg = <0x7e807000 0x100>;
+	interrupts = <2 10>; /* pixelvalve */
+};
+
+hvs@7e400000 {
+	compatible = "brcm,bcm2835-hvs";
+	reg = <0x7e400000 0x6000>;
+	interrupts = <2 1>;
+};
+
+hdmi: hdmi@7e902000 {
+	compatible = "brcm,bcm2835-hdmi";
+	reg = <0x7e902000 0x600>,
+	      <0x7e808000 0x100>;
+	interrupts = <2 8>, <2 9>;
+	ddc = <&i2c2>;
+	hpd-gpios = <&gpio 46 GPIO_ACTIVE_HIGH>;
+	clocks = <&clocks BCM2835_PLLH_PIX>,
+		 <&clocks BCM2835_CLOCK_HSM>;
+	clock-names = "pixel", "hdmi";
+};
+
+vc4: gpu {
+	compatible = "brcm,bcm2835-vc4";
+};
+
+*/

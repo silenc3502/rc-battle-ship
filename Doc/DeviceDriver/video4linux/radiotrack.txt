@@ -1,0 +1,152 @@
+NOTES ON RADIOTRACK CARD CONTROL
+RADIOTRACK 카드 제어에 관한 주의사항
+by Stephen M. Benoit (benoits@servicepro.com)  Dec 14, 1996
+----------------------------------------------------------------------------
+ 
+Document version 1.0
+ 
+ACKNOWLEDGMENTS           	감사의 말
+----------------
+This document was made based on 'C' code for Linux from Gideon le Grange (legrang@active.co.za or legrang@cs.sun.ac.za) in 1994, and elaborations from Frans Brinkman (brinkman@esd.nl) in 1996.  The results reported here are from experiments that the author performed on his own setup, so your mileage may vary... I make no guarantees, claims or warranties to the suitability or validity of this information.  No other documentation on the AIMS Lab (http://www.aimslab.com/) RadioTrack card was made available to the author.  This document is offered in the hopes that it might help users who want to use the RadioTrack card in an environment other than MS Windows.
+이 문서는 1994 년 Gideon le Grange (legrang@active.co.za 또는 legrang@cs.sun.ac.za)의 Linux 용 C 코드와 Frans Brinkman (brinkman@esd.nl)의 정교함을 바탕으로 작성되었습니다. 여기에 보고된 결과는 저자가 자신의 설정에서 수행한 실험 결과이므로 귀하의 mileage 는 다를 수 있습니다 ... 나는 이 정보의 적합성 또는 타당성에 대한 어떠한 보증, 요구 또는 보증도하지 않습니다. AIMS Lab (http://www.aimslab.com/) RadioTrack 카드에 대한 다른 문서는 제작자가 이용할 수 없었습니다. 이 문서는 MS Windows 이외의 환경에서 RadioTrack 카드를 사용하고자 하는 사용자를 도울 수 있기를 희망하여 제공됩니다.
+WHY THIS DOCUMENT?        	이 문서는 왜 그럴까요?
+------------------
+I have a RadioTrack card from back when I ran an MS-Windows platform.  After converting to Linux, I found Gideon le Grange's command-line software for running the card, and found that it was good!  Frans Brinkman made a comfortable X-windows interface, and added a scanning feature.  For hack value, I wanted to see if the tuner could be tuned beyond the usual FM radio broadcast band, so I could pick up the audio carriers from North American broadcast TV channels, situated just below and above the 87.0-109.0 MHz range. I did not get much success, but I learned about programming ioports under Linux and gained some insights about the hardware design used for the card.
+MS-Windows 플랫폼을 실행할 때 RadioTrack 카드가 있습니다. Linux로 변환 한 후 Gideon le Grange의 카드 실행을 위한 명령줄 소프트웨어를 발견했는데 그 카드가 훌륭하다는 것을 알았습니다! Frans Brinkman은 편안한 X-windows 인터페이스를 만들고 스캔 기능을 추가했습니다. 해킹 값에 대해서는 튜너가 일반 FM 라디오 방송 대역을 넘어서 튜닝 될 수 있는지 보고 싶었기 때문에 87.0-109.0 MHz 범위 바로 아래와 그 위에있는 북미 방송 TV 채널에서 오디오 통신 업체를 선택할 수있었습니다. 나는 많은 성공을 얻지 못했지만 리눅스에서 ioports 프로그래밍에 대해 배웠고 카드에 사용된 하드웨어 디자인에 대한 통찰력을 얻었다.
+So, without further delay, here are the details.
+따라서 더 이상 지체하지 않고, 여기 세부 사항을 보겠슴돠.
+ 
+PHYSICAL DESCRIPTION      	물리적 설명
+--------------------
+The RadioTrack card is an ISA 8-bit FM radio card.  The radio frequency (RF) input is simply an antenna lead, and the output is a power audio signal available through a miniature phone plug.  Its RF frequencies of operation are more or less limited from 87.0 to 109.0 MHz (the commercial FM broadcast band).  Although the registers can be programmed to request frequencies beyond these limits, experiments did not give promising results.  The variable frequency oscillator (VFO) that demodulates the intermediate frequency (IF) signal probably has a small range of useful frequencies, and wraps around or gets clipped beyond the limits mentioned above.
+RadioTrack 카드는 ISA 8 비트 FM 라디오 카드입니다. 무선 주파수 (RF) 입력은 단순히 안테나 리드이며 출력은 소형 전화 플러그를 통해 사용할 수 있는 전력 오디오 신호입니다. 그것의 RF 주파수는 87.0에서 109.0 MHz (상업용 FM 방송 대역)로 다소 제한되어있다. 레지스터가 이러한 제한을 초과하는 주파수를 요청하도록 프로그래밍 될 수 있지만 실험 결과는 유망한 결과를 제공하지 못했습니다. 중간 주파수 (IF) 신호를 복조하는 가변 주파수 발진기 (VFO)는 아마도 유용한 주파수의 작은 범위를 가지며, 위에서 언급한 한계를 감싸거나 감싼다.(??)
+ 
+CONTROLLING THE CARD WITH IOPORT         	IOPORT로 카드 제어
+--------------------------------
+The RadioTrack (base) ioport is configurable for 0x30c or 0x20c.  Only one ioport seems to be involved.  The ioport decoding circuitry must be pretty simple, as individual ioport bits are directly matched to specific functions (or blocks) of the radio card.  This way, many functions can be changed in parallel with one write to the ioport.  The only feedback available through the ioports appears to be the "Stereo Detect" bit.
+RadioTrack (기본) ioport는 0x30c 또는 0x20c에 대해 구성 가능합니다. 하나의 ioport 만 관련되어있는 것 같습니다. 개별 ioport 비트는 무선 카드의 특정 기능 (또는 블록)과 직접 일치하므로 ioport 디코딩 회로는 매우 단순해야 합니다. 이 방법을 사용하면 ioport에 대한 하나의 쓰기와 함께 많은 기능을 변경할 수 있습니다. ioports를 통해 사용할 수 있는 유일한 피드백은 "스테레오 감지 (Stereo Detect)"비트입니다.
+ 
+The bits of the ioport are arranged as follows:
+ioport의 비트는 다음과 같이 정렬됩니다.
+ 
+  MSb                                                         LSb
++------+------+------+--------+--------+-------+---------+--------+
+| VolA | VolB | ???? | Stereo | Radio  | TuneA | TuneB   | Tune   |
+|  (+) |  (-) |  	| Detect | Audio  | (bit) | (latch) | Update |
+|  	|  	|      | Enable | Enable |   	|     	| Enable |
++------+------+------+--------+--------+-------+---------+--------+
+ 
+ 
+VolA . VolB  [AB......]
+-----------
+0 0 : audio mute          	           	오디오 뮤트모드(음소거)
+0 1 : volume +	(some delay required)          	볼륨 + (약간 지연 필요)
+1 0 : volume -	(some delay required)          	볼륨 - (약간 지연 필요)
+1 1 : stay at present volume             	현재 볼륨 유지
+ 
+Stereo Detect Enable [...S....]                  	스테레오 감지 활성화
+--------------------
+0 : No Detect                            	감지 없음
+1 : Detect                               	감지함
+ 
+Results available by reading ioport >60 msec after last port write.
+최종 포트 쓰기 후 ioport> 60 msec를 읽음으로써 결과를 얻을 수 있습니다.
+0xff ==> no stereo detected,  0xfd ==> stereo detected.
+0xff ==> 스테레오가 감지되지 않음, 0xfd ==> 스테레오가 감지 됨.
+ 
+Radio to Audio (path) Enable [....R...]          	라디오에서 오디오 (경로) 활성화
+----------------------------
+0 : Disable path (silence)               	경로 사용 중지 (조용히해)
+1 : Enable path  (audio produced)        	경로 사용 (오디오 생성)
+ 
+TuneA . TuneB [.....AB.]
+-------------
+0 0 : "zero" bit phase 1                 	"0"비트 phase 1
+0 1 : "zero" bit phase 2                 	"0"비트 phase 2
+ 
+1 0 : "one" bit phase 1
+1 1 : "one" bit phase 2
+ 
+24-bit code, where bits = (freq*40) + 10486188.
+ 24 비트 코드, 여기서 bits = (freq * 40) + 10486188.
+The Most Significant 11 bits must be 1010 xxxx 0x0 to be valid.
+가장 중요한 11 비트는 유효하려면 1010 xxxx 0x0이어야합니다.
+The bits are shifted in LSb first.
+ 비트는 LSb에서 먼저 이동합니다. (left-shift-bit.. 2의 n승으로 증가한다는 이야기 같음)
+ 
+Tune Update Enable [.......T]     	튠 (Tune) 업데이트 활성화
+------------------
+0 : Tuner held constant                  	튜너가 일정하게 유지됨
+1 : Tuner updating in progress    	진행중인 튜너 업데이트
+ 
+ 
+PROGRAMMING EXAMPLES      	프로그래밍 예제
+--------------------
+Default:    	BASE <-- 0xc8  (current volume, no stereo detect,
+                          	radio enable, tuner adjust disable)
+           	기본값 : BASE <- 0xc8 (현재 볼륨, 스테레오 감지 없음,
+                   	라디오 사용 가능, 튜너 조정 불가능)
+Card Off:  	BASE <-- 0x00  (audio mute, no stereo detect,
+                          	radio disable, tuner adjust disable)
+           	카드 꺼짐 : BASE <- 0x00 (오디오 음소거, 스테레오 감지 없음,
+                   	라디오 비활성화, 튜너 조정 비활성화)
+Card On:   	BASE <-- 0x00  (see "Card Off", clears any unfinished business)
+           	BASE <-- 0xc8  (see "Default")
+           	카드 켜기 : BASE <- 0x00 ( "카드 꺼짐"참조, 완료되지 않은 모든 사업체를 지웁니다)
+                   	BASE <- 0xc8 ( "기본값"참조)
+Volume Down:	BASE <-- 0x48  (volume down, no stereo detect,
+                          	radio enable, tuner adjust disable)
+           	* wait 10 msec *
+           	BASE <-- 0xc8  (see "Default")
+           	볼륨 감소 : BASE <- 0x48 (볼륨 감소, 스테레오 감지 없음,
+                   	라디오 사용 가능, 튜너 조정 불가능)
+                   	* 10 밀리 초 기다림 *
+                   	BASE <- 0xc8 ( "기본값"참조)
+ 
+Volume Up:  	BASE <-- 0x88  (volume up, no stereo detect,
+                          	radio enable, tuner adjust disable)
+           	* wait 10 msec *
+           	BASE <-- 0xc8  (see "Default")
+           	볼륨 높이기 : BASE <- 0x88 (볼륨 높이기, 스테레오 감지 안 함,
+라디오 사용 가능, 튜너 조정 불가능)
+* 10 밀리 초 기다림 *
+BASE <- 0xc8 ( "기본값"참조)
+Check Stereo:   BASE <-- 0xd8  (current volume, stereo detect,
+                          	radio enable, tuner adjust disable)
+           	* wait 100 msec *
+           	x <-- BASE 	(read ioport)
+           	BASE <-- 0xc8  (see "Default")
+ 
+           	x=0xff ==> "not stereo", x=0xfd ==> "stereo detected"
+ 
+스테레오 확인 : BASE <- 0xd8 (현재 볼륨, 스테레오 감지,
+라디오 사용 가능, 튜너 조정 불가능)
+* 100msec 대기 *
+x <- BASE (read ioport)
+BASE <- 0xc8 ( "기본값"참조)
+ 
+ 
+Set Frequency:  code = (freq*40) + 10486188
+           	foreach of the 24 bits in code,
+           	(from Least to Most Significant):
+           	  to write a "zero" bit,
+           		BASE <-- 0x01  (audio mute, no stereo detect, radio
+                          		disable, "zero" bit phase 1, tuner adjust)
+           		BASE <-- 0x03  (audio mute, no stereo detect, radio
+                          		disable, "zero" bit phase 2, tuner adjust)
+           	  to write a "one" bit,
+           		BASE <-- 0x05  (audio mute, no stereo detect, radio
+                          		disable, "one" bit phase 1, tuner adjust)
+           		BASE <-- 0x07  (audio mute, no stereo detect, radio
+                          		disable, "one" bit phase 2, tuner adjust)
+ 
+주파수 설정 : code = (freq * 40) + 10486188
+코드에서 24 비트 foreach, (최소에서 최대까지) :
+"제로"비트를 쓰려면,
+BASE <- 0x01 (오디오 음소거, 스테레오 감지 없음, 라디오 비활성화, "0"비트 위상 1, 튜너 조정)
+"1"비트를 기록하기 위해 BASE <-0x03 (오디오 뮤트, 스테레오 검출 없음, 라디오 비활성화, "제로"비트 위상 2, 튜너 조정)
+BASE <- 0x05 (오디오 음소거, 스테레오 감지 없음, 라디오 비활성화, "1 비트 위상 1", 튜너 조정)
+BASE <- 0x07 (오디오 음소거, 스테레오 감지 없음, 라디오 비활성화, "1 비트 위상 2", 튜너 조정)----------------------------------------------------------------------------
+ 
+ 
+

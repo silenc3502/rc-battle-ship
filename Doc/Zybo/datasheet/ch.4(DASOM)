@@ -1,0 +1,105 @@
+System Addresses
+4.1 Address Map
+
+Table 4-1: System-Level Address Map
+종합 시스템 수준 주소 맵은 표 4-1에 나와 있습니다. 음영 처리 된 항목은 주소 범위가 예약되어있어 액세스하지 말아야 함을 나타냅니다. 표 4-2는 예약 된 주소 범위를 나타냅니다.
+
+용어설명 : 
+ACP : accelerator coherency port (가속 통합 포트)
+AXI_HP : Advanced eXtensible Interface High-Performance (고급 확장 가능 인터페이스 버스-고성능)
+4 개의 AXI_HP 인터페이스는 DDR 및 OCM 메모리에 대한 고 대역폭 데이터 경로가있는 PL 버스 마스터를 제공합니다. 각 인터페이스는 읽기 및 쓰기 트래픽을위한 두 개의 FIFO 버퍼를 포함합니다.
+ㄴ https://www.xilinx.com/support/documentation/ip_documentation/axi_ref_guide/v13_4/ug761_axi_reference_guide.pdf
+SCU : Snoop Control Unit (스눕 제어장치 3.3 챕터)
+OCM : On-Chip Memory ( 29 챕터 ) 
+DDR : Double Data Rate ( 처리장치.. 한번에 두개의 워드를 처리한다 ) 
+PL : Programmable Logic ( FPGA : 하드웨어 )
+PS : Processing System ( 소프트웨어 ) 
+ARM코어가 올라가는 영역을 PS 라 하고 설계하는 로직 부분을 PL이라 합니다.
+두 영역의 Data 전송은 AXI Ports를 통해 연결되어있다.
+ㄴ http://blog.naver.com/chacagea/220957002285
+
+IOP : IOP (I / O Peripherals)는 외부 데이터 통신을 위한 업계 표준 인터페이스 모음입니다.
+SMC : Static Memory Controller( 정적 메모리 컨트롤러 )
+SLCR : System-Level Control registers ( 시스템 레벨 제어 레지스터 )
+Quad-SPI : Shared Peripheral Interrupts ( 12 챕터 )
+
+Notes : 
+SCU 그리고 OCM에 의해 필터링되지 않은 주소는 낮게 매핑된다.
+
+
+Notes:
+1. 다른 버스 마스터에는 S_AXI_GP 인터페이스, 장치 구성 인터페이스 (DevC), DAP 컨트롤러, DMA 컨트롤러 및 로컬 DMA 장치가 있는 다양한 컨트롤러 (이더넷, USB 및 SDIO)가 포함됩니다.
+
+2. OCM은 4 개의 64KB 섹션으로 나뉩니다. 각 섹션은 낮은 주소 범위 또는 높은 주소 범위에 독립적으로 매핑되지만 동시에 둘 다 매핑되지는 않습니다. 또한 SCU는 OCM 하위 주소 범위로 예정된 주소를 DDR DRAM 컨트롤러로 대신 필터링 할 수 있습니다.  
+OCM에 대한 자세한 설명은 29 장, 온 - 칩 메모리 (OCM)에서 설명합니다.
+
+3. SCU 주소 필터링 범위의 일부가 아닌 slcr.OCM_CFG [RAM_HI]를 통해 높은 OCM 주소 범위에 매핑 된 각 64KB 섹션에 대해 (0x000C_0000에서 0x000F_FFFF까지) 범위의 CPU 및 ACP 마스터에 대해 별칭이 지정됩니다. 
+자세한 내용은 29 장, 온칩 메모리 (OCM)를 참조하십시오.
+
+4. 단일 장치를 사용하는 경우 QSPI 0에 연결해야합니다.이 경우 주소 맵은 FC00_0000에서 시작하여 최대 FCFF_FFFF (16MB)로 이동합니다. 두 개의 장치를 사용하는 경우, 두 장치는 동일한 용량 이어야합니다. 두 장치의 주소 맵은 장치의 크기와 연결 구성에 따라 다릅니다.
+4 비트 스택 공유 I / O 버스의 경우 QSPI 0 장치는 FC00_0000에서 시작하여 최대 FCFF_FFFF (16MB)로 이동합니다. 
+QSPI 1 디바이스는 FD00_0000에서 시작하여 최대 FDFF_FFFF (다른 16MB)로 이동합니다.  
+첫 번째 장치의 크기가 16MB보다 작으면 두 장치 사이에 메모리 공간 구멍이 생깁니다. 
+8 비트 이중 병렬 모드 (8 비트 버스)의 경우 메모리 맵은 FC00_0000부터 최대 FDFF_FFFF (32MB)까지 연속적입니다.
+
+Table 4-2: System-Level Address Map (Reserved Addresses) - 예약된 시스템 레벨 주소 맵 
+
+PL AXI Interface Note
+PL, M_AXI_GP {1,0}로 가는 두 개의 범용 상호 연결 포트가 있습니다. 
+각 포트는 PS의 마스터에 의해 주소 지정 가능하며 각 포트는 표 4-1에 지정된 범위에서 1GB의 시스템 주소 공간을 차지합니다. 
+M_AXI_GP 주소는 PS에서 직접 가져옵니다. 
+PL에 가는 도중에 다시 매핑되지 않습니다. 이 범위를 벗어나는 주소는 PL에 제공되지 않습니다.
+
+Execute-In-Place Capable Devices
+다음 장치는 제자리에서 실행 가능합니다.
+• DDR
+• OCM
+• SMC SRAM/NOR
+• Quad-SPI (선형 어드레싱 모드)
+• M_AXI_GP{1, 0} (적절한 PL 슬레이브 컨트롤러를 갖춘 PL 블록 RAM 또는 외부 메모리)
+
+4.2 System Bus Masters
+CPU와 AXI_ACP는 동일한 메모리 맵을 볼 수 있습니다. 
+단, CPU에는 전용 타이머, 인터럽트 컨트롤러 및 공유 L2 캐시 / SCU 레지스터에 액세스하는 전용 버스가 있습니다. 
+AXI_HP 인터페이스는 DDR DRAM 및 OCM 메모리에 높은 대역폭을 제공합니다. 
+
+다른 시스템 버스 마스터에는 다음이 포함됩니다.
+
+• DMA 컨트롤러, 9 장, DMA 컨트롤러 참조
+• 장치 구성 인터페이스(DevC)  6 장, 부팅 및 구참성을 참조하십시오.
+• 디버그 액세스 포트 (DAP) 28 장, 시스템 테스트 및 디버그를 참조하십시오.
+• AXI 범용 포트 (S_AXI_GP [1 : 0])에 연결된 PL 버스 마스터 컨트롤러는 상호 연결(5 장)과  Programmable Logic 설명( 21 장 ) 참조 
+• 로컬 DMA 장치 (이더넷, USB 및 SDIO)가있는 AHB 버스 마스터 포트
+
+4.3 SLCR Registers
+시스템 레벨 제어 레지스터 (SLCR)는 PS 동작을 제어하는 데 사용되는 다양한 레지스터로 구성됩니다. 
+이 레지스터는 로드 및 저장 명령어를 사용하여 중앙 인터커넥트를 통해 액세스 할 수 있습니다. 
+각 레지스터에 대한 자세한 설명은 부록 B, 레지스터 세부 정보에서 확인할 수 있습니다. 
+기본 주소와 함께 SLCR 레지스터의 요약은 표 4-3에 나와 있습니다.
+
+Table 4-3: SLCR Register Map
+
+4.4 CPU Private Bus Registers
+표 4-4에 나와있는 레지스터는 CPU 전용 버스며 CPU에서만 액세스 할 수 있습니다.
+가속 통합 포트 (ACP)는 개인용 CPU 레지스터에 액세스 할 수 없습니다. 전용 CPU 레지스터는 APU의 하위 시스템을 제어하는 데 사용됩니다.
+
+4.5 SMC Memory
+SMC 메모리는 32 비트 AHB 버스를 통해 액세스 됩니다. (표 4-5 참조). 
+SMC 제어 레지스터는 표 4-6에 나열되어 있습니다. 
+NAND 및 SRAM / NOR 컨트롤러의 기능에 대한 정보는 11 장, 정적 메모리 컨트롤러를 참조하십시오.
+
+7z007s and 7z010 Device Notice ( 이 제품군을 사용하는 사람에게 안내 ) 
+7z010 듀얼 코어 및 7z007s 단일 코어 장치는 제한된 수의 핀으로 CLG225 패키지를 갖추고 있습니다. 
+SMC의 경우 8 비트 NAND 인터페이스 만 지원됩니다. 
+이 장치는 NOR / SRAM 인터페이스 또는 16 비트 NAND 인터페이스를 지원하지 않습니다.
+
+4.6 PS I/O Peripherals
+I / O 주변 장치 레지스터는 표 4-6에 나와있는 32 비트 APB 버스를 통해 액세스됩니다.
+
+Table 4-6: I/O Peripheral Register Map
+
+4.7 Miscellaneous PS Registers ( 여러가지 PS의 잡다한 레지스터 )
+PS 시스템 레지스터는 32 비트 AHB 버스를 통해 액세스됩니다 (표 4-7 참조).
+
+Table 4-7: PS System Register Map
+1. FSBL의 RSA 인증을 지원하는 데 사용되는 일회성 프로그램 가능 비 휘발성 메모리.

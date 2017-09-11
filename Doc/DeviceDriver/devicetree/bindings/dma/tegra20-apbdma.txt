@@ -1,0 +1,89 @@
+* NVIDIA Tegra APB DMA controller
+
+Required properties:
+- compatible: Should be "nvidia,<chip>-apbdma"
+- reg: Should contain DMA registers location and length. This shuld include
+  all of the per-channel registers.
+- interrupts: Should contain all of the per-channel DMA interrupts.
+- clocks: Must contain one entry, for the module clock.
+  See ../clocks/clock-bindings.txt for details.
+- resets : Must contain an entry for each entry in reset-names.
+  See ../reset/reset.txt for details.
+- reset-names : Must include the following entries:
+  - dma
+- #dma-cells : Must be <1>. This dictates the length of DMA specifiers in
+  client nodes' dmas properties. The specifier represents the DMA request
+  select value for the peripheral. For more details, consult the Tegra TRM's
+  documentation of the APB DMA channel control register REQ_SEL field.
+
+Examples:
+
+apbdma: dma@6000a000 {
+	compatible = "nvidia,tegra20-apbdma";
+	reg = <0x6000a000 0x1200>;
+	interrupts = < 0 136 0x04
+		       0 137 0x04
+		       0 138 0x04
+		       0 139 0x04
+		       0 140 0x04
+		       0 141 0x04
+		       0 142 0x04
+		       0 143 0x04
+		       0 144 0x04
+		       0 145 0x04
+		       0 146 0x04
+		       0 147 0x04
+		       0 148 0x04
+		       0 149 0x04
+		       0 150 0x04
+		       0 151 0x04 >;
+	clocks = <&tegra_car 34>;
+	resets = <&tegra_car 34>;
+	reset-names = "dma";
+	#dma-cells = <1>;
+};
+
+
+/*
+* NVIDIA Tegra APB DMA 컨트롤러
+
+필수 속성 :
+- 호환 : "nvidia, <chip> -apbdma"여야합니다.
+- reg : DMA 레지스터 위치와 길이를 포함해야합니다. 이 경고에는 채널 별 모든 레지스터가 포함됩니다.
+- 인터럽트 : 모든 채널 당 DMA 인터럽트를 포함해야합니다.
+- clocks : 모듈 클럭에 대해 하나의 항목을 포함해야합니다.
+  자세한 내용은 ../clocks/clock-bindings.txt를 참조하십시오.
+- reset : reset-names의 각 항목에 대한 항목을 포함해야합니다.
+  자세한 내용은 ../reset/reset.txt를 참조하십시오.
+- reset-names : 다음 항목을 포함해야합니다.
+  - dma
+- # dma-cells : <1>이어야합니다. 이것은 클라이언트 노드의 dmas 등록 정보에서 DMA 지정자의 길이를 나타냅니다. 지정자는 주변 장치에 대한 DMA 요청 선택 값을 나타냅니다. 자세한 내용은 APB DMA 채널 제어 레지스터 REQ_SEL 필드에 대한 Tegra TRM의 설명서를 참조하십시오.
+
+Examples:
+
+apbdma: dma@6000a000 {
+	compatible = "nvidia,tegra20-apbdma";
+	reg = <0x6000a000 0x1200>;
+	interrupts = < 0 136 0x04
+		       0 137 0x04
+		       0 138 0x04
+		       0 139 0x04
+		       0 140 0x04
+		       0 141 0x04
+		       0 142 0x04
+		       0 143 0x04
+		       0 144 0x04
+		       0 145 0x04
+		       0 146 0x04
+		       0 147 0x04
+		       0 148 0x04
+		       0 149 0x04
+		       0 150 0x04
+		       0 151 0x04 >;
+	clocks = <&tegra_car 34>;
+	resets = <&tegra_car 34>;
+	reset-names = "dma";
+	#dma-cells = <1>;
+};
+
+*/

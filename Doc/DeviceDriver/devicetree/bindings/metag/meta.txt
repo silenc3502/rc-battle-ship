@@ -1,0 +1,52 @@
+* Meta Processor Binding
+
+This binding specifies what properties must be available in the device tree
+representation of a Meta Processor Core, which is the root node in the tree.
+
+Required properties:
+
+    - compatible: Specifies the compatibility list for the Meta processor.
+      The type shall be <string> and the value shall include "img,meta".
+
+Optional properties:
+
+    - clocks: Clock consumer specifiers as described in
+      Documentation/devicetree/bindings/clock/clock-bindings.txt
+
+    - clock-names: Clock consumer names as described in
+      Documentation/devicetree/bindings/clock/clock-bindings.txt.
+
+Clocks are identified by name. Valid clocks are:
+
+    - "core": The Meta core clock from which the Meta timers are derived.
+
+* 메타 프로세서 바인딩
+
+이 바인딩은 트리의 루트 노드 인 메타 프로세서 코어의 장치 트리 표현에서 사용할 수 있어야하는 속성을 지정합니다.
+
+필수 속성 :
+
+     - compatible : 메타 프로세서의 호환성 목록을 지정합니다.
+       유형은 <string>이고 값은 "img, meta"를 포함해야합니다.
+
+선택적 속성 :
+
+     - clocks : Documentation / devicetree / bindings / clock / clock-bindings.txt에 설명 된  Clock consumer specifiers
+
+     - clock-names : Documentation / devicetree / bindings / clock / clock-bindings.txt에 설명 된  Clock consumer names
+
+Clocks는 이름으로 식별됩니다. 유효한 Clocks는 다음과 같습니다.
+
+     - "코어": 메타 타이머가 파생 된 메타 코어 클럭.
+
+
+
+
+* Examples
+
+/ {
+	compatible = "toumaz,tz1090", "img,meta";
+
+	clocks = <&meta_core_clk>;
+	clock-names = "core";
+};

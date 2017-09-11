@@ -1,0 +1,12 @@
+#!/usr/bin/env xdg-open
+
+[Desktop Entry]
+Name=Image Gallery
+GenericName=Demo App
+Icon=/usr/share/matrix-gui-2.0/apps/images/qt-icon.png
+Type=Application
+Exec=image-gallery /usr/share/camera-images/
+Categories=camera
+ProgramType=gui
+X-MATRIX-Description=/usr/share/matrix-gui-2.0/apps/qt-image-gallery/desc_qt-image-gallery.html
+Name[en_US]=qt-image-gallery.desktop

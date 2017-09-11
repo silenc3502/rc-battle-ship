@@ -1,0 +1,426 @@
+This document describes the device tree bindings associated with the KeyStone
+Serial RapidIO driver support.
+이 문서에서는 KeyStone Serial RapidIO 드라이버 지원과 관련된 장치 트리 바인딩에 대해 설명합니다.
+
+Required properties
+필수 속성
+-------------------
+
+#address-cells
+#size-cells:      Should be '1' if the device has sub-nodes with 'reg' property.
+reg:              Address and length of the register set for the SRIO subsystem
+		  on the SOC.
+reg-names:        Indicates the name of the various register ranges defined with
+		  the "reg" property above. There are three mandatory ranges of
+		  registers:
+		   - RapidIO registers ("rio")
+		   - boot configuration registers (for JTAGID and K1 SerDes
+                     setup) ("boot_config")
+		   - SerDes configuration registers ("serdes")
+clocks:           Clock IDs array as required by the controller.
+clock-names:      Names of clocks corresponding to IDs in the clock property.
+compatible:       Should be "ti,keystone-rapidio".
+interrupts:       The two IRQ definitions for:
+		   - RIO special interrupts (doorbells, errors, port-writes in,
+		   ...)
+                   - LSU completions
+# address-cells
+# size-cells : 장치에 'reg'속성이있는 하위 노드가있는 경우 '1'이어야합니다.
+reg : SOC상의 SRIO 서브 시스템을위한 레지스터 세트의 어드레스 및 길이.
+reg-names : 위의 "reg"속성으로 정의 된 다양한 레지스터 범위의 이름을 나타냅니다. 세 가지 필수 레지스터 범위가 있습니다.
+- RapidIO 레지스터 ( "rio")
+- 부팅 구성 레지스터 (JTAGID 및 K1 SerDes 설정 용) ( "boot_config")
+- SerDes 구성 레지스터 ( "serdes")
+clocks : 컨트롤러에서 요구하는대로 Clock ID 배열.
+clock-names : clock 속성의 ID에 해당하는 Names of clocks 입니다.
+호환 가능 : "ti, keystone-rapidio"여야합니다.
+interrupts : 다음에 대한 두 개의 IRQ 정의 :
+- RIO 특수 인터럽트 (초인종, 오류, 포트 쓰기,
+...)
+                    - LSU 완료
+
+Optional properties
+선택적 속성
+-------------------
+
+dma-coherent:     Indicates if DirectIO operations support hw cache-coherency.
+		  On KeyStone platforms it is recommended to set this property
+		  when running on ARM cores.
+
+dma-coherent : DirectIO 작업이  hw cache-coherency.을 지원하는지 여부를 나타냅니다.
+KeyStone 플랫폼에서는 ARM 코어에서 실행할 때이 속성을 설정하는 것이 좋습니다.
+
+keystone2-serdes: Indicates that the driver needs to use KeyStone 2 SerDes
+		  initialization. If not specified, it will be KeyStone 1
+		  initialization instead.
+		  keystone2-serdes : 드라이버가 'KeyStone 2 SerDes 초기화를 사용해야 함' 을 나타냅니다. 
+		  지정하지 않으면 KeyStone 1 초기화가됩니다.
+
+baudrate:         This the lane baudrate configuration number (from 0 to 3).
+		  If not specified the baudrate configuration 3 will be used (5 Gbps).
+baudrate : 차선 전송 속도 구성 번호 (0에서 3까지).
+			지정하지 않으면 전송 속도 구성 3이 사용됩니다 (5Gbps).
+
+path-mode:        This is the SerDes lanes to ports configuration number (from 0
+                  to 4). If not specified the mode 0 will be used (4 ports in 1x).
+path-mode : 이것은 SerDes 레인 대 포트 구성 번호입니다 (0에서 4까지).
+ 				지정하지 않으면 모드 0이 사용됩니다 (1x에서 4 포트).
+
+port-register-timeout:
+		  This is the delay in seconds for waiting the port registration
+                  at startup. if not specified a default 30 seconds value will
+                  be used.
+port-register-timeout :
+		시작시 포트 등록을 대기하는 데 걸리는 시간 (초)입니다. 
+		지정하지 않으면 기본 30 초 값이 사용됩니다.
+
+ports:            This is the bitfield of RapidIO port(s) to probe at startup.
+		  If not specified, no port will be used.
+포트 : 시작시 RapidIO port(s) to probe 의 비트 필드입니다.
+		지정하지 않으면 포트가 사용되지 않습니다.
+
+ports-remote:     Allows to explicitly specify the remote port number (of the
+                  link partner) for each local port. There is one value per port
+                  for the 4 ports.
+		  If not specified, the remote ports will be detected at startup
+                  using the peer Switch Port Information CAR register if
+                  available (meaning that the link partner implements such
+                  register).
+		  The remote ports are needed for the software error recovery
+                  process.
+ports-remote : 각 로컬 포트에 대해 (링크 파트너의) 원격 포트 번호를 명시 적으로 지정할 수 있습니다. 4 포트의 포트 당 하나의 값이 있습니다.
+지정하지 않으면 peer Switch Port Information CAR register (사용 가능한 경우 링크 파트너가 해당 레지스터를 구현 함을 의미)를 사용하여 시작시 원격 포트가 감지됩니다.
+원격 포트는 소프트웨어 오류 복구 프로세스에 필요합니다.
+
+dev-id-size:      RapidIO common transport system size:
+                   0 - Small size, 8-bit deviceID fields, 256 devices.
+                   1 - Large size, 16-bit deviceID fields, 65536 devices.
+		  If not specified 0 (8-bit) value will be used.
+dev-id-size : RapidIO 공통 전송 시스템 크기 :
+                    0 - 작은 크기, 8 비트 deviceID 필드, 256 개 장치.
+                    1 - 대형, 16 비트 deviceID 필드, 65536 장치.
+					지정하지 않으면 0 (8 비트) 값이 사용됩니다.
+
+lsu:              Start and end indexes of the LSU range that will be used for
+                  DirectIO transfers and maintenance requests. Using multiple
+                  LSUs allows to allocate one for maintenance packets and
+                  different LSUs for each DMA channels used for DirectI/O
+                  transfers increasing the parallelism capabilities.
+                  If not specified LSU 0 will be used for all kind of transfers.
+lsu : 			DirectIO 전송 및 유지 관리 요청에 사용될 LSU 범위의 시작 및 끝 인덱스입니다. 
+				여러 LSU를 사용하면 유지 관리 패킷에 하나를 할당하고 DirectI / O 전송에 
+				사용되는 각 DMA 채널에 대해 서로 다른 LSU를 할당하여 병렬 처리 기능을 
+				향상시킬 수 있습니다. LSU 0이 지정되지 않으면 모든 종류의 전송에 사용됩니다.
+
+num-dio-channels  Number of virtual DMA channels available for DirectI/O
+                  transfers. Note that one is always reserved for doorbells
+                  purpose. Default is 8 if not specified.
+num-dio-channels DirectI / O 전송에 사용할 수있는 가상 DMA 채널 수입니다. 
+				하나는 초인종 용으로 항상 예약되어 있습니다. 지정되지 않은 경우 기본값은 8입니다.
+
+rxu-map-range:    Define the range (start and end values) of RXU mapping entries
+                  that will be used for MP receive. Range must start from 0 and
+                  end up to 63. If not specified the full range will be used by
+		  Linux(0 to 63).
+rxu-map-range : MP 수신에 사용될 RXU 매핑 항목의 범위 (시작 및 끝 값)를 정의합니다.
+ 범위는 0부터 시작하여 63까지 끝나야합니다. 지정하지 않으면 Linux에서 전체 범위가 사용됩니다 (0 ~ 63).
+
+num-mboxes:       Number of receive mailboxes used for MP. If not specified,
+                  only one mailbox will be used.
+num-mboxes : MP에 사용되는 receive mailboxes. 지정하지 않으면 하나의 mailbox 만 사용됩니다.
+
+pkt-forward:      This allows to define the routing table for hardware packet
+		  forwarding. There are 8 entries in the table. Each entry
+                  starts with the lower DeviceID boundary, then the upper
+                  DeviceID boundary and the output port to route packets whose
+                  DestID falls within the described range.
+		  For example, '0x3 0x3 1' will forward incoming packets with
+		  DestID 0x3 to port 1.
+		  All the 8 entries must be referenced with the 3 values.
+
+pkt-forward : 이것은 하드웨어 패킷 포워딩을위한 라우팅 테이블을 정의 할 수있게합니다.
+		 테이블에 8 개의 항목이 있습니다. 각 항목은 낮은 DeviceID 경계부터 시작하여 상위 DeviceID 경계와
+ 		 출력 포트로 시작하여 설명 된 범위 내에있는 패킷을 라우팅합니다. 
+		 예를 들어, '0x3 0x3 1'은 DestID 0x3 인 수신 패킷을 포트 1로 전달합니다. 
+ 		 8 개의 항목 모두를 3 개의 값으로 참조해야합니다.
+
+
+SerDes optional properties
+SerDes 선택적 특성
+--------------------------
+
+These properties are used to tune the KeyStone 2 SerDes hardware parameters and
+coefficients. For more information please refer to KeyStone II Architecture
+Serializer/Deserializer (SerDes) User Guide (SPRUHO3) available on www.ti.com.
+이 속성은 KeyStone 2 SerDes 하드웨어 매개 변수와 계수를 조정하는 데 사용됩니다. 
+보다 자세한 정보는 www.ti.com에서 제공되는 KeyStone II Architecture
+Serializer/Deserializer (SerDes) 사용자 가이드 (SPRUHO3)를 참조하십시오.
+
+serdes-1lsb:      Allows to set the TX driver 1 lsb pre emphasis setting for
+                  KeyStone 2 SerDes. There is one value per lane. Default value is 0.
+serdes-1lsb : 	  KeyStone 2 SerDes에 대해 TX 드라이버 1 LSB pre emphasis 을 설정할 수 있습니다. 
+				  차선마다 하나의 값이 있습니다. 기본값은 0입니다.
+
+serdes-c1:        Allows to override value of TX driver C1 coefficient for
+		  KeyStone 2 SerDes. There is one value per lane. Default value
+		  if not specified is 6 for 3.125Gbps and 4 for other baudrates.
+serdes-c1 : KeyStone 2 SerDes에 대한 TX 드라이버 C1 계수의 값을 덮어 쓸 수 있습니다.
+ 차선마다 하나의 값이 있습니다. 지정하지 않으면 기본값은 3.125Gbps의 경우 6이고 다른 전송 속도의 경우 4입니다.
+
+serdes-c2: Allows to override value of TX driver C2 coefficient for
+		  KeyStone 2 SerDes. There is one value per lane. Default value
+		  is 0 if not specified.
+serdes-c2 : KeyStone 2 SerDes에 대한 TX 드라이버 C2 계수의 값을 무시할 수 있습니다. 
+		차선마다 하나의 값이 있습니다. 지정되지 않은 경우 기본값은 0입니다.
+
+serdes-cm:	  Allows to override value of TX driver CM coefficient for
+		  KeyStone 2 SerDes. There is one value per lane. Default value
+		  is 0.
+serdes-cm : KeyStone 2 SerDes에 대한 TX 드라이버 CM 계수 값을 무시할 수 있습니다.
+		 차선마다 하나의 값이 있습니다. 디폴트 값은 0입니다.
+
+serdes-att:       Allows to set attenuator setting of TX driver for KeyStone 2
+		  SerDes. There is one value per lane. Default value is 12 if
+		  not specified.
+serdes-att : KeyStone 2 SerDes 용 TX 드라이버의 감쇠기 설정을 지정할 수 있습니다. 
+		차선마다 하나의 값이 있습니다. 지정되지 않은 경우 기본값은 12입니다.
+
+serdes-vreg:      Allows to set regulator voltage setting for TX driver for
+		  KeyStone 2 SerDes. There is one value per lane. Default value
+		  is 4 if not specified.
+serdes-vreg : KeyStone 2 SerDes 용 TX 드라이버의 regulator voltage 설정을 허용합니다.
+ 차선마다 하나의 값이 있습니다. 지정하지 않으면 기본값은 4입니다.
+
+serdes-vdreg:     Allows to set lane regulator output voltage setting for TX
+		  driver for KeyStone 2. Default value is 1 (VNOM) if not
+		  specified.
+serdes-vdreg : KeyStone 2 용 TX 드라이버의 레인 regulator voltage 전압 설정을 지정할 
+			수 있습니다. 지정되지 않은 경우 기본값은 1 (VNOM)입니다.		  
+
+serdes-rx-att-start:
+                  Allows to set attenuator start value of RX driver for Keystone
+		  2 SerDes. There is one value per lane. Default value is 3.
+serdes-rx-att-start :
+                   Keystone 2 SerDes 용 RX 드라이버의 감쇠기 시작 값을 설정할 수 있습니다. 차선마다 하나의 값이 있습니다. 기본값은 3입니다.
+
+serdes-rx-boost-start:
+                  Allows to set attenuator start value of RX driver for Keystone
+		  2 SerDes. There is one value per lane. Default value is 3.
+serdes-rx-boost-start :
+                   Keystone 2 SerDes 용 RX 드라이버의 감쇠기 시작 값을 설정할 수 있습니다. 차선마다 하나의 값이 있습니다. 기본값은 3입니다.
+
+serdes-rx-att:    Allows to set attenuator static value of RX driver for
+		  Keystone 2 SerDes. If set to -1, dynamic calibration is used
+		  instead. There is one value per lane. Default value is -1.
+serdes-rx-att : Keystone 2 SerDes 용 RX 드라이버의 감쇠기 정적 값을 설정할 수 있습니다.
+		 -1로 설정하면 동적 보정이 대신 사용됩니다. 차선마다 하나의 값이 있습니다. 기본값은 -1입니다.
+
+serdes-rx-boost:  Allows to set attenuator start value of RX driver for Keystone
+		  2 SerDes. If set to -1, dynamic calibration is used instead.
+                  There is one value per lane. Default value is -1.
+serdes-rx-boost : Keystone 2 SerDes 용 RX 드라이버의 감쇠기 시작 값을 설정할 수 있습니다.
+			 -1로 설정하면 동적 보정이 대신 사용됩니다. 차선마다 하나의 값이 있습니다. 기본값은 -1입니다.
+
+Sub-nodes
+---------
+
+Each mailbox (according to num-mboxes) must be added as subnodes "mbox-%d" with
+%d the mailbox number (from 0 to n).
+This sub-node has the following properties:
+각 mailbox (num-mboxes에 따라)은 mailbox number (0에서 n까지) % d와 함께 하위 노드 
+"mbox-% d"로 추가되어야합니다. 이 하위 노드에는 다음과 같은 속성이 있습니다.
+
+
+rx-channel:       The packet DMA channel associated to this receive mailbox.
+		  This property is mandatory and must refer to a specified
+		  'navigator-dma-names' DMA client resource like specified in
+		  the Documentation/devicetree/bindings/soc/ti/
+		  keystone-navigator-dma.txt file
+rx-channel :이 수신  mailbox에 연결된 패킷 DMA 채널입니다. 이 속성은 필수 항목이며 Documentation / devicetree / bindings / soc / ti / keystone-navigator-dma.txt 파일에 
+지정된 것과 같이 지정된 'navigator-dma-names'DMA 클라이언트 리소스를 참조해야합니다
+
+rx-pool:	  This mandatory property defines the pool of descriptors that
+		  will be used for the receive mailbox. The first parameter is
+		  the size of descriptor, the second is the region Id where to
+		  get descriptors for receive DMA.
+rx-pool :이 필수 속성은 receive mailbox 에 사용될 pool of descriptors 을 정의합니다.
+
+첫 번째 매개 변수는 descriptor의 크기이고, 두 번째 매개 변수는 수신 DMA에 대한 descriptor를 가져올 영역입니다.
+
+rx-queue:         This property defines the hw queue Id used for receive.
+		  If not specified a QPEND queue will be allocated by the
+		  kernel.
+rx-queue :이 등록 정보는 수신에 사용 된 hw 대기열 ID를 정의합니다.
+			지정하지 않으면 QPEND 대기열이 커널에 의해 할당됩니다.		  
+
+rx-queue-depth:   This can be at present a maximum of 4 queues per packet DMA
+		  channel. We can specify here the number of descriptors for
+		  each queue.
+		  If not specified only one queue of depth of 128 will be used.
+rx-queue-depth : 현재 패킷 DMA 채널 당 최대 4 개의 대기열이 될 수 있습니다. 
+				여기서 각 큐에 대한 설명자의 수를 지정할 수 있습니다. 
+				지정하지 않으면 128 자릿수의 큐 하나만 사용됩니다.
+
+rx-buffer-size:   For each receive queue, we can specify the buffer size.
+		  Default is 4096 bytes if not specified.
+rx-buffer-size : 각 수신 대기열에 대해 버퍼 크기를 지정할 수 있습니다.
+지정되지 않은 경우 기본값은 4096 바이트입니다.
+
+tx-channel:       This is the packet DMA channel name associated with this
+		  mailbox for transmit. This property is mandatory and works
+		  like the rx-channel property.
+tx-channel : 전송을 위해 이  mailbox 과 연결된 패킷 DMA 채널 이름입니다. 이 속성은 필수 요소이며 rx-channel 속성과 동일하게 작동합니다.
+
+tx-queue:         This mandatory property defines the hw transmit queue Id.
+		  This must be set in accordance to the Packet DMA channel
+		  used in transmit. Check the KeyStone SRIO hw documentation
+		  for more information.
+tx-queue :이 필수 속성은 hw 전송 큐 ID를 정의합니다. 
+		  이것은 전송시 사용되는 패킷 DMA 채널에 따라 설정되어야합니다. 
+		  자세한 정보는 KeyStone SRIO hw 문서를 확인하십시오.
+
+tx-completion-queue:
+	          This property defines the hw queue Id used for transmit
+		  completion. If not specified a QPEND queue will be allocated
+		  by the  kernel.
+tx-completion-queue :
+			이 등록 정보는 전송 완료에 사용 된 hw 대기열 ID를 정의합니다.
+			 지정하지 않으면 QPEND 대기열이 커널에 의해 할당됩니다.
+
+tx-garbage-queue:
+	          This property defines the hw queue Id used for transmit
+		  errors. If not specified a QPEND queue will be allocated
+		  by the  kernel.
+tx-garbage-queue :
+			이 등록 정보는 전송 오류에 사용 된 hw 대기열 ID를 정의합니다. 
+			지정하지 않으면 QPEND 대기열이 커널에 의해 할당됩니다.
+
+tx-queue-depth:   Number of descriptors for the transmit queue. Default is 128
+                  descriptors if not specified
+tx-queue-depth : 전송 대기열에 대한 설명자의 수. 지정되지 않은 경우 기본값은 128 descriptors 입니다.
+
+stream-id:        If specified, the mailbox will be mapped to the indicated
+		  stream ID and packet type 9 will be used instead of packet
+                  type 11.
+stream-id : 지정된 경우 mailbox 은 표시된 스트림 ID에 매핑되고 패킷 유형 11 대신 패킷 유형 9가 사용됩니다.
+
+Example
+-------
+
+knav_dmas: knav_dmas@0 {
+
+        ...
+
+	dma_srio: dma_srio@0 {
+		  reg = <0x2901000 0x020>,
+		        <0x2901400 0x200>,
+			<0x2901800 0x200>,
+			<0x2901c00 0x200>,
+			<0x2902000 0x280>;
+		  reg-names = "global", "txchan", "rxchan",
+                              "txsched", "rxflow";
+        };
+
+	...
+
+};
+
+rapidio: rapidio@2900000 {
+	compatible = "ti,keystone-rapidio";
+	#address-cells = <1>;
+	#size-cells = <1>;
+	reg = <0x2900000 0x40000        /* rio regs */
+	       0x2620000 0x1000         /* boot config regs */
+               0x232c000 0x2000>;       /* serdes config regs */
+	reg-names = "rio", "boot_config", "serdes";
+	clocks = <&clksrio>;
+	clock-names = "clk_srio";
+	dma-coherent;
+
+	ti,navigator-dmas = <&dma_srio 18>, /* phandle channel_id */
+			    <&dma_srio 19>,
+			    <&dma_srio 0>,
+			    <&dma_srio 1>;
+	ti,navigator-dma-names = "riorx0", "riorx1", "riotx0", "riotx1";
+
+	keystone2-serdes;
+
+	baudrate  = <3>;              /* 5 Gbps */
+	path-mode = <4>;              /* 1 port in 4x */
+	port-register-timeout = <30>; /* 30 seconds */
+
+	lsu = <0 0>;            /* available LSU range (start end) */
+							/ * 사용 가능한 LSU 범위 (시작 끝) * /
+
+	num-dio-channels = <8>; /* number of DIO DMA channels */
+							/ * DIO DMA 채널 수 * /
+	
+	ports = <0x1>;      /* bitfield of port(s) to probe */
+						/ * 조사 할 포트의 비트 필드 * /
+
+	ports-remote = <0 1 2 3>; /* remote ports:
+			           * local port 0 is connected to peer port 0,
+				   * local port 1 is connected to peer port 1,
+				   * ...
+				   */
+				   			/ * 원격 포트 :
+							* 로컬 포트 0은 피어 포트 0에 연결되고,
+							* 로컬 포트 1은 피어 포트 1에 연결되고,
+							* ...
+							* /
+	dev-id-size = <0>;  /* RapidIO common transport system
+			     * size.
+			     * 0 - Small size. 8-bit deviceID
+			     *     fields. 256 devices.
+			     * 1 - Large size, 16-bit deviceID
+			     *     fields. 65536 devices.
+			     */
+			   			  / * RapidIO 공용 전송 시스템
+							* 크기.
+							* 0 - 작은 크기. 8 비트 디바이스 ID
+							* 필드. 256 개 장치.
+							* 1 - 대형 16 비트 DeviceID
+							* 필드. 65536 장치.
+							* /	
+
+
+	interrupts = <0 152 0xf01
+                      0 153 0xf01>; /* RIO and LSU IRQs */
+                      				/ * RIO 및 LSU IRQ * /
+
+	rxu-map-range = <0 15>; /* use only the 16 first RXU mapping entries */
+							/ * 16 개의 첫 번째 RXU 매핑 항목 만 사용 * /
+	num-mboxes = <2>;
+
+	mbox-0 {
+	        rx-channel = "riorx0";
+		rx-pool = <128 15>; /* size region_id */
+                rx-queue-depth  = <256 0 0 0>;
+                rx-buffer-size  = <4096 0 0 0>;
+		rx-queue = <8714>;
+                /*stream-id = <0>;*/
+		tx-channel = "riotx0";
+		tx-pool = <128 15>;
+		tx-queue-depth = <256>;
+		tx-queue = <672>; /* hw transmit queue for channel/flow 0 */
+							/ * hw 채널 / 흐름 0에 대한 큐 전송 * /
+		tx-completion-queue = <8716>;
+		tx-garbage-queue = <8717>;
+        };
+
+        mbox-1 {
+	        rx-channel = "riorx1";
+		rx-pool = <128 15>;
+                rx-queue-depth  = <256 0 0 0>;
+                rx-buffer-size  = <4096 0 0 0>;
+		rx-queue = <8715>;
+                /*stream-id = <1>;*/
+		tx-channel = "riotx1";
+		tx-pool = <128 15>;
+		tx-queue-depth = <256>;
+		tx-queue = <673>;  /* hw transmit queue for channel/flow 1 */
+							/ * hw 채널 / 흐름 1에 대한 큐 전송 * /
+	        tx-completion-queue = <8718>;
+		tx-garbage-queue = <8719>;
+        };
+};

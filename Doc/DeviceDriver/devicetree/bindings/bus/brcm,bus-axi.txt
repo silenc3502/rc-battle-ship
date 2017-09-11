@@ -1,0 +1,62 @@
+Driver for ARM AXI Bus with Broadcom Plugins (bcma)
+
+Required properties:
+
+- compatible : brcm,bus-axi
+
+- reg : iomem address range of chipcommon core
+
+The cores on the AXI bus are automatically detected by bcma with the
+memory ranges they are using and they get registered afterwards.
+Automatic detection of the IRQ number is not working on
+BCM47xx/BCM53xx ARM SoCs. To assign IRQ numbers to the cores, provide
+them manually through device tree. Use an interrupt-map to specify the
+IRQ used by the devices on the bus. The first address is just an index,
+because we do not have any special register.
+
+The top-level axi bus may contain children representing attached cores
+(devices). This is needed since some hardware details can't be auto
+detected (e.g. IRQ numbers). Also some of the cores may be responsible
+for extra things, e.g. ChipCommon providing access to the GPIO chip.
+
+- compatible : brcm, bus-axi
+
+- reg : 칩 코어 코어의 iomem 주소 범위
+
+AXI 버스의 코어는 사용중인 메모리 범위와 함께 bcma에 의해 자동으로 감지되며 이후에 등록됩니다. BCM47xx / BCM53xx ARM SoC에서는 IRQ 번호 자동 감지가 작동하지 않습니다. 코어에 IRQ 번호를 할당하려면 장치 트리를 통해 수동으로 제공하십시오. 인터럽트 맵을 사용하여 버스의 장치가 사용하는 IRQ를 지정하십시오. 우리는 특별한 레지스터가 없으므로 첫 번째 주소는 인덱스 일뿐입니다.
+
+최상위 축 버스에는 연결된 코어 (장치)를 나타내는 하위 노드가있을 수 있습니다. 이는 일부 하드웨어 세부 사항을 자동으로 감지 할 수 없기 때문에 필요합니다 (e.g. IRQ 번호). 
+GPIO 칩에 대한 액세스를 제공하는 e.g. 칩 커먼 (ChipCommon)도 있습니다.
+
+Example:
+
+	axi@18000000 {
+		compatible = "brcm,bus-axi";
+		reg = <0x18000000 0x1000>;
+		ranges = <0x00000000 0x18000000 0x00100000>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+		#interrupt-cells = <1>;
+		interrupt-map-mask = <0x000fffff 0xffff>;
+		interrupt-map =
+			/* Ethernet Controller 0 */
+			<0x00024000 0 &gic GIC_SPI 147 IRQ_TYPE_LEVEL_HIGH>,
+
+			/* Ethernet Controller 1 */
+			<0x00025000 0 &gic GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH>;
+
+			/* PCIe Controller 0 */
+			<0x00012000 0 &gic GIC_SPI 126 IRQ_TYPE_LEVEL_HIGH>,
+			<0x00012000 1 &gic GIC_SPI 127 IRQ_TYPE_LEVEL_HIGH>,
+			<0x00012000 2 &gic GIC_SPI 128 IRQ_TYPE_LEVEL_HIGH>,
+			<0x00012000 3 &gic GIC_SPI 129 IRQ_TYPE_LEVEL_HIGH>,
+			<0x00012000 4 &gic GIC_SPI 130 IRQ_TYPE_LEVEL_HIGH>,
+			<0x00012000 5 &gic GIC_SPI 131 IRQ_TYPE_LEVEL_HIGH>;
+
+		chipcommon {
+			reg = <0x00000000 0x1000>;
+
+			gpio-controller;
+			#gpio-cells = <2>;
+		};
+	};

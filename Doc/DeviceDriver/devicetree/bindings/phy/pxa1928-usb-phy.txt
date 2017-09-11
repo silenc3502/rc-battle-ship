@@ -1,0 +1,24 @@
+* Marvell PXA1928 USB and HSIC PHYs
+
+Required properties:
+- compatible: "marvell,pxa1928-usb-phy" or "marvell,pxa1928-hsic-phy"
+- reg: base address and length of the registers
+- clocks - A single clock. From common clock binding.
+- #phys-cells: should be 0. From commmon phy binding.
+- resets: reference to the reset controller
+필수 속성 :
+- compatible : "marvell, pxa1928-usb-phy"또는 "marvell, pxa1928-hsic-phy"
+- reg : 레지스터의 기본 주소와 길이
+- clocks -  A single clock. common clock binding에서.
+- # phys-cells : 0이어야합니다. commmon phy 바인딩에서.
+- resets : resets controller에 대한 참조
+
+
+Example:
+
+	usbphy: phy@7000 {
+		compatible = "marvell,pxa1928-usb-phy";
+		reg = <0x7000 0xe0>;
+		clocks = <&apmu_clocks PXA1928_CLK_USB>;
+		#phy-cells = <0>;
+	};

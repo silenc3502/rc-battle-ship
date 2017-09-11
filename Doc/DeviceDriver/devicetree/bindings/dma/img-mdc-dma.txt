@@ -1,0 +1,116 @@
+* IMG Multi-threaded DMA Controller (MDC)
+
+Required properties:
+- compatible: Must be "img,pistachio-mdc-dma".
+- reg: Must contain the base address and length of the MDC registers.
+- interrupts: Must contain all the per-channel DMA interrupts.
+- clocks: Must contain an entry for each entry in clock-names.
+  See ../clock/clock-bindings.txt for details.
+- clock-names: Must include the following entries:
+  - sys: MDC system interface clock.
+- img,cr-periph: Must contain a phandle to the peripheral control syscon
+  node which contains the DMA request to channel mapping registers.
+- img,max-burst-multiplier: Must be the maximum supported burst size multiplier.
+  The maximum burst size is this value multiplied by the hardware-reported bus
+  width.
+- #dma-cells: Must be 3:
+  - The first cell is the peripheral's DMA request line.
+  - The second cell is a bitmap specifying to which channels the DMA request
+    line may be mapped (i.e. bit N set indicates channel N is usable).
+  - The third cell is the thread ID to be used by the channel.
+
+Optional properties:
+- dma-channels: Number of supported DMA channels, up to 32.  If not specified
+  the number reported by the hardware is used.
+
+Example:
+
+mdc: dma-controller@18143000 {
+	compatible = "img,pistachio-mdc-dma";
+	reg = <0x18143000 0x1000>;
+	interrupts = <GIC_SHARED 27 IRQ_TYPE_LEVEL_HIGH>,
+		     <GIC_SHARED 28 IRQ_TYPE_LEVEL_HIGH>,
+		     <GIC_SHARED 29 IRQ_TYPE_LEVEL_HIGH>,
+		     <GIC_SHARED 30 IRQ_TYPE_LEVEL_HIGH>,
+		     <GIC_SHARED 31 IRQ_TYPE_LEVEL_HIGH>,
+		     <GIC_SHARED 32 IRQ_TYPE_LEVEL_HIGH>,
+		     <GIC_SHARED 33 IRQ_TYPE_LEVEL_HIGH>,
+		     <GIC_SHARED 34 IRQ_TYPE_LEVEL_HIGH>,
+		     <GIC_SHARED 35 IRQ_TYPE_LEVEL_HIGH>,
+		     <GIC_SHARED 36 IRQ_TYPE_LEVEL_HIGH>,
+		     <GIC_SHARED 37 IRQ_TYPE_LEVEL_HIGH>,
+		     <GIC_SHARED 38 IRQ_TYPE_LEVEL_HIGH>;
+	clocks = <&system_clk>;
+	clock-names = "sys";
+
+	img,max-burst-multiplier = <16>;
+	img,cr-periph = <&cr_periph>;
+
+	#dma-cells = <3>;
+};
+
+spi@18100f00 {
+	...
+	dmas = <&mdc 9 0xffffffff 0>, <&mdc 10 0xffffffff 0>;
+	dma-names = "tx", "rx";
+	...
+};
+
+/*
+
+* IMG 멀티 스레드 DMA 컨트롤러 (MDC)
+
+필수 속성 :
+- 호환 : "img, 피스타치오 -mdc-dma"여야합니다.
+- reg : MDC 레지스터의 기본 주소와 길이를 포함해야합니다.
+- 인터럽트 : 모든 채널 별 DMA 인터럽트를 포함해야합니다.
+- clocks : clock-name의 각 항목에 대한 항목을 포함해야합니다.
+  자세한 내용은 ../clock/clock-bindings.txt를 참조하십시오.
+- clock-names : 다음 항목을 포함해야합니다.
+  - sys : MDC 시스템 인터페이스 클럭.
+- img, cr-periph : 주변 제어 syscon에 phandle을 포함해야합니다.
+  채널 맵핑 레지스터에 대한 DMA 요구를 포함하는 노드.
+- img, max-burst-multiplier : 지원되는 최대 버스트 크기 배수 여야합니다.
+최대 버스트 크기는 하드웨어에보고 된 버스 폭을 곱한 값입니다.
+- # dma-cells : 3이어야합니다.
+  - 첫 번째 셀은 주변 장치의 DMA 요청 라인입니다.
+  - 제 2 셀은 DMA 요청 라인이 맵핑 될 수있는 채널 (즉, 비트 N 세트는 채널 N이 사용 가능함을 나타냄)을 지정하는 비트 맵이다.
+  - 세 번째 셀은 채널에서 사용할 스레드 ID입니다.
+
+선택적 속성 :
+- dma-channels : 지원되는 DMA 채널의 수 (최대 32). 지정하지 않으면 하드웨어에서보고 한 번호가 사용됩니다.
+
+Example:
+
+mdc: dma-controller@18143000 {
+	compatible = "img,pistachio-mdc-dma";
+	reg = <0x18143000 0x1000>;
+	interrupts = <GIC_SHARED 27 IRQ_TYPE_LEVEL_HIGH>,
+		     <GIC_SHARED 28 IRQ_TYPE_LEVEL_HIGH>,
+		     <GIC_SHARED 29 IRQ_TYPE_LEVEL_HIGH>,
+		     <GIC_SHARED 30 IRQ_TYPE_LEVEL_HIGH>,
+		     <GIC_SHARED 31 IRQ_TYPE_LEVEL_HIGH>,
+		     <GIC_SHARED 32 IRQ_TYPE_LEVEL_HIGH>,
+		     <GIC_SHARED 33 IRQ_TYPE_LEVEL_HIGH>,
+		     <GIC_SHARED 34 IRQ_TYPE_LEVEL_HIGH>,
+		     <GIC_SHARED 35 IRQ_TYPE_LEVEL_HIGH>,
+		     <GIC_SHARED 36 IRQ_TYPE_LEVEL_HIGH>,
+		     <GIC_SHARED 37 IRQ_TYPE_LEVEL_HIGH>,
+		     <GIC_SHARED 38 IRQ_TYPE_LEVEL_HIGH>;
+	clocks = <&system_clk>;
+	clock-names = "sys";
+
+	img,max-burst-multiplier = <16>;
+	img,cr-periph = <&cr_periph>;
+
+	#dma-cells = <3>;
+};
+
+spi@18100f00 {
+	...
+	dmas = <&mdc 9 0xffffffff 0>, <&mdc 10 0xffffffff 0>;
+	dma-names = "tx", "rx";
+	...
+};
+
+*/

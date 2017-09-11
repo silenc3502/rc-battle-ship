@@ -1,0 +1,539 @@
+<파이썬 에서 컬러필터링 하는 방법을 참고하여, C++ 에서 컬러필터링 응용하기>
+
+<1. 파이썬에서 컬러필터링 하는 방법>
+컬러시스템 컬러필터
+색상을 표현하는 방식은 여러가지가 있는데, 컬러시스템이라고 부릅니다. 예를들면 RGB, YUV, HSV 같은 것 인데요, 컬러시스템에서 모든  생상은 수치로 표현됩니다. 즉, 특정 색상이 가지는 수치 범위가 정해져 있죠. 입력받은 영상데이터에서 특정 색상의 수치범위만 남기고 그 외의 범위는 제거한다면, 원하는 색상만 영상데이터에 남길 수 있어요. 이때 원하는 컬러만 남기고 다른 컬러는 제거하기 때문에 컬러필터라고 합니다.
+이러한 컬러필터 기능은 로봇제어등에 매우 요긴하게 사용될 수 있죠. 예를 들어 작업장 내에 붉은 색 라인을 죽 그어 놓고 자재를 운반하는 로봇이 붉은 색 라인만을 따라서 이동하게 만드는 경우를 생각해 보겠습니다. 로봇은 카메라로 노면의 영상데이터를 입력받습니다. 이때 영상데이터에 컬러필터링을 적용하여 붉은 색상외에 모든 데이터는 마스크 연산을 통해 제거하고 붉은색 라인 정보만 남길 수 있겠습니다. 그러면 붉은색 라인을 따라서 쭉 이동하기 용이해집니다.
+
+OpenCV 컬러필터링
+컬러필터링을 수행하는 단계는 다음과 같습니다. 먼저 카메라를 통해 입력받은 데이터를 먼저 HSV 컬러 시스템으로 변환합니다. HSV 컬러시스템은 컬러필터링에 용이합니다. 다음으로 HSV 컬러 시스템 상에서 필터링 되지 않고 통과되기를 원하는 컬러의 범위를 선정하여, 마스킹 영상을 생성합니다. 마지막으로 원본 영상과 마스킹 영상을 AND 연산을 통해 마스킹 부위만 남기고 다른 부분은 모두 색상정보를 제거합니다. OpenCV에는 색상을 표현하는 컬러시스템간의 전환을 편리하게 하는 함수가 있습니다.
+
+아래는 붉은 색 영역만 통과 시키고 나머지 부분의 색상은 제거하는 예제 코드이다
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+1  import cv2 
+2  import numpy as np
+3  cap = cv2.VideoCapture(0)
+4  while True:
+5          ret, frame = cap.read()
+6          hsv= cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+7          lower_blue = np.array([0, 50, 50])
+8          upper_blue = np.array([20, 255, 255])
+9          mask = cv2.inRange(hsv, lower_blue, upper_blue)
+10         res = cv2.bitwise_and(frame, frame, mask=mask)
+11         cv2.imshow('image', frame)
+12         cv2.imshow('mask', mask)
+13         cv2.imshow('res', res)
+14         if cv2.waitKey(1) & 0xFF == ord('q'):
+15                 break
+16 cap.release()
+17 cv2.destroyAllWindows()
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+라인2에서 마스크 영상생성에 필요한 컬러범위 지정에 사용할 numpy 패키지를 import 합니다.
+라인6에서 입력받은 카메라 영상의 컬러 시스템을 BGR에서 HSV로 변경합니다.
+라인7과 라인8은 HSV 컬러시스템에서 필터를 통과 시킬 색상의 범위를 지정합니다. HSV 컬러시스템에서 붉은색 범위증 낮은쪽을 선택했습니다.
+라인9에서 HSV 영상에서 지정한 색상범위에 해당하는 마스크 영상을 구합니다. 영상을 남길부분이 1, 그 외 영역은 0 입니다.
+라인 10에서는 원본과 마스크 영상을 AND 연산을 합니다. 필터를 통과할 색상(붉은색)만 원본에 남고 그 외 색상은 제거됩니다.
+
+
+http://blog.naver.com/audiendo/220828949865
+[출처] 라즈베리파이 OpenCV 파이썬 컬러 필터링|작성자 조만간 빠마장
+
+==================================================================================================
+
+<C++ OpenCV 라이브러리 사용하여 지정한 색의 원만 검출하는 예제>
+
+[ [참고] 색 추출 알고리즘 : http://newstyle.egloos.com/2707246 ]
+
+**순서**
+- 우선 특정 포인트의 색을 지정하기 위해, 마우스 핸들러 프로그래밍
+- 원 영상의 Smoothing
+- 색공간 변환 RGB -> HSV
+- 지정한 포인트의 H,S,V 값 추출
+- 검출할 H,S,V 값의 범위 지정
+- HSV 이미지 마스킹
+- 모폴로지
+- 이미지에서 원 검출. 끝.
+
+**순서대로 수행해보기**
+1. 마우스 핸들링
+OpenCV 의 HighGui 에서는 마우스 이벤트에 대한 핸들러를 제공한다.
+cvSetMouseCallback() 이라는 함수를 이용하는데 OpenCV 에서는 아래와 같이 설명한다.
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+void cv::setMouseCallback (const String & winname, MouseCallback onMouse, void *userdata = 0)		
+
+Sets mouse handler for the specified window.
+
+Parameters
+winname	: Name of the window.
+onMouse	: Mouse callback. See OpenCV samples, such as https://github.com/opencv/opencv/tree/master/samples/cpp/ffilldemo.cpp, on how to specify and use the callback.
+userdata : The optional parameter passed to the callback.
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+cvSetMouseCallback("PreviewImage", on_eventhandle, (void *)img);
+위와 같은 식으로 사용했는데, img 영상에서 마우스 이벤트가 발생하면 on_eventhandle 이라는 함수를 호출하도록 Setting 하는 것이다.
+
+작성한 on_eventhandle 은 아래와 같다
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+void on_eventhandle(int event, int x, int y, int flag, void* param)
+{
+  switch(event)
+  {
+    case CV_EVENT_LBUTTODOWN;
+    if(getFlag == 0){
+	getx = x;
+	gety = y;
+	getFlag = 1;
+    }else if{
+	getFlag = 2;
+    }
+    break;
+
+    case CV_EVENT_RBUTTODOWN;
+    getFlag = 0;
+    break;
+  }
+}
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+간단예제.. 마우스 왼쪽버튼 클릭시 좌표 얻어오고, 한번더 클릭하면 그 좌표로 셋팅하고, 
+마우스 오른쪽버튼 클릭시..다시 처음부터 좌표 얻어올 수 있도록 초기화 하는 코드이다
+
+
+2. 원 영상에 Smoothing
+
+
+3. 색공간 변환
+색공간을 기존의 RGB(Red, Green, Blue) color space 에서 HSV(Hue, Saturation, Value-Brightness) 로 바꾼다.
+OpenCV에서는 cvCvtcolor(src, dst, cv_BGR2HSV); 로 간단히 변환할 수 있다.
+
+
+4. 지정한 포인트의 H, S, V 추출
+cvGet2D() 함수를 이용하여 cvScalar 로 저장하는 방법을 사용한다.
+cvGet2D() 는 아래와 같이 설명하고 있다.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+CvScalar cvGet2D (const CvArr* arr, int idx0, int idx1)	
+	
+This is an overloaded member function, provided for convenience. It differs from the above function only in what argument(s) it accepts.
+
+Parameters
+arr	Input array
+idx0	The first zero-based component of the element index
+idx1	The second zero-based component of the element index
+
+The functions return a specific array element. In the case of a sparse array the functions return 0 if the requested node does not exist (no new node is created by the functions).
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+그래서 작성한 예제는 다음과 같다
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+CvScalar s = cvGet2D(HSVImg, gety , getx);
+H = (int)s.val[0];
+S = (int)s.val[1];
+V = (int)s.val[2];
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+간단예제.. image 에 지정한 x,y 좌표의 생정보를 가져오는 것이다.
+여기서 중요한 키포인트.. cvGet2D의 첫번째 파라미터는 image, 두번째 파라미터는 y좌표, 세번째 파라미터는 x좌표 라는 점이다. (img, x, y 가 아니다!)
+
+
+5. 검출할 H, S, V의 범위 지정
+일정 범위를 지정해준다
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//calculate HSV Boundary
+lowH = H * LOW_BOUND;
+highH = H * HIGH_BOUND;
+if(highH >= 180) highH = 179;
+
+lowS = S * LOW_BOUND;
+highS = S * HIGH_BOUND;
+if(highS >= 256) highS = 255;
+
+lowV = V * LOW_BOUND;
+highV = V * HIGH_BOUND;
+if(highV >= 256) highV = 255;
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+OpenCV의 HSV Color Space 에서 각 H, S, V 값의 범위는 H=0~179, S=0~255, V=0~255 로 설정한 것이다
+
+
+6. HSV 이미지 마스킹
+지정한 범위의 색 외에 나머지는 모두 마스킹 시켜 원을 검출하기 용이하도록 한다.
+마스킹을 사용할때는 IplImage가 아닌 Mat을 이용한다.
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+CvMat* cvCreateMat (int rows, int cols, int type)		
+
+Creates a matrix header and allocates the matrix data.
+
+The function call is equivalent to the following code:
+ CvMat* mat = cvCreateMatHeader(rows, cols, type);
+ cvCreateData(mat);
+
+Parameters
+rows	Number of rows in the matrix
+cols	Number of columns in the matrix
+type	The type of the matrix elements in the form CV_<bit depth><S|U|F>C<number of channels> , where S=signed, U=unsigned, F=float. For example, CV_8UC1 means the elements are 8-bit unsigned and the there is 1 channel, and CV_32SC2 means the elements are 32-bit signed and there are 2 channels.
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+void cv::inRange (InputArray src, InputArray lowerb, InputArray upperb, OutputArray dst)	
+
+  Checks if array elements lie between the elements of two other arrays.
+
+  For every element of a single-channel input array:
+** http://docs.opencv.org/master/d2/de8/group__core__array.html#ga48af0ab51e36436c5d04340e036ce981
+
+
+void cvInRange	(const CvArr* src, const CvArr*	lower, const CvArr* upper, CvArr* dst)		
+
+  dst(idx) = lower(idx) <= src(idx) < upper(idx)
+
+Parameters
+src	first input array
+lower	inclusive lower boundary array or a scalar
+upper	inclusive upper boundary array or a scalar
+dst	output array of the same size as src and CV_8U type
+The function checks the range as follows:
+
+for every element of a single-channel input array:
+\texttt{dst} (I) = \texttt{lower} (I)_0 \leq \texttt{src} (I)_0 \leq \texttt{upper} (I)_0
+
+for two-channel arrays:
+\texttt{dst} (I) = \texttt{lower} (I)_0 \leq \texttt{src} (I)_0 \leq \texttt{upper} (I)_0 \land \texttt{lower} (I)_1 \leq \texttt{src} (I)_1 \leq \texttt{upper} (I)_1
+
+and so forth
+
+That is, dst (I) is set to 255 (all 1 -bits) if src (I) is within the specified 1D, 2D, 3D, ... box and 0 otherwise.
+
+When the lower and/or upper boundary parameters are scalars, the indexes (I) at lower and upper in the above formulas should be omitted.
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+따라서, 예제코드는 다음과 같다
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+cvDilate()
+void cvDilate(const CvArr* src, CvArr* dst, IplConvKernel* element = NULL, int iterations = 1)	
+	
+dilates input image (applies maximum filter) one or more times.
+
+If element pointer is NULL, 3x3 rectangular element is used
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+mask = cvCreateMat(size.height, size.width, CV_8UC1);
+cvInRangeS(HSVImg, cvScalar(lowH,lowS,lowV), cvScalar(highH,highS,highV), mask);
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+위와 같이, mask Mat을 만들고 cvInRanges 하면, 원래 image에 정해진 범위 안의 H, S, V 값만을 남기는 Masking 이 완료된다.
+
+
+7. 모폴로지
+Masking 한 이미지는 도형 내부의 그림자나 외부와의 간섭으로 인한 불필요한 것들을 보정해 줄 필요가 있다.
+내가 사용한 cvErode()와 cvDilate()외에, OpenCV에서는 그 외에 다른 모폴로지 함수를 많이 제공하고 있다.(cvMorphologyEx와 같은)
+cvErode 는 침식, cvDilate 는 팽창 을 보정해주는 것을 의미함.
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+void cv::erode (InputArray src, OutputArray dst, InputArray kernel, Point anchor = Point(-1,-1), int 	iterations = 1, int borderType = BORDER_CONSTANT, const Scalar & borderValue =morphologyDefaultBorderValue() )	
+
+Erodes an image by using a specific structuring element.
+The function erodes the source image using the specified structuring element that determines the shape of a pixel neighborhood over which the minimum is taken:
+
+
+void cvErode (const CvArr* src, CvArr* dst, IplConvKernel* element = NULL, int iterations = 1)
+		
+erodes input image (applies minimum filter) one or more times. If element pointer is NULL, 3x3 rectangular element is used
+
+
+parameters
+src	: input image; the number of channels can be arbitrary, but the depth should be one of CV_8U, CV_16U, CV_16S, CV_32F or CV_64F.
+dst	: output image of the same size and type as src.
+kernel	: structuring element used for erosion; if element=Mat(), a 3 x 3 rectangular structuring element is used. Kernel can be created using getStructuringElement.
+anchor	: position of the anchor within the element; default value (-1, -1) means that the anchor is at the element center.
+iterations : number of times erosion is applied.
+borderType : pixel extrapolation method, see cv::BorderTypes
+borderValue : border value in case of a constant border
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+cvDilate()
+void cvDilate (const CvArr* src, CvArr* dst, IplConvKernel* element = NULL, int iterations = 1)	
+	
+dilates input image (applies maximum filter) one or more times.
+
+If element pointer is NULL, 3x3 rectangular element is used
+
+
+dilate()
+void cv::dilate	(InputArray src, OutputArray dst, InputArray kernel, Point anchor = Point(-1,-1), int 	iterations = 1, int borderType = BORDER_CONSTANT, const Scalar&borderValue = morphologyDefaultBorderValue())
+
+Dilates an image by using a specific structuring element.
+
+The function dilates the source image using the specified structuring element that determines the shape of a pixel neighborhood over which the maximum is taken:
+
+**http://docs.opencv.org/master/d4/d86/group__imgproc__filter.html#ga4ff0f3318642c4f469d0e11f242f3b6c
+
+The function supports the in-place mode. Dilation can be applied several ( iterations ) times. In case of multi-channel images, each channel is processed independently.
+
+Parameters
+src	: input image; the number of channels can be arbitrary, but the depth should be one of CV_8U, CV_16U, CV_16S, CV_32F or CV_64F.
+dst	: output image of the same size and type as src`.
+kernel	: structuring element used for dilation; if elemenat=Mat(), a 3 x 3 rectangular structuring element is used. Kernel can be created using getStructuringElement
+anchor	: position of the anchor within the element; default value (-1, -1) means that the anchor is at the element center.
+iterations	: number of times dilation is applied.
+borderType	: pixel extrapolation method, see cv::BorderTypes
+borderValue	: border value in case of a constant border
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+따라서, 다음과 같이 모폴로지를 수행했다
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+cvErode(mask, mask, NULL);
+cvDilate(mask, mask, NULL);
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+위와 같이 사용했는데, 3번째 파라미터에 따라 그 침식 또는 팽창의 정도를 수정할 수 있다.
+
+이렇게 완성한 영상을 마지막으로.. 
+cvHoughCircle 함수를 이용하여 원을 찾아내면 끝.
+(나는 여기에 사다리꼴 모양의 mask 안에서만 수행할 것이므로.. 추가적인 매트릭스가 필요함. 파이썬 코드 분석이 필요함)
+
+
+그래서 최종코드는 이렇다. 구동가능 여부는 확인하지 않았다.
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+#include <iostream>
+#include <stdio.h>
+#include <sys/time.h>
+#include "opencv2/opencv.hpp"
+
+#define LOW_BOUND 0.7
+#define HIGH_BOUND 1.3
+
+struct timeval start_time;
+struct timeval end_time;
+double elapsed_time;
+float fps;
+double total_fps = 0.0, average_fps = 0.0;
+long cnt = 1;
+char buffer[25];
+CvFont font;
+char getFlag = 0;
+long getx, gety;
+int getRed, getGreen, getBlue;
+int Bval, Rval, Gval;
+
+using namespace std;
+
+void on_eventhandle(int event, int x, int y, int flag, void* param)
+{
+  switch(event)
+  {
+    case CV_EVENT_LBUTTODOWN;
+    if(getFlag == 0){
+	getx = x;
+	gety = y;
+	getFlag = 1;
+    }else if{
+	getFlag = 2;
+    }
+    break;
+
+    case CV_EVENT_RBUTTODOWN;
+    getFlag = 0;
+    break;
+  }
+}
+
+int main()
+{
+  IplImage* img;
+  IplImage* GrayImg = 0;
+  IplImage* SmoothImg = 0;
+  IplImage* Edge = 0;
+  IplImage* HSVImg;
+  IplImage* HImg = 0;
+  IplImage* SImg = 0;
+  IplImage* VImg = 0;
+  CvMat* mask;
+  int key;
+  ing k;
+  double dp = 1;
+  double min_dist = 300;
+  int H, S, V;
+  int lowH, lowS, lowV, highH, highS, highV;
+  CvSize size;
+  int cx, cy, radius, ccnt;
+  cvInitFont(&font, CV_FONT_HERSHEY_SIMPLEX, 0.5, 0.5);
+
+  CvCapture* capture = cvCaptureFromCAM(0);
+  cvSetCaptureProperty(capture, CV_CAP_PROP_FRAME_WIDTH, 640);
+  cvSetCaptureProperty(capture, CV_CAP_PROP_FRAME_HEIGHT, 480);
+  cvSetCaptureProperty(capture, CV_CAP_PROP_FPS, 65);
+
+  while(1)
+  {
+    gettimeofday(&start_time, NULL);
+
+    cvGrabFrame(capture);
+    img = cvRetrieveFrame(capture);
+
+    cvSetMouseCallback("PreviewImage", on_eventhandle, (void*)img);
+
+    if(getFlag == 0)
+    {
+	sprintf(buffer, "Picking up color by left click");
+	cvPutText(img, buffer, cvPoing(200,20), &font, CV_RGB(255,255,255));
+    }else if(getFlag == 1){
+	sprintf(buffer, "If below color is right you chosen, start detect by left click again");
+	cvPutText(img, buffer, cvPoint(20,20), &font, CV_RGB(255,255,255));
+	size = cvGetSize(img);
+	CvScalar v = cvGet2D(img, gety, getx);
+	getBlue = (int)v.val[0];
+	getGreen = (int)v.val[1];
+	getRed = (int)v.val[2];
+	//Convert get RGB to HSV
+	SmoothImg = cvCreateImage(size, IPL_DEPTH_8U, 3);
+	cvSmooth(img, SmoothImg, CV_GAUSSIAN, 9,9,2,2);
+	HSVImg = cvCreateImage(size, IPL_DEPTH_8U, 3);
+	cvCvtColor(SmoothImg, HSVImg, CV_BGR2HSV);
+	CvScalar s = cvGet2D(HSVImg, gety, getx);
+	H = (int)s.val[0];
+	S = (int)s.val[1];
+	V = (int)s.val[2];
+
+	sprintf(buffer, "X=%d, Y=%d, R=%d, G=%d, B=%d, H=%d, S=%d, V=%d", 
+			 getx, gety, getRed, getGreen, getBlue, H, S, V);
+	cvPutText(img, buffer, cvPoint(getx, gety), &font, CV_RGB(255,255,255));
+    }else{
+	sprintf(buffer, "You can picking up again by right click");
+	cvPutText(img, buffer, cvPoint(100,20), &fong, CV_RGB(255,255,255));
+	cvSmooth(img, SmoothImg, CV_GAUSSIAN, 9,9,2,2);
+	cvCvtColor(SmoothImg, HSVImg, CV_BGR2HSV);
+
+	lowH = H * LOW_BOUND;
+	highH = H * HIGH_BOUND;
+	if(highH >= 180) highH =179;
+
+	lowS = S * LOW_BOUND;
+	highS = S * HIGH_BOUND;
+	if(highS >= 256) highS = 255;
+
+	lowV = V * LOW_BOUND;
+	highV = V * HIGH_BOUND;
+	if(highV >= 256) highV = 255;
+
+	//Masking
+	mask = cvCreateMat(size.height, size.width, CV_8UC1);
+	cvInRangeS(HSVImg, cvScalar(lowH,lowS,lowV), cvScalar(highH,highS,highV), mask);
+	
+	//CvMat* tempMat;
+	//tempMat = cvCreateMat(size.height, size.width, CV_8UC1);
+	//cvMorphologhEx(mask, mask, tempMat, NULL, CV_MOP_OPEN);
+	//IplConvKernel* se21 = cvCreateStructuringElementEx(21,21,10,10, CV_SHAPE_RECT, NULL);
+	//IplConvKernel* se11 = cvCreateStructuringElementEx(11,11,5,5, CV_SHAPE_RECT, NULL);
+	cvErode(mask, mask, NULL);
+	cvDilate(mask, mask, NULL);
+	//cvErode(mask, mask, se21);
+	//cvDilate(mask, mask, se11);
+	//cvErode(mask, mask, se21);
+	//cvReleaseStructuringElement(&se21);
+	//cvReleaseStructuringElement(&se11);
+	//cvReleaseMat(&tempMat);
+
+	//Hough Transform
+	GrayImg = cvCreateImage(size,8,1);
+	cvCopy(mask, GrayImg, NULL);
+	cvSmooth(GrayImg, GrayImg, CV_GAUSSIAN, 15, 15, 2, 2);
+
+	CvMemStorage* storage = cvCreateMemStorage(0);
+
+	CvSeq* Circles = cvHoughCircles(GrayImg, storage, CV_HOUGH_GRADIENT, 2, size.height/10, 100, 40, 5, 60);
+
+	for(k=0; k<Circles->total; k++){
+	  float* circle;
+	  circle = (float*)cvGetSeqElem(Circles, k);
+
+	  ccnt = Circles->total;
+
+	  cx = cvRound(circle[0]);
+	  cy = cvRound(circle[1]);
+	  radius = cvRound(circle[2]);
+	  cvCircle(img, cvPoint(cx, cy), radius, CV_RGB(0,255,0), 3, 8, 0);
+
+	  sprintf(buffer, "X=%d, Y=%d, R=%d, cx, cy, radius);
+	  cvPutText(img, buffer, cvPoint(cx-80, cy+radius+15), &font, CV_RGB(255,255,255));
+	}
+	cvReleaseMemStorage(&storage);
+
+	cvNamedWindow("HSVImage", 1);
+	cvShowImage("HSVImage", HSVImg);
+	cvMoveWindow("HSVImage", 850, 200);
+
+	cvNamedWindow("Mask", 1);
+	cvShowImage("Mask", Mask);
+	cvMoveWindow("Mask", 850, 700);
+    }
+    cvNamedWindow("PreviewImage", 1);
+    cvShowImage("PreviewImage", GrayImg);
+    cvMoveWindow("PreviewImage", 850, 400);
+
+    key = cvWaitkey(1);
+    if(key > 10) break;
+
+    gettimeofday(&end_time, NULL);
+
+    elapsed_time = (double)(end_time.tv_sec)+(double)(end_time.tv_usec)/1000000.0 - (double)(start_time.tv_sec) - (double)(start_time.tv_usec)/1000000.0;
+    fps = 1.0 /elapsed_time;
+    total_fps += fps;
+    average_fps = total_fps/(double)(cnt);
+    cnt++;
+    if(cnt == 100){
+	cnt = 1;
+	total_fps = 0.0;
+    }
+    elapsed_time*=1000.0;
+
+    printf("Elapsed T = %2.3f ms, Frame = %2.3f (fps), Avrg Frame Rate = %2.3f\n", clapsed_time, fps, average_fps);
+
+    //cvReleaseMemStorage(&storage);
+  } //end of while(1)
+
+  cvReleaseImage(&img);
+  cvReleaseCapture(&capture);
+  cvReleaseMat(&mask);
+  cvReleaseMat(&SmoothImg);
+  cvReleaseMat(&GrayImg);
+  cvReleaseMat(&HSVImg);
+  return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

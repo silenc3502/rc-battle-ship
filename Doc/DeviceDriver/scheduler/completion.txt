@@ -1,0 +1,381 @@
+completions - wait for completion handling
+
+완료 - 완료 처리 대기
+==========================================
+
+This document was originally written based on 3.18.0 (linux-next)
+
+Introduction:
+
+이 문서는 원래 3.18.0 (linux-next)
+
+소개:
+-------------
+
+If you have one or more threads of execution that must wait for some process
+to have reached a point or a specific state, completions can provide a
+race-free solution to this problem. Semantically they are somewhat like a
+pthread_barrier and have similar use-cases.
+
+하나 이상의 실행 스레드가 특정 프로세스 또는 특정 상태에 도달 할 때까지 기다려야하는 경우 완료를 
+통해 이 문제에 대한 경쟁이없는 솔루션을 제공 할 수 있습니다. 
+의미 상 그들은 pthread_barrier와 다소 유사하며 유사한 유스 케이스를 가지고있다.
+
+Completions are a code synchronization mechanism which is preferable to any
+misuse of locks. Any time you think of using yield() or some quirky
+msleep(1) loop to allow something else to proceed, you probably want to
+look into using one of the wait_for_completion*() calls instead. The
+advantage of using completions is clear intent of the code, but also more
+efficient code as both threads can continue until the result is actually
+needed.
+
+완료는 잠금의 오용보다 바람직한 코드 동기화 메커니즘입니다. yield () 또는 약간의 기발한 msleep (1) 루프를 사용하여 
+다른 것을 진행할 수 있다고 생각할 때마다 wait_for_completion * () 호출 중 하나를 사용하는 것이 좋습니다. 
+완성을 사용하는 이점은 코드의 명확한 의도이지만 결과가 실제로 필요할 때까지 두 스레드가 계속 될 수 있으므로보다 효율적인 코드입니다.
+
+Completions are built on top of the generic event infrastructure in Linux,
+with the event reduced to a simple flag (appropriately called "done") in
+struct completion that tells the waiting threads of execution if they
+can continue safely.
+
+완료는 Linux의 일반 이벤트 인프라 위에 구축되며 이벤트가 안전하게 완료되면 대기중인 
+스레드를 알려주는 구조체 완료의 간단한 플래그 (적절하게 "done"이라고 함)로 감소됩니다.
+
+As completions are scheduling related, the code is found in
+kernel/sched/completion.c - for details on completion design and
+implementation see completions-design.txt
+
+완성과 관련된 스케줄링으로, 코드는 kernel / sched / completion.c에 있습니다 
+- 완료 디자인 및 구현에 대한 자세한 내용은 completions-design.txt를 참조하십시오.
+
+
+Usage:
+
+용법
+------
+
+There are three parts to using completions, the initialization of the
+struct completion, the waiting part through a call to one of the variants of
+wait_for_completion() and the signaling side through a call to complete()
+or complete_all(). Further there are some helper functions for checking the
+state of completions.
+
+완료를 사용하는 데는 세 부분으로 나뉘며, 구조 완성의 초기화, wait_for_completion ()의 변형 중 하나에 대한 호출을 통한 대기 부분 및 complete () 
+또는 complete_all ()에 대한 호출을 통한 신호 측면이 있습니다. 또한 완료 상태를 확인하는 데 도움이되는 몇 가지 도우미 함수가 있습니다.
+
+To use completions one needs to include <linux/completion.h> and
+create a variable of type struct completion. The structure used for
+handling of completions is:
+
+완료를 사용하려면 <linux / completion.h>를 포함하고 struct completion 유형의 변수를 생성해야합니다. 
+완료 처리에 사용되는 구조는 다음과 같습니다.:
+
+	struct completion {
+		unsigned int done;
+		wait_queue_head_t wait;
+	};
+
+providing the wait queue to place tasks on for waiting and the flag for
+indicating the state of affairs.
+
+대기 대기중인 작업을 대기 대기 큐에 제공하고 작업 상태를 나타내는 플래그를 제공합니다.
+
+Completions should be named to convey the intent of the waiter. A good
+example is:
+
+웨이터의 의도를 전달하기 위해 완성을 명기해야합니다. 좋은 예는 다음과 같습니다.:
+
+	wait_for_completion(&early_console_added);
+
+	complete(&early_console_added);
+
+Good naming (as always) helps code readability.
+
+
+wait_for_completion (& early_console_added);
+
+완료 (& early_console_added);
+
+올바른 명명법 (항상 그렇듯이)은 코드 가독성을 높이는 데 도움이됩니다.
+
+
+Initializing completions:
+
+완료 완료 중: 
+-------------------------
+
+Initialization of dynamically allocated completions, often embedded in
+other structures, is done with:
+
+동적으로 할당 된 완료의 초기화는 종종 다른 구조에 포함되어 다음과 같이 수행됩니다.:
+
+	void init_completion(&done);
+
+Initialization is accomplished by initializing the wait queue and setting
+the default state to "not available", that is, "done" is set to 0.
+
+초기화는 대기 큐를 초기화하고 기본 상태를 "사용할 수 없음"으로 설정하여 수행됩니다. 즉, "완료"는 0으로 설정됩니다.
+
+The re-initialization function, reinit_completion(), simply resets the
+done element to "not available", thus again to 0, without touching the
+wait queue. Calling init_completion() twice on the same completion object is
+most likely a bug as it re-initializes the queue to an empty queue and
+enqueued tasks could get "lost" - use reinit_completion() in that case.
+
+재 초기화 함수 인 reinit_completion ()은 done 요소를 "not available"으로 재설정하고 대기열을 건드리지 않고 다시 0으로 재설정합니다. 
+동일한 완료 객체에서 init_completion ()을 두 번 호출하면 대기열을 빈 대기열로 다시 초기화하고
+대기열에있는 작업이 "손실"될 수 있으므로 버그가 발생할 가능성이 큽니다.이 경우 reinit_completion ()을 사용하십시오.
+
+For static declaration and initialization, macros are available. These are:
+
+정적 선언 및 초기화의 경우 매크로를 사용할 수 있습니다. 이것들은:
+
+	static DECLARE_COMPLETION(setup_done)
+
+used for static declarations in file scope. Within functions the static
+initialization should always use:
+
+파일 범위의 정적 선언에 사용됩니다. 함수 내에서 정적 초기화는 항상 다음을 사용해야합니다.:
+
+	DECLARE_COMPLETION_ONSTACK(setup_done)
+
+suitable for automatic/local variables on the stack and will make lockdep
+happy. Note also that one needs to make *sure* the completion passed to
+work threads remains in-scope, and no references remain to on-stack data
+when the initiating function returns.
+
+스택에 자동 / 로컬 변수에 적합하며 lockdep를 행복하게 만듭니다. 
+또한 작업 스레드에 전달 된 완료가 범위 내에 남아 있는지 확인하고 초기화 함수가 반환 될 때 참조가 스택에 남아 있지 않아야합니다.
+
+Using on-stack completions for code that calls any of the _timeout or
+_interruptible/_killable variants is not advisable as they will require
+additional synchronization to prevent the on-stack completion object in
+the timeout/signal cases from going out of scope. Consider using dynamically
+allocated completions when intending to use the _interruptible/_killable
+or _timeout variants of wait_for_completion().
+
+_timeout 또는 _interruptible / _killable 변형을 호출하는 코드에 대한 온 - 스택 완료를 사용하면 타임 아웃 / 신호 케이스의 스택 완료 객체가 범위를 벗어나는 것을 
+방지하기 위해 추가 동기화가 필요하므로 바람직하지 않습니다. 
+wait_for_completion ()의 _interruptible / _killable 또는 _timeout 변형을 사용하려는 경우 동적으로 할당 된 완료를 사용하는 것을 고려하십시오.
+
+
+Waiting for completions:
+
+완료 대기 중:
+------------------------
+
+For a thread of execution to wait for some concurrent work to finish, it
+calls wait_for_completion() on the initialized completion structure.
+A typical usage scenario is:
+
+실행 스레드가 완료 작업을 기다리는 동안 초기화 된 완료 구조에서 wait_for_completion ()을 호출합니다.
+일반적인 사용 시나리오는 다음과 같습니다.:
+
+	struct completion setup_done;
+	init_completion(&setup_done);
+	initialize_work(...,&setup_done,...)
+
+	/* run non-dependent code */              /* do setup */
+
+	wait_for_completion(&setup_done);         complete(setup_done)
+
+This is not implying any temporal order on wait_for_completion() and the
+call to complete() - if the call to complete() happened before the call
+to wait_for_completion() then the waiting side simply will continue
+immediately as all dependencies are satisfied if not it will block until
+completion is signaled by complete().
+
+이것은 wait_for_completion ()과 complete () 호출에 대한 시간 순서를 의미하지 않습니다. 
+wait_for_completion () 호출 전에 complete () 호출이 발생하면 대기중인 측은 즉시 모든 종속성이 만족되면 즉시 대기합니다. 
+complete ()에 의해 완료가 표시 될 때까지 차단됩니다.
+
+Note that wait_for_completion() is calling spin_lock_irq()/spin_unlock_irq(),
+so it can only be called safely when you know that interrupts are enabled.
+Calling it from hard-irq or irqs-off atomic contexts will result in
+hard-to-detect spurious enabling of interrupts.
+
+wait_for_completion ()은 spin_lock_irq () / spin_unlock_irq ()를 호출하므로 인터럽트가 활성화 된 경우에만 안전하게 호출 할 수 있습니다. 
+hard-irq 또는 irqs-off 원자 컨텍스트에서 호출하면 인터럽트를 감지하기 어렵게됩니다.
+
+wait_for_completion():
+
+	void wait_for_completion(struct completion *done):
+
+The default behavior is to wait without a timeout and to mark the task as
+uninterruptible. wait_for_completion() and its variants are only safe
+in process context (as they can sleep) but not in atomic context,
+interrupt context, with disabled irqs. or preemption is disabled - see also
+try_wait_for_completion() below for handling completion in atomic/interrupt
+context.
+
+기본 동작은 시간 초과없이 대기하고 태스크를 중단 불가능으로 표시하는 것입니다. wait_for_completion ()과 그 변종은 프로세스 컨텍스트 (잠들 수 있음)에서만 
+안전하지만 비활성화 된 irq가있는 원자 컨텍스트, 인터럽트 컨텍스트에서는 안전하지 않습니다. 
+또는 선매가 비활성화되었습니다. 원자 / 인터럽트 컨텍스트에서 완료를 처리하려면 아래의 try_wait_for_completion ()도 참조하십시오.
+
+As all variants of wait_for_completion() can (obviously) block for a long
+time, you probably don't want to call this with held mutexes.
+
+wait_for_completion ()의 모든 변종들이 오랫동안 (분명히) 차단 될 수 있기 때문에, 이것을 개최 된 뮤텍스와 함께 호출하고 싶지는 않을 것입니다.
+
+
+Variants available:
+
+사용 가능한 변형 :
+-------------------
+
+The below variants all return status and this status should be checked in
+most(/all) cases - in cases where the status is deliberately not checked you
+probably want to make a note explaining this (e.g. see
+arch/arm/kernel/smp.c:__cpu_up()).
+
+아래의 변형은 모두 상태를 반환하며이 상태는 대부분의 (/ 모든) 경우에서 검사해야합니다 - 상태를 의도적으로 확인하지 않은 경우 
+이 내용을 설명하는 것이 좋습니다 (예 : arch / arm / kernel / smp.c 참조). : __ cpu_up ()).
+
+A common problem that occurs is to have unclean assignment of return types,
+so care should be taken with assigning return-values to variables of proper
+type. Checking for the specific meaning of return values also has been found
+to be quite inaccurate e.g. constructs like
+if (!wait_for_completion_interruptible_timeout(...)) would execute the same
+code path for successful completion and for the interrupted case - which is
+probably not what you want.
+
+흔히 발생하는 문제는 반환 유형을 잘못 할당하는 것이므로 올바른 값의 변수에 반환 값을 할당하는 데주의를 기울여야합니다. 반환 값의 특정 의미를 확인하는 작업도 매우 부정확합니다. 
+if (! wait_for_completion_interruptible_timeout (...))와 같은 구문은 성공적인 완료 및 중단 된 케이스에 대해 동일한 코드 경로를 실행합니다. 
+이는 아마도 원하는 것은 아닙니다.
+
+	int wait_for_completion_interruptible(struct completion *done)
+
+This function marks the task TASK_INTERRUPTIBLE. If a signal was received
+while waiting it will return -ERESTARTSYS; 0 otherwise.
+
+이 함수는 TASK_INTERRUPTIBLE 작업을 표시합니다. 기다리는 동안 신호가 수신되면 -ERESTARTSYS가 리턴됩니다. 그렇지 않으면 0입니다.
+
+	unsigned long wait_for_completion_timeout(struct completion *done,
+		unsigned long timeout)
+
+The task is marked as TASK_UNINTERRUPTIBLE and will wait at most 'timeout'
+(in jiffies). If timeout occurs it returns 0 else the remaining time in
+jiffies (but at least 1). Timeouts are preferably calculated with
+msecs_to_jiffies() or usecs_to_jiffies(). If the returned timeout value is
+deliberately ignored a comment should probably explain why (e.g. see
+drivers/mfd/wm8350-core.c wm8350_read_auxadc())
+
+작업은 TASK_UNINTERRUPTIBLE로 표시되며 대부분 '시간 초과'(jiffies)로 대기합니다. 
+시간 초과가 발생하면 0을 반환하고 나머지 시간은 jiffies를 반환합니다 (그러나 적어도 1). 타임 아웃은 msecs_to_jiffies () 또는 usecs_to_jiffies ()를 사용하여 계산하는 것이 바람직합니다. 
+반환 된 시간 초과 값을 의도적으로 무시하면 설명에서 이유를 설명해야합니다 (예 : drivers / mfd / wm8350-core.c wm8350_read_auxadc () 참조).
+
+	long wait_for_completion_interruptible_timeout(
+		struct completion *done, unsigned long timeout)
+
+This function passes a timeout in jiffies and marks the task as
+TASK_INTERRUPTIBLE. If a signal was received it will return -ERESTARTSYS;
+otherwise it returns 0 if the completion timed out or the remaining time in
+jiffies if completion occurred.
+
+이 함수는 jiffies에 타임 아웃을 전달하고 태스크를 TASK_INTERRUPTIBLE로 표시합니다. 신호가 수신되면 -ERESTARTSYS가 리턴됩니다.
+그렇지 않으면 완료 시간이 초과되면 0을 반환하고 완료되면 jiffies에 남은 시간을 반환합니다.
+
+Further variants include _killable which uses TASK_KILLABLE as the
+designated tasks state and will return -ERESTARTSYS if it is interrupted or
+else 0 if completion was achieved.  There is a _timeout variant as well:
+
+추가 변종에는 지정된 작업 상태로 TASK_KILLABLE을 사용하는 _killable과 인터럽트 된 경우 
+-ERESTARTSYS가 반환되고 완료되면 0이 반환됩니다. _timeout 변형도 있습니다 :
+
+	long wait_for_completion_killable(struct completion *done)
+	long wait_for_completion_killable_timeout(struct completion *done,
+		unsigned long timeout)
+
+The _io variants wait_for_completion_io() behave the same as the non-_io
+variants, except for accounting waiting time as waiting on IO, which has
+an impact on how the task is accounted in scheduling stats.
+
+_io 변형 인 wait_for_completion_io ()는 IO를 대기하는 회계 대기 시간을 제외하고 non-_io 변형과 동일하게 작동합니다. 
+이는 일정 예약에서 작업이 어떻게 처리되는지에 영향을줍니다.
+
+	void wait_for_completion_io(struct completion *done)
+	unsigned long wait_for_completion_io_timeout(struct completion *done
+		unsigned long timeout)
+
+
+Signaling completions:
+
+신호 완료 : 
+----------------------
+
+A thread that wants to signal that the conditions for continuation have been
+achieved calls complete() to signal exactly one of the waiters that it can
+continue.
+
+연속 조건을 달성했다는 신호를 보내려는 스레드는 complete ()를 호출하여 계속 진행할 수있는 웨이터 중 하나에게 신호를 보냅니다.
+
+	void complete(struct completion *done)
+
+or calls complete_all() to signal all current and future waiters.
+
+혹은 현재 및 미래의 모든 웨이터에게 신호를 보내기 위해 complete_all ()을 호출합니다.
+
+	void complete_all(struct completion *done)
+
+The signaling will work as expected even if completions are signaled before
+a thread starts waiting. This is achieved by the waiter "consuming"
+(decrementing) the done element of struct completion. Waiting threads
+wakeup order is the same in which they were enqueued (FIFO order).
+
+스레드가 대기 상태가되기 전에 신호가 완료되었다고해도 신호는 예상대로 작동합니다. 
+이는 웨이터가 구조체 완료의 완료 요소를 "소비"(감소)함으로써 달성됩니다. 
+대기중인 스레드 웨이크 업 순서는 대기열에 있던 순서와 동일합니다 (FIFO 순서).
+
+If complete() is called multiple times then this will allow for that number
+of waiters to continue - each call to complete() will simply increment the
+done element. Calling complete_all() multiple times is a bug though. Both
+complete() and complete_all() can be called in hard-irq/atomic context safely.
+
+complete ()가 여러 번 호출되면 해당 수의 웨이터가 계속 진행할 수 있습니다. 
+complete ()를 호출하면 done 요소 만 증가합니다. complete_all ()을 여러 번 호출하는 것은 버그입니다. 
+complete ()와 complete_all ()은 하드 irq / atomic 문맥에서 안전하게 호출 될 수있다.
+
+There only can be one thread calling complete() or complete_all() on a
+particular struct completion at any time - serialized through the wait
+queue spinlock. Any such concurrent calls to complete() or complete_all()
+probably are a design bug.
+
+대기열 스핀 록을 통해 직렬화 된 특정 구조체 완성에 대해 complete () 또는 complete_all ()을 호출하는 스레드가 하나만있을 수 있습니다. 
+complete () 또는 complete_all ()에 대한 이러한 동시 호출은 아마도 디자인 버그 일 것입니다.
+
+Signaling completion from hard-irq context is fine as it will appropriately
+lock with spin_lock_irqsave/spin_unlock_irqrestore and it will never sleep.
+
+하드 -Irq 컨텍스트로부터의 시그널링 완성은 spin_lock_irqsave / spin_unlock_irqrestore와 함께 적절히 잠길 것이므로 절대로 잘 수 없다.
+
+
+try_wait_for_completion()/completion_done():
+--------------------------------------------
+
+The try_wait_for_completion() function will not put the thread on the wait
+queue but rather returns false if it would need to enqueue (block) the thread,
+else it consumes one posted completion and returns true.
+
+try_wait_for_completion () 함수는 스레드를 대기열에 넣지 않고 스레드를 대기열에 넣어야하는 경우 false를 반환하고 
+그렇지 않으면 완료된 게시를 완료하고 true를 반환합니다.
+
+	bool try_wait_for_completion(struct completion *done)
+
+Finally, to check the state of a completion without changing it in any way, 
+call completion_done(), which returns false if there are no posted
+completions that were not yet consumed by waiters (implying that there are
+waiters) and true otherwise;
+
+마지막으로 완료 상태를 어떤 방식으로 변경하지 않고 검사하려면 completion_done ()을 호출합니다. 
+완료되지 않은 게시 완료 (웨이터가 있음을 암시 함)가 없으면 false를 반환하고 그렇지 않으면 false를 반환합니다. :
+
+	bool completion_done(struct completion *done)
+
+Both try_wait_for_completion() and completion_done() are safe to be called in
+hard-irq or atomic context.
+
+try_wait_for_completion () 및 completion_done ()은 모두 hard-irq 또는 atomic 문맥에서 호출하는 것이 안전합니다
+
+Both try_wait_for_completion() and completion_done() are safe to be called in hard-irq or atomic context.
+
+try_wait_for_completion () 및 completion_done ()은 모두 hard-irq 또는 atomic 문맥에서 호출하는 것이 안전합니다.

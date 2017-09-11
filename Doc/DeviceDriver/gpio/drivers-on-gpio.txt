@@ -1,0 +1,122 @@
+Subsystem drivers using GPIO
+============================
+
+Note that standard kernel drivers exist for common GPIO tasks and will provide the right in-kernel and userspace APIs/ABIs for the job, and that these drivers can quite easily interconnect with other kernel subsystems using hardware descriptions such as device tree or ACPI:
+
+일반적인 GPIO 작업을 위한 표준 Kernel Driver 가 있으며 작업에 적합한 Kernel 과 사용자 APIs/ABIs 를 제공하며
+이러한 Driver 는 Device Tree 혹은 ACPI 와 같은 HW 기술자를 사용하여 다른 Kernel 하위 시스템과 쉽게 상호 연결할 수 있다:
+
+- leds-gpio: drivers/leds/leds-gpio.c will handle LEDs connected to  GPIO lines, giving you the LED sysfs interface
+
+- leds-gpio: drivers/leds/leds-gpio.c 는 GPIO 선에 연결된 LED 를 처리하여 LED sysfs 인터페이스를 제공한다.
+
+- ledtrig-gpio: drivers/leds/trigger/ledtrig-gpio.c will provide a LED trigger, i.e. a LED will turn on/off in response to a GPIO line going high or low (and that LED may in turn use the leds-gpio as per above).
+
+- ledtrig-gpio: drivers/leds/trigger/ledtrig-gpio.c 는 LED Trigger 를 제공한다.
+                       즉, GPIO 선이 High 혹은 Low 로 전환될 때 LED 가 켜지거나 꺼진다(LED 는 차례대로 LED 를 사용한다)
+
+- gpio-keys: drivers/input/keyboard/gpio_keys.c is used when your GPIO line can generate interrupts in response to a key press. Also supports debounce.
+
+- gpio-keys: drivers/input/keyboard/gpio_keys.c 는 GPIO 선이 키 누름에 대한 응답으로
+                    Interrupt 를 생성할 수 있을 때 사용된다.
+                    또한 debounce 를 지원한다.
+
+- gpio-keys-polled: drivers/input/keyboard/gpio_keys_polled.c is used when your GPIO line cannot generate interrupts, so it needs to be periodically polled by a timer.
+
+- gpio-keys-polled: drivers/input/keyboard/gpio_keys_polled.c 는 GPIO 선이 인터럽트를 생성할 수 없기 때문에
+                                Timer 에 의해 주기적으로 폴링되어야 할 때 사용된다.
+
+- gpio_mouse: drivers/input/mouse/gpio_mouse.c is used to provide a mouse with up to three buttons by simply using GPIOs and no mouse port. You can cut the mouse cable and connect the wires to GPIO lines or solder a mouse connector to the lines for a more permanent solution of this type.
+
+- gpio_mouse: drivers/input/mouse/gpio_mouse.c 는 단순히 GPIO 와 mouse 포트를 사용하지 않고
+                         최대 3 개의 버튼을 마우스에 제공하는데 사용된다.
+                         마우스 케이블을 잘라내어 GPIO 라인에 와이어를 연결하거나
+                         마우스 커넥터를 라인에 납땜하여 영구적인 솔루션을 제공할 수 있다.
+
+- gpio-beeper: drivers/input/misc/gpio-beeper.c is used to provide a beep from an external speaker connected to a GPIO line.
+
+- gpio-beeper: drivers/input/misc/gpio-beeper.c 는 GPIO 라인에 연결된 외부 스피커에서 신호음을 내기 위해 사용된다.
+
+- gpio-tilt-polled: drivers/input/misc/gpio_tilt_polled.c provides tilt detection switches using GPIO, which is useful for your homebrewn pinball machine if for nothing else. It can detect different tilt angles of the monitored object.
+
+- gpio-tilt-polled: drivers/input/misc/gpio_tilt_polled.c 는 GPIO 를 사용하여 기울김 감지 스위치를 제공한다.
+                             이는 가정용 핀볼 기계에 유리하다.
+                             감시 대상의 다른 경사각을 감지할 수 있다.
+
+- extcon-gpio: drivers/extcon/extcon-gpio.c is used when you need to read an external connector status, such as a headset line for an audio driver or an HDMI connector. It will provide a better userspace sysfs interface than GPIO.
+
+- extcon-gpio: drivers/extcon/extcon-gpio.c 는 Audio Driver
+                        혹은 HDMI 커넥터의 헤드셋 라인과 같은 외부 커넥터 상태를 읽어야할때 사용된다.
+                        GPIO 보다 더 나은 사용자 공간 sysfs 인터페이스를 제공한다.
+
+- restart-gpio: drivers/power/gpio-restart.c is used to restart/reboot the system by pulling a GPIO line and will register a restart handler so userspace can issue the right system call to restart the system.
+
+- restart-gpio: drivers/power/gpio-restart.c 는 GPIO 라인을 pulling 하여 System 을 다시 시작 / 재부팅하는데 사용되며
+                        재시작 핸들러를 등록하므로 사용자 공간에서 올바른 System Call 을 실행하여 System 을 다시 시작할 수 있다.
+
+- poweroff-gpio: drivers/power/gpio-poweroff.c is used to power the system down by pulling a GPIO line and will register a pm_power_off() callback so that userspace can issue the right system call to power down the system.
+
+- poweroff-gpio: drivers/power/gpio-poweroff.c 는 GPIO 라인을 pulling 하여
+                             System 전원을 끄는데 사용되며 pm_power_off() Callback 을 등록하여
+                             사용자 공간이 System 의 전원을 끄기 위해 올바른 System Call 을 할 수 있도록 한다.
+
+- gpio-gate-clock: drivers/clk/clk-gpio-gate.c is used to control a gated clock (off/on) that uses a GPIO, and integrated with the clock subsystem.
+
+- gpio-gate-clock: driver/clk/clk-gpio-gate.c 는 GPIO 를 사용하고
+                              Clock 하위 시스템과 통합된 Gate Clock(Off/On) 을 제어하는데 사용된다.
+
+- i2c-gpio: drivers/i2c/busses/i2c-gpio.c is used to drive an I2C bus (two wires, SDA and SCL lines) by hammering (bitbang) two GPIO lines. It will appear as any other I2C bus to the system and makes it possible to connect drivers for the I2C devices on the bus like any other I2C bus driver.
+
+- i2c-gpio: drivers/i2c/busses/i2c-gpio.c 는 2 개의 GPIO 라인을 묶어(bitbang)서
+                  I2C Bus(2 개의 와이어, SDA 및 SCL 라인)을 구동하는데 사용된다.
+                  System 에 대한 다른 I2C Bus 로 나타나며
+                  다른 I2C Bus Driver 와 마찬가지로 Bus 의 I2C Device 용 Driver 를 연결할 수 있다.
+
+- spi_gpio: drivers/spi/spi-gpio.c is used to drive an SPI bus (variable number of wires, atleast SCK and optionally MISO, MOSI and chip select lines) using GPIO hammering (bitbang). It will appear as any other SPI bus on the system and makes it possible to connect drivers for SPI devices on the bus like any other SPI bus driver. For example any MMC/SD card can then be connected to this SPI by using the mmc_spi host from the MMC/SD card subsystem.
+
+- spi_gpio: drivers/spi/spi-gpio.c 는 GPIO 를 묶어(bitbang)서 사용하는
+                   SPI Bus(가변 수의 와이어, 최소 SCK 및 선태적으로 MISO, MOSI 및 Chip 선택 라인) 을 구동하는데 사용된다.
+                   System 의 다른 SPI Bus 로 나타나며 다른 SPI Bus Driver 와 마찬가지로 SPI 장치용 Driver 를 Bus 에 연결할 수 있다.
+                   예로 MMC / SD Card Sub System 의 mmc_spi Host 를 사용하여 MMC / SD 카드를 이 SPI 에 연결할 수 있다.
+
+- w1-gpio: drivers/w1/masters/w1-gpio.c is used to drive a one-wire bus using a GPIO line, integrating with the W1 subsystem and handling devices on the bus like any other W1 device.
+
+- w1-gpio: drivers/w1/masters/w1-gpio.c 는 GPIO 라인을 사용하여 단선 Bus 를 구동하고
+                   w1 하위 시스템과 통합되며 다른 w1 장치와 마찬가지로 Bus 에서 장치를 처리하는데 사용된다.
+
+- gpio-fan: drivers/hwmon/gpio-fan.c is used to control a fan for cooling the system, connected to a GPIO line (and optionally a GPIO alarm line), presenting all the right in-kernel and sysfs interfaces to make your system not overheat.
+
+- gpio-fan: drivers/hwmon/gpio-fan.c 는 GPIO 라인 (및 선택적 GPIO alarm 라인)에 연결된
+                   System 냉각용 팬을 제어하는데 사용되며 과열되지 않도록 모든 Kernel 내부 및 sysfs 인터페이스를 제공한다.
+
+- gpio-regulator: drivers/regulator/gpio-regulator.c is used to control a regulator providing a certain voltage by pulling a GPIO line, integrating with the regulator subsystem and giving you all the right interfaces.
+
+- gpio-regulator: drivers/regulator/gpio-regulator.c 는 GPIO 라인을 pulling 함으로써 Regulator Subsystem 을 통합하여
+                            모든 적절한 인터페이스를 제공하여 특정 전압을 제공하는 Regulator 를 제어하는데 사용된다.
+
+- gpio-wdt: drivers/watchdog/gpio_wdt.c is used to provide a watchdog timer that will periodically "ping" a hardware connected to a GPIO line by toggling it from 1-to-0-to-1. If that hardware does not recieve its "ping" periodically, it will reset the system.
+
+- gpio-wdt: drivers/watchdog/gpio_wdt.c 는 GPIO 라인에 연결된 HW 를 주기적으로 "ping" 할
+                    Watchdog Timer 를 제공하는데 사용되며 이 Timer 는 GPIO 라인을 1 에서 0 으로 0 에서 1 로 전환한다.
+                    해당 HW 가 주기적으로 "ping" 을 수신하지 않으면 System 이 reset 된다.
+
+- gpio-nand: drivers/mtd/nand/gpio.c is used to connect a NAND flash chip to a set of simple GPIO lines: RDY, NCE, ALE, CLE, NWP. It interacts with the NAND flash MTD subsystem and provides chip access and partition parsing like any other NAND driving hardware.
+
+- gpio-nand: drivers/mtd/nand/gpio.c 는 NAND Flash Chip 을
+                      RDY, NCE, ALE, CLE, NWP 와 같은 간단한 GPIO 라인 셋에 연결하는데 사용된다.
+                      이 제품은 NAND Flash MTD Subsystem 과 상호작용하며
+                      다른 NAND 구동 HW 와 마찬가지로 Chip Access 및 Partition Parsing 을 제공한다.
+
+Apart from this there are special GPIO drivers in subsystems like MMC/SD to read card detect and write protect GPIO lines, and in the TTY serial subsystem to emulate MCTRL (modem control) signals CTS/RTS by using two GPIO lines.
+The MTD NOR flash has add-ons for extra GPIO lines too, though the address bus is usually connected directly to the flash.
+
+이 외에도 MMC / SD 와 같은 Subsystem 에 특수 GPIO Driver 가 있어 이 Card 감지 및 쓰기 방지 GPIO 회선과
+TTY 직렬 Subsystem 에서는 MCTRL(모뎀 제어)를 에뮬레이트하기 위해 2 개의 GPIO 회선을 사용하여 CTS / RTS 에 신호를 보낸다.
+Address Bus 는 대개 직접 Flash 에 연결되지만 MTD NOR Flash 에는 추가 GPIO 회선을 위한 추가 기능이 있다.
+
+Use those instead of talking directly to the GPIOs using sysfs; they integrate with kernel frameworks better than your userspace code could. Needless to say, just using the apropriate kernel drivers will simplify and speed up your embedded hacking in particular by providing ready-made components.
+
+sysfs 를 사용하여 GPIO 와 직접 대화하는 대신 아래의 것들을 사용하라.
+사용자 공간 코드보다 Kernel Framework 와 더 잘 통합된다.
+말할 필요도 없이 적절한 Kernel Driver 를 사용하면
+미리 만들어진 구성요소를 제공하여 임베디드 해킹을 단순화하고 가속화할 수 있다.

@@ -1,0 +1,180 @@
+Device Tree Overlay Notes
+-------------------------
+
+This document describes the implementation of the in-kernel
+device tree overlay functionality residing in drivers/of/overlay.c and is a
+companion document to Documentation/devicetree/dt-object-internal.txt[1] &
+Documentation/devicetree/dynamic-resolution-notes.txt[2]
+이 문서는 drivers / of / overlay.c에있는 커널 내부 장치 트리 오버레이 기능의 구현을 설명하며 
+Documentation / devicetree / dt-object-internal.txt [1] 및 
+Documentation / devicetree / dynamic- resolution - notes.txt [2]
+
+How overlays work
+오버레이 작동 방식
+-----------------
+
+A Device Tree's overlay purpose is to modify the kernel's live tree, and
+have the modification affecting the state of the kernel in a way that
+is reflecting the changes.
+Since the kernel mainly deals with devices, any new device node that result
+in an active device should have it created while if the device node is either
+disabled or removed all together, the affected device should be deregistered.
+장치 트리의 오버레이 목적은 커널의 라이브 트리를 수정하고 변경 사항을 반영하는 
+방식으로 커널의 상태에 영향을주는 수정을 가하는 것입니다. 커널은 주로 장치를 
+다루기 때문에 활성 장치를 생성하는 새로운 장치 노드는 장치 노드를 생성하거나 
+생성해야하며 장치 노드가 모두 비활성화되거나 모두 제거되는 경우 영향을받는 장치는 등록 취소되어야합니다.
+
+Lets take an example where we have a foo board with the following base tree
+which is taken from [1].
+[1]에서 가져온 다음 기본 트리가있는 foo 보드가있는 예제를 보겠습니다.
+
+---- foo.dts -----------------------------------------------------------------
+	/* FOO platform */
+	/ {
+		compatible = "corp,foo";
+
+		/* shared resources */
+		/ * 공유 리소스 * /
+		res: res {
+		};
+
+		/* On chip peripherals */
+		/ * 칩 주변 장치 * /
+
+		ocp: ocp {
+			/* peripherals that are always instantiated */
+			/ * 항상 인스턴스화되는 주변 장치 * /
+			peripheral1 { ... };
+		}
+	};
+---- foo.dts -----------------------------------------------------------------
+
+The overlay bar.dts, when loaded (and resolved as described in [2]) should
+오버레이 bar.dts가 로드되면 [2]에서 설명한대로 해결됨
+
+---- bar.dts -----------------------------------------------------------------
+/plugin/;	/* allow undefined label references and record them */
+/플러그인/; / * 정의되지 않은 레이블 참조를 허용하고 기록 * /
+
+/ {
+	....	/* various properties for loader use; i.e. part id etc. */
+			/ * 로더 사용을위한 다양한 속성; 즉 부품 ID 등 * /
+
+	fragment@0 {
+		target = <&ocp>;
+		__overlay__ {
+			/* bar peripheral */
+			/ * 바 주변 기기 * /
+
+			bar {
+				compatible = "corp,bar";
+				... /* various properties and child nodes */
+					 / * 다양한 속성과 하위 노드 * /
+			}
+		};
+	};
+};
+---- bar.dts -----------------------------------------------------------------
+
+result in foo+bar.dts
+결과는 foo + bar.dts이다.
+
+---- foo+bar.dts -------------------------------------------------------------
+	/* FOO platform + bar peripheral */
+	/ {
+		compatible = "corp,foo";
+
+		/* shared resources */
+		res: res {
+		};
+
+		/* On chip peripherals */
+		/ * 칩 주변 장치 * /
+
+		ocp: ocp {
+			/* peripherals that are always instantiated */
+			/ * 항상 인스턴스화되는 주변 장치 * /
+
+			peripheral1 { ... };
+
+			/* bar peripheral */
+			bar {
+				compatible = "corp,bar";
+				... /* various properties and child nodes */
+					/ * 다양한 속성과 자식 노드 * /
+			}
+		}
+	};
+---- foo+bar.dts -------------------------------------------------------------
+
+As a result of the overlay, a new device node (bar) has been created
+so a bar platform device will be registered and if a matching device driver
+is loaded the device will be created as expected.
+오버레이의 결과로 새로운 장치 노드 (bar)가 생성되어 바 플랫폼 장치가 등록되고 
+일치하는 장치 드라이버가로드되면 장치가 예상대로 생성됩니다.
+
+Overlay in-kernel API
+오버레이 인 커널 API
+
+--------------------------------
+
+The API is quite easy to use.
+API는 사용하기가 쉽습니다.
+
+1. Call of_overlay_create() to create and apply an overlay. The return value
+is a cookie identifying this overlay.
+1. of_overlay_create ()를 호출하여 오버레이를 만들고 적용합니다. 반환 값은이 
+오버레이를 식별하는 쿠키입니다.
+
+2. Call of_overlay_destroy() to remove and cleanup the overlay previously
+created via the call to of_overlay_create(). Removal of an overlay that
+is stacked by another will not be permitted.
+2. of_overlay_destroy ()를 호출하여 of_overlay_create ()를 호출하고 이전에 
+작성된 오버레이를 제거하고 정리합니다. 다른 오버레이로 겹쳐진 오버레이는 제거 할 수 없습니다.
+
+Finally, if you need to remove all overlays in one-go, just call
+of_overlay_destroy_all() which will remove every single one in the correct
+order.
+마지막으로 one-go에서 모든 오버레이를 제거해야하는 경우 올바른 순서로 모든 
+단일 오버레이를 제거하는 of_overlay_destroy_all ()을 호출하면됩니다.
+
+Overlay DTS Format
+------------------
+
+The DTS of an overlay should have the following format:
+오버레이의 DTS 형식은 다음과 같습니다.
+
+{
+	/* ignored properties by the overlay */
+	/ * 오버레이에 의한 속성 무시 * /
+
+	fragment@0 {	/* first child node */
+					/ * 첫 번째 자식 노드 * /
+
+		target=<phandle>;	/* phandle target of the overlay */
+	or  					/ * 오버레이의 표적 타겟 * /
+
+		target-path="/path";	/* target path of the overlay */
+								/ * 오버레이의 대상 경로 * /
+
+		__overlay__ {
+			property-a;	/* add property-a to the target */
+						/ * target에 property-a를 추가한다. * /
+
+			node-a {	/* add to an existing, or create a node-a */	
+				...		/ * 기존 노드에 추가하거나 노드 -a를 만듭니다 * /
+			};
+		};
+	}
+	fragment@1 {	/* second child node */
+		...
+	};
+	/* more fragments follow */	
+	/ * 더 많은 조각들이 뒤 에 있다.* /	
+}
+
+Using the non-phandle based target method allows one to use a base DT which does
+not contain a __symbols__ node, i.e. it was not compiled with the -@ option.
+The __symbols__ node is only required for the target=<phandle> method, since it
+contains the information required to map from a phandle to a tree location.
+non- phandle 기반 대상 메서드를 사용하면 __symbols__ 노드가 포함되지 않은 기본 DT를 사용할 수 있습니다. 즉, - @ 옵션을 사용하여 컴파일되지 않았습니다. __symbols__ 노드는 phandle에서 트리 위치로 매핑하는 데 필요한 정보가 포함되어 있으므로 target = <phandle> 메소드에만 필요합니다.

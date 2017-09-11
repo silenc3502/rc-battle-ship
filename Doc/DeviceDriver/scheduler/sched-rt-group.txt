@@ -1,0 +1,262 @@
+				Real-Time group scheduling
+				--------------------------
+
+CONTENTS
+========
+
+0. WARNING
+1. Overview
+  1.1 The problem
+  1.2 The solution
+2. The interface
+  2.1 System-wide settings
+  2.2 Default behaviour
+  2.3 Basis for grouping tasks
+3. Future plans
+
+0. 경고
+1. 개요
+   1.1 문제
+   1.2 해결책
+2. 인터페이스
+   2.1 시스템 전체 설정
+   2.2 기본 동작
+   2.3 작업 그룹화의 기초
+3. 향후 계획
+
+0. WARNING
+==========
+
+ Fiddling with these settings can result in an unstable system, the knobs are
+ root only and assumes root knows what he is doing.
+
+이러한 설정을 사용하면 시스템이 불안정해질 수 있으며, 노브는 루트에만 해당되며 루트가 자신이하는 일을 알고 있다고 가정합니다.
+
+Most notable:
+
+ * very small values in sched_rt_period_us can result in an unstable
+   system when the period is smaller than either the available hrtimer
+   resolution, or the time it takes to handle the budget refresh itself.
+
+ * very small values in sched_rt_runtime_us can result in an unstable
+   system when the runtime is so small the system has difficulty making
+   forward progress (NOTE: the migration thread and kstopmachine both
+   are real-time processes).
+
+가장 주목할만한 것 :
+
+  * sched_rt_period_us의 값이 너무 작 으면 사용 가능한 hrtimer 해상도 또는 예산 새로 고침 자체를 처리하는 데 걸리는 시간보다 작은 경우 시스템이 불안정해질 수 있습니다.
+
+  * sched_rt_runtime_us의 값이 너무 작 으면 런타임이 너무 작아 시스템이 앞으로 진행하는 데 어려움이있을 때 불안정한 시스템이 될 수 있습니다 (참고 : 마이그레이션 스레드와 kstopmachine은 모두 실시간 프로세스입니다).
+
+1. Overview
+===========
+
+
+1.1 The problem
+---------------
+
+Realtime scheduling is all about determinism, a group has to be able to rely on
+the amount of bandwidth (eg. CPU time) being constant. In order to schedule
+multiple groups of realtime tasks, each group must be assigned a fixed portion
+of the CPU time available.  Without a minimum guarantee a realtime group can
+obviously fall short. A fuzzy upper limit is of no use since it cannot be
+relied upon. Which leaves us with just the single fixed portion.
+
+실시간 스케줄링은 모두 결정론에 관한 것이므로 그룹은 일정한 대역폭 (예 : CPU 시간)에 의존 할 수 있어야합니다. 실시간 작업의 여러 그룹을 예약하려면 각 그룹에 사용 가능한 CPU 시간의 고정 부분을 할당해야합니다. 최소한의 보증없이 실시간 그룹이 분명히 부족할 수 있습니다. 퍼지 상한값은 신뢰할 수 없으므로 아무 쓸모가 없습니다. 하나의 고정 부분 만 남겨 둡니다.
+
+1.2 The solution
+----------------
+
+CPU time is divided by means of specifying how much time can be spent running
+in a given period. We allocate this "run time" for each realtime group which
+the other realtime groups will not be permitted to use.
+
+CPU 시간은 지정된 기간 동안 실행되는 데 소요되는 시간을 지정하는 방법으로 나뉩니다. 우리는 다른 실시간 그룹이 사용할 수없는 각 실시간 그룹에 대해이 "실행 시간"을 할당합니다.
+
+Any time not allocated to a realtime group will be used to run normal priority
+tasks (SCHED_OTHER). Any allocated run time not used will also be picked up by
+SCHED_OTHER.
+
+실시간 그룹에 할당되지 않은 시간은 정상 우선 순위 작업 (SCHED_OTHER)을 실행하는 데 사용됩니다. SCHED_OTHER에 의해 사용되지 않는 할당 된 실행 시간도 선택됩니다.
+
+Let's consider an example: a frame fixed realtime renderer must deliver 25
+frames a second, which yields a period of 0.04s per frame. Now say it will also
+have to play some music and respond to input, leaving it with around 80% CPU
+time dedicated for the graphics. We can then give this group a run time of 0.8
+* 0.04s = 0.032s.
+
+예를 들어 프레임 고정형 실시간 렌더러는 프레임 당 0.04 초를 생성하는 초당 25 프레임을 제공해야합니다. 이제는 음악을 재생하고 입력에 응답해야하며 그래픽 전용 약 80 %의 CPU 시간을 남겨 두어야합니다. 그런 다음이 그룹에 0.8 * 0.04s = 0.032s의 런타임을 제공 할 수 있습니다.
+
+This way the graphics group will have a 0.04s period with a 0.032s run time
+limit. Now if the audio thread needs to refill the DMA buffer every 0.005s, but
+needs only about 3% CPU time to do so, it can do with a 0.03 * 0.005s =
+0.00015s. So this group can be scheduled with a period of 0.005s and a run time
+of 0.00015s.
+
+이렇게하면 그래픽 그룹의 실행 시간이 0.032 초로 0.04 초가됩니다. 이제 오디오 스레드가 매 0.005 초마다 DMA 버퍼를 다시 채워야하지만 CPU 시간을 약 3 % 만 소요하면 0.03 * 0.005s = 0.00015s로 수행 할 수 있습니다. 따라서이 그룹은 0.005 초의주기와 0.00015 초의 실행 시간으로 스케줄 될 수 있습니다.
+
+The remaining CPU time will be used for user input and other tasks. Because
+realtime tasks have explicitly allocated the CPU time they need to perform
+their tasks, buffer underruns in the graphics or audio can be eliminated.
+
+나머지 CPU 시간은 사용자 입력 및 기타 작업에 사용됩니다. 실시간 작업은 작업 수행에 필요한 CPU 시간을 명시 적으로 할당했기 때문에 그래픽이나 오디오의 버퍼 언더런을 제거 할 수 있습니다.
+
+NOTE: the above example is not fully implemented yet. We still
+lack an EDF scheduler to make non-uniform periods usable.
+
+참고 : 위 예제는 아직 완전히 구현되지 않았습니다. 비 균등 기간을 사용할 수 있도록하는 EDF 스케줄러가 여전히 부족합니다.
+
+
+2. The Interface
+================
+
+
+2.1 System wide settings
+------------------------
+
+The system wide settings are configured under the /proc virtual file system:
+
+/proc/sys/kernel/sched_rt_period_us:
+  The scheduling period that is equivalent to 100% CPU bandwidth
+
+/proc/sys/kernel/sched_rt_runtime_us:
+  A global limit on how much time realtime scheduling may use.  Even without
+  CONFIG_RT_GROUP_SCHED enabled, this will limit time reserved to realtime
+  processes. With CONFIG_RT_GROUP_SCHED it signifies the total bandwidth
+  available to all realtime groups.
+
+  * Time is specified in us because the interface is s32. This gives an
+    operating range from 1us to about 35 minutes.
+  * sched_rt_period_us takes values from 1 to INT_MAX.
+  * sched_rt_runtime_us takes values from -1 to (INT_MAX - 1).
+  * A run time of -1 specifies runtime == period, ie. no limit.
+
+시스템 전체 설정은 / proc 가상 파일 시스템 아래에 구성됩니다.
+
+/ proc / sys / kernel / sched_rt_period_us :
+   100 % CPU 대역폭과 동일한 일정 기간
+
+/ proc / sys / kernel / sched_rt_runtime_us :
+   실시간 스케줄링이 얼마나 많은 시간을 사용할 수 있는지에 대한 전체 제한. CONFIG_RT_GROUP_SCHED가 활성화되지 않은 경우에도 실시간 프로세스에 예약 된 시간이 제한됩니다. CONFIG_RT_GROUP_SCHED를 사용하면 모든 실시간 그룹에서 사용할 수있는 총 대역폭을 나타냅니다.
+
+   * 인터페이스는 s32이므로 시간이 지정됩니다. 이것은
+     작동 범위는 1 ~ 35 분입니다.
+   * sched_rt_period_us는 1에서 INT_MAX까지의 값을 취합니다.
+   * sched_rt_runtime_us는 -1에서 (INT_MAX - 1)까지의 값을 취합니다.
+   * 실행 시간 -1은 런타임 == 기간을 지정합니다. 제한 없음.
+
+
+2.2 Default behaviour
+---------------------
+
+The default values for sched_rt_period_us (1000000 or 1s) and
+sched_rt_runtime_us (950000 or 0.95s).  This gives 0.05s to be used by
+SCHED_OTHER (non-RT tasks). These defaults were chosen so that a run-away
+realtime tasks will not lock up the machine but leave a little time to recover
+it.  By setting runtime to -1 you'd get the old behaviour back.
+
+sched_rt_period_us (1000000 또는 1s) 및 sched_rt_runtime_us (950000 또는 0.95s)의 기본값. SCHED_OTHER (비 RT 작업)에서 0.05 초를 사용합니다. 이러한 기본값은 런 - 어웨이 실시간 작업이 시스템을 잠그지 않지만 복구 시간을 약간 남겨 두도록 선택되었습니다. 런타임을 -1로 설정하면 이전 동작을 되돌릴 수 있습니다.
+
+By default all bandwidth is assigned to the root group and new groups get the
+period from /proc/sys/kernel/sched_rt_period_us and a run time of 0. If you
+want to assign bandwidth to another group, reduce the root group's bandwidth
+and assign some or all of the difference to another group.
+
+기본적으로 모든 대역폭은 루트 그룹에 할당되고 새 그룹은 / proc / sys / kernel / sched_rt_period_us에서 실행 시간을 0으로 설정합니다. 다른 그룹에 대역폭을 할당하려면 루트 그룹의 대역폭을 줄이고 또는 다른 모든 그룹과의 차이.
+
+Realtime group scheduling means you have to assign a portion of total CPU
+bandwidth to the group before it will accept realtime tasks. Therefore you will
+not be able to run realtime tasks as any user other than root until you have
+done that, even if the user has the rights to run processes with realtime
+priority!
+
+실시간 그룹 스케줄링은 실시간 작업을 받기 전에 전체 CPU 대역폭의 일부를 그룹에 할당해야한다는 것을 의미합니다. 따라서 사용자가 실시간 우선 순위로 프로세스를 실행할 수있는 권한을 가지고 있더라도 루트가 아닌 다른 사용자로 실시간 작업을 실행할 수 없습니다!
+
+
+2.3 Basis for grouping tasks
+----------------------------
+
+Enabling CONFIG_RT_GROUP_SCHED lets you explicitly allocate real
+CPU bandwidth to task groups.
+
+CONFIG_RT_GROUP_SCHED를 사용하면 실제 CPU 대역폭을 작업 그룹에 명시 적으로 할당 할 수 있습니다.
+
+This uses the cgroup virtual file system and "<cgroup>/cpu.rt_runtime_us"
+to control the CPU time reserved for each control group.
+
+이 명령은 cgroup 가상 파일 시스템과 "<cgroup> /cpu.rt_runtime_us"를 사용하여 각 제어 그룹에 예약 된 CPU 시간을 제어합니다.
+
+For more information on working with control groups, you should read
+Documentation/cgroups/cgroups.txt as well.
+
+컨트롤 그룹 작업에 대한 자세한 내용은 Documentation / cgroups / cgroups.txt를 참조하십시오.
+
+Group settings are checked against the following limits in order to keep the
+configuration schedulable:
+
+구성을 스케줄 가능하게 유지하기 위해 다음 제한에 대해 그룹 설정을 검사합니다 :
+
+   \Sum_{i} runtime_{i} / global_period <= global_runtime / global_period
+
+For now, this can be simplified to just the following (but see Future plans):
+
+   \Sum_{i} runtime_{i} <= global_runtime
+
+
+3. Future plans
+===============
+
+There is work in progress to make the scheduling period for each group
+("<cgroup>/cpu.rt_period_us") configurable as well.
+
+각 그룹 ( "<cgroup> /cpu.rt_period_us")에 대한 스케줄링 기간도 구성 가능하도록 작업이 진행 중입니다.
+
+The constraint on the period is that a subgroup must have a smaller or
+equal period to its parent. But realistically its not very useful _yet_
+as its prone to starvation without deadline scheduling.
+
+기간에 대한 제약 조건은 하위 그룹이 부모보다 작거나 같은 기간을 가져야한다는 것입니다. 그러나 현실적으로 데드 라인 스케줄링없이 기아에 노출되기 쉬운 것은별로 유용하지 않습니다.
+
+Consider two sibling groups A and B; both have 50% bandwidth, but A's
+period is twice the length of B's.
+
+두 형제 집단 A와 B를 생각해보십시오. 둘 다 50 % 대역폭을 갖지만 A의 기간은 B의 두 배입니다.
+
+* group A: period=100000us, runtime=10000us
+	- this runs for 0.01s once every 0.1s
+
+* group B: period= 50000us, runtime=10000us
+	- this runs for 0.01s twice every 0.1s (or once every 0.05 sec).
+
+* 그룹 A : 기간 = 100000us, 런타임 = 10000us
+	  - 이것은 0.1 초마다 0.01 초 동안 실행됩니다.
+
+* 그룹 B : 기간 = 50000us, 런타임 = 10000us
+	   - 0.1 초마다 0.01 초 (0.05 초마다 1 회)가 실행됩니다.
+
+This means that currently a while (1) loop in A will run for the full period of
+B and can starve B's tasks (assuming they are of lower priority) for a whole
+period.
+
+이것은 현재 A의 while (1) 루프가 B의 전체 기간 동안 실행되고 전체 기간 동안 B의 태스크가 우선 순위가 낮다고 가정 할 때 굶주릴 수 있음을 의미합니다.
+
+The next project will be SCHED_EDF (Earliest Deadline First scheduling) to bring
+full deadline scheduling to the linux kernel. Deadline scheduling the above
+groups and treating end of the period as a deadline will ensure that they both
+get their allocated time.
+
+다음 프로젝트는 리눅스 커널에 완전한 데드 라인 스케줄링을 가져 오는 SCHED_EDF (가장 빠른 마감 첫 번째 스케줄링)가 될 것입니다. 위의 그룹을 계획하고 최종 기한을 최종 기한으로 처리하는 마감일은 둘 다 할당 된 시간을 확보 할 수 있습니다.
+
+Implementing SCHED_EDF might take a while to complete. Priority Inheritance is
+the biggest challenge as the current linux PI infrastructure is geared towards
+the limited static priority levels 0-99. With deadline scheduling you need to
+do deadline inheritance (since priority is inversely proportional to the
+deadline delta (deadline - now)).
+
+완료하려면 SCHED_EDF 구현에 시간이 걸릴 수 있습니다. 우선 순위 상속은 현재 Linux PI 인프라 스트럭처가 제한된 정적 우선 순위 수준 0-99에 맞추어 져 있기 때문에 가장 큰 과제입니다. 데드 라인 스케줄링을 사용하면 우선 순위가 최종 델타 (마감일 - 현재)에 반비례하기 때문에 데드 라인 상속을 수행해야합니다.
+
+This means the whole PI machinery will have to be reworked - and that is one of
+the most complex pieces of code we have.
+
+이것은 전체 PI 기계가 재생산되어야 함을 의미하며 이는 우리가 보유한 가장 복잡한 코드 중 하나입니다.

@@ -1,0 +1,28 @@
+Cirrus Logic Arizona class audio SoCs
+
+These devices are audio SoCs with extensive digital capabilities and a range
+of analogue I/O.
+
+This document lists Extcon specific bindings, see the primary binding document:
+  ../mfd/arizona.txt
+
+Optional properties:
+
+  - wlf,hpdet-channel : Headphone detection channel.
+    ARIZONA_ACCDET_MODE_HPL or 1 - Headphone detect mode is set to HPDETL
+    ARIZONA_ACCDET_MODE_HPR or 2 - Headphone detect mode is set to HPDETR
+    If this node is not mentioned or if the value is unknown, then
+    headphone detection mode is set to HPDETL.
+
+
+이 장치는 광범위한 디지털 기능과 다양한 아날로그 I / O를 갖춘 오디오 SoC입니다.
+
+이 문서는 Extcon 특정 바인딩을 나열합니다. 기본 바인딩 문서를 참조하십시오.
+   ../mfd/arizona.txt
+
+선택적 속성 :
+
+   - wlf, hpdet-channel : 헤드폰 감지 채널.
+     ARIZONA_ACCDET_MODE_HPL 또는 1 - 헤드폰 감지 모드가 HPDETL로 설정됩니다.
+     ARIZONA_ACCDET_MODE_HPR 또는 2 - 헤드폰 감지 모드가 HPDETR로 설정됩니다.
+     이 노드가 언급되지 않았거나 값이 알려지지 않은 경우 헤드폰 탐지 모드는 HPDETL로 설정됩니다.

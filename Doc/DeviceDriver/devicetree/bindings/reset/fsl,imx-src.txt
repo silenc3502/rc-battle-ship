@@ -1,0 +1,74 @@
+Freescale i.MX System Reset Controller
+======================================
+
+Please also refer to reset.txt in this directory for common reset
+controller binding usage.
+
+Required properties:
+- compatible: Should be "fsl,<chip>-src"
+- reg: should be register base and length as documented in the
+  datasheet
+- interrupts: Should contain SRC interrupt and CPU WDOG interrupt,
+  in this order.
+- #reset-cells: 1, see below
+
+프리 스케일 i.MX 시스템 리셋 컨트롤러
+========================
+
+공통 재설정 제어기 바인딩 사용에 대해서는이 디렉토리의 reset.txt를 참조하십시오.
+
+필수 속성 :
+- 호환 가능 : "fsl, <chip> -src"여야합니다.
+- reg : 데이터 시트에 문서화 된대로 레지스터 기본 및 길이 여야합니다.
+- 인터럽트 : SRC 인터럽트 및 CPU WDOG 인터럽트를이 순서로 포함해야합니다.
+- # reset-cells : 1, 아래 참조
+
+
+example:
+
+src: src@020d8000 {
+        compatible = "fsl,imx6q-src";
+        reg = <0x020d8000 0x4000>;
+        interrupts = <0 91 0x04 0 96 0x04>;
+        #reset-cells = <1>;
+};
+
+Specifying reset lines connected to IP modules
+==============================================
+
+The system reset controller can be used to reset the GPU, VPU,
+IPU, and OpenVG IP modules on i.MX5 and i.MX6 ICs. Those device
+nodes should specify the reset line on the SRC in their resets
+property, containing a phandle to the SRC device node and a
+RESET_INDEX specifying which module to reset, as described in
+reset.txt
+
+IP 모듈에 연결된 리셋 라인 지정하기
+==================================
+
+시스템 재설정 컨트롤러는 i.MX5 및 i.MX6 IC의 GPU, VPU, IPU 및 OpenVG IP 모듈을 재설정하는 데 사용할 수 있습니다. 이러한 장치 노드는 reset.txt에 설명 된대로 SRC 장치 노드에 대한 phandle과 재설정 할 모듈을 지정하는 RESET_INDEX를 포함하는 resets 속성의 SRC에 재설정 줄을 지정해야합니다
+
+example:
+
+        ipu1: ipu@02400000 {
+                resets = <&src 2>;
+        };
+        ipu2: ipu@02800000 {
+                resets = <&src 4>;
+        };
+
+The following RESET_INDEX values are valid for i.MX5:
+GPU_RESET     0
+VPU_RESET     1
+IPU1_RESET    2
+OPEN_VG_RESET 3
+The following additional RESET_INDEX value is valid for i.MX6:
+IPU2_RESET    4
+
+다음 RESET_INDEX 값은 i.MX5에 유효합니다.
+GPU_RESET 0
+VPU_RESET 1
+IPU1_RESET 2
+OPEN_VG_RESET 3
+다음의 추가 RESET_INDEX 값은 i.MX6에 유효합니다.
+IPU2_RESET 4

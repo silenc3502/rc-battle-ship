@@ -1,0 +1,123 @@
+Freescale SoC SEC Security Engines versions 1.x-2.x-3.x
+
+Required properties:
+
+- compatible : Should contain entries for this and backward compatible
+  SEC versions, high to low, e.g., "fsl,sec2.1", "fsl,sec2.0" (SEC2/3)
+                             e.g., "fsl,sec1.2", "fsl,sec1.0" (SEC1)
+    warning: SEC1 and SEC2 are mutually exclusive
+- reg : Offset and length of the register set for the device
+- interrupts : the SEC's interrupt number
+- fsl,num-channels : An integer representing the number of channels
+  available.
+- fsl,channel-fifo-len : An integer representing the number of
+  descriptor pointers each channel fetch fifo can hold.
+- fsl,exec-units-mask : The bitmask representing what execution units
+  (EUs) are available. It's a single 32-bit cell. EU information
+  should be encoded following the SEC's Descriptor Header Dword
+  EU_SEL0 field documentation, i.e. as follows:
+
+	bit 0  = reserved - should be 0
+	bit 1  = set if SEC has the ARC4 EU (AFEU)
+	bit 2  = set if SEC has the DES/3DES EU (DEU)
+	bit 3  = set if SEC has the message digest EU (MDEU/MDEU-A)
+	bit 4  = set if SEC has the random number generator EU (RNG)
+	bit 5  = set if SEC has the public key EU (PKEU)
+	bit 6  = set if SEC has the AES EU (AESU)
+	bit 7  = set if SEC has the Kasumi EU (KEU)
+	bit 8  = set if SEC has the CRC EU (CRCU)
+	bit 11 = set if SEC has the message digest EU extended alg set (MDEU-B)
+
+remaining bits are reserved for future SEC EUs.
+
+- fsl,descriptor-types-mask : The bitmask representing what descriptors
+  are available. It's a single 32-bit cell. Descriptor type information
+  should be encoded following the SEC's Descriptor Header Dword DESC_TYPE
+  field documentation, i.e. as follows:
+
+	bit 0  = set if SEC supports the aesu_ctr_nonsnoop desc. type
+	bit 1  = set if SEC supports the ipsec_esp descriptor type
+	bit 2  = set if SEC supports the common_nonsnoop desc. type
+	bit 3  = set if SEC supports the 802.11i AES ccmp desc. type
+	bit 4  = set if SEC supports the hmac_snoop_no_afeu desc. type
+	bit 5  = set if SEC supports the srtp descriptor type
+	bit 6  = set if SEC supports the non_hmac_snoop_no_afeu desc.type
+	bit 7  = set if SEC supports the pkeu_assemble descriptor type
+	bit 8  = set if SEC supports the aesu_key_expand_output desc.type
+	bit 9  = set if SEC supports the pkeu_ptmul descriptor type
+	bit 10 = set if SEC supports the common_nonsnoop_afeu desc. type
+	bit 11 = set if SEC supports the pkeu_ptadd_dbl descriptor type
+
+  ..and so on and so forth.
+
+Optional properties:
+
+- interrupt-parent : the phandle for the interrupt controller that
+  services interrupts for this device.
+
+
+
+
+
+
+필수 속성 :
+
+- 호환 :이 항목과 이전 버전과의 호환 가능 항목을 포함해야합니다.
+   SEC 버전, high to low, e.g., "fsl, sec2.1", "fsl, sec2.0"(SEC2 / 3)
+                              e.g., "fsl, sec1.2", "fsl, sec1.0"(SEC1)
+     경고 : SEC1과 SEC2는 상호 배타적입니다.
+- reg : 장치에 설정된 레지스터 오프셋 및 길이
+- 인터럽트 : SEC의 인터럽트 번호
+- fsl, num-channels : 사용 가능한 채널 수를 나타내는 정수입니다.
+- fsl, channel-fifo-len : 각 채널 페치 FIFO가 보유 할 수있는 디스크립터 포인터의 수를 나타내는 정수.
+- fsl, exec-units-mask : 사용 가능한 실행 단위 (EU)를 나타내는 비트 마스크. 단일 32 비트 셀입니다. EU 정보는 SEC의 디스크립터 헤더 Dword EU_SEL0 필드 문서 인 i.e. 에 따라 다음과 같이 인코딩해야합니다.
+
+bit 0 = 예약 됨 - 0이어야 함
+bit 1 = SEC에 ARC4 EU (AFEU)
+bit 2 = SEC가 DES / 3DES EU (DEU)
+bit 3 = SEC에 메시지 다이제스트가있는 경우 설정 됨 EU (MDEU / MDEU-A)
+bit 4 = SEC에 난수 생성기가있는 경우 설정 EU (RNG)
+bit 5 = SEC에 공개 키 EU (PKEU)가있는 경우 설정
+bit 6 = SEC가 AES EU (AESU)
+bit 7 = SEC가 Kasumi EU (KEY)
+bit 8 = SEC에 CRC가있는 경우 설정 EU (CRCU)
+bit 11 = SEC에  message digest 가있는 경우 설정 됨 EU 확장 집합 (MDEU-B)
+
+남은 비트는 향후 SEC EU를 위해 예약됩니다.
+
+- fsl, descriptor-types-mask : 사용 가능한 디스크립터를 나타내는 비트 마스크. 단일 32 비트 셀입니다. 설명자 유형 정보는 SEC의 설명자 헤더 Dword DESC_TYPE 필드 문서에 따라 다음과 같이 인코딩되어야합니다.
+
+bit 0 = SEC가 aesu_ctr_nonsnoop desc를 지원하면 설정됩니다. 유형
+bit 1 = SEC가 ipsec_esp 디스크립터 유형을 지원하면 설정 됨
+bit 2 = SEC가 common_nonsnoop desc를 지원하면 설정됩니다. 유형
+bit 3 = SEC가 802.11i AES ccmp desc를 지원하면 설정됩니다. 유형
+bit 4 = SEC가 hmac_snoop_no_afeu desc를 지원하면 설정됩니다. 유형
+bit 5 = SEC가 srtp 디스크립터 유형을 지원하면 설정 됨
+bit 6 = SEC가 non_hmac_snoop_no_afeu desc.type을 지원하면 설정됩니다.
+bit 7 = SEC가 pkeu_assemble 설명자 유형을 지원하면 설정됩니다.
+bit 8 = SEC가 aesu_key_expand_output desc.type을 지원하면 설정됩니다.
+bit 9 = SEC가 pkeu_ptmul 디스크립터 유형을 지원하면 설정 됨
+bit 10 = SEC가 common_nonsnoop_afeu desc를 지원하면 설정됩니다. 유형
+bit 11 = SEC가 pkeu_ptadd_dbl 기술자 유형을 지원하면 설정 됨
+
+
+.. 등등.
+
+선택적 속성 :
+
+- interrupt-parent :이 장치에 대한 인터럽트를 서비스하는 인터럽트 컨트롤러의 phandle입니다.
+
+
+Example:
+
+	/* MPC8548E */
+	crypto@30000 {
+		compatible = "fsl,sec2.1", "fsl,sec2.0";
+		reg = <0x30000 0x10000>;
+		interrupts = <29 2>;
+		interrupt-parent = <&mpic>;
+		fsl,num-channels = <4>;
+		fsl,channel-fifo-len = <24>;
+		fsl,exec-units-mask = <0xfe>;
+		fsl,descriptor-types-mask = <0x12b0ebf>;
+	};

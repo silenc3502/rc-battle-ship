@@ -1,0 +1,41 @@
+* NXP LPC32xx SoC USB Device Controller (UDC)
+
+Required properties:
+- compatible: Must be "nxp,lpc3220-udc"
+- reg: Physical base address of the controller and length of memory mapped
+  region.
+- interrupts: The USB interrupts:
+              * USB Device Low Priority Interrupt
+              * USB Device High Priority Interrupt
+              * USB Device DMA Interrupt
+              * External USB Transceiver Interrupt (OTG ATX)
+- transceiver: phandle of the associated ISP1301 device - this is necessary for
+               the UDC controller for connecting to the USB physical layer
+
+
+필수 속성 :
+- compatible : "nxp, lpc3220-udc"여야합니다.
+- reg : 컨트롤러의 물리적 기본 주소와 메모리 매핑 된 영역의 길이.
+- 인터럽트 : USB 인터럽트 :
+               * USB 장치 낮은 우선 순위 인터럽트
+               * USB 장치 높은 우선 순위 인터럽트
+               * USB 장치 DMA 인터럽트
+               * 외부 USB 트랜시버 인터럽트 (OTG ATX)
+- transceiver : 관련 ISP1301 장치의 phandle - UDC 컨트롤러가 USB 물리 계층에 연결하기 위해 필요합니다.
+
+
+
+Example:
+
+	isp1301: usb-transceiver@2c {
+		compatible = "nxp,isp1301";
+		reg = <0x2c>;
+	};
+
+	usbd@31020000 {
+		compatible = "nxp,lpc3220-udc";
+		reg = <0x31020000 0x300>;
+		interrupt-parent = <&mic>;
+		interrupts = <0x3d 0>, <0x3e 0>, <0x3c 0>, <0x3a 0>;
+		transceiver = <&isp1301>;
+	};

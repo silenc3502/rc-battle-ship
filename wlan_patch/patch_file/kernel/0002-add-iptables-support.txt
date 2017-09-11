@@ -1,0 +1,41 @@
+From 6c95b11fc055bc7701d342e3da3bde4c99063217 Mon Sep 17 00:00:00 2001
+From: Iain Hunter <i-hunter1@ti.com>
+Date: Tue, 16 Aug 2016 09:54:47 +0100
+Subject: [PATCH 2/2] add iptables support
+
+---
+ arch/arm/configs/tisdk_am57xx-evm_defconfig | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
+
+diff --git a/arch/arm/configs/tisdk_am57xx-evm_defconfig b/arch/arm/configs/tisdk_am57xx-evm_defconfig
+index 5fe69d8..4627683 100644
+--- a/arch/arm/configs/tisdk_am57xx-evm_defconfig
++++ b/arch/arm/configs/tisdk_am57xx-evm_defconfig
+@@ -925,18 +925,19 @@ CONFIG_NF_CONNTRACK_PROC_COMPAT=y
+ # CONFIG_NF_LOG_ARP is not set
+ # CONFIG_NF_LOG_IPV4 is not set
+ # CONFIG_NF_REJECT_IPV4 is not set
+-CONFIG_NF_NAT_IPV4=m
+-# CONFIG_NF_NAT_MASQUERADE_IPV4 is not set
++CONFIG_NF_NAT_IPV4=y
++CONFIG_NF_NAT_MASQUERADE_IPV4=y
+ # CONFIG_NF_NAT_PPTP is not set
+ # CONFIG_NF_NAT_H323 is not set
+-CONFIG_IP_NF_IPTABLES=m
++CONFIG_IP_NF_IPTABLES=y
+ # CONFIG_IP_NF_MATCH_AH is not set
+ # CONFIG_IP_NF_MATCH_ECN is not set
+ # CONFIG_IP_NF_MATCH_TTL is not set
+-CONFIG_IP_NF_FILTER=m
++CONFIG_IP_NF_FILTER=y
+ # CONFIG_IP_NF_TARGET_REJECT is not set
+ # CONFIG_IP_NF_TARGET_SYNPROXY is not set
+-# CONFIG_IP_NF_NAT is not set
++CONFIG_IP_NF_NAT=y
++CONFIG_IP_NF_TARGET_MASQUERADE=y
+ # CONFIG_IP_NF_MANGLE is not set
+ # CONFIG_IP_NF_RAW is not set
+ CONFIG_IP_NF_ARPTABLES=m
+-- 
+1.9.1
+

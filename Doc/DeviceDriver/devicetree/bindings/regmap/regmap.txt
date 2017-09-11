@@ -1,0 +1,58 @@
+Device-Tree binding for regmap
+regmap에 대한 디바이스 트리 바인딩
+
+The endianness mode of CPU & Device scenarios:
+엔디안 모드의 CPU 및 장치 시나리오 :
+
+Index     Device     Endianness properties
+
+색인 	   장치      엔디안 	등록 정보
+---------------------------------------------------
+1         BE         'big-endian'
+2         LE         'little-endian'
+
+For one device driver, which will run in different scenarios above
+on different SoCs using the devicetree, we need one way to simplify
+this.
+위의 다양한 시나리오에서 devicetree를 사용하여 다른 SoC에서 실행될 하나의 장치 드라이버의 경우이를 단순화하는 한 가지 방법이 필요합니다.
+
+Required properties:
+필수 속성 :
+
+- {big,little}-endian: these are boolean properties, if absent
+  meaning that the CPU and the Device are in the same endianness mode,
+  these properties are for register values and all the buffers only.
+- {big, little} -endian : 이들은 부울 속성입니다. CPU와 장치가 동일한 
+엔디안 모드에있는 경우 이러한 속성은 레지스터 값과 모든 버퍼에만 적용됩니다.
+
+Examples:
+Scenario 1 : CPU in LE mode & device in LE mode.
+				LE 모드의 CPU 및 LE 모드의 장치.
+dev: dev@40031000 {
+	      compatible = "name";
+	      reg = <0x40031000 0x1000>;
+	      ...
+};
+
+Scenario 2 : CPU in LE mode & device in BE mode.
+dev: dev@40031000 {
+	      compatible = "name";
+	      reg = <0x40031000 0x1000>;
+	      ...
+	      big-endian;
+};
+
+Scenario 3 : CPU in BE mode & device in BE mode.
+dev: dev@40031000 {
+	      compatible = "name";
+	      reg = <0x40031000 0x1000>;
+	      ...
+};
+
+Scenario 4 : CPU in BE mode & device in LE mode.
+dev: dev@40031000 {
+	      compatible = "name";
+	      reg = <0x40031000 0x1000>;
+	      ...
+	      little-endian;
+};

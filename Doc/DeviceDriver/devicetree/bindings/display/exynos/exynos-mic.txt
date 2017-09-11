@@ -1,0 +1,118 @@
+Device-Tree bindings for Samsung Exynos SoC mobile image compressor (MIC)
+
+MIC (mobile image compressor) resides between decon and mipi dsi. Mipi dsi is
+not capable to transfer high resoltuion frame data as decon can send. MIC
+solves this problem by compressing the frame data by 1/2 before it is
+transferred through mipi dsi. The compressed frame data must be uncompressed in
+the panel PCB.
+
+Required properties:
+- compatible: value should be "samsung,exynos5433-mic".
+- reg: physical base address and length of the MIC registers set and system
+       register of mic.
+- clocks: must include clock specifiers corresponding to entries in the
+	  clock-names property.
+- clock-names: list of clock names sorted in the same order as the clocks
+	       property. Must contain "pclk_mic0", "sclk_rgb_vclk_to_mic0".
+- samsung,disp-syscon: the reference node for syscon for DISP block.
+- ports: contains a port which is connected to decon node and dsi node.
+	 address-cells and size-cells must 1 and 0, respectively.
+- port: contains an endpoint node which is connected to the endpoint in the
+	decon node or dsi node. The reg value must be 0 and 1 respectively.
+
+Example:
+SoC specific DT entry:
+mic: mic@13930000 {
+	compatible = "samsung,exynos5433-mic";
+	reg = <0x13930000 0x48>;
+	clocks = <&cmu_disp CLK_PCLK_MIC0>,
+	       <&cmu_disp CLK_SCLK_RGB_VCLK_TO_MIC0>;
+	clock-names = "pclk_mic0", "sclk_rgb_vclk_to_mic0";
+	samsung,disp-syscon = <&syscon_disp>;
+
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		port@0 {
+			reg = <0>;
+			mic_to_decon: endpoint {
+				remote-endpoint = <&decon_to_mic>;
+			};
+		};
+
+		port@1 {
+			reg = <1>;
+			mic_to_dsi: endpoint {
+				remote-endpoint = <&dsi_to_mic>;
+			};
+		};
+	};
+};
+
+
+/*
+/*
+삼성 Exynos SoC 모바일 이미지 압축기 (MIC)의 장치 트리 바인딩
+
+MIC (모바일 이미지 압축기)는 decon과 mipi dsi 사이에 있습니다. 
+
+Mipi dsi는 데콘이 보낼 수있는 고분해능 프레임 데이터를 전송할 수 없습니다.
+
+ MIC는 mipi dsi를 통해 전송되기 전에 프레임 데이터를 1/2로 압축하여이 문제를 해결합니다. 
+
+압축 된 프레임 데이터는 패널 PCB에서 압축 해제되어야합니다.
+
+필수 속성 :
+
+- 호환 : 값은 "samsung, exynos5433-mic"여야합니다.
+
+- reg : mic 레지스터 세트의 물리적 기본 주소와 길이 및 mic의 시스템 레지스터.
+
+- clocks : clock-names 속성의 항목에 해당하는 클럭 지정자를 포함해야합니다.
+
+- clock-names : 클럭 이름과 같은 순서로 정렬 된 클럭 이름 목록. 
+
+"pclk_mic0", "sclk_rgb_vclk_to_mic0"을 포함해야합니다.
+
+- samsung, disp-syscon : DISP 블록을위한 syscon의 참조 노드.
+
+- ports : 데콘 노드와 dsi 노드에 연결된 포트를 포함합니다.
+
+주소 셀과 크기 셀은 각각 1과 0이어야합니다.
+
+- 포트 : decon 노드 또는 dsi 노드의 끝점에 연결된 끝점 노드를 포함합니다.
+
+ reg 값은 각각 0과 1이어야합니다.
+
+Example:
+SoC specific DT entry:
+mic: mic@13930000 {
+	compatible = "samsung,exynos5433-mic";
+	reg = <0x13930000 0x48>;
+	clocks = <&cmu_disp CLK_PCLK_MIC0>,
+	       <&cmu_disp CLK_SCLK_RGB_VCLK_TO_MIC0>;
+	clock-names = "pclk_mic0", "sclk_rgb_vclk_to_mic0";
+	samsung,disp-syscon = <&syscon_disp>;
+
+	ports {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		port@0 {
+			reg = <0>;
+			mic_to_decon: endpoint {
+				remote-endpoint = <&decon_to_mic>;
+			};
+		};
+
+		port@1 {
+			reg = <1>;
+			mic_to_dsi: endpoint {
+				remote-endpoint = <&dsi_to_mic>;
+			};
+		};
+	};
+};
+
+*/

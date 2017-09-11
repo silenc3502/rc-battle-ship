@@ -1,0 +1,2652 @@
+A TMS320C66xTM CorePac DSP core that encompasses :DSP Subsystems Overview
+DSP Subsystems 개요
+
+The device includes two identical instances (DSP1 and DSP2) of a digital signal processor (DSP)
+subsystem, based on the TI's standard TMS320C66xTM DSP CorePac core.
+이 디바이스는 TI의 표준 TMS320C66xTM DSP CorePac 코어를 기반으로 디지털 신호 프로세서 (DSP) 서브 시스템의 두 개의 동일한 인스턴스 (DSP1 및 DSP2)가 포함되어 있습니다.
+
+The TMS320C66x DSP core enhances the TMS320C674xTM core, which merges the C674xTM floating
+point and the C64x+TM fixed-point instruction set architectures.
+TMS320C66x DSP 코어는 C674xTM 부동 소수점 및 C64x + TM 고정 소수점 명령어 세트 아키텍처를 병합 한 TMS320C674xTM 코어를 강화합니다.
+
+The C66x DSP is object-code compatible with the C64x+/C674x DSPs.
+
+C66x DSP는 C64x + / C674x DSP와 같이 오브젝트 코드 가 호환됩니다.
+
+오브젝트 코드: 컴파일러나 어셈블러에 의해 만들어진 코드
+
+For more information on the TMS320C66x core CPU, see the TMS320C66x DSP CPU and Instruction Set
+Reference Guide, (SPRUGH7).
+TMS320C66x 코어 CPU에 대한 자세한 내용은 TMS320C66x DSPCPU및 지침 참조( SPRUGH7)참조 가이드를 참조하십시오.
+
+Each of the two DSP subsystems integrated in the device includes the following components:
+ 기기에 통합된 두개의 DSP subsystems 은 다음과 같은 구성 요소를 포함한다.
+
+A TMS320C66xTM CorePac DSP core that encompasses :
+핵심 요소를 포함하는 TMS320C66xTM core-Core :
+- L1 program-dedicated (L1P) cacheable memory
+
+L1 프로그램 전용 (L1P) 캐시 가능한 메모리
+
+- L1 data-dedicated (L1D) cacheable memor
+
+L1 데이터 전용 (L1D) 캐시 가능한 메모리
+
+-L2 (program and data) cacheable memory
+
+L2 (프로그램 및 데이터) 캐시 가능 메모리
+- Extended Memory Controller (XMC)
+
+확장 메모리 컨트롤러 (XMC)
+-External Memory Controller (EMC)
+
+외부 메모리 컨트롤러 (EMC)
+-DSP CorePac located interrupt controller (INTC)
+
+DSP CorePac이 위치한 인터럽트 컨트롤러 (INTC)
+-DSP CorePac located power-down controller (PDC)
+DSP CorePac에 위치한 PDC (power-down controller)
+
+Dedicated enhanced data memory access engine -
+
+확장 데이터 전용 메모리 액세스 엔진
+
+EDMA, to transfer data from/to memories and peripherals external to the DSP subsystems and to local DSP memory (most commonly L2 SRAM).
+EDMA를 사용하여 DSP 서브 시스템의 외부 메모리 와 주변 장치 및 로컬 DSP 메모리 (가장 일반적으로 L2 SRAM) 사이에서 데이터를 전송합니다.
+
+The external DMA requests are passed through DSP system level (SYS) wakeup logic, and
+
+외부 DMA 요구는 DSP 시스템 레벨 (SYS) 웨이크 업 로직을 통과하고
+
+ collectedfrom the DSP1 / DSP2 dedicated outputs of the device DMA Events Crossbar for each of the two
+subsystems.
+각각 다른 서브 시스템 에대해 디바이스 dma Events Crossbar 의 dsp1/dsp2 출력에 수집된다.
+
+A level 2 (L2) interconnect network (DSP NoC) to allow connectivity between different modules of the subsystem or the remainder of the device via the device L3_MAIN interconnect.
+l2 상호연결 네트워크는 서브시스템의 다른 모듈 또는 장치 L3_MAIN 상호 연결을 통한 여러 장치 연결를 허락한다.
+
+Two memory management units (on EDMA L2 interconnect and DSP MDMA paths) for accessing the
+device L3_MAIN interconnect address space
+
+디바이스 L3_MAIN 상호 연결 주소 공간을 액세스하기위한 2 개의 메모리 관리 장치 (EDMA L2 상호 연결 및 DSP MDMA 경로에 있음)
+
+Dedicated system control logic (DSP_SYSTEM) responsible for power management, clock generation,
+and connection to the device power, reset, and clock management (PRCM) module
+전원 관리, 클록 발생 장치 전원 리셋 및 클럭 관리 (PRCM) 모듈에 대한 연결을 담당하는 전용 시스템 제어 로직 (DSP_SYSTEM)
+
+5.1.1 DSP Subsystems Key Features
+he TMS320C66x Instruction Set Architecture (ISA) is the latest for the C6000 family.
+
+TMS320C66x 명령 세트 아키텍처 (ISA)는 C6000 제품군의 최신 버전입니다.
+As with its predecessors (C64x, C64x+ and C674x), the C66x is an advanced VLIW architecture with 8 functional
+units (two multiplier units and six arithmetic logic units) that operate in parallel.
+
+기존의 C64x, C64x + C674x와 마찬가지로, C66x는 병렬로 동작하는 8 개의 기능(2 개의 곱셈 유닛과 6 개의 산술 논리 장치)를 갖춘
+고급 VLIW 아키텍처입니다.
+The C66x CPU has a total of 64 general-purpose 32-bit registers.
+C66x CPU에는 총 64 개의 범용 32 비트 레지스터가 있습니다.
+
+Some features of the DSP C6000 family devices are :
+
+DSP C6000 제품군의 일부 기능은 다음과 같습니다.
+
+Advanced VLIW CPU with eight functional units (two multipliers and six ALUs) which:
+
+8 개의 기능 단위 (2 개의 곱셈기와 6 개의 ALU)를 갖춘 고급 VLIW CPU :
+
+– Executes up to eight instructions per cycle for up to ten times the performance of typical DSPs
+일반적인 DSP의 성능의 최대 10 배의 사이클에서 최대 8 명령을 실행
+– Allows designers to develop highly effective RISC-like code for fast development time
+
+설계자(사용자)는 개발 시간을 단축하는 데 매우 효과적인 RISC 계열 코드를 개발할 수 있습니다
+
+• Instruction packing
+
+지침 팩
+– Gives code size equivalence for eight instructions executed serially or in parallel
+
+직렬 또는 병렬로 실행되는 8 개의 명령어에 대해 코드 크기를 동일하게 제공합니다.
+– Reduces code size, program fetches, and power consumption
+
+코드 크기, 프로그램 인출 소비 전력을 절감
+• Conditional execution of most instructions
+
+대부분의 명령어의 조건부 실행
+– Reduces costly branching
+비용이 많이 드는 분기를 줄입니다.
+– Increases parallelism for higher sustained performance
+
+지속적인 성능 향상을 위해 병렬 처리 기능 향상
+• Efficient code execution on independent functional units
+독립 실행형 기기에서의 효율적인 코드 실행
+– Industry's most efficient C compiler on DSP benchmark suite
+업계 에서 최고의 효율성을 자랑하는 DSP벤치 마크 제품군
+– Industry's first assembly optimizer for fast development and improved parallelization
+- 신속한 개발 및 개선 된 병렬화를위한 업계 최초의 어셈블리 최적화
+•8-/16-/32-bit/64-bit data support, providing efficient memory support for a variety of applications
+
+8/16/32 비트 / 64 비트 데이터 지원으로 다양한 애플리케이션에 효율적인 메모리 지원 제공
+•40-bit arithmetic options which add extra precision for vocoders and other computationally intensive
+applications
+보코더 및 기타 연산 집약적(강한) 인 애플리케이션을위해 정밀도를 높여주는 40 비트 연산 옵션
+• Saturation and normalization to provide support for key arithmetic operations
+주요 산술 연산을 지원하기 위한 포화 및 정규화
+• Field manipulation and instruction extract, set, clear, and bit counting support common operation found
+in control and data manipulation applications.
+
+필드 조작과 명령 추출, 세트, ​​클리어 및 비트 카운트는 제어 및 데이터 조작 응용 프로그램에서 볼 수있는 일반적인 작업을 지원합니다.
+The C66x CPU has the following additional features :
+
+C66x CPU에는 다음과 같은 추가 기능이 있습니다.
+• Each multiplier can perform two 16 × 16-bit or four 8 × 8 bit multiplies every clock cycle.
+각 곱셈기는 매 클럭주기마다 두 개의 16 × 16 비트 또는 네 개의 8 × 8 비트 곱셈을 수행 할 수 있습니다.
+• Quad 8-bit and dual 16-bit instruction set extensions with data flow support
+
+데이터 흐름을 지원하는 쿼드 8 비트 및 듀얼 16 비트 명령어 세트 확장
+
+• Support for non-aligned 32-bit (word) and 64-bit (double word) memory accesses
+
+비 정렬 32 비트 (워드) 및 64 비트 (더블 워드) 메모리 액세스 지원
+
+• Special communication-specific instructions have been added to address common operations in error-
+correcting codes.
+오류 정정 코드의 작업에 대처하기위한 특별한 통신 관련 명령어가 추가되었습니다.
+• Bit count and rotate hardware extends support for bit-level algorithms.
+비트 수 및 하드웨어 회전는 비트 레 알고리즘벌 지원을 확장합니다.
+
+• Compact instructions: Common instructions (AND, ADD, LD, MPY) have 16-bit versions to reduce
+code size.
+
+컴팩트 명령 : 공통 명령 (AND, ADD, LD, MPY)은 코드 크기를 줄이기 위해 16 비트 버전을 제공합니다.
+• Protected mode operation: A two-level system of privileged program execution to support higher-
+capability operating systems and system features such as memory protection.
+메모리 보호 시스템과 같은 기능 운영 체제 및 시스템 기능을 지원하는 권한이 부여된
+
+레벨2 시스템 특별한 프로그램
+
+• Exceptions support for error detection and program redirection to provide robust code execution
+오류 감지 및 프로그램 리디렉션(방향전환)을 지원하여 건강한(깔끔한) 코드 실행을 제공합니다.
+• Hardware support for modulo loop operation to reduce code size and allow interrupts during fully-
+pipelined code
+하드웨어 지원을 위해 하드웨어 지원-코드 크기를 줄이고 코드 도중에 인터럽트를 허용합니다.
+
+• Each multiplier can perform 32 × 32 bit multiplies
+
+각 곱셈기는 32 × 32 비트 곱셈을 수행 할 수 있습니다
+• Additional instructions to support complex multiplies allowing up to eight 16-bit multiply/add/subtracts
+per clock cycle
+
+클럭 사이클 당 최대 8 개의 16 비트 곱하기 / 더하기 / 빼기를 ​​허용하는 복소 곱셈을 지원하는 추가 지침
+해석 : 한사이클당 최대 8개의 16비트가 있는데 그것들끼리 곱하기 더하기 뺴기 를 허용하는 복소 곱셈을 지원한다.
+
+The TMS320C66x has the following key improvements to the ISA :
+
+TMS320C66x는 ISA에 대해 다음과 같은 주요 개선점을 가지고 있습니다 :
+• 4x Multiply Accumulate improvement for both fixed and floating point
+
+고정 소수점 및 부동 소수점 모두에 대해 4 배 곱하기 누적 향상
+다른 해석: 고정 소수점 및 부동 소수점 대해 4 배 (누적)곱하기 기능히 향상
+
+• Enhancement of the vector processing capability for fixed and floating point
+
+고정 소수점 및 부동 소수점 벡터 처리 기능 강화
+
+• Addition of domain-specific instructions for complex arithmetic and matrix operations
+
+• 복잡한 산술 연산과 행렬 연산을위한 도메인 특정 명령 추가
+
+
+On the C66x ISA, the vector processing capability is improved by extending the width of the SIMD instructions.
+C66x ISA에서 SIMD 명령어의 너비를 확장하면 벡터 처리 기능이 향상됩니다.
+
+The C674x DSP supports 2-way SIMD operations for 16-bit data and 4-way SIMD operations for 8-bit data.
+
+C674x DSP는 16 비트 데이터용 양방향 SIMD 연산과 8 비트 데이터용 4-way SIMD 연산을 지원합니다.
+
+C66x enhances this capabilities with the addition of SIMD instructions for 32-bit data allowing operation on 128-bit vectors.
+
+C66x는 SIMD 명령어를 32 비트 데이터에 추가하여이 기능을 강화하고 128 비트 벡터에서의 연산을 가능하게합니다.
+
+For example the QMPY32 instruction is able to perform the element to element multiplication between two vectors of four 32-bit data each.
+
+예를 들어, QMPY32 명령은 4 개의 32 비트 데이터로 이루어진 두 벡터 사이의 요소와 요소의 곱셈을 각각 실행할 수 있습니다.
+
+C66x ISA includes a set of specific instructions to handle complex arithmetic and matrix operations.
+
+C66x ISA는 복잡한 수학 연산과 행렬 연산을 처리하기위한 특정 명령 세트가 포함되어 있습니다.
+---------------------------------
+• TMS320C66x DSP CorePac memory components :
+• TMS320C66x DSP CorePac 메모리 구성 요소 :
+
+- A 32-KiB L1 program memory (L1P) configurable as cache and / or SRAM:
+캐시 또는 SRAM으로 구성 가능한 32 KiB L1 프로그램 메모리 (L1P)
+
+When configured as a cache, the L1P is a 1-way set-associative cache with a 32-byte cache line
+캐시로 구성되어있는 경우, L1P는 32 바이트의 캐시 라인을 가진 1 웨이 세트 연산 결합 캐시입니다
+
+• The DSP CorePac L1P memory controller provides bandwidth management, memory protection, and power-down functions
+DSP CorePac L1P 메모리 컨트롤러는 대역폭 관리, 메모리 보호 및 파워 다운 기능을 제공합니다
+
+• The L1P is capable of cache block and global coherence operations
+L1P는 캐시 블록 및 글로벌 일관성 조작이 가능하다
+• The L1P controller has an Error Detection (ED) mechanism, including necessary SRAM
+
+L1P 컨트롤러에는 필요한 SRAM을 포함하여 오류 감지 (ED) 메커니즘이 있습니다.
+
+• The L1P memory can be fully configured as a cache or SRAM
+
+L1P 메모리는 캐시 또는 SRAM으로 완전히 구성 될 수 있습니다.
+
+• Page size for L1P memory is 2KB
+L1P 메모리의 페이지 크기는 2KB입니다.
+--------------------------------------
+– A 32-KiB L1 data memory (L1D) configurable as cache and / or SRAM:
+- 캐시 및 / 또는 SRAM으로 구성 가능한 32K 바이트 L1 데이터 메모리 (L1D)
+
+
+• When configured as a cache, the L1D is a 2-way set-associative cache with a 64-byte cache line
+캐시로 구성되어있는 경우 L1D는 64 바이트의 캐시 라인을 가진 2 웨이 세트 연산 결합 캐시입니다
+
+•The DSP CorePac L1D memory controller provides bandwidth management, memoryprotection, and power-down functions
+DSP CorePac L1D 메모리 컨트롤러는 대역폭 관리, 메모리 보호 및 파워 다운 기능을 제공합니다
+
+• The L1D memory can be fully configured as a cache or SRAM
+L1D 메모리는 캐시 또는 SRAM로 완전히 구성될 수 있습니다.
+
+• No support for error correction or detection
+오류 수정 또는 감지 지원 안 함
+
+• Page size for L1D memory is 2KB
+L1D 메모리의 페이지 크기는 2KB입니다.
+------------------------------------
+– A 288-KiB (program and data) L2 memory, only part of which is cacheable:
+288-KiB (프로그램 및 데이터) L2 메모리에서는 일부만 캐시 가능합니다.
+• When configured as a cache, the L2 memory is a 4-way set associative cache with a 128-byte cache line
+캐시로 구성되어있는 경우 L2 메모리는 128 바이트의 캐시 라인을 가진 4 웨이 세트 연산 결합 캐시입니다
+
+• Only 256 KiB of L2 memory can be configured as cache or SRAM
+256 KiB L2 메모리 만 캐시 또는 SRAM으로 구성 할 수 있습니다.
+
+• 32 KiB of the L2 memory is always mapped as SRAM
+L2 메모리의 32 KiB는 항상 SRAM으로 매핑됩니다.
+
+• The L2 memory controller has an Error Correction Code (ECC) and ED mechanism, including necessary SRAM
+L2 메모리 컨트롤러는 ECC (오류수정코드)와 ED 메커니즘 이 필요한 SRAM 있다.
+
+• The L2 memory controller supports hardware prefetching and also provides bandwidth management, memory protection, and power-down functions.
+• L2 메모리 컨트롤러는 하드웨어 프리 페치를 지원하고 대역폭 관리, 메모리 보호 및 전원 차단 기능도 제공합니다.
+
+• Page size for L2 memory is 16KB
+• L2 메모리의 페이지 크기는 16KB입니다.
+--------------------------
+• The External Memory Controller (EMC) is a bridge from the C66x CorePac to the rest of the DSP subsystem and device. It has :
+외부 메모리 컨트롤러 (EMC)는 C66x CorePac에서 나머지 DSP 서브 시스템 및 장치까지의 다리입니다.
+
+– a 32-bit configuration port (CFG) providing access to local subsystem resources (like DSP_EDMA,DSP_SYSTEM, etc) or to L3_MAIN resources accessible via the CFG address range.
+로컬 서브 시스템 자원 (DSP_EDMA, DSP_SYSTEM 등) 또는 CFG 주소 범위에서 사용 가능한 L3_MAIN 소스에 대해 액세스를 제공하는 32 비트 구성 포트 (CFG).
+
+– a 128-bit slave-DMA port (SDMA) which provides accesses of system masters outside the DSP
+subsystem to resources inside the DSP subsystem or C66x DSP CorePac memories, i.e. when the
+DSP subsystem is the slave in a transaction.
+DSP 서브 시스템 외부의 시스템 마스터의 액세스를 DSP 서브 시스템 또는 C66x DSP 코어 팩 메모리 내부의 리소스, 즉 DSP 서브 시스템이 트랜잭션에서 슬레이브 인 경우에 제공하는 128 비트 슬레이브 -DMA 포트 (SDMA).
+
+• The Extended Memory Controller (XMC) processes requests from the L2 Cache Controller (which are
+a result of CPU instruction fetches, load/store commands, cache operations) to device resources via
+the C66x DSP CorePac 128-bit master DMA (MDMA) port :
+확장 메모리 컨트롤러 (XMC)는 C66x DSP CorePac 128 비트 Main DMA (MDMA) 포트를 통해 L2 캐쉬 컨트롤러 (CPU 명령어 인출로드 / 저장 명령어 캐시 작업의 결과 영역)에서 장치 리소스에 대한 요청을 처리 합니다.
+– Memory protection for addresses outside C66x DSP CorePac generated over device L3_MAIN on the MDMA port
+MD66 포트에 장치 L3_MAIN을 통해 생성 된 C66x DSP CorePac 외부 주소에 대한 메모리 보호
+– Prefetch, multi-in-flight requests
+
+프리 페치 여러 비행 요구
+
+
+• A DSP local Interrupt Controller (INTC) in the DSP C66x CorePac, interfaces the system events to
+the DSP C66x core CPU interrupt and exceptions inputs. Each DSP subsystem C66x CorePac
+interrupt controller supports up to 128 system events of which 64 interrupts are external to DSP
+subsystems, collected from the DSP1 /DSP2 dedicated outputs of the device Interrupt Crossbar.
+DSP C66x CorePac의 DSP 로컬 인터럽트 컨트롤러 (INTC)는 시스템 이벤트를 DSP C66x 코어 CPU 인터럽트 및 예외 입력에 인터페이스합니다.
+각 DSP 서브 시스템 C66x CorePac 인터럽트 컨트롤러는 최대 128 개의 시스템 이벤트를 지원하고 64 개의 인터럽트 장치 인터럽트 크로스바 DSP1 / DSP2 전용 출력에서 ​​수집 된 DSP 서브 시스템의 외부에 있습니다.
+• Local Enhanced Direct Memory Access (EDMA) controller feaures:
+
+로컬 향상된 다이렉트 메모리 액세스 (EDMA) 컨트롤러의 특징 :
+
+
+– Channel controller (CC) : 64-channel, 128 PaRAM, 2 Queues
+채널 컨트롤러 (CC) : 64 채널, 128 PaRAM, 2 대기열
+
+– 2 x Third-party Transfer Controllers (TPTC0 and TPTC1):
+2 x Third-party전송 컨트롤러(TPTC0 and TPTC1)
+
+• Each TC has a 128-bit read port and a 128-bit write port
+각 TC에는 128 비트 읽기 포트와 128 비트 쓰기 포트가 있습니다
+
+• 2KiB FIFOs on each TPTC
+각 TPTC에 2KiB FIFO
+– 1-dimensional/2-dimensional (1D/2D) addressing
+1 차원 / 2 차원 (1D / 2D) 어드레싱
+– Chaining capability
+연쇄 기능
+
+• DSP subsystems integrated MMUs:
+DSP 서브 시스템 통합 MMU :
+
+– Two MMUs are integrated:
+두 MMU가 통합되어 있습니다.
+
+• The MMU0 is located between DSP MDMA master port and the device L3_MAIN interconnect
+and can be optionally bypassed
+MMU0는 DSP MDMA 마스터 포트 와 L3_MAIN interconnect사이 에 위치하고 있으며,선택적으로 우회할 수 있습니다.
+
+• The MMU1 is located between the EDMA master port and the device L3_MAIN interconnect
+MMU1은 EDMA 마스터 포트와 장치 L3_MAIN 상호 연결 장치 사이에 위치합니다
+
+• A DSP local Power-Down Controller (PDC) is responsible to power-down various parts of the DSP
+C66x CorePac, or the entire DSP C66x CorePac.
+DSP 로컬 파워 다운 컨트롤러 (PDC)는 DSP C66x CorePac 또는 DSP C66x CorePac 전체의 다양한 부분의 파워 다운을합니다.
+
+• The DSP subsystems System Control logic provides:
+DSP 서브 시스템 시스템 제어 로직은 다음을 제공합니다.
+
+– Slave idle and master standby protocols with device PRCM for powerdown
+Slave idle 및 마스터 대기 프로토콜를 절전장치 PRCM을 사용하여 절전한다.
+– OCP Disconnect handshake for init and target busses
+OCP 초기화 및 대상 버스에 대한 핸드 셰이크 연결 끊기
+– Asynchronous reset
+비동기식 재설정
+– Power-down modes :
+파워 다운 모드
+• "Clockstop" mode featuring wake-up on interrupt event. The DMA event wake-up is managed in
+software.
+클랙스탑 모드기능 은 인터럽트 이벤트를 깨운다. DMA 이벤트 웨이크 업 기능은 소프트웨어에 의해 관리됩니다.
+• The device DSP subsystems are supplied by a PRCM DPLL, but each DSP1/2 has integrated its
+own PLL module outside the C66x CorePac for clock gating and division.
+장치 DSP 서브 시스템은 PRCM DPLL로 부터 공급되지만, 각 DSP1 / 2는 클록 게이팅 및 분배를 위해 자체 PLL 모듈을 C66x 코어 팩 외부에 통합했습니다.
+• Each of the two device DSP subsystems has following port instances to connect to remaining part of the device. See also Figure 5-1:
+두각각의 DSP하위 시스템 은 기기의 나머지 부분을 연결하기 위해 다음 포트를 따른다. 그림 5-1참조:
+
+– A 128-bit initiator (DSP MDMA master) port for MDMA/Cache requests
+MDMA / 캐시 요구에 대한 128 비트 초기 (DSP MDMA 마스터) 포트
+
+– A 128-bit initiator (DSP EDMA master) port for EDMA requests
+EDMA 요구에 대한 128 비트 초기 (DSP EDMA 마스터) 포트
+
+– A 32-bit initiator (DSP CFG master) port for configuration requests
+구성 요구를위한 32 비트 초기 (DSP CFG 마스터) 포트
+
+– A 128-bit target (DSP slave) port for requests to DSP memories and various peripherals
+DSP 메모리 및 주변기기에 대한 요청에 대한 128 비트 타겟 DSP (슬레이브) 포트
+
+• C66x DSP subsystems (DSPSS) safety aspects :
+C66x DSP 서브 시스템 (DSPSS)의 안전 :
+– Above mentioned memory ECC/ED mechanisms
+상기 메모리 ECC / ED 메커니즘
+
+– MMUs enable mapping of only the necessary application space to the processor
+MMU는 필요한 응용 프로그램 공간만을 프로세서에 매핑 할 수 있습니다
+– Memory Protection Units internal to the DSPSS ( in L1P,L1D and L2 memory controllers ) and
+external to DSPSS (firewalls) to help define legal accesses and raise exceptions on illegalaccesses
+메모리 보호 DSPSS 내부 (L1P, L1D 및 L2 메모리 컨트롤러) 및 DSPSS (방화벽) 외부에서 합법적 인 액세스를 정의하고 불법적 인 액세스에 대한 예외를 발생시키는 장치
+– Exceptions: Memory errors, various DSP errors, MMU errors and some system errors are detected
+and cause exceptions. The exceptions could be handled by the DSP or by a designated safety
+processor at the chip level. Note that it may not be possible for the safety processor to completely handle some exceptions
+예외:메모리 오류, 다양한 DSP오류 MMU 오류및 일부 시스템 오류는 예외를 일으킨다. 예외는 DSP 또는 칩 레벨에 지정된 안전 프로세서에 의해 처리 될 수 있습니다. 안전 프로세서가 일부 예외를 완전히 처리하지 못할 수 있다는 점에 유의하십시오.
+
+Unsupported features on the C66x DSP core for the device are:
+ C66x DSP 코어 장치 에서 지원되지 않는 기능
+
+• The Extended Memory Controller MPAX (memory protection and address extension) 36-bit addressing
+is NOT supported
+확장 메모리 컨트롤러 MPAX (메모리 보호 및 주소 확장) 는 36 비트 어드레싱을 지원하지 않습니다
+
+
+Known DSP subsystem powermode restrictions for the device are :
+장치에 대한 알려진 DSP 서브 시스템 powermode 제한 사항은 다음과 같습니다.
+
+• "Full logic / RAM retention" mode featuring wake-up on both interrupt or DMA event (logic in “always
+on” domain). Only OFF mode is supported by DSP subsystem, requiring full boot.
+인터럽트와 DMA 이벤트 ( "올웨이즈 온"도메인 로직)에서 웨이크 업 을 특징으로 하는 '전체 로직 / RAM 유지 "모드.
+OFF 모드만이 DSP 서브 시스템에서 지원되므로 전체 부팅이 필요합니다.
+
+
+5.2
+DSP Subsystem Integration
+DSP 서브 시스템 통합
+
+
+This section describes the integration of the module in the device, including information about clocks,
+resets, and hardware requests.
+이 섹션에서는 클럭 재설정 및 하드웨어 요구에 대한 정보를 포함하며 장치 모듈의 통합에 대해 설명합니다.
+
+
+Figure 5-2 shows the integration of the DSP subsystem.
+Figure 5-2  DSP 서브 시스템의 통합을 보여줍니다.
+
+NOTE: For more information about the slave idle protocol and the wake-up request, see
+Section 3.1.1.1.2, Module-Level Clock Management, in Chapter 3, Power, Reset, and Clock
+Management.
+슬레이브 아이돌 프로토콜 및 웨이크 업 요청에 대한 자세한 내용은 3 장 "전원, 리셋, 클록 관리"의 "3.1.1.1.2 모듈 수준의 클럭 관리"를 참조하십시오.
+
+Table 5-1 through Table 5-3 summarize the integration of the module in the device.
+표 5-1에서 표 5-3은 장치에서 모듈의 통합을 요약합니다.
+
+For information about PRCM reset sources and distribution, see Section 3.10.2,PD_DSP1 Description in Chapter 3, Power, Reset, and Clock Management. For DSP1 local reset details see also the Section 5.3.3.2.
+PRCM 재설정 소스 및 배포에 대한 자세한 내용은 3 장, 전원, 재설정 및 클록 관리의 3.10.2 절, PD_DSP1 설명을 참조하십시오. DSP1 로컬 리셋에 대한 자세한 내용은 5.3.3.2 절을 참조하십시오.
+
+NOTE: For information about PRCM clock gating and management, see Section 3.10.2, PD_DSP1
+Description and Section 3.10.3, PD_DSP2 Description in Chapter 3, Power, Reset, and Clock Management.
+PRCM 클록 게이팅 및 관리에 대한 자세한 내용은 3.10.2 절, PD_DSP1 설명 및 3.10.3 절, PD_DSP2 설명은 3 장, 전원 재설정 및 클럭 관리를 참조하십시오.
+
+
+The DSP1 / DSP2 generates a number of interrupt requests (IRQs) mapped via the device
+IRQ_CROSBBAR to other device interrupt controllers (outside DSP subsystem). They are described in
+Table 5-3.
+SP1 / DSP2는 IRQ_CROSBBAR 디바이스를 통해 다른 디바이스 인터럽트 컨트롤러 (DSP 서브 시스템 외부)에 매핑 된 여러 인터럽트 요청 (IRQ)을 생성합니다. 표 5-3.에 설명되어 있습니다
+
+DSP1 subsystem local MMU1 (DSP1_MMUCFG1) interrupt.
+DSP1 서브 시스템 로컬 MMU1 (DSP1_MMUCFG1) 인터럽트.
+This IRQ source signal is not mapped by default to any device INTC.
+이 IRQ 소스 신호는 기본적으로 모든 장치 INTC에 매핑되지 않습니다.
+
+DSP1 subsystem aggregated ("OR-ed") error interrupt.
+DSP1 서브 시스템 집계 ( "OR-ed") 오류 인터럽트.
+This IRQ source signal is not mapped by default to any device INTC.
+이 IRQ 소스 신호는 기본적으로 모든 장치 INTC에 매핑되지 않습니다.
+
+DSP1 subsystem EDMAchannel controller global interrupt.
+DSP1 서브 시스템 EDMA 채널 컨트롤러 글로벌 인터럽트.
+This IRQ source signal is not mapped by default to any device INTC.
+이 IRQ 소스 신호는 기본적으로 모든 장치 INTC에 매핑되지 않습니다.
+
+DSP2 subsystem local MMU0 (DSP2_MMU0CFG) interrupt.
+DSP2 서브 시스템 로컬 MMU0 (DSP2_MMU0CFG) 인터럽트.
+This IRQ source signal is not mapped by default to any device INTC.
+이 IRQ 소스 신호는 기본적으로 모든 장치 INTC에 매핑되지 않습니다.
+
+DSP2 subsystem EDMA channel controller REGION0 interrupt.
+DSP2 서브 시스템 EDMA 채널 제어기 REGION0 인터럽트.
+This IRQ source signal is not mapped by default to any device INTC.
+이 IRQ 소스 신호는 기본적으로 모든 장치 INTC에 매핑되지 않습니다.
+
+NOTE: The DSP1 / DSP2 does NOT generate any DMA requests towards other device DMA controllers outside DSP1 / DSP2 (EDMA, DMA_SYSTEM, etc.).
+참고 : DSP1 / DSP2는 DSP1 / DSP2 (EDMA, MA_SYSTEM 등) 외부의 다른 장치 DMA 컨트롤러에 대해 DMA 요청을 생성하지 않습니다.
+
+NOTE: The “Default Mapping” column in Table 5-3, DSP Hardware Requests shows the default mapping of module IRQ source signals. 표 5-3의 "Default Mapping"열, DSP Hardware Requests는 모듈 IRQ 소스 신호의 기본 매핑을 보여줍니다.
+These IRQ source signals can also be mapped to other lines of each device Interrupt controller through the IRQ_CROSSBAR module.
+이러한 IRQ 소스 신호는 IRQ_CROSSBAR 모듈을 통해 각 장치 인터럽트 컨트롤러의 다른 라인에도 매핑 될 수 있습니다.
+For more information about the IRQ_CROSSBAR module, see Section 18.4.6.4, IRQ_CROSSBAR Module Functional Description, in Chapter 18, Control Module.
+IRQ CROSSBAR 모듈에 대한 자세한 내용은 18 장, 제어 모듈의 18.4.6.4 절, IRQ CROSSBAR 모듈 기능 설명을 참조하십시오.
+For more information about the device interrupt controllers, see Chapter 17, Interrupt Controllers.
+장치 인터럽트 컨트롤러에 대한 자세한 내용은 17 장, 인터럽트 컨트롤러를 참조하십시오.
+
+NOTE: • For a description of the interrupt source controls at DSP subsystem level, see Section 5.3.4, DSP Interrupt Requests.
+DSP 하위 시스템 레벨에서 인터럽트 소스 컨트롤에 대한 설명은 섹션 5.3.4, DSP 인터럽트 요청을 참조하십시오.
+
+DSP1/DSP2 subsystem external interrupt sources: The default interrupt sources mapped by the device IRQ_CROSSBAR to the DSP1 / DSP2 interrupt controller lines are described in the Chapter 17, Interrupt Controllers.
+DSP1 / DSP2 서브 시스템의 외부 인터럽트 소스 : 장치 IRQ_CROSSBAR 의해 DSP1 / DSP2 인터럽트 컨트롤러 라인에 매핑되는 기본 인터럽트 소스 내용은 제 17 장 "인터럽트 컨트롤러"에서 설명하고 있습니다.
+lines are described in the Chapter 17, Interrupt Controllers. The programmable muxing of various external interrupt sources to the
+DSP1_INTC.DSP1_IRQ_x and DSP2_INTC.DSP2_IRQ_x input lines (where x=32 to 95) is covered in the Section 18.4.6.4, IRQ_CROSSBAR Module Functional Description, of the Chapter 18, Control Module.
+라인에 대해서는 17 장, 인터럽트 컨트롤러에서 설명합니다. 다양한 외부 인터럽트 소스를 DSP1_INTC.DSP1_IRQ_x 및 SP2_INTC.DSP2_IRQ_x 입력 행 (x = 32에서 95까지)은 18 장, 제어 모듈의 IRQ_CROSSBAR 모듈 기능 설명 섹션 18.4.6.4에서 다룹니다.
+
+DSP1/DSP2 subsystem internal interrupt sources: The mapping of DSP subsystem internal IRQ sources to DSP1_IRQ_x / DSP2_IRQ_x lines (where x=0 to 31 and x=96 to 127 for DSP subsystem internal event sources) is described in the Section 5.3.4, DSP Interrupt Requests.
+DSP1 / DSP2 서브 시스템의 내부 인터럽트 소스 : DSP 서브 시스템의 내부 IRQ 소스와 DSP1_IRQ_x / DSP2_IRQ_x 라인 (DSP 서브 시스템 내부 이벤트 소스 x = 0~31 및 x = 96~127)에 매핑 내용은 DSP 인터럽트 요구.
+
+DSP1/DSP2 subsystem external DMA request sources: The Table 5-6 and Table 5-7 lists the default DSP1 and DSP2 external DMA request sources, respectively, routed via the device DMA_CROSSBAR to the DSP1_EDMA / DSP2_EDMA channel controller inputs (DMA_DSP1_DREQ_i / DMA_DSP2_DREQ_i).
+DSP1 / DSP2 서브 시스템 외부 DMA 요청 소스 : 표 5-6 및 표 5-7은 각각 장치 DMA_CROSSBAR를 통해 DSP1_EDMA / DSP2_EDMA 채널 컨트롤러 입력 (DMA_DSP1_DREQ_i / DMA_DSP2_DREQ_i)이고 라우팅되는 기본 DSP1 및 DSP2 외부 DMA 요청 소스를 나열합니다. 
+
+5.3 DSP Subsystems Functional Description
+5.3 DSP 서브 시스템 기능 설명
+5.3.1 DSP Subsystems Block Diagram
+5.3.1 DSP 서브 시스템 블록 다이어그램
+Each of the device two DSP subsystems - DSP1 and DSP2 is composed of a DSP C66x CorePac coupled with several other submodules that enable its integration in the device architecture.
+두개의 DSP하위 시스템 각각에 대해 DSP1 과 DSP2는 디바이스 아키텍처에 통합될 수 있는 몇가지 다른 하위 모듈 이 결합된 DSP C66x CorePac로 구성되어 있습니다.
+
+Device DSP subsystem provides :
+장치 DSP 하위 시스템은 다음을 제공합니다.
+• a 128-bit master data port (MDMA) on device L3_MAIN with a dedicated DSP subsystem local MMU
+(MMU0) on the path.
+• 경로상의 전용 DSP 서브 시스템 로컬 MMU (MMU0)를 사용하여 장치 L3_MAIN의 128 비트 마스터 데이터 포트 (MDMA).
+
+• a 32-bit master configuration port (CFG) on device L3_MAIN through which DSP host configures
+various device located peripherals (external to the DSP subsystem).
+• DSP 호스트들이 다양한 장치에 배치 된 주변 장치 (DSP 서브 시스템의 외부)를 구성하는 장치 L3_MAIN에서 32 비트의 마스터 구성 포트 (CFG).
+
+• a 128-bit slave DMA port (SDMA) on device L3_MAIN which allows external initiators (masters) to DSP
+to manipulate some portion of its config / status registers (those which are mapped in the L3_MAIN
+space) in the device
+• 외부 이니시에이터 (마스터)가 DSP에 그 장치의 config / status 레지스터 (L3_MAIN 공간에 매핑되는 것)의 일부를 조작 할 수있게하는 장치 L3_MAIN 128 비트 슬레이브 DMA 포트 (SDMA)
+
+• a 128-bit master EDMA port - which allows the DSP_EDMA traffic controllers to initiate transfers on L3_MAIN.
+• 128 비트 마스터 EDMA 포트 - DSP_EDMA 트래픽 컨트롤러가 L3_MAIN에서 전송을 시작할 수 있습니다.
+
+The C66x DSP subsystem is illustrated in the Figure 5-1.
+C66x DSP 서브 시스템은 그림 5-1에 나와 있습니다.
+
+5.3.2 DSPSubsystem Components
+5.3.2 DSPSubsystem 구성 요소
+
+
+5.3.2.1 C66x DSP Subsystem Introduction
+5.3.2.1 C66x DSP 서브 시스템의 개요
+
+The key component of the C66x DSP subsystem is built on the TI's high performance TMS320C66x DSPCorePac which consists of a single TMS320C66x CPU (DSP_C0) processor along with a level 1 (L1P andL1D) cacheable SRAM and a level 2 (L2) cacheable SRAM memories interfaced via associated local L1P,L1D and L2 memory controllers, respectively.
+C66x DSP 서브 시스템의 주요 구성 요소는 레벨 1 (L1P 및 L1D) 캐시 가능 SRAM 및 레벨 2 (L2) 캐시 가능 SRAM과 함께 단일 TMS320C66x CPU (DSP_C0) 프로세서로 구성된 TI의 고성능 TMS320C66x DSP CorePac을 기반으로합니다. 메모리는 관련된 로컬 L1P, L1D 및 L2 메모리 컨트롤러를 통해 각각 인터페이스됩니다.
+
+ A DSP C66x CorePac includes also some other internal peripheral components, see Section 5.3.2.2.3 for details.
+DSP C66x CorePac는 다른 내부 주변 구성 요소도 포함되어 있습니다 (자세한 내용은 제 5.3.2.2.3 항을 참조하십시오).
+
+This chapter provides an overview of the DSP subsystem and the following considerations associated with it :
+이 장에서는 DSP 서브 시스템의 개요와 DSP 서브 시스템에 대한 다음 고려 사항에 대해 설명합니다.
+
+• DSP C66x CorePac Core and L1 / L2 Memories
+• DSP C66x CorePac 코어 및 L1 / L2 메모리
+
+• DSP System control and configuration :
+• DSP 시스템의 제어 및 설정 :
+– clock management
+- 클락 관리
+– wake-up event generation
+- 알람 이벤트의 생성
+– interrupt masking
+- 인터럽트 마스크
+• DSP Booting
+• DSP 부팅
+• DSP subsystem internal memory and external memory (L3_MAIN) space views
+• DSP 서브 시스템의 내부 및 외부 메모리 (L3_MAIN) 공간 뷰
+• DSP INTC interrupts mapping, event combining and exception generation
+• DSP INTC 인터럽트 매핑 이벤트 합성 및 예외 생성
+• DMA requests mapping to EDMA channels and EDMA traffic routing
+• EDMA 채널 및 EDMA 트래픽 라우팅에 DMA 요구 매핑
+• Others
+For more information on the TMS320C66x DSP CorePac, refer to the TMS320C66x DSP CorePac User
+Guide, ( SPRUGW0C), the TMS320C66x DSP Cache User Guide, ( SPRUGY8) and the TMS320C66x
+DSP CPU and Instruction Set Reference Guide, ( SPRUGH7).
+TMS320C66x DSP CorePac에 대한 자세한 내용은 "TMS320C66x DSP CorePac 사용자 가이드」(SPRUGW0C)"TMS320C66x DSP 캐시 사용 설명서 "(SPRUGY8) 및"TMS320C66x DSP CPU 및 명령어 세트 레퍼런스 가이드」(SPRUGH7)를 참조하십시오.
+
+5.3.2.2 DSP TMS320C66x CorePac
+The TMS320C66x DSP CorePac is illustrated on Figure 5-1.
+TMS320C66x DSP CorePac은 그림 5-1에 나와 있습니다. It consists of a single DSP C66x CPU
+
+(DSP_C0) processor tightly coupled with level 1 - L1P (program), L1D (data) cacheable SRAM memories
+and level 2 (L2) cacheable SRAM memories.
+DSP C66x CPU 는 L1P (프로그램), L1D (데이터) 캐시 가능, SRAM 메모리 및 레벨 2 (L2) 캐시 가능, SRAM 메모리와 밀접하게 결합 된 DSP_C0 프로세서입니다.
+
+ The C66x CorePac integrated memories are interfaced via associated local L1P, L1D and L2 memory controllers, respectively.
+C66x CorePac 통합 메모리는 관련 로컬 L1P, L1D 및 L2 메모리 컨트롤러를 통해 각 인터페이스 되어있습니다.
+
+Additionally, the DSP C66x CorePac contains the following internal peripherals:
+또한 DSP C66x CorePac 다음의 내부 주변 장치가 포함되어 있습니다.
+• an interrupt controller (DSP_INTC) to service DSP C66x CorePac internal and external interrupt events
+• DSP C66x CorePac 내부 및 외부 인터럽트 이벤트를 처리하기위한 인터럽트 컨트롤러 (DSP_INTC)
+
+• a power-down controller (DSP_PDC)
+• 파워 다운 컨트롤러 (DSP_PDC)
+
+• an external memory controller - DSP_EMC
+• 외부 메모리 컨트롤러 - DSP_EMC
+
+• an extended memory controller - DSP_XMC_CTRL
+• 확장 메모리 컨트롤러 - DSP_XMC_CTRL
+
+• a bandwidth manager - BWM with local controls to the L1P-, L1D- and L2-memories
+대역폭 관리자 - L1P, L1D 및 L2 메모리에 로컬 컨트롤을 갖춘 BWM
+
+• an internal direct memory access controller - IDMA
+내부 직접 메모리 액세스 컨트롤러 - IDMA
+
+The C66x CorePac DSP also instantiates Debug and Trace logic, part of which is implemented in the DSP
+core C66x CPU.
+또한 C66x CorePac DSP는 DSP 코어 C66x CPU에서 구현되는 디버그 및 추적 로직을 인스턴스화합니다.
+
+For more details, refer to the Chapter 34, On-Chip Debug Support .
+자세한 내용은 34 장, 온칩 디버그 지원을 참조하십시오.
+
+5.3.2.2.1 DSP TMS320C66x CorePac CPU
+
+The DSP C66x CorePac CPU includes following key components :
+DSP C66x CorePac CPU는 다음 주요 구성 요소를 포함합니다 :
+
+• A program fetch unit
+•프로그램 가져오기 장치
+
+• 16-/32-bit instruction dispatch unit, advanced instruction packing
+• 16-/32-bit 명령어 전달 장치, 고급 명령 패킹
+
+• Instruction decode unit
+• 명령 디코드 장치
+
+• Two data paths, each with four functional units
+•두개의 기능적인 장치가 있는 2개의 데이터 경로
+
+• 64 x 32-bit general purpose registers
+64 × 32 비트 범용 레지스터
+
+• Control logic and associated registers
+• 제어 로직 및 관련 레지스터
+
+• An internal interrupt and exception controller
+내부 인터럽트 및 예외 컨트롤러
+
+• Test, emulation logic
+• 테스트, 에뮬레이션 논리
+
+• Internal DMA (IDMA) for transfers between internal memories
+• 내부 메모리 간의 전송을위한 내부 DMA (IDMA)
+
+For more information on the TMS320C66x central processing unit, see the TMS320C66x DSP CPU and
+Instruction Set Reference Guide, ( SPRUGH7).
+TMS320C66x 중앙 처리 장치에 대한 자세한 내용은 TMS320C66x DSP CPU 및 명령 세트 참조 안내서 (SPRUGH7).
+
+5.3.2.2.2 DSP TMS320C66x CorePac Internal Memory Controllers and Memories
+5.3.2.2.2 DSP TMS320C66x CorePac 내부 메모리 컨트롤러 및 메모리
+
+The TMS320C66x DSP CorePac implements a two-level internal cache-based memory architecture.
+TMS320C66x DSP CorePac은 2- 레벨 내부 캐시 기반 메모리 아키텍처를 구현합니다.
+
+5.3.2.2.2.1 Level 1 Memories
+
+Level 1 memory (L1) is split into separate program memory (L1P memory) and data memory (L1D
+memory).
+레벨 1 메모리 (L1)는 다른 프로그램 메모리 (L1P 메모리)와 데이터 메모리 (L1D 메모리)로 분할되어 있습니다.
+
+Each of the memories can be split into static RAM (normal addressable on-chip memory) and
+cache.
+각 메모리는 스태틱 RAM (일반 주소 가능한 온칩 메모리) 및 캐시로 나눌 수 있습니다.
+
+L1P memory is dedicated to TMS320C66x CPU program words storage and is interfaced via a dedicated
+L1P memory controller in the DSP C66x CorePac.
+L1P 메모리는 TMS320C66x CPU 프로그램 워드 저장 전용이며 DSP C66x CorePac의 전용 L1P 메모리 컨트롤러를 통해 인터페이스됩니다.
+ User can choose to initialize one part of the L1P memory as cache and the other as SRAM.
+사용자는 L1P 메모리의 한 부분을 캐시로 초기화하고 다른 부분은 SRAM으로 초기화하도록 선택할 수 있습니다.
+
+The entire 32 KiB memory is cacheable.
+전체 32KB 메모리가 캐시 가능합니다.
+
+The L1P features a dynamically configurable cache size (4 KiB, 8 KiB, 16 KiB and 32 KiB) defined via L1P controller configuration register - L1PCFG[2:0] L1PMODE bitfield.
+L1P 컨트롤러 구성 레지스터 는 -L1PCFG [2 : 0] L1PMODE 비트 필드에 정의 된 동적으로 구성 가능한 캐시 (4 KiB, 8 KiB, 16 KiB 및 32 KiB)를 제공합니다.
+
+Note that, the L1P controller maps the cache space by starting at the top of the L1P memory map (i.e. from most significant address) and working downwards.
+L1P 제어기는 L1P 메모리 맵의 최상위 (즉, 최상위 주소)에서 시작하여 아래쪽으로 작업하여 캐시 공간을 매핑합니다.
+
+The L1P mapped SRAM size is 32 KiB minus the configured cache size.
+L1P 매핑 된 SRAM 크기는 구성된 캐시 크기에서 32KB입니다.
+
+NOTE: The L1P cache / SRAM is ONLY read-accessible by the C66x CPU processor.
+L1P 캐시 / SRAM은 C66x CPU 프로세서에 의해서만 읽기 액세스가 가능합니다.
+The DSP C66x CorePac external DMAs (SDMA and EDMA) and internal DMA (IDMA) are the only
+initiators which can write to the L1P memory.
+DSP C66x CorePac 외부 DMA (SDMA 및 EDMA) 및 내부 DMA (IDMA)는 L1P 메모리에 기록 할 수있는 유일한 개시 장치입니다.
+ The CPU may however write access and modify certain L1P cache/SRAM controller registers if such access is allowed for the register.
+그러나 CPU는 해당 액세스가 허용되는 경우 특정 액세스 제어 장치를 사용하여 특정 액세스 제어 장치를 입력하고 수정할 수 있습니다.
+
+NOTE: In the device integrated DSP, at reset, the entire 32 KiB- L1P memory is initialized as a
+cache ( reset value of L1PMODE=0x7).
+디바이스 통합 DSP에서 리셋시 32 KiB-L1P 메모리 전체가 캐시 (L1PMODE = 0x7의 재설정 값)로 초기화됩니다.
+
+
+For more information on the L1P cache/SRAM memories, refer to the TMS320C66x DSP Cache User
+Guide, ( SPRUGY8).
+L1P 캐시 / SRAM 메모리에 대한 자세한 내용은 TMS320C66x DSP 캐시 사용자 안내서 (SPRUGY8)를 참조하십시오.
+
+L1D memory is used for level 1 CPU data storage and is interfaced via a dedicated L1D memory
+controller in the DSP C66x CorePac.
+L1D 메모리는 레벨 1 CPU 데이터 저장에 사용되며 DSP C66x CorePac의 전용 L1D 메모리 컨트롤러를 통해 인터페이스됩니다.
+
+User can choose to initialize one part of the L1D memory as cache and the other as SRAM.
+사용자는 L1D 메모리의 한 부분을 캐시로 초기화하고 다른 부분은 SRAM으로 초기화하도록 선택할 수 있습니다.
+The entire 32 KiB memory is cacheable.
+전체 32KB 메모리가 캐시 가능합니다.
+
+The L1D features a dynamically configurable cache size (4 KiB, 8 KiB, 16 KiB and 32 KiB) defined via L1D configuration register - L1DCFG[2:0] L1DMODE bitfield.
+L1D는 L1D 구성 레지스터 (L1DCFG [2 : 0] L1DMODE 비트 필드)를 통해 동적으로 구성 가능한 캐시 크기 (4 KiB, 8 KiB, 16 KiB 및 32 KiB)를 특징으로합니다.
+
+ Note that, the L1D controller maps the cache space by starting at the top of the L1D memory map (i.e. from most significant address) and working downwards. The L1D mapped SRAM size is 32 KiB minus the configured cache size.
+L1D 제어기는 L1D 메모리 맵의 최상위에서 (즉, 최상위 어드레스로부터) 시작하여 하향으로 동작함으로써 캐시 공간을 매핑한다.
+
+NOTE: In the device integrated DSP, at reset, the entire 32 KiB- L1D memory is initialized as a  cache ( i.e. reset value of L1DMODE = 0x7).
+참고 : 장치 통합 DSP에서 리셋시 전체 32 KiB-L1D 메모리는 캐시 (즉, L1DMODE = 0x7의 재설정 값)로 초기화됩니다.
+
+For more information on the L1D cache/SRAM memories, refer to the TMS320C66x DSP Cache User Guide, ( SPRUGY8).
+L1D 캐시 / SRAM 메모리에 대한 자세한 내용은 TMS320C66x DSP 캐시 사용자 안내서 (SPRUGY8)를 참조하십시오.
+
+5.3.2.2.2.2 Level 2 Memory
+The L2 memory can also be split into L2 RAM (normal addressable on-chip memory) and L2-cache for
+caching external to the DSP meagmodule memory locations.
+L2 메모리는 DSP 메모리 모듈 위치 외부의 캐싱을 위해 L2 RAM (일반 주소 지정 가능 온칩 메모리) 및 L2 캐시로 분할 될 수도 있습니다.
+
+The on-chip integrated L2 memory total size is 288 KiB.
+온칩 통합 L2 메모리 총 크기는 288 KiB입니다.
+
+ The L2 memory is shared between data and program word sources within and outside the DSP C66x CorePac.
+L2 메모리는 DSP C66x CorePac 내외의 데이터 워드와 프로그램 워드 소스 공유됩니다.
+
+ The L2 memory is divided into two physical 128 bit-wide banks, accesses to which are interleaved on address LSB.
+L2 메모리는 2 개의 물리적 128 비트 폭 뱅크로 분리되어 그 액세스 주소 LSB에서 인터리브된다.
+
+ Each of the two L2 banks is further split into 4 subbanks.
+두 개의 L2 뱅크 각각은 4 개의 서브 뱅크로 더 나뉩니다.
+
+NOTE: Only 256 KiB of the L2 memory are cacheable in the device DSP. The remaining 32 KiB are
+always mapped as static RAM.
+L2 메모리의 256 KiB만이 장치 DSP에 캐시 가능합니다. 나머지 32 KiB는 항상 정적 RAM으로 매핑됩니다.
+
+NOTE: The MDMA bus error event is not exported outside DSP subsystem.
+참고 : MDMA 버스 오류 이벤트는 DSP 하위 시스템 외부로 내보내지지 않습니다.
+However it is merged (OR-ed) along with other error event sources within the DSP subsystem to produce a single
+ERRINT_IRQ interrupt exported outside the DSP subsystem.
+그러나 DSP 서브 시스템 내부에서 다른 ERRINT_IRQ 인터럽트를 생성하기 위해 DSP 서브 시스템 내의 다른 오류 이벤트 소스와 함께 병합 (OR-ed)됩니다.
+
+For more details on ERRINT_IRQ generation and asscoiated event registers at DSP_SYSTEM level, refer to the Section 5.3.4.2.2.
+ERRINT_IRQ 생성 및 DSP_SYSTEM 레벨의 asscoiated 이벤트 레지스터에 대한 자세한 내용은 5.3.4.2.2 절을 참조하십시오.
+
+5.3.2.2.3 DSP C66x CorePac Internal Peripherals
+5.3.2.2.3 DSP C66x CorePac 내부 주변 장치
+
+The DSP C66x CorePac includes the following internal peripherals:
+DSP C66x CorePac에는 다음과 같은 내부 주변 장치가 포함되어 있습니다.
+
+• DSP interrupt controller (DSP_INTC)
+• DSP 인터럽트 컨트롤러 (DSP_INTC)
+
+• DSP power-down controller (DSP_PDC)
+• DSP 파워 다운 컨트롤러 (DSP_PDC)
+
+• Bandwidth manager (DSP_BWM)
+• 대역폭 관리자 (DSP_BWM)
+
+• Memory Protection Hardware
+• 메모리 보호 하드웨어
+
+• Internal DMA (DSP_IDMA) controller
+• 내부 DMA (DSP_IDMA) 컨트롤러
+
+• External Memory Controller (DSP_EMC)
+• 외부 메모리 컨트롤러 (DSP_EMC)
+
+• Extended Memory Controller (DSP_XMC_CTRL) including prefetch buffer logic
+• prefetch 버퍼 로직을 포함한 확장된 메모리 컨트롤러( DSP_XMC_CTRL)
+
+• Error Detection logic for the L1P memory
+• L1P 메모리에 대한 오류 감지 로직
+
+• Error Detection and Correction (ECC) logic for the L2 memory This section briefly describes the DSP_INTC, DSP_PDC, DSP_BWM, DSP_IDMA, DSP_EMC,  DSP_XMC_CTRL controller, L1P Error detection and L2 ECC logic.
+• L2 메모리 용 ECC (Error Detection and Correction) 로직이 섹션에서는 DSP_INTC, DSP_PDC, DSP_BWM, DSP_IDMA, DSP_EMC, DSP_XMC_CTRL 컨트롤러, L1P 오류 감지 및 L2 ECC 로직에 대해 간략하게 설명합니다.
+
+ For more information on the TMS320C66x DSP CorePac, see the TMS320C66x DSP CorePac User Guide, ( SPRUGW0C).
+ TMS320C66x DSP CorePac에 대한 자세한 내용은 TMS320C66x DSP CorePac 사용자 안내서 (SPRUGW0C)를 참조하십시오.
+
+5.3.2.2.2.2 Level 2 Memory
+5.3.2.2.2.2 레벨 2 메모리
+
+The L2 memory can also be split into L2 RAM (normal addressable on-chip memory) and L2-cache for caching external to the DSP meagmodule memory locations.
+L2 메모리는 DSP 메모리 모듈 위치 에 외부의 캐싱을 위해 L2 RAM (일반 주소 지정 가능 온칩 메모리) 및 L2 캐시로 분할 될 수도 있습니다.
+
+The on-chip integrated L2 memory total size is 288 KiB.
+온칩 통합 L2 메모리 총 크기는 288 KiB입니다.
+
+The L2 memory is shared between data and program word sources within and outside the
+DSP C66x CorePac.
+L2 메모리는 DSP C66x CorePac 내외의 데이터 워드와 프로그램 워드 소스 공유됩니다.
+
+The L2 memory is divided into two physical 128 bit-wide banks, accesses to which are interleaved on address LSB.
+L2 메모리는 2 개의 물리적 128 비트 폭 뱅크로 분리되어 그 액세스 주소 LSB에서 인터리브된다.
+
+Each of the two L2 banks is further split into 4 subbanks.
+2 개의 L2 뱅크의 각각에는 4 개의 사부반쿠로 분할된다.
+
+NOTE: Only 256 KiB of the L2 memory are cacheable in the device DSP. The remaining 32 KiB are always mapped as static RAM.
+노트: L2 메모리의 256 KiB만이 장치 DSP에 캐시 가능합니다. 나머지 32 KiB는 항상 정적 RAM으로 매핑됩니다.
+
+    
+The L2 memory features a dynamically configurable cache size (32 KiB, 64 KiB, 128 KiB and 256 KiB)
+L2 메모리는 L2 구성 레지스터 (L2CFG [2 : 0] L2MODE 비트 필드)를 통해 동적으로 구성 가능한 캐시 크기 (32 KiB, 64 KiB, 128 KiB 및 256 KiB)를 특징으로합니다.
+defined via L2 configuration register - L2CFG[2:0] L2MODE bitfield.
+L2 구성 레지스터를 통해 정의 됨 - L2CFG [2 : 0] L2MODE 비트 필드.
+The additional (to the 32KiB fixed SRAM L2) SRAM available is 256-KiB minus the cache size.
+사용 가능한 32KiB 고정 SRAM 는 L2 SRAM에 추가되는 256K 바이트 캐시 크기를 뺀 것입니다.
+L2 memory controller is responsible for MDMA bus error events reporting.
+L2 메모리 컨트롤러는 MDMA 버스 오류 이벤트보고를 담당합니다.
+
+The DSP C66x CorePac MDMA bus error event is exported outside the C66x DSP CorePac in the subsystem, and can be enabled to trigger the ERRINT_IRQ aggregated interrupt output.
+DSP C66x CorePac MDMA 버스 오류 이벤트는 서브 시스템의 C66x DSP CorePac 외부로 내보내지며 ERRINT_IRQ 집계 인터럽트 출력을 트리거 할 수 있습니다.
+ See also corresponding "MDMAERREVT" event in the Table 5-5.
+표 5-5의 해당 "MDMAERREVT"이벤트를 참조하십시오.
+
+NOTE: The MDMA bus error event is not exported outside DSP subsystem. However it is merged
+(OR-ed) along with other error event sources within the DSP subsystem to produce a single
+ERRINT_IRQ interrupt exported outside the DSP subsystem.
+참고 : MDMA 버스 오류 이벤트는 DSP 하위 시스템 외부로 내보내지지 않습니다. 그러나 DSP 서브 시스템 내부에서 다른 ERRINT_IRQ 인터럽트를 생성하기 위해 DSP 서브 시스템 내의 다른 오류 이벤트 소스와 함께 병합 (OR-ed)됩니다.
+For more details on ERRINT_IRQ generation and asscoiated event registers at DSP_SYSTEM level, refer to the Section 5.3.4.2.2.
+ERRINT_IRQ 생성 및 DSP_SYSTEM 레벨의 asscoiated 이벤트 레지스터에 대한 자세한 내용은 5.3.4.2.2 절을 참조하십시오.
+
+5.3.2.2.3 DSP C66x CorePac Internal Peripherals
+5.3.2.2.3 DSP C66x CorePac 내부 주변 장치
+
+The DSP C66x CorePac includes the following internal peripherals:
+DSP C66x CorePac에는 다음과 같은 내부 주변 장치가 포함되어 있습니다.
+
+• DSP interrupt controller (DSP_INTC)
+• DSP 인터럽트 컨트롤러 (DSP_INTC)
+
+• DSP power-down controller (DSP_PDC)
+• DSP 파워 다운 컨트롤러 (DSP_PDC)
+
+• Bandwidth manager (DSP_BWM)
+• 대역폭 관리자 (DSP_BWM)
+
+• Memory Protection Hardware
+• 메모리 보호 하드웨어
+
+• Internal DMA (DSP_IDMA) controller
+• 내부 DMA (DSP_IDMA) 컨트롤러
+
+•External Memory Controller (DSP_EMC)
+• 외부 메모리 컨트롤러 (DSP_EMC)
+
+•Extended Memory Controller (DSP_XMC_CTRL) including prefetch buffer logic
+• 프리 페치 버퍼 로직을 포함한 확장 메모리 컨트롤러 (DSP_XMC_CTRL)
+
+•Error Detection logic for the L1P memory
+• L1P 메모리에 대한 오류 감지 로직
+
+•Error Detection and Correction (ECC) logic for the L2 memory
+• L2 메모리 용 ECC (Error Detection and Correction) 논리
+
+
+This section briefly describes the DSP_INTC, DSP_PDC, DSP_BWM, DSP_IDMA, DSP_EMC,
+DSP_XMC_CTRL controller, L1P Error detection and L2 ECC logic.
+이 절에서는 DSP_INTC, DSP_PDC, DSP_BWM, DSP_IDMA, DSP_EMC, DSP_XMC_CTRL 컨트롤러, L1P 오류 감지 및 L2 ECC 논리에 대해 간략하게 설명합니다.
+
+ For more information on the TMS320C66x DSP CorePac, see the TMS320C66x DSP CorePac User Guide, ( SPRUGW0C).
+TMS320C66x DSP CorePac에 대한 자세한 내용은 TMS320C66x DSP CorePac 사용자 안내서 (SPRUGW0C)를 참조하십시오.
+
+5.3.2.2.3.1 DSP C66x CorePac Interrupt Controller (DSP INTC)
+5.3.2.2.3.1 DSP C66x CorePac 인터럽트 컨트롤러 (DSP INTC)
+
+The DSP C66x CorePac includes an interrupt controller (DSP_INTC) and can receive a total of 128
+system events as inputs.
+DSP C66x CorePac은 인터럽트 컨트롤러 (DSP_INTC)를 포함하고 총 128 개의 시스템 이벤트를 입력으로 수신 할 수 있습니다.
+They include DSP-generated events and chip-level events.
+여기에는 DSP 생성 이벤트 및 칩 레벨 이벤트가 포함됩니다.
+
+In addition to these 128 events, a non-maskable (NMI) event (see the Section 5.3.4.1.1) and reset events
+are mapped to the DSP_INTC as well, and are routed straight through to the DSP CPU core.
+이 128 개의 이벤트 외에도, NMI (Non-Maskable) 이벤트 (5.3.4.1.1 절 참조) 및 리셋 이벤트 는 DSP_INTC에도 맵핑되며, DSP CPU 코어로 곧바로 라우팅됩니다.
+
+For more details on the DSP_INTC functionalities and its corresponding control / status registers (part of
+the DSP_ICFG local configuration space), refer to the section Interrupt Controller within the TMS320C66x
+DSP CorePac User Guide, ( SPRUGW0C).
+DSP_INTC 기능과 거기에 대응하는 제어 / 상태 레지스터 (DSP_ICFG 로컬 구성 공간의 일부)에 대한 자세한 내용은 "TMS320C66x DSP CorePac 사용 설명서 (SPRUGW0C)"의 "인터럽트 컨트롤러"를 참조하십시오.
+
+For more details on input interrupt mappings and associated IRQ wake-up events, refer to the
+Section 5.3.4.1.
+입력 인터럽트 매핑과 관련된 IRQ 웨이크 업 이벤트에 대한 자세한 내용은 5.3.4.1 절을 참조하십시오.
+
+For more information about the device DSP_INTC, see Chapter 17, Interrupt Controllers.
+DSP_INTC 디바이스에 대한 자세한 정보는 17 장, 인터럽트 컨트롤러를 참조하십시오.
+
+For more information on chip level IRQ mapping via the device IRQ_CROSSBAR module, see Section 18.4.6.4,
+IRQ_CROSSBAR Module Functional Description, in Chapter 18, Control Module.
+장치 IRQ_CROSSBAR 모듈을 통한 칩 수준 IRQ 매핑에 대한 자세한 내용은 18 장, 제어 모듈의 18.4.6.4 절, IRQ_CROSSBAR 모듈 기능 설명을 참조하십시오.
+
+5.3.2.2.3.2 DSP C66x CorePac Power-Down Controller (DSP PDC)
+5.3.2.2.3.2 DSP C66x CorePac 파워 다운 컨트롤러 (DSP PDC)
+
+The DSP C66x CorePac includes a power-down controller (PDC).
+DSP C66x CorePac에는 파워 다운 컨트롤러 (PDC)가 포함되어 있습니다.
+The PDC can power-down all of the following components of the DSP C66x CorePac and internal memories of the DSP subsystem:
+PDC는 모든 DSP C66x CorePac의 구성 요소와 DSP 하위 시스템의 내부 메모리 :
+• C66x CPU
+• L1P Memory
+• L2 Memory
+• Cache controllers
+• Entire TMS320C66x DSP CorePac
+전체 TMS320C66x DSP 코어 팩
+
+Refer to the Power-Down Controller in the TMS320C66x DSP CorePac User Guide, ( SPRUGW0C) for
+detailed descriptions of the DSP C66x CorePac components power-down control.
+DSP C66x CorePac 컴포넌트 파워 다운 제어에 대한 자세한 설명은 TMS320C66x DSP CorePac 사용 자 가이드 (SPRUGW0C)의 파워 다운 컨트롤러를 참조한다.
+
+5.3.2.2.3.3 DSP C66x CorePac Bandwidth Manager (BWM)
+5.3.2.2.3.3 DSP C66x CorePac 대역폭 관리자 (BWM)
+
+The DSP C66x CorePac implements a bandwidth manager (BWM) to assure that some requestors do
+NOT block resources in the C66x CorePac DSP for extended periods of time.
+DSP C66x CorePac은 대역폭 관리자 (BWM)를 구현하여 일부 요청자가 장시간 동안 C66x CorePac DSP의 리소스를 차단하지 않도록합니다.
+
+Refer to the Bandiwdth Management Architecture in theTMS320C66x DSP CorePac User Guide, (
+SPRUGW0C) for detailed descriptions of the DSP C66x CorePac components power-down control.
+DSP C66x CorePac 컴포넌트 파워 다운 제어에 대한 자세한 설명은 TMS320C66x DSP CorePac 사용자 안내서 (Bandwidth) 관리 아키텍처 (SPRUGW0C)를 참조하십시오.
+
+5.3.2.2.3.4 DSP C66x CorePac Memory Protection Hardware
+5.3.2.2.3.4 DSP C66x CorePac 메모리 보호 하드웨어
+
+The C66x Core Pac memory protection architecture introduces in the DSP a combination of DSP privilege
+levels and a memory system permission structure.
+C66x Core Pac 메모리 보호 아키텍처는 DSP 권한 수준과 메모리 시스템 권한 구조의 조합을 DSP에 도입합니다.
+
+ This provides several benefits to the system, as follows:
+이것은 다음과 같이 시스템에 여러 가지 이점을 제공합니다.
+
+The DSP C66x CorePac MP events are exported outside the DSP C66x CorePac in DSP subsystem,
+and can be enabled to trigger the ERRINT_IRQ aggregated interrupt output.
+DSP C66x CorePac MP 이벤트는 DSP 서브 시스템의 DSP C66x CorePac 외부로 내보내지며 ERRINT_IRQ 집계 인터럽트 출력을 트리거 할 수 있습니다.
+ See also corresponding memory protection fault events listed in the Table 5-5.
+표 5-5에 나열된 해당 메모리 보호 오류 이벤트를 참조하십시오.
+
+NOTE: The memory protection exception events are not exported outside DSP subsystem.
+참고 : 메모리 보호 예외 이벤트는 DSP 하위 시스템 외부로 내보내지지 않습니다.
+ However they are merged (OR-ed) along with other error event sources within the DSP subsystem to produce a single ERRINT_IRQ interrupt exported outside the DSP subsystem.
+그러나 이들은 DSP 서브 시스템 내에서 다른 ERRINT_IRQ 인터럽트를 생성하기 위해 DSP 서브 시스템 내의 다른 오류 이벤트 소스와 함께 병합 (OR-ed)됩니다.
+For more details on ERRINT_IRQ generation and associated event registers at DSP_SYSTEM level, refer to the Section 5.3.4.2.2.
+ERRINT_IRQ 생성 및 DSP_SYSTEM 레벨의 연관된 이벤트 레지스터에 대한 자세한 내용은 5.3.4.2.2 절을 참조하십시오.
+
+NOTE: IDMA, DMA or System initiators should not issue read/write requests to regions of DSP L1P,
+L1D, or L2 memory configured as cache.
+참고 : IDMA, DMA 또는 시스템 초기 캐시로 설정된 DSP L1P, L1D 또는 L2 메모리 영역에 읽기 / 쓰기 요청을하지 마십시오. In such cases the corresponding MPPA register should be set to 0x0 to disallow external read/write accesses.
+이런 경우 해당 MPPA 레지스터를 0x0으로 설정하여 외부의 읽기 / 쓰기 액세스를 금지해야합니다.
+
+5.3.2.2.3.5 DSP C66x CorePac Internal DMA (IDMA) Controller
+5.3.2.2.3.5 DSP C66x CorePac 내부 DMA (IDMA) 컨트롤러
+
+ The IDMA controller performs fast block transfers between any two memory locations local to the DSP C66x CorePac.
+IDMA 컨트롤러는 DSP C66x CorePac의 로컬 두 메모리 위치간에 빠른 블록 전송을 수행합니다.
+Local memory locations are defined as those in Level 1 program (L1P), Level 1 data (L1D), and Level 2 (L2) memories, or in the external peripheral configuration (CFG) port.
+로컬 메모리 위치는 레벨 1 프로그램 (L1P), 레벨 1 데이터 (L1D) 및 레벨 2 (L2) 메모리 또는 외부 주변 장치 구성 (CFG) 포트의 위치로 정의됩니다.
+The IDMA configuration / status registers themselves are part of the DSP_ICFG and are visible only to
+C66x CPU.
+IDMA 구성 / 상태 레지스터 자체는 DSP_ICFG의 일부이며 C66x CPU에서만 볼 수 있습니다.
+
+NOTE: The IDMA cannot transfer data to or from the internal DSP memory-mapped register
+space (DSP_ICFG).
+참고 : IDMA 내부 DSP 메모리 매핑 된 레지스터 공간 (DSP_ICFG)간에 데이터를 전송할 수 없습니다.
+
+The IDMA exception is mapped to the system level ERRINT_IRQ interrupt event. For more
+details, refer to the Section 5.3.4.2.2 and the Table 5-5.
+IDMA 예외는 시스템 레벨 ERRINT_IRQ 인터럽트 이벤트에 맵핑됩니다. 자세한 내용은 섹션 5.3.4.2.2 및 표 5-5를 참조하십시오.
+
+The DSP C66x CorePac IDMA error event is exported outside the DSP C66x CorePac in the subsystem, and can be enabled to trigger the ERRINT_IRQ aggregated interrupt output.
+DSP C66x CorePac IDMA 오류 이벤트는 서브 시스템의 DSP C66x CorePac 외부로 내보내지며 ERRINT_IRQ 집계 된 인터럽트 출력을 트리거 할 수 있습니다.
+See also corresponding "EMC_IDMAERR" event in the Table 5-5.
+표 5-5의 해당 "EMC_IDMAERR"이벤트를 참조하십시오.
+
+NOTE: The IDMA exception error event is not exported outside DSP subsystem.
+참고 : IDMA 예외 오류 이벤트는 DSP 하위 시스템 외부로 내보내지지 않습니다.
+However it is merged (OR-ed) along with other error event sources within the DSP subsystem to produce a single ERRINT_IRQ interrupt exported outside the DSP subsystem.
+그러나 DSP 서브 시스템 내부에서 다른 ERRINT_IRQ 인터럽트를 생성하기 위해 DSP 서브 시스템 내의 다른 오류 이벤트 소스와 함께 병합 (OR-ed)됩니다.
+For more details on ERRINT_IRQ generation and asscoiated event registers at DSP_SYSTEM level, refer to the Section 5.3.4.2.2.
+ERRINT_IRQ 생성 및 DSP_SYSTEM 레벨의 asscoiated 이벤트 레지스터에 대한 자세한 내용은 5.3.4.2.2 절을 참조하십시오.
+
+The IDMA is fully described in the section Internal Direct Memory Access (IDMA) Controller of the TMS320C66x DSP CorePac User Guide, ( SPRUGW0C).
+IDMA에 대한 자세한 내용은 TMS320C66x DSP CorePac 사용자 안내서 (SPRUGW0C)의 IDMA (Internal Direct Memory Access) 컨트롤러 단원을 참조하십시오.
+
+5.3.2.2.3.6 DSP C66x CorePac External Memory Controller
+5.3.2.2.3.6 DSP C66x CorePac 외부 메모리 컨트롤러
+
+The DSP C66x CorePac has an embedded External Memory Controller which acts as a bridge between
+the DSP C66x CorePac CPU and the remaining part of DSP subsystem.
+DSP C66x CorePac에는 DSP C66x CorePac CPU와 DSP 하위 시스템의 나머지 부분 간 브리지 역할을하는 내장 메모리 컨트롤러가 있습니다.
+ It implements two ports interfacing the DSP C66x CorePac environment:
+DSP C66x CorePac 환경을 인터페이스하는 2 개의 포트를 구현합니다.
+
+• An external peripheral 32-bit CFG port which acts as an (DSP CPU cfg) initiator on the DSP_NoC L2
+interconnect.
+• DSP_NoC L2 상호 연결에서 (DSP CPU cfg) 이니시에이터로 작동하는 외부 주변 장치 32 비트 CFG 포트.
+It is the root source of all C66x CPU external configuration traffic (excluding the DSP_ICFG traffic which takes place only within the DSP C66x CorePac) towards the subsystem.
+이것은 C66x CPU의 외부 구성 트래픽(DSP C66x CorePac에서만 발생하는 DSP_ICFG 트래픽을 제외한) 모든 루트 소스에서 서브 시스템을 향해 있습니다.
+• An SDMA slave port which is a target on the L2 DSP_NoC interconnect.
+• L2 DSP_NoC는 상호 연결의 대상인 SDMA 슬레이브 포트.
+It generally accepts traffic initiated on DSP_NoC by the:
+일반적으로 DSP_NoC에서 시작된 트래픽
+– DSP_EDMA_TC0 and DSP_EDMA_TC1
+- DSP_EDMA_TC0 및 DSP_EDMA_TC1
+
+– DSP external slave port on the L3_MAIN
+- L3_MAIN의 DSP 외부 슬레이브 포트
+
+
+In summary:
+요약
+• The CPU CFG port provides access to the memory-mapped registers which control various peripherals
+and resources within the DSP subsystem, such as the MMUs, DSP_EDMA controllers, DSP system
+control and wakeup logic, DSP NoC itself, DSP external peripherals, etc.
+• CPU CFG 포트는 MMU, DSP_EDMA 컨트롤러, DSP 시스템 제어 및 웨이크 업 로직, DSP NoC 자체 DSP 외부 주변 장치 등 DSP 서브 시스템의 다양한 주변 장치 및 리소스를 제어하는 ​​메모리 매핑 된 레지스터에 대한 액세스를 제공 합니다.
+
+•The DSP system masters found outside the DSP C66x CorePac such as the DSP_EDMA controllers
+(TC0 and TC1) or L3_MAIN masters (device MPU, IPU1, IPU2, etc.) access the SDMA slave port to
+reach resources inside the DSP C66x CorePac.
+•DSP_EDMA 컨트롤러 (TC0 및 TC1) 또는 L3_MAIN 마스터 (장치 MPU, IPU1, IPU2 등)와 같은 DSP C66x CorePac 외부에서 발견 된 DSP 시스템 마스터는 SDMA 슬레이브 포트에 액세스하여 DSP C66x CorePac 내부 리소스에 접근합니다.
+In respect to the SDMA port, the DSP C66x CorePac is the slave in the transaction.
+SDMA 포트와 관련하여 DSP C66x CorePac은 트랜잭션에서 슬레이브입니다.
+The DSP_EMC controller adds following functionalities to the DSP C66x CorePac:
+DSP_EMC 컨트롤러는 다음과 같은 기능을 DSP C66x CorePac에 추가합니다.
+• Reporting errors related to the C66x CPU external peripheral configuration bus (associated registers)
+• C66x CPU 외부 주변 장치 구성 버스 (관련 레지스터)와 관련된보고 오류
+
+NOTE: Regarding PrivID versus AID mapping functionality of the EMC, the C66x DSP CorePac is
+able to distinguish ONLY "local" vs "external" requests.
+참고 : EMC의 PrivID 대 AID 매핑 기능과 관련하여 C66x DSP CorePac은 "로컬"대 "외부"요청 만 구별 할 수 있습니다.
+The device integrated C66x DSP CorePac has the SDMA PrivID input tied-off to a value of 0x0.
+장치 통합 C66x DSP CorePac는 SDMA PrivID 입력이 0x0의 값에 연결되어 있습니다.
+ On DSP C66x CorePac SDMA port, this means that no distinguishing can be made between external requests which come over DSP_NoC interconnect from local DSP_EDMA and those coming from other initiators accesing DSP via the device L3_MAIN interconnect.
+DSP C66x CorePac SDMA 포트는 로컬 DSP_EDMA에서 DSP_NoC 인터커넥트 및 장치 L3_MAIN 인터커넥트를 통해 DSP에 액세스하는 다른 이니세이터들과 구별 할 수 없습니다.
+This limits the funcitionality of the internal memory protection registers.
+이렇게하면 내부 메모리 보호 레지스터의 기능이 제한됩니다.
+
+The DSP C66x CorePac EMC error event is exported outside the DSP C66x CorePac in the
+subsystem, and is capable to trigger the ERRINT_IRQ aggregated interrupt output.
+DSP C66x CorePac EMC 오류 이벤트는 서브 시스템의 DSP C66x CorePac의 외부로 내보내고 ERRINT_IRQ 집계 인터럽트 출력을 트리거 할 수 있습니다.
+
+ See also corresponding EMC_BUSERR event in the Table 5-5.
+표 5-5의 해당 EMC_BUSERR 이벤트를 참조하십시오.
+
+NOTE: The EMC configuration bus error event is not exported outside DSP subsystem.
+참고 : EMC 구성 버스 오류 이벤트는 DSP 하위 시스템 외부로 내보내지지 않습니다.
+ However it is merged (OR-ed) along with other error event sources within the DSP subsystem to
+produce a single ERRINT_IRQ interrupt exported outside the DSP subsystem.
+그러나 DSP 서브 시스템 내부에서 다른 ERRINT_IRQ 인터럽트를 생성하기 위해 DSP 서브 시스템 내의 다른 오류 이벤트 소스와 함께 병합 (OR-ed)됩니다.
+For more details on ERRINT_IRQ generation and asscoiated event registers at DSP_SYSTEM level, refer to the Section 5.3.4.2.2.
+ERRINT_IRQ 생성 및 DSP_SYSTEM 레벨의 asscoiated 이벤트 레지스터에 대한 자세한 내용은 5.3.4.2.2 절을 참조하십시오.
+
+For various DSP_NoC initiator vs target mappings, refer to the Table 5-8.
+다양한 DSP_NoC 기자 및 대상 매핑은 표 5-8를 참조하십시오.
+
+Note that, there are DSP_NoC pressure (Mflag bus) controls in DSP_SYSTEM logic related to the C66x
+CPU CFG and DSP_NoC SDMA init traffic. They are described in the Section 5.3.8.3.
+C66x CPU CFG 및 DSP_NoC SDMA init 트래픽 관련 DSP_SYSTEM 논리에는 DSP_NoC 압력 (Mflag 버스) 컨트롤이 있습니다. 그들은 섹션 5.3.8.3에 설명되어 있습니다.
+
+The EMC functionalities / registers are fully described in the section External Memory Controller (EMC) of the TMS320C66x DSP CorePac User Guide, ( SPRUGW0C).
+EMC 기능 / 레지스터는 TMS320C66x DSP CorePac 사용자 안내서 (SPRUGW0C)의 외장 메모리 컨트롤러 (EMC) 섹션에서 자세히 설명합니다.
+
+5.3.2.2.3.7 DSP C66x CorePac Extended Memory Controller
+5.3.2.2.3.7 DSP C66x CorePac 확장 메모리 컨트롤러
+
+The DSP C66x CorePac located extended memory controller (DSP_XMC_CTRL) implements a local DMA
+master port (MDMA) which provides the primary path for C66x CPU and cache requests to the device
+level memories such as (DDR or L3 SRAM) and peripheral / memory mapped register space.
+DSP C66x CorePac에 위치한 확장 메모리 컨트롤러 (DSP_XMC_CTRL)는 장치에 C66x CPU 및 캐시 요청에 대한 기본 경로를 제공하는 로컬 DMA 마스터 포트 (MDMA)를 구현합니다 .DDR 또는 L3 SRAM 및 주변 장치 / 메모리 매핑 된 레지스터 공간과 같은 상위 수준의 메모리를 포함 할 수 있습니다.
+
+Via some additional logic, including DSP_SYSTEM controls and a local DSP MMU - DSP_MMU0 on the path (with
+option to bypass), C66x local MDMA port is mapped to the DSP subsystem CPU master port (i.e. MDMA
+master port of the DSP CPU on L3_MAIN).
+DSP_SYSTEM 컨트롤과 경로상의 로컬 DSP MMU-DSP_MMU0 (바이 패스 옵션 포함)을 포함한 몇 가지 추가 로직을 통해 C66x 로컬 MDMA 포트는 DSP 서브 시스템 CPU 마스터 포트 (예 : L3_MAIN의 DSP CPU의 MDMA 마스터 포트)에 매핑됩니다.
+
+ The DSP C66x Corepac MDMA port is mapped to the DSP Subsystem CPU Master Port (with DSP_MMU0 involved or not involved) to allow fast accesses (DSP_NoC not involved) to the external SDRAM (via the L3_MAIN and DMM) or to L3 SRAM (via the L3_MAIN).
+DSP C66x Corepac MDMA 포트는 외부 SDRAM에 대한 빠른 액세스 (L3_MAIN 및 DMM 통해) 또는 L3 SRAM에 대한 빠른 액세스 (DSP_NoC은 포함되지 않습니다)을 가능하게하는 DSP 서브 시스템 CPU 마스터 포트 (DSP_MMU0 참여 또는 참여 하지 않습니다) L3_MAIN).
+
+The memory protection settings in MPAX defines types of the memory accesses permitted on various
+address ranges within DSP C66x CorePac 32-bit address map.
+MPAX의 메모리 보호 설정은 DSP C66x CorePac 32 비트 주소 맵 내 다양한 ​​주소 범위에서 허용되는 메모리 액세스 유형을 정의합니다.
+
+The DSP_XMC_CTRL also instantiates program and data prefetch buffer logic to reduce time during
+servicing read requests from the L1D, L1P and L2 memory controllers.
+DSP_XMC_CTRL은 또한 프로그램 및 데이터 프리 페치 버퍼 로직을 인스턴스화하여 L1D, L1P 및 L2 메모리 컨트롤러의 읽기 요청을 처리하는 동안 시간을 ​​줄입니다.
+The aim is to buffer program and data fetches from external L3_MAIN memory locations.
+그 목적은 외부 L3_MAIN 메모리 위치에서 프로그램 및 데이터 페치를 버퍼링하는 것입니다.
+ While the program prefetch buffer is organized as 4 entry x 32 byte, the data prefetch buffer is organized in 8 slots, with 128 bytes per slot.
+프로그램 프리 페치 버퍼가 4 개 항목 x 32 바이트로 구성되는 동안 데이터 프리 페치 버퍼는 슬롯 당 128 바이트가있는 8 개 슬롯으로 구성됩니다.
+ The DSP_XMC_CTRL prefetch reduces the penalty associated with accesses to the L3_MAIN SDRAM upon L1P, L1D and L2-cache read-misses.
+DSP_XMC_CTRL 프리 페치는 L1P, L1D 및 L2 캐시 읽기 누락시 L3_MAIN SDRAM에 대한 액세스와 관련된 페널티를 줄입니다.
+
+NOTE: the DSP_XMC_CTRL registers are part of the DSP_ICFG space, hence they are not
+accessible outside the DSP C66x CorePac (visible only to the C66x CPU).
+참고 : DSP_XMC_CTRL 레지스터는 DSP_ICFG 공간의 일부이므로 DSP C66x CorePac (C66x CPU에서만 볼 수 있음) 외부에서는 액세스 할 수 없습니다.
+
+In summary the DSP_XMC_CTRL provides :
+요약하면 DSP_XMC_CTRL은 다음을 제공합니다.
+• a master path from the DSP C66x CorePac level 2 cache / SRAM memory to device memory such as
+SDRAM or L3 SRAM or peripheral / MMR address space.
+DSP C66x CorePac 레벨 2 캐시 / SRAM 메모리에서 다음과 같은 장치( DSP_XMC_CTRL) 메모리에 이르는 마스터 경로 SDRAM 또는 L3 SRAM 또는 주변 장치 / MMR 주소 공간.
+
+• memory protection on external address ranges related to L3_MAIN RAMs (via MPAX unit) :
+• L3_MAIN RAM과 관련된 외부 주소 범위의 메모리 보호 (MPAX 장치를 통해) :
+– 16 user-defined address ranges (MPAX segments) can be used to divide external memory space
+- 16 개의 사용자 정의 주소 범위 (MPAX 세그먼트)를 사용하여 외부 메모리 공간을 나눌 수 있습니다
+
+• Address translation
+• 주소 번역
+
+• Data and Program prefetch buffer logic
+• 데이터 및 프로그램 프리 페치 버퍼 로직
+
+• 12- address candidate buffer that acts as a "stream detection filter"
+• "스트림 탐지 필터"역할을하는 12- 주소 예비 버퍼
+
+NOTE: The device DSP subsystem does NOT use the DSP C66x CorePac multicore shared
+memory controller (MSMC) port to add more static RAM within subsystem boundaries, i.e. no
+additional SRAM is available in the DSP except for the L1P, L1D and L2 memories.
+장치 DSP 하위 시스템은 DSP C66x CorePac 멀티 코어 공유 메모리 컨트롤러 (MSMC) 포트를 사용하여 서브 시스템 경계 내에서 더 많은 정적 RAM을 추가하지 않습니다. 즉, L1P, L1D 및 L2 메모리를 제외하고 DSP에 추가 SRAM을 사용할 수 없습니다.
+
+Only the DSP_XMC_CTRL controller MDMA port on the L3_MAIN interconnect is used to extend DSP
+available RAM memory via a direct or DSP_MMU0 translated access to the device EMIF DDR memories and OCMC RAMs.
+L3_MAIN 상호 연결 DSP_XMC_CTRL 컨트롤러 MDMA 포트만 장치 EMIF DDR 메모리 및 OCMC RAM에 직접 또는 DSP_MMU0 변환 액세스를 통해 DSP 사용 가능한 RAM 메모리를 확장하는 데 사용됩니다.
+
+The XMC functionalities / registers are fully described in the section Extended Memory Controller (XMC)
+of the TMS320C66x DSP CorePac User Guide, ( SPRUGW0C).
+XMC 기능 / 레지스터는 TMS320C66x DSP CorePac 사용자 안내서 (SPRUGW0C)의 확장 메모리 컨트롤러 (XMC) 섹션에서 자세히 설명합니다.
+
+5.3.2.2.3.7.1 XMC MDMA Accesses at DSP System Level
+5.3.2.2.3.7.1 DSP 시스템 레벨에서의 XMC MDMA 액세스
+
+5.3.2.2.3.7.1.1 DSP System MPAX Logic
+5.3.2.2.3.7.1.1 DSP 체계 MPAX 논리
+
+The default configuration of MPAX registers provides a 32-bit view of system memory on L3_MAIN.
+MPAX 레지스터의 기본 구성은 L3_MAIN에서 시스템 메모리의 32 비트 뷰를 제공합니다.
+
+In summary, each MPAX segment (mentioned above) is programmed with a starting virtual base address,
+segment sizes from 4 GiB down to 4 KiB, replacement address (i.e., physical address); and permission
+attributes.
+요약하면, 각 MPAX 세그먼트 (위에서 언급 한)는 시작 가상 기본 주소로 프로그래밍되며, 4 GiB이하부터 4 KiB까지의 세그먼트 크기, 대체 주소 (즉, 물리적 주소); 허가 속성.
+
+Provided that DSP_MMU0 can be used to perform address translation, in most cases the replacement address will equal the base address (i.e., virtual == physical from DSP C66x CorePac perespective).
+DSP_MMU0을 사용하여 주소 변환을 수행 할 수있는 경우, 대체 주소는 기본 주소와 동일합니다 (즉, 가상 == DSP C66x CorePac의 물리적 주소).
+
+The system level implementation of MPAX logic allows the C66x CPU to change permission without being
+required to flush the cache.
+MPAX 로직의 시스템 레벨 구현은 C66x CPU가 캐시를 플러시하는 데 필요합니다.
+
+The C66x CPU subsystem relies on the MPAXn.PERM field to properly configure the permissions for
+remote address ranges.
+C66x CPU 하위 시스템은 MPAXn.PERM 필드를 사용하여 원격 주소 범위에 대한 사용 권한을 올바르게 구성합니다.
+
+The MDMA.rperm[6:0] signals are tie-off to a fixed value of 0x7F on the DSP C66x CorePac boundary.
+MDMA.rperm [6 : 0] 신호는 DSP C66x CorePac 경계에서 0x7F의 고정 값에 연결됩니다.
+
+5.3.2.2.3.7.1.2 MDMA Non-Post Override Control
+5.3.2.2.3.7.1.2 MDMA 비 포스트 재 지정 제어
+
+The C66x corepac submits writes denoted as either “cacheable” or non-cacheable.
+C66x 코어 팩은 "캐시 가능"또는 캐시 불가능한 것으로 표시된 쓰기를 제출합니다.
+
+Write accesses that are non-cacheable will be submitted as interconnect (L3_MAIN) non-posted writes; whereas write accesses that are cacheable are submitted as interconnect posted writes.
+쓰기가 불가능한 쓰기 액세스는 상호 연결 (L3_MAIN) 비 게시 쓰기로 제출됩니다. 캐시 가능한 쓰기 액세스는 상호 연결 게시 쓰기로 제출됩니다.
+
+An exception for the cache writes to L3_MAIN is that in the case of a cache block write-back operation (when actual cache evict busrts are actually issued towards L3_MAIN connected memory), a non-posted write is submitted.
+L3_MAIN에 대한 캐시 쓰기 예외는 캐시 블록 후 기록 작업 (실제 캐시 제거 버스가 실제로 L3_MAIN 연결된 메모리를 향할 때)이 게시되지 않은 쓰기가 제출된다는 것입니다.
+
+NOTE: In order to provide a safety net for interconnects that may do aggressive reordering, a memory-mapped register SW control is provided - DSP_SYS_BUS_CONFIG[24] NOPOSTOVERRIDE.
+참고 : 적극적인 정렬 할 수있는 상호 연결 안전망을 제공하기 위해 메모리 매핑 된 레지스터 SW 컨트롤이 포함되어 있습니다 (DSP_SYS_BUS_CONFIG [24] NOPOSTOVERRIDE).
+
+When set, this results in all write commands being issued as nonposted.
+설정되면 모든 쓰기 명령이 포스트가 아닌 것으로 발행됩니다.
+
+This bit defaults to set, and thus the default behavior is for non-posted writes to be used exclusively.
+이 비트는 기본적으로 set으로 설정되어 있기 때문에, 기본 동작은 배치되지 않은 쓰기를 독점적으로 사용할수있다.
+
+5.3.2.2.3.8 L1P Memory Error Detection Logic
+5.3.2.2.3.8 L1P 메모리 오류 탐지 로직
+
+The L1P memory detection logic (no correction is implemented) uses a 4-bit parity per 256-bit location (1-bit parity per 64-bit line quadrant).
+L1P 메모리 감지 로직 (보정하지 않음)은 256 비트 위치 당 4 비트 패리티 (64 비트 라인 사분면 당 1 비트 패리티)를 사용합니다.
+
+The L1P error detection logic features:
+L1P 오류 감지 로직의 특징은 다음과 같습니다.
+
+• L1P error detection command, status and address controls (registers)
+• L1P 오류 감지 명령, 상태 및 주소 제어 (레지스터)
+
+• L1P_ED error detection exception / interrupt to the DSP_INTC upon DMA / IDMA access
+• L1P_ED 오류 감지 예외 / DMA / IDMA 액세스시 DSP_INTC에 대한 인터럽트
+
+• a direct exception event to C66x CPU (DSP_INTC not involved) upon parity error during a program
+fetch from L1P-cache
+• L1P 캐시에서 프로그램을 가져 오는 동안 패리티 오류가 발생하면 C66x CPU에 대한 직접 예외 이벤트 (DSP_INTC는 포함되지 않음)
+
+• L1P-cache error recovery
+• L1P 캐시 오류 복구
+
+The L1P parity error detection event is exported outside the DSP C66x CorePac in the subsystem,  and can be enabled to trigger the ERRINT_IRQ aggregated interrupt output.
+L1P 패리티 오류 감지 이벤트는 서브 시스템의 DSP C66x CorePac 외부로 내보내지며 ERRINT_IRQ 집계 인터럽트 출력을 트리거 할 수 있습니다.
+
+ See also corresponding "PMC_ED" event in the Table 5-5.
+표 5-5의 해당 "PMC_ED"이벤트를 참조하십시오.
+
+NOTE: The L1P error detection event is not exported outside DSP subsystem.
+참고 : L1P 오류 감지 이벤트는 DSP 하위 시스템 외부로 내보내지지 않습니다.
+
+However it is merged (OR-ed) along with other error event sources within the DSP subsystem to produce a single ERRINT_IRQ interrupt exported outside the DSP subsystem.
+그러나 DSP 서브 시스템 내부에서 다른 ERRINT_IRQ 인터럽트를 생성하기 위해 DSP 서브 시스템 내의 다른 오류 이벤트 소스와 함께 병합 (OR-ed)됩니다.
+
+For more details on ERRINT_IRQ generation and asscoiated event registers at DSP_SYSTEM level, refer to the Section 5.3.4.2.2.
+ERRINT_IRQ 생성 및 DSP_SYSTEM 레벨의 asscoiated 이벤트 레지스터에 대한 자세한 내용은 5.3.4.2.2 절을 참조하십시오.
+
+For more details on L1P error detection logic, refer to the section L1P Error Detection, of the
+TMS320C66x DSP CorePac User Guide, ( SPRUGW0C).
+L1P 오류 감지 로직에 대한 자세한 내용은 TMS320C66x DSP CorePac 사용자 안내서 (SPRUGW0C)의 L1P 오류 감지 섹션을 참조하십시오.
+
+5.3.2.2.3.9 L2 Memory Error Detection and Correction Logic
+5.3.2.2.3.9 L2 메모리 오류 탐지 및 수정 논리
+
+The L2 Memory error detection and correction logic (ECC) implements a distance-3 “detect 2, correct 1”
+Hamming code based error correction / detection algorithm.
+L2 메모리 오류 탐지 및 정정 로직 (ECC)은 거리 -3 "해독 코드 2를 기반으로 한 정확한 해밍 코드를 오류 정정 / 검출 알고리즘으로 구현합니다.
+ A 12-bit hamming code per 256-bit is used.
+256 비트 당 12 비트 해밍 코드가 사용됩니다.
+The L2 error detection and correction logic features:
+L2 오류 감지 및 정정 로직 기능 :
+• L2 error detection command, status and address controls (registers)
+• L2 오류 감지 명령, 상태 및 주소 제어 (레지스터)
+
+• L2 EDC enable
+• L2 EDC 활성화
+
+• L2 error detection event counter
+• L2 오류 감지 이벤트 카운터
+
+• 2x L2 EDC exception / interrupts mapped to the DSP_INTC :
+• DSP_INTC에 매핑 된 2x L2 EDC 예외 / 인터럽트 :
+
+– L2_ED1 = "error corrected" event
+- L2_ED1 = "오류 수정 됨"이벤트
+
+– L2_ED2 = "error-not-corrected" event
+- L2_ED2 = "오류가 수정되지 않았습니다"이벤트
+
+The two L2 memory error correction events are exported outside the DSP C66x CorePac in the  subsystem, and can be enabled to trigger the ERRINT_IRQ aggregated interrupt output.
+두 개의 L2 메모리 오류 수정 이벤트는 서브 시스템의 DSP C66x CorePac 외부로 내보내지며 ERRINT_IRQ 집계 된 인터럽트 출력을 트리거 할 수 있습니다.
+ See also corresponding "UMC_ED1" and "UMC_ED2" events in the Table 5-5.
+표 5-5의 해당 "UMC_ED1"및 "UMC_ED2"이벤트를 참조하십시오.
+
+NOTE: The L2 error detection events are not exported outside DSP subsystem.
+참고 : L2 오류 감지 이벤트는 DSP 하위 시스템 외부로 내보내지지 않습니다.
+ However they are merged (OR-ed) along with other error event sources within the DSP subsystem to produce
+a single ERRINT_IRQ interrupt exported outside the DSP subsystem.
+그러나 이들은 DSP 서브 시스템 내에서 다른 ERRINT_IRQ 인터럽트를 생성하기 위해 DSP 서브 시스템 내의 다른 오류 이벤트 소스와 함께 병합 (OR-ed)됩니다.
+For more details on ERRINT_IRQ generation and asscoiated event registers at DSP_SYSTEM level, refer to the Section 5.3.4.2.2.
+ERRINT_IRQ 생성 및 DSP_SYSTEM 레벨의 asscoiated 이벤트 레지스터에 대한 자세한 내용은 5.3.4.2.2 절을 참조하십시오.
+
+For more details on L2 error detection and correction logic, refer to the section L2 Error Detection and
+Correction of theTMS320C66x DSP CorePac User Guide, ( SPRUGW0C).
+L2 오류 감지 및 수정 로직에 대한 자세한 내용은 TMS320C66x DSP CorePac 사용자 안내서 (SPRUGW0C)의 L2 오류 감지 및 수정 섹션을 참조하십시오.
+
+5.3.2.3 DSP Debug and Trace Support
+5.3.2.3 DSP 디버그 및 추적 지원
+
+The DSP subsystem offers full support for the native DSP C66x CorePac debug features. This includes
+Advanced Event Triggering (AET) and Trace.
+DSP 서브 시스템은 기본 DSP C66x CorePac 디버그 기능을 완벽하게 지원합니다. 여기에는 다음이 포함됩니다.
+고급 이벤트 트리거링 (AET) 및 추적.
+
+5.3.2.3.1 DSP Advanced Event Triggering (AET)
+5.3.2.3.1 DSP 고급 이벤트 트리거링 (AET)
+
+AET capability can be used to debug complex problems as well as understand performance
+characteristics of user applications.
+AET 기능을 사용하여 복잡한 문제를 디버깅하고 사용자 응용 프로그램의 성능 특성을 이해할 수 있습니다.
+AET provides the following capabilities:
+AET는 다음과 같은 기능을 제공합니다.
+
+• Hardware Program Breakpoints: specify addresses or address ranges that can generate events such
+as halting the processor or triggering the trace capture.
+• 하드웨어 프로그램 중단 점 : 프로세서 정지 또는 트레이스 캡처 트리거와 같은 이벤트를 생성 할 수있는 주소 또는 주소 범위를 지정합니다.
+
+• Data Watchpoints: specify data variable addresses, address ranges, or data values that can generate
+events such as halting the processor or triggering the trace capture.
+• Data Watchpoints : 프로세서 중지 또는 추적 캡처 트리거와 같은 이벤트를 생성 할 수있는 데이터 변수 주소, 주소 범위 또는 데이터 값을 지정합니다.
+
+• Counters: count the occurrence of an event or cycles for performance monitoring.
+• 카운터 : 성능 모니터링을 위해 이벤트의 발생 또는 횟수를 계산합니다.
+
+• State Sequencing: allows combinations of hardware program breakpoints and data watchpoints to  precisely generate events for complex sequences.
+• 상태 시퀀스 : 복잡한 시퀀스의 이벤트를 정확하게 생성하기 위해 하드웨어 프로그램의 중단 점 및 데이터 와치 포인트를 결합 할 수 있습니다.
+
+5.3.2.3.2 DSP Trace Support
+5.3.2.3.2 DSP 추적 지원
+
+Trace is a debug technology that provides a detailed, historical account of application code execution, timing, and data accesses.
+추적은 응용 프로그램 코드 실행, 타이밍 및 데이터 액세스에 대한 자세한 설명을 제공하는 디버그 기술입니다.
+
+Trace collects, compresses, and exports debug information for analysis.
+추적은 분석을 위해 디버그 정보를 수집, 압축 및 내보내기합니다.
+
+Trace works in real-time and does not impact the execution of the system. Trace is supported via Code  Composer Studio.
+추적은 실시간으로 작동하며 시스템 실행에 영향을 미치지 않습니다. 추적은 Code Composer Studio를 통해 지원됩니다.
+
+See also the Chapter 34, On-Chip Debug Support.
+34 장, 온칩 디버그 지원을 참조하십시오.
+
+5.3.3 DSP System Control Logic
+5.3.3 DSP 시스템 제어 논리
+
+The DSP_SYSTEM module controls the following functions:
+DSP_SYSTEM 모듈은 다음 기능을 제어합니다.
+
+• Generation of the divided clocks (DSP_CLK2 or DSP_CLK3) to all components of the DSP subsystem
+• DSP 하위 시스템의 모든 구성 요소로 분할 클럭 (DSP_CLK2 또는 DSP_CLK3) 생성
+
+• Synchronization of the DSP divided clocks
+• DSP 분할 클럭의 동기화
+
+• PRCM module power handshaking
+• PRCM 모듈 전원 핸드 쉐이킹
+
+• Reset input resynchronization of the active-to-inactive transition to the CD1_CLK clock
+• CD1_CLK 클록에 대한 활성 - 비활성 전환의 입력 재 동기화 재설정
+
+• DSP subsystem top level configuraiton registers and its access from the DSP core.
+• DSP 서브 시스템 최상위 레벨 구성 레지스터 및 DSP 코어로부터의 액세스.
+
+Figure 5-3 highlights the DSP_SYSTEM and its connectivities to the surrounding blocks within the  subsystem and in the device.
+그림 5-3은 DSP_SYSTEM과 하위 시스템 및 장치의 주변 블록에 대한 연결을 강조 표시합니다.
+
+5.3.3.1 DSP System Clocks
+5.3.3.1 DSP 시스템 클럭
+
+The DSP1 and DSP2 subsystems inputs a primary non-divided clock (DSP1_FICLK / DSP2_FICLK) and  based on it (DSP_CLK1), internally generates either a divided by 2 clock (DSP_CLK2) version or a  divided by 3 clock (DSP_CLK3).
+DSP1 및 DSP2 서브 시스템은 1 차 미분할 클럭(DSP1_FICLK / DSP2_FICLK)을 입력하고 이를 기반으로 DSP_CLK1을 내부적으로 2 클럭(DSP_CLK2) 버전으로 나누어 지거나 3 클럭으로 나누어 (DSP_CLK3) 생성합니다.
+
+The divided clock determines the operation rate of the DSP subsystem logic and bus interfaces.
+분할 클럭은 DSP 서브 시스템 로직 및 버스 인터페이스의 작동 속도를 결정합니다.
+
+The division is defined upon device boot time through signal level externally applied on the device sysboot15 input.
+디바이 스는 장치 부팅 시간에 장치 sysboot15 입력에 외부에서 적용된 신호 레벨을 통해 정의됩니다.
+
+ The actual bit configuration is latched upon power-on reset in Control Module register CTRL_CORE_BOOTSTRAP[15] SYS_BOOT_15_CLOCK_DIVIDER boot status bit.
+실제 비트 구성은 제어 모듈 레지스터 CTRL_CORE_BOOTSTRAP [15] SYS_BOOT_15_CLOCK_DIVIDER 부팅 상태는 비트의 전원 켜기 재설정시 래치됩니다.
+
+For more details, refer to the Section 18.4.6.14.1, System Boot Status Settings of the chapter, Control  Module.
+자세한 내용은 섹션 18.4.6.14.1, 제어 모듈 장의 시스템 부팅 상태 설정을 참조하십시오.
+
+NOTE: Upon boot time, sysboot15 set at '0' selects a DSP_CLK2 and a sysboot15 set at '1' selects
+a DSP_CLK3 divided clock version for the DSP subsystem logic and bus interfaces.
+참고 : 부팅시 sysboot15가 '0'으로 설정되면 DSP_CLK2가 선택되고 '1'로 설정된 sysboot15가 선택됩니다
+DSP 서브 시스템 로직 및 버스 인터페이스를위한 DSP_CLK3 분할 클록 버전.
+
+
+NOTE: Only DSP_CLK3 clock is supported on this SoC. For SR1.1, sysboot15 must be tied to vdd,  but for SR2.0 it is configurable. For more information, see Section 18.4.6.1.1.1, Permanent PU/PD disabling (SR 2.0 only) in Chapter 18, Control Module.
+참고 :이 SoC에서는 DSP_CLK3 클럭 만 지원됩니다. SR1.1의 경우 sysboot15는 vdd에 연결해야하지만 SR2.0의 경우 구성이 가능합니다. 자세한 내용은 18 장, 제어 모듈의 18.4.6.1.1.1 절, 영구 PU / PD 비활성화 (SR 2.0 전용)를 참조하십시오.
+
+The clock operating mode setting (DSP_CLK2 or DSP_CLK3) must be static just before and continually
+after reset deassertion.
+클록 동작 모드 설정 (DSP_CLK2 또는 DSP_CLK3)은 리셋 디 어썰트 직전과 그 직후에 정적이어야한다.
+
+ This signal will also drive the configuration to the DSP C66x CorePac for the XMC_MDMA_CLK, EMC_SDMA_CLK, and EMC_CFG_CLK configurations.
+이 신호는 또한 XMC_MDMA_CLK, EMC_SDMA_CLK 및 EMC_CFG_CLK 구성을 위해 DSP C66x CorePac에 대한 구성을 유도합니다.
+
+The DSPSS1 / DSPSS2 subsystem input clock frequency (DSP_CLK1) corresponds to the PRCM DSP1_GFCLK / DSP2_GFCLK frequency that is configured in the device PRCM registers.
+DSPSS1 / DSPSS2 서브 시스템 입력 클록 주파수 (DSP_CLK1)는 장치 PRCM 레지스터에 구성된 PRCM DSP1_GFCLK / DSP2_GFCLK 주파수에 해당합니다.
+
+NOTE: For valid DSP_CLK1 (and hence for DSP_CLK3 = DSP_CLK1 / 3) frequency range, see the  Operating Performance Points section of the device Data Manual.
+참고 : 올바른 DSP_CLK1 (따라서 DSP_CLK3 = DSP_CLK1 / 3) 주파수 범위에 대해서는 장치 데이터 매뉴얼의 작동 성능 점수 절을 참조하십시오.
+
+The Section 5.3.2 also shows the distribution of the different DSP subsystems blocks within the two DSP  local clock domains CD0_CLK (running on DSP_CLK frequency) and CD1_CLK (running on DSP_CLK2
+or DSP_CLK3 frequency).
+섹션 5.3.2는 또한 두 개의 DSP 내에서 서로 다른 DSP 서브 시스템 블럭의 분포를 보여준다
+DSP_CLK 주파수에서 실행되는 로컬 클록 도메인 CD0_CLK) 및 DSP_CLK2 또는 DSP_CLK3 주파수에서 실행되는 CD1_CLK가 있습니다.
+
+Table 5-4. Summary of the DSP1 and DSP2 Hardware Resets
+표 5-4. DSP1 및 DSP2 하드웨어 재설정 요약
+
+DSP1_PWR_RST Description
+This is power-on reset signal used inside DSP1 to reset mainly the
+emulation logic.
+이것은 주로 에뮬레이션 로직을 리셋하기 위해 DSP1 내부에서 사용되는 파워 온 리셋 신호입니다.
+ It resets the entire DSP1 logic.
+DSP1 로직 전체를 리셋합니다.
+
+DSP1_RST
+Reset signal used to reset all logic inside DSP1 except Emulation logic.
+에뮬레이션 로직을 제외한 DSP1 내의 모든 로직을 리셋하는 데 사용되는 리셋 신호.
+
+
+DSP1_LRST
+Reset applied ONLY to the C66x CPU inside DSP1
+리셋은 DSP1 내부의 C66x CPU에만 적용됩니다.
+
+DSP1_LRST_DONE
+Indicates completion of the DSP1 local C66x CPU reset to device PRCM
+장치 PRCM에 대한 DSP1 로컬 C66x CPU 재설정 완료를 나타냅니다.
+
+See also the Section 5.2 for more information on the PRCM reset sources to DSP reset inputs  connectivity.
+PRCM 재설정 소스 와 DSP 재설정 입력 연결에 대한 자세한 내용은 5.2 절을 참조하십시오.
+
+
+Refer to the Section 3.5.6.6, DSP1 Subsystem Power-on Reset Sequence and the Section 3.5.6.8, DSP2  Subsystem Power-on Reset Sequence in the chapter, Power, Reset and Clock Manamgement for more  details on the DSP1 and DSP2 power-on reset sequence, respectively.
+DSP1 및 DSP2 파워 온에 대한 자세한 내용은 3.5.6.6 절, DSP1 서브 시스템 파워 온 리셋 순서 및 3.5.6.8 절, DSP2 서브 시스템 파워 온 리셋 순서, 전원, 리셋 및 클록 관리 장을 참조하십시오. 리셋 시퀀스이다.
+
+NOTE: In the case of DSP1 / DSP2 recovery from the “Powerdown-grid off”, a full power-on-reset  sequence is required before re-booting and resuming functional operation.
+참고 : 전원 끄기 그리드에서 DSP1 / DSP2를 복구하는 경우 "기능 작동을 재부팅하고 다시 시작하기 전에 전체 파워 온 리셋 시퀀스가 필요합니다.
+
+
+
+The DSP host (device MPU) software must ensure that the PRCM functional clock DSP1_GFCLK / DSP2_GFCLK is enabled to the DSP1 / DSP2, respectively, prior to starting the DSP1 / DSP2 power-on reset sequence.
+DSP 호스트 (장치 MPU) 소프트웨어는 DSP1 / DSP2 파워 온 리셋 시퀀스를 시작하기 전에 PRCM 기능 클럭 인 DSP1_GFCLK / DSP2_GFCLK가 각각 DSP1 / DSP2에 활성화되어 있는지 확인해야합니다.
+
+5.3.3.3 DSP Software Resets
+5.3.3.3 DSP 소프트웨어 리셋
+
+During a software reset on the DSP, all resets described in Table 5-4 are asserted, except for the poweron DSP_PWRON_RST signal which remains de-asserted in this case.
+DSP에서 소프트웨어를 리셋하는 동안 이 경우 표시 되지 않은 poweron DSP_PWRON_RST 신호를 제외하고 표 5-4에 설명 된 모든 리셋이 어설트됩니다.
+
+The DSP subsystem does NOT implement any local software reset controls.
+DSP 하위 시스템은 로컬 소프트웨어 재설정 제어를 구현하지 않습니다.
+
+The software reset assertion and DSP_LRST completion monitoring is done in PRCM located registers (part of the DSP1_PRM / DSP2_PRM address space).
+소프트웨어 리셋 어설션 및 DSP_LRST 완료 모니터링은 PRCM 위치 레지스터 (DSP1_PRM / DSP2_PRM 어드레스 공간의 일부)에서 수행됩니다.
+
+
+Refer to the Section 3.5.6.7, DSP1 Subsystem Software Warm Reset Sequence and the Section 3.5.6.9,  DSP2 Subsystem Software Warm Reset Sequence in the chapter, Power, Reset and Clock Manamgement for more details on the DSP1 and DSP2 software reset sequence and related software controls, respectively.
+DSP1 및 DSP2 소프트웨어 리셋 순서에 대한 자세한 내용은 3.5.6.7, DSP1 하위 시스템 소프트웨어 웜 리셋 순서 및 3.5.6.9 절, DSP2 하위 시스템 소프트웨어 웜 리셋 순서, 전원, 리셋 및 클록 관리 장을 참조하십시오. 소프트웨어 제어
+
+5.3.3.4 DSP Power Management
+5.3.3.4 DSP 전원 관리
+
+The supported power-down modes are:
+지원되는 절전 모드는 다음과 같습니다.
+
+• Slave idle and master standby protocols for powerdown
+• 전원 끄기를위한 슬레이브 유휴 및 마스터 대기 프로토콜
+
+• "Disconnect from interconnect" handshake for init and target busses
+• 초기화 및 대상 버스에 대한 "인터커넥트 연결 해제"핸드 셰이크
+
+• Clock Stop mode - wakeup on interrupt or DMA event
+• Clock Stop 모드 - 인터럽트 또는 DMA 이벤트 발생
+
+• Grid OFF mode : No power supply is switched-on
+• 그리드 OFF 모드 : 전원 공급 장치가 켜져 있지 않습니다.
+
+NOTE: Powerdown-retention mode is NOT supported by DSP subsystem. The DSP recovery from
+the Powerdown-grid OFF mode requires full boot.
+참고 : DSP 하위 시스템에서는 절전 모드를 지원하지 않습니다. Powerdown-grid OFF 모드에서 DSP를 복구하려면 전체 부팅이 필요합니다.
+
+The DSP C66x CorePac natively supports “CLKSTOP/Static Powerdown” and “POWERDOWN (Grid off)”  modes of operation.
+DSP C66x CorePac은 기본적으로 "CLKSTOP / Static Powerdown"및 "POWERDOWN (Grid off)"작동 모드를 지원합니다.
+
+ Once the device PRCM restores clocks and power supply, then the DSP C66x CorePac can exit static-powerdown.
+장치 PRCM이 클록 및 전원 공급을 복원하면 DSP C66x CorePac은 정적 전원 차단을 종료 할 수 있습니다.
+
+The DSP_SYSTEM wakeup logic is implemented in the "always-on" clock / power supply domain.
+DSP_SYSTEM 웨이크 업 로직은 "always-on"클럭 / 전원 공급 장치 도메인에서 구현됩니다.
+
+ This logic monitors new interrupts / events and will drive the IDLE wakeup request when a new interrupt / event occurs.
+이 로직은 새로운 인터럽트 / 이벤트를 모니터링하고 새로운 인터럽트 / 이벤트가 발생할 때 IDLE 웨이크 업 요청을 유도합니다.
+
+
+5.3.3.4.1 DSP System Powerdown Protocols
+5.3.3.4.1 DSP 시스템 전원 차단 프로토콜
+
+For each of the powerdown modes – Static or Powerdown-Grid Off, the device PRCM will control whether  clocks are gated, or whether supplies are reduced or removed.
+각 파워 다운 모드 (Static 또는 Powerdown-Grid Off)에 대해 장치 PRCM은 클록이 게이트되는지 또는 소모품이 감소되거나 제거되는지 여부를 제어합니다.
+
+NOTE: In the case of “Powerdown-grid off”, a full power-on-reset sequence is required before rebooting  and resuming functional operation.
+참고 : "Powerdown-grid off"의 경우, 기능 작동을 재부팅하고 다시 시작하기 전에 전체 파워 온 리셋 시퀀스가 필요합니다.
+
+in the static powerdown modes - the DSP recognizes new level interrupts while in a clock-gated state (and  drive wakeup request).
+정적 파워 다운 모드에서 DSP는 클럭 게이트 상태 (및 드라이브 웨이크 업 요청)에서 새로운 레벨 인터럽트를 인식합니다.
+
+ During this powerdown mode all internal state will be retained, including DSP C66x CorePac, interconnect, EDMA, memories, etc.
+이 파워 다운 모드에서는 DSP C66x CorePac, 인터커넥트, EDMA, 메모리 등 모든 내부 상태가 유지됩니다.
+
+
+The following protocols are implemented with PRCM:
+다음 프로토콜은 PRCM으로 구현됩니다.
+
+• Slave idle protocol with device PRCM for powerdown (wake-up capable)
+• 절전을 위해 장치 PRCM을 사용하는 슬레이브 유휴 프로토콜 (깨우기 가능)
+
+• Master standby protocol with device PRCM for powerdown
+• 전원 공급 장치 용 장치 PRCM이있는 마스터 대기 프로토콜
+
+• Interconnect disconnect for master and slave ports
+• 마스터 및 슬레이브 포트에 대한 인터커넥트 연결 해제
+
+
+The Master standby and slave idle protocols behaviour is controlled in the DSP_SYS_SYSCONFIG  register.
+마스터 대기 및 슬레이브 유휴 프로토콜 동작은 DSP_SYS_SYSCONFIG 레지스터에서 제어됩니다.
+
+5.3.3.4.2 DSP Software and Hardware Power Down Sequence Overview
+5.3.3.4.2 DSP 소프트웨어 및 하드웨어 전원 차단 시퀀스 개요
+
+Figure 5-4 highlights the high level flow-chart for entry into any of the DSP powerdown modes.
+그림 5-4는 DSP 파워 다운 모드로 들어가기위한 하이 레벨 플로우 차트를 강조 표시합니다.
+
+Thesystem host (typically) first informs the DSP that it should enter a powerdown mode.
+시스템 호스트 (일반적으로)는 먼저 DSP에 전원 차단 모드로 들어가야한다고 알립니다.
+
+The host (g.h. device MPU) sends a software message (normally via system level mailbox+interrupt).
+호스트 (g.h 장치 MPU)는 소프트웨어 메시지를 보냅니다 (일반적으로 시스템 수준 편지함 + 인터럽트를 통해).
+
+In parallel, the PRCM (via host or DSP programmation) will hardware assert an SIdleReq request to the DSP via the IDLE Protocolconnection.
+병렬로, PRCM (호스트 또는 DSP 프로그래밍을 통해) 하드웨어는 IDLE 프로토콜 연결을 통해 DSP로 SIdleReq 요청을 어설 션합니다.
+
+At the next stage, the C66x CPU, in general, performs any software bookkeeping necessary
+to transition the DSP subsystem to a quiescent state.
+다음 단계에서 C66x CPU는 일반적으로 DSP 서브 시스템을 정지 상태로 전환하는 데 필요한 소프트웨어 부기를 수행합니다.
+
+This may include : waiting for outstanding DMA transfers to complete, waiting for outstanding DMA transfers to complete, etc.
+여기에는 다음을 포함 할 수 있습니다 : 미해결 DMA 전송 완료 대기, 미해결 DMA 전송 완료 대기, 등
+
+ The C66x processor should finally execute the IDLE instruction when it is ready to be powered-down.
+ C66x 프로세서는 전원이 꺼질 준비가되었을 때 마침내 IDLE 명령을 실행해야합니다.
+
+ Assuming the DSP_SYS_SYSCONFIG[5:4] STANDBYMODE is enabled, then the hardware will transition to an idle state and notify to the system the intention to enter powerdown state to the system via the master standby and slave idle protocols.
+ DSP_SYS_SYSCONFIG [5 : 4] STANDBYMODE가 활성화되었다고 가정하면 하드웨어는 IDLE 상태로 전환되어 마스터 대기 및 슬레이브 IDLE 프로토콜을 통해 시스템에 전원 차단 상태로 들어갈 의도를 시스템에 알립니다.
+
+After IDLE and MSTANDBY handshake is completed, the DSP clocks are optionally gated; and supply rails are optionally reduced or turned off.
+ IDLE(게으른?) 및 MSTANDBY 핸드 셰이크가 완료되면 DSP 클록이 선택적으로 게이트됩니다. 선택적으로 공급 레일을 줄이거 나 끕니다.
+
+NOTE: The PM_DSPx_PWRSTCTRL[1:0] POWERSTATE bit field in device PRCM must be set to 0x3 (ON state) prior to performing the sequence shown in Figure 5-4 for the transition to be successful.
+참고 : 전환이 성공하려면 그림 5-4에 표시된 시퀀스를 수행하기 전에 장치 PRCM의 PM_DSPx_PWRSTCTRL [1 : 0] POWERSTATE 비트 필드를 0x3 (ON 상태)로 설정해야합니다.
+
+
+5.3.3.4.3 DSP IDLE Wakeup
+5.3.3.4.3 DSP IDLE 웨이크 업
+
+In order to facilitate auto-wakeup of DSP C66x, the IDLE protocol’s wakeup capability is used.
+DSP C66x의 자동 웨이크 업을 용이하게하기 위해 IDLE 프로토콜의 웨이크 업 기능이 사용된다.
+
+Wakeup operation is enabled if DSP_SYS_SYSCONFIG[3:2] IDLEMODE is set to 0x3.
+DSP_SYS_SYSCONFIG [3 : 2] IDLEMODE가 0x3으로 설정된 경우 웨이크 업 작업이 활성화됩니다.
+
+In this mode, while in IDLE state, if an external input interrupt source is asserted (if enabled via the DSP_SYS_IRQWAKEEN0 / DSP_SYS_IRQWAKEEN1 mask) or if an external DMA event source is asserted (if enabled via the DSP_SYS_DMAWAKEEN0 / DSP_SYS_DMAWAKEEN1 mask) or if the DSP subsystem NMI input is asserted (note that there is no wake enable mask for the non- askable interrupt) then the Mwakeup signal is asserted to the PRCM which is expected to observe the Mwakeup.
+이 모드에서는 IDLE 상태에서 외부 입력 인터럽트 소스가 어설 션(요청? 본뜻은 주장하다.) (DSP_SYS_IRQWAKEEN0 / DSP_SYS_IRQWAKEEN1 마스크를 통해 활성화 된 경우)되거나 외부 DMA 이벤트 소스가 어설 션(요청) (DSP_SYS_DMAWAKEEN0 / DSP_SYS_DMAWAKEEN1 마스크를 통해 활성화 된 경우)되거나 DSP 서브 시스템 NMI 입력이 어설션(요청)되면 (비 요청 인터럽트에 대한 웨이크 인 에이블 마스크가 없다는 것에 유의하십시오), Mwakeup 신호는 Mwakeup을 관측 할 것으로 예상되는 PRCM에 어서 트(주장)됩니다.
+
+Upon such assertion the PRCM enables the clocks, exiting the "Standby" and "Idle" states.
+그러한 어설 션시 PRCM은 클록을 활성화하고 "대기"및 "IDLE"상태를 종료합니다.
+
+at this point the C66x CPU is able to branch to the pending interrupt service routine.
+이 시점에서 C66x CPU는 보류중인 인터럽트 서비스 루틴으로 분기 할 수 있습니다.
+
+The MWakeup is deasserted when all IRQ or DMA requests enabled in the DSP_SYS_IRQWAKEEN0/1 and
+DSP_SYS_DMAWAKEEN0/1 are deasserted.
+MWakeup은 모든 IRQ 또는 DMA 요청이 DSP_SYS_IRQWAKEEN0 / 1에서 활성화 될 때 디 어서 트되고
+DSP_SYS_DMAWAKEEN0 / 1이 (가) 해제되었습니다
+
+The Wakeup logic controlling assertion of the MWakeup request is completely asynchronous because in IDLE mode the clock may not be present.
+IDLE 모드에서 클록이 존재하지 않을 수 있기 때문에 MWakeup 요청의 어설 션을 제어하는 ​​웨이크 업 로직은 완전히 비동기식입니다.
+
+It relies on level sensitive interrupts.
+레벨에 민감한 인터럽트에 의존합니다.
+
+NOTE: The DSP_EDMA must be manually removed from IDLE / Standby state.
+참고 : DSP_EDMA는 IDLE / 대기 상태에서 수동으로 제거해야합니다.
+
+During that time, it is possible that the EDMA input event is no longer pending and may not have been recognized/latched as an EVENT to the EDMA.
+이 시간 동안 EDMA 입력 이벤트가 더 이상 보류 상태가 아니며 EDMA에 EVENT로 인식 / 래치되지 않았을 수 있습니다.
+
+In that case, the user SW can enable the DSP EDMA_WAKE_INT (in associated DSP_SYS_EDMAWAKE0_IRQENABLE_SET register ) to recognize in the (DSP_SYS_EDMAWAKE0_IRQSTATUS_RAW  /DSP_SYS_EDMAWAKE0_IRQSTATUS ) which specific EDMA event was asserted and caused the wakeup condition.
+이 경우, 사용자 SW는 연관된 DSP_SYS_EDMAWAKE0_IRQENABLE_SET 레지스터의 DSP EDMA_WAKE_INT를 (DSP_SYS_EDMAWAKE0_IRQSTATUS_RAW / DSP_SYS_EDMAWAKE0_IRQSTATUS) 특정 EDMA 이벤트에 어설 션되어 웨이크 업 상태가 발생합니다.
+
+The DSP software can then trigger the corresponding DSP_EDMA channel manually (by setting the ESR) or by servicing the interrupt/event manually via reads and writes.
+DSP 소프트웨어는 해당 DSP_EDMA 채널을 수동으로 트리거 (ESR 설정)하거나 읽기 및 쓰기를 통해 수동으로 인터럽트 / 이벤트를 처리 할 수 있습니다.
+
+For more details, refer to the Section 5.3.5.1.
+자세한 내용은 5.3.5.1 절을 참조하십시오
+
+5.3.3.4.4 DSP SYSTEM IRQWAKEEN registers
+5.3.3.4.4 DSP 시스템 IRQWAKEEN 레지스터
+
+The DSP_SYS_IRQWAKEEN0 / DSP_SYS_IRQWAKEEN1 masking bits must be appropriately set for
+any valid interrupt mapped from device IRQ_CROSSBAR to the DSP subsystem boundary, to enable its path (passing through the DSP_SYSTEM wakeup logic) to the DSP local interrupt controller - DSP_INTC.
+DSP_SYS_IRQWAKEEN0 / DSP_SYS_IRQWAKEEN1 마스킹 비트는 장치 IRQ_CROSSBAR에서 DSP 하위 시스템 경계로 매핑 된 유효한 인터럽트가 DSP 로컬 인터럽트 컨트롤러 (DSP_INTC)로 전달되도록 (DSP_SYSTEM 웨이크 업 논리를 통과) 적절히 설정되어야합니다.
+
+CAUTION
+In order for a given interrupt to be serviced by the DSP (even when the Idle Instruction is NOT being executed), the Interrupt must be enabled in the coresponding DSP_SYS_IRQWAKEEN0 or DSP_SYS_IRQWAKEEN1 register.
+주의
+주어진 인터럽트가 (Idle Instruction이 실행되지 않을 때조차도) DSP에 의해 처리되기 위해서는 해당 DSP_SYS_IRQWAKEEN0 또는 DSP_SYS_IRQWAKEEN1 레지스터에서 인터럽트를 활성화해야합니다.
+
+5.3.3.4.5 DSP Automatic Power Transition
+5.3.3.4.5 DSP 자동 전력 전환
+
+This section provides register details for configuring the DSP1 subsystem in automatic power transition mode.
+이 절에서는 자동 전원 전환 모드에서 DSP1 서브 시스템을 구성하기위한 레지스터 세부 사항을 제공합니다.
+
+The same should be considered for DSP2 in corresponding PRCM and DSP2 related registers.
+대응하는 PRCM 및 DSP2 관련 레지스터에서 DSP2에 대해서도 동일하게 고려해야합니다.
+
+The DSP1 module is supposed to be configured to automatic management in PRCM.DSP1_CM_CORE_AON via setting the register CM_DSP1_DSP1_CLKCTRL[1:0] MODULEMODE bitfield to 0x1.
+DSP1 모듈은 레지스터 CM_DSP1_DSP1_CLKCTRL [1 : 0] MODULEMODE 비트 필드를 0x1로 설정함으로써 PRCM.DSP1_CM_CORE_AON에서 자동 관리로 구성되어야합니다.
+
+ The DSP1 clock domain is supposed to be configured in automatic "HW_AUTO" transition
+(setting bitfield CM_DSP1_CLKSTCTRL[1:0] CLKTRCTRL=0x3).
+DSP1 클럭 도메인은 자동 "HW_AUTO"전환으로 구성됩니다 (비트 필드 CM_DSP1_CLKSTCTRL [1 : 0] 설정 CLKTRCTRL = 0x3).
+
+The power state (controls are in the PRCM.DSP1_PRM instance) to reach upon a sleep transition is configured in the PM_DSP1_PWRSTCTRL[1:0]POWERSTATE bitfield.
+
+PM_DSP1_PWRSTCTRL [1 : 0] POWERSTATE 비트 필드에서 절전 전환시 도달 할 전원 상태 (PRCM.DSP1_PRM 인스턴스에있는 컨트롤)가 구성됩니다.
+
+5.3.4 DSP Interrupt Requests
+5.3.4 DSP 인터럽트 요청
+
+The DSP subsystem relies on the DSP C66x CorePac local interrupt controller - DSP_INTC for mapping the various input interrupts to the C66x CPU, that are :
+DSP 하위 시스템은 다양한 입력 인터럽트를 C66x CPU에 매핑하기 위해 DSP C66x CorePac 로컬 인터럽트 컨트롤러 -DISP_INTC를 사용합니다.
+
+• generated outside the DSP, by the device intergated modules and subsystems
+• 장치 외부 모듈 및 하위 시스템에 의해 DSP 외부에서 생성됩니다.
+
+• generated within the DSP subsystems but outside the DSP C66x CorePac
+• DSP 서브 시스템 내에서 생성되었지만 DSP C66x CorePac 외부에서 생성됨
+
+• generated by different components within the DSP C66x CorePac
+DSP C66x CorePac 내의 다른 구성 요소에 의해 생성됩니다.
+
+In addition, a non-maskable input interrupt, direct mapped on a C66x processor NMI input is implemented.
+또한 C66x 프로세서의 NMI 입력에 직접 매핑 된 non-maskab 입력 인터럽트가 구현되어 있습니다.
+
+It is mapped via a register that resides within the device Control Module.
+장치 제어 모듈 내에 상주하는 레지스터를 통해 매핑됩니다.
+
+Both the maskable interrupts and the non-maskable interrupts are synchronized internally.
+마스크 가능 인터럽트와 마스크 불가능 인터럽트는 내부적으로 동기화됩니다.
+
+Part of the DSP subsystem module generated interrupts which are output as follows:
+DSP 하위 시스템 모듈의 일부가 다음과 같이 출력되는 인터럽트를 생성했습니다.
+
+• DSP_EDMA interrupts
+• DSP_EDMA 인터럽트
+
+• DSP_MMU0 and DSP_MMU1 interrupts
+• DSP_MMU0 및 DSP_MMU1 인터럽트
+
+• Error interrupts
+• 인터럽트 오류
+
+Figure 5-5 shows how are the interrupt sources organized.
+그림 5-5는 인터럽트 소스를 어떻게 구성하는지 보여줍니다.
+
+ To manage and expand the interrupt
+capabilities of the DSP C66x CorePac (internal and external interrupt requests), the DSP subsystem includes two levels of interrupt control :
+DSP C66x CorePac (내부 및 외부 인터럽트 요청)의 인터럽트 기능을 관리 및 확장하기 위해 DSP 하위 시스템에는 두 가지 수준의 인터럽트 제어가 포함됩니다.
+
+• The DSP C66x CorePac local Interrupt controller - DSP_INTC
+• DSP C66x CorePac 로컬 인터럽트 컨트롤러 - DSP_INTC
+
+• The System control logic - DSP_SYSTEM
+• 시스템 제어 로직 - DSP_SYSTEM
+
+5.3.4.1 DSP Input Interrupts
+5.3.4.1 DSP 입력 인터럽트
+
+In summary, the DSP_INTC accepts up to 124 event inputs, and flexibly maps those down to 12 interrupt inputs to the DSP.
+요약하면, DSP_INTC는 최대 124 개의 이벤트 입력을 받아들이고 12 개의 인터럽트 입력을 DSP에 유연하게 매핑합니다.
+
+The mapping can be 1:1 (input:output), or can use the event combiner to map multiple interrupts (within a 32-bit group) to one of the DSP interrupt inputs.
+매핑은 1 : 1 (입력 : 출력) 일 수 있으며 이벤트 결합기를 사용하여 다중 인터럽트 (32 비트 그룹 내)를 DSP 인터럽트 입력 중 하나에 매핑 할 수 있습니다.
+
+In general, many of the 124 interrupt controller inputs are collected within the DSP C66x CorePac, and are NOT available at the DSP C66x CorePac boundaries.
+일반적으로 124 개의 인터럽트 컨트롤러 입력은 DSP C66x CorePac에 수집되며 DSP C66x CorePac 경계에서는 사용할 수 없습니다.
+
+The C66x CPU dropped event is exported outside the C66x CorePac in DSP subsystem, and can be
+enabled to trigger the ERRINT_IRQ aggregated interrupt output.
+C66x CPU 드롭 이벤트는 DSP 서브 시스템의 C66x CorePac 외부로 내보내지며 ERRINT_IRQ 집계 인터럽트 출력을 트리거 할 수 있습니다.
+
+ See also corresponding "INTERR" event listed in the Table 5-5.
+표 5-5에 나열된 해당 "INTERR"이벤트를 참조하십시오.
+
+NOTE: The dropped CPU event is not exported outside DSP subsystem.
+참고 : 드롭 된 CPU 이벤트는 DSP 하위 시스템 외부로 내보내지지 않습니다.
+
+However it is merged (ORed) along with other error event sources within the DSP subsystem to produce a single ERRINT_IRQ interrupt exported outside the DSP subsystem.
+그러나 DSP 서브 시스템 내에서 다른 ERRINT_IRQ 인터럽트를 생성하기 위해 DSP 서브 시스템 내의 다른 오류 이벤트 소스와 함께 병합 (ORed)됩니다.
+
+For more details on ERRINT_IRQ generation and asscoiated event registers at DSP_SYSTEM level, refer to the Section 5.3.4.2.2..
+ERRINT_IRQ 생성 및 DSP_SYSTEM 레벨의 asscoiated 이벤트 레지스터에 대한 자세한 내용은 5.3.4.2.2 절을 참조하십시오.
+
+Part of the input interrupts, generated by DSP peripherals that are located outside the DSP C66x CorePac - DSP_EDMA (DSP_EDMA_CC, DSP_EDMA_TC0, DSP_EDMA_TC1) , DSP_MMU0, DSP_MMU1 and DSP_NoC, are also mapped to outputs at the DSP subsystem boundary, such that they can be exported to system hosts (MPU, etc.) via the device IRQ_CROSSBAR.
+DSP 인터럽트의 일부는 DSP C66x CorePac-DSP_EDMA (DSP_EDMA_CC, DSP_EDMA_TC0, DSP_EDMA_TC1), DSP_MMU0, DSP_MMU1 및 DSP_NoC 외부에있는 DSP 주변 장치에 의해 생성되며 DSP 서브 시스템 경계의 출력에도 매핑됩니다. IRQ_CROSSBAR 장치를 통해 시스템 호스트 (MPU 등)로 내 보냅니다.
+
+Of particular interest, MMUs (DSP_MMU0 and DSP_MMU1) interrupts will typically be serviced by the device MPU instead of by the local DSP core.
+특히 MMU (DSP_MMU0 및 DSP_MMU1) 인터럽트는 로컬 DSP 코어 대신 디바이스 MPU에 의해 처리됩니다.
+
+Any interrupt input at DSP subsystem boundaries (i.e. excluding the DSP subsystem internal IRQ sources that reside in and outside the DSP C66x CorePac) can be used to wake-up the DSP subsystem from an IDLE state.
+DSP 서브 시스템 경계에서 인터럽트 입력 (즉, DSP C66x CorePac 내부 및 외부에있는 DSP 서브 시스템 내부 IRQ 소스 제외)을 사용하여 DSP 서브 시스템을 유휴 IDLE에서 웨이크 업할 수있다.
+
+This is described in the Section 5.3.3.4.3 and is controlled by the DSP_SYSTEM logic register
+DSP_SYS_SYSCONFIG [3:2] IDLEMODE bitfield along with the DSP_SYS_IRQWAKEEN0 / DSP_SYS_IRQWAKEEN1 registers.
+이것은 5.3.3.4.3 절에 설명되어 있으며 DSP_SYSTEM 논리 레지스터에 의해 제어됩니다
+DSP_SYS_SYSCONFIG [3 : 2] IDLEMODE 비트 필드는 DSP_SYS_IRQWAKEEN0 / DSP_SYS_IRQWAKEEN1 레지스터와 함께 사용됩니다.
+
+CAUTION
+The DSP_SYS_IRQWAKEEN0 / DSP_SYS_IRQWAKEEN1 bits MUST be enabled for externally mapped interrupts (DSP_INTC[95:32]) to be serviced by the DSP regardless of the DSP power state (IDLE or non-IDLE).
+주의
+DSP 전력 상태 (IDLE 또는 NON-IDLE 속)에 관계없이 DSP가 서비스 할 수 있도록 외부 적으로 매핑 된 인터럽트 (DSP_INTC [95:32])를 위해 DSP_SYS_IRQWAKEEN0 / DSP_SYS_IRQWAKEEN1 비트를 활성화해야한다.
+
+The DSP C66x CorePac DSP_INTC registers are NOT readable by any entity other than the C66x CPU,  because they are part of the DSP_ICFG C66x CorePac internal configuration space (see also the Section 5.3.10).
+DSP C66x CorePac DSP_INTC 레지스터는 DSP_ICFG C66x CorePac 내부 구성 공간 (5.3.10 절 참조)의 일부이기 때문에 C66x CPU 이외의 엔티티에서 읽을 수 없습니다.
+
+Hereby, only the C66x itself is able to service these interrupt events.
+따라서 C66x만이 이러한 인터럽트 이벤트를 처리 할 수 있습니다
+
+The only way for these interrupts to be cleared is for the DSP CPU to clear the state in the EVTFLAGi (where i=0 to 3) register, or via reset assertion.
+이러한 인터럽트를 지울 수있는 유일한 방법은 DSP CPU가 EVTFLAGi (i = 0에서 3까지) 레지스터 또는 리셋 어설 션을 통해 상태를 지우는 것입니다.
+
+NOTE: For cases where the DSP maps an interrupt directly, the DSP is not strictly required to clear
+the EVTFLAGi register.
+참고 : DSP가 인터럽트를 직접 매핑하는 경우 DSP는 EVTFLAGi 레지스터를 지우도록 엄격하게 요구되지 않습니다.
+
+User software must take the extra step of clearing the EVTFLAGi to cause the corresponding output interrupt to be cleared and re-asserted upon a new input event assertion.
+사용자 소프트웨어는 EVTFLAGi를 지우는 추가 단계를 거쳐야 해당 출력 인터럽트를 지우고 새로운 입력 이벤트 어서션시 다시 어서 트해야한다.
+
+5.3.4.1.1 DSP Non-maskable Interrupt Input
+5.3.4.1.1 DSP 비 마스크 가능 인터럽트 입력
+
+The device DSP also supports a non-maskable interrupt (NMI) directly mapped to the NMI input of the
+C66x CPU.
+또한 디바이스 DSP는 C66x CPU의 NMI 입력에 직접 매핑되는 NMI (Non-Maskable Interrupt)를 지원한다.
+
+This line is also mapped to the NMEVT input of the DSP local INTC, and can be used as an exception signal, too.
+또한이 라인은 DSP 로컬 INTC의 NMEVT 입력에 매핑되며 예외 신호로도 사용될 수 있습니다.
+
+At system level, the NMI interrupt mapping to the DSP_INTC is controlled via the device core Control Module register as follows:
+ 시스템 레벨에서 DSP_INTC에 대한 NMI 인터럽트 매핑은 다음과 같이 장치 코어 제어 모듈 레지스터를 통해 제어됩니다.
+
+• CTRL_CORE_NMI_DESTINATION_2 [15:8] DSP1 = 0x1 enables the DSP1 to receive the NMI coming from the device nmin_dsp input.
+• CTRL_CORE_NMI_DESTINATION_2 [15 : 8] DSP1 = 0x1은 DSP1이 장치 nmin_dsp 입력에서 오는 NMI를 수신 할 수있게합니다.
+
+• CTRL_CORE_NMI_DESTINATION_2 [23:26] DSP2 = 0x1 enables the DSP2 to receive the NMI coming from the device nmin_dsp input.
+• CTRL_CORE_NMI_DESTINATION_2 [23:26] DSP2 = 0x1은 DSP2가 장치 nmin_dsp 입력에서 오는 NMI를 수신 할 수있게합니다.
+
+For more details on the NMI receive enable bit mapping, refer to the Section 18.5, Control Module  Register Manual in the chapter, Control Module.
+NMI 수신 허용 비트 맵핑에 대한 자세한 내용은 섹션 18.5, 제어 모듈 장의 섹션 18.5, 제어 모듈 레지스터 매뉴얼을 참조하십시오.
+
+5.3.4.2 DSP Event and Interrupt Generation Outputs
+5.3.4.2 DSP 이벤트 및 인터럽트 생성 출력
+
+5.3.4.2.1 DSP MDMA and DSP EDMA Mflag Event Outputs
+5.3.4.2.1 DSP MDMA와 DSP EDMA Mflag 사건 산출
+
+The Mflag events generated by DSP subsystem EVTOUT bus are represented in the Figure 5-5.
+DSP 서브 시스템 EVTOUT 버스에 의해 생성 된 Mflag 이벤트는 그림 5-5에 나와 있습니다.
+
+A couple of the DSP EVTOUT bus outputs - EVTOUT[31] and EVTOUT[30] are used for generation of
+MFLAGs dedicated to the DSP MDMA and EDMA ports, respectively.
+두 개의 DSP EVTOUT 버스 출력 - EVTOUT [31] 및 EVTOUT [30]은 각각 DSP MDMA 및 EDMA 포트 전용 MFLAG 생성에 사용됩니다.
+
+DSP MFLAGs are connected directly to DMM and EMIF.
+DSP MFLAG는 DMM 및 EMIF에 직접 연결됩니다
+
+The DSP MFLAGs participate in the DMM Emergency and EMIF MFLAG prioritization schemes.
+DSP MFLAG는 DMM Emergency 및 EMIF MFLAG 우선 순위 지정 체계에 참여합니다.
+
+At the L3 Level Bandwidth regulators connected to the DSP MDMA and EDMA ports can be used to control DSP traffic versus other device traffic.
+DSP MDMA 및 EDMA 포트에 연결된 L3 레벨 대역폭 레귤레이터는 DSP 트래픽 대 다른 장치 트래픽을 제어하는 ​​데 사용할 수 있습니다.
+
+The device DSP subsystem is able to generate the 2 output Mflag events via the following DSP_SYSTEM
+module located registers :
+장치 DSP 하위 시스템은 레지스터에 위치한 다음 DSP_SYSTEM 모듈을 통해 2 개의 출력 Mflag 이벤트를 생성 할 수 있습니다.
+
+• DSP_SYS_EVTOUT_SET[31:30]
+
+• DSP_SYS_EVTOUT_CLR[31:30]
+
+The current state of the outputs can be detected by reading any of these "pseudo" register bits.
+출력의 현재 상태는 이러한 "pseudo(의사)"레지스터 비트 중 하나를 읽음으로써 감지 될 수 있습니다.
+
+NOTE: Only EVTOUT[31:30] outputs are implemented in the device, hence only bits [31:30] of the
+mentioned DSP_SYS_EVTOUT_x registers are used.
+참고 : EVTOUT [31:30] 출력 만 장치에 구현되므로 언급 된 DSP_SYS_EVTOUT_x 레지스터의 비트 [31:30] 만 사용됩니다.
+
+The DSP_SYS_EVTOUT_SET register unconditionally drives the corresponding output event to '1'.
+DSP_SYS_EVTOUT_SET 레지스터는 무조건 해당 출력 이벤트를 '1'로 구동합니다.
+
+The DSP_SYS_EVTOUT_CLR register unconditionally drives the corresponding output event to a '0'.
+DSP_SYS_EVTOUT_CLR 레지스터는 무조건 해당 출력 이벤트를 '0'으로 구동합니다.
+
+5.3.4.2.2 DSP Aggregated Error Interrupt Output
+5.3.4.2.2 DSP 집계 된 오류 인터럽트 출력
+
+The aggregated error interrupt of the DSP subsystem is shown in the Figure 5-5.
+DSP 서브 시스템의 집계 된 에러 인터럽트가 그림 5-5에 나타나있다.
+
+The subset of those events that correspond to: DSP C66x CorePac generated error events, DSP_EDMA error interrupts and L2 DSP_NoC interconnect error interrupt, is reduced by an ORschematic to a single ERRINT_IRQ output interrupt which is made available on DSP subsystem boundary.
+DSP CARD CorePac 생성 오류 이벤트, DSP_EDMA 오류 인터럽트 및 L2 DSP_NoC 상호 연결 오류 인터럽트는 ORschematic에 의해 DSP 하위 시스템 경계에서 사용 가능한 단일 ERRINT_IRQ 출력 인터럽트로 감소됩니다.
+
+It is expected that one of the DSP system hosts monitors the interrupts/error conditions in safety
+conscious systems.
+DSP 시스템 호스트 중 하나가 안전 의식이있는 시스템에서 인터럽트 / 오류 상태를 모니터 할 것으로 예상됩니다.
+
+Figure 5-6 shows a functional representation of the DSP error interrupt "OR"-reduction logic.
+그림 5-6은 DSP 오류 인터럽트 "OR"- 감쇄 로직의 기능적 표현을 보여줍니다.
+
+In summary, there exists an unmasked status (DSP_SYS_ERRINT_IRQSTATUS_RAW) register, two complementary
+enable bit-vector registers (DSP_SYS_ERRINT_IRQENABLE_SET / DSP_SYS_ERRINT_IRQENABLE_CLR), and a masked status register (DSP_SYS_ERRINT_IRQSTATUS).
+요약하면, 마스크되지 않은 상태 (DSP_SYS_ERRINT_IRQSTATUS_RAW) 레지스터 2 개의 상호보완적 인 에이블 비트 벡터 레지스터 (DSP_SYS_ERRINT_IRQENABLE_SET / DSP_SYS_ERRINT_IRQENABLE_CLR) 및 마스크 된 상태 레지스터 (DSP_SYS_ERRINT_IRQSTATUS)가 존재합니다.
+
+The ERRINT event is asserted when any enabled error interrupt input is asserted.
+ERRINT 이벤트는 사용 가능한 오류 인터럽트 입력이 어설 션 될 때 어설트됩니다.
+
+NOTE: The ERRINT_IRQ output can be programmatically mapped as the DSPi_IRQ_TPCC_ERR (where i=1 to 2) interrupt to all device (dsp hosts) interrupt controllers via the device IRQ_CROSSBAR.
+참고 : ERRINT_IRQ 출력은 장치 IRQ_CROSSBAR을 통해 모든 장치 (dsp 호스트) 인터럽트 컨트롤러에 대한 DSPi_IRQ_TPCC_ERR (i = 1 ~ 2) 인터럽트로 프로그래밍 방식으로 매핑 될 수 있습니다.
+
+For more information on the IRQ_CROSSBAR module, see Section 18.4.6.4, IRQ_CROSSBAR Module Functional Description, in Chapter 18, Control Module.
+IRQ_CROSSBAR 모듈에 대한 자세한 내용은 18 장, 제어 모듈의 18.4.6.4 절, IRQ_CROSSBAR 모듈 기능 설명을 참조하십시오.
+
+For more information about the device interrupt controllers, see Chapter 17, Interrupt
+Controllers.
+장치 인터럽트 컨트롤러에 대한 자세한 내용은 17 장, 인터럽트 컨트롤러를 참조하십시오.
+
+The Table 5-5 details the mapping of error event output sources to the bit positions within the following
+DSP error event related registers :
+표 5-5는 오류 이벤트 출력 소스를 다음과 같은 비트 위치에 매핑하는 방법을 자세히 설명합니다
+DSP 오류 이벤트 관련 레지스터 :
+
+• DSP_SYS_ERRINT_IRQSTATUS_RAW
+
+• DSP_SYS_ERRINT_IRQSTATUS
+
+• DSP_SYS_ERRINT_IRQENABLE_SET
+
+• DSP_SYS_ERRINT_IRQENABLE_CLR
+
+Following functional descriptions are valid for the above registers :
+다음 함수 설명은 위의 레지스터에 유효합니다
+
+• IRQ status raw register - This register provides a per-event raw interrupt status vector.
+• IRQ 상태 원시 레지스터 -이 레지스터는 이벤트 별 원시 인터럽트 상태 벡터를 제공합니다.
+
+The Raw status is set even if the corresponding event is not enabled.
+원시 상태는 해당 이벤트가 사용 가능하지 않은 경우에도 설정됩니다.
+
+ Software can write '1' to set the (raw) status for debug purposes.
+소프트웨어는 디버그 목적을 위해 (원시) 상태를 설정하기 위해 '1'을 쓸 수 있습니다.
+
+• IRQ status register - This register provides a per-event enabled interrupt status vector.
+• IRQ 상태 레지스터 -이 레지스터는 이벤트 별 사용 가능 인터럽트 상태 벡터를 제공합니다.
+
+The Enabled status is set if the corresponding event is enabled and the raw status is set.
+사용 가능 상태는 해당 이벤트가 사용 가능하고 원시 상태가 설정된 경우 설정됩니다.
+
+Software can write 1 to clear the (raw) status after the interrupt has been serviced.
+소프트웨어는 인터럽트가 처리 된 후 (원시) 상태를 지우기 위해 1을 쓸 수 있습니다.
+
+The clear takes effect even if the interrupt is not enabled.
+인터럽트가 활성화되지 않은 경우에도 지우기가 적용됩니다.
+
+• IRQ enable register - This register provides a per-event interrupt enable bit vector.
+• IRQ 활성화 레지스터 -이 레지스터는 이벤트 별 인터럽트 활성화 비트 벡터를 제공합니다.
+
+Software can write 1 to set (i.e., enable the corresponding interrupt).
+소프트웨어는 세트에 1을 기록 할 수있다 (즉, 대응하는 인터럽트를 인 에이블한다).
+
+Reads of this register return the actual state of the enable register (and is the same as reading the corresponding "IRQ Clear" - register)
+이 레지스터의 읽기는 활성화 레지스터의 실제 상태를 반환합니다 (해당 "IRQ Clear"레지스터 읽기와 동일)
+
+• IRQ clear register - This register provides a per-event interrupt enable bit vector.
+• IRQ 클리어 레지스터 -이 레지스터는 이벤트 별 인터럽트 활성화 비트 벡터를 제공합니다.
+
+Software can write 1 to clear (i.e., disable the corresponding interrupt).
+소프트웨어는 1을 클리어 (즉, 대응하는 인터럽트를 디스 에이블) 할 수있다.
+
+Reads of this register return the actual state of the enable register (and is the same as reading the corresponding "IRQ Set" register)
+이 레지스터의 읽기는 활성화 레지스터의 실제 상태를 반환합니다 (해당 "IRQ Set"레지스터를 읽는 것과 같습니다)
+
+NOTE: A DSP_SYS_ERRINT_IRQSTATUS_RAW bit is set even if the corresponding event is NOT enabled in the DSP_SYS_ERRINT_IRQENABLE_SET.
+참고 : 해당 이벤트가 NOT 일지라도 DSP_SYS_ERRINT_IRQSTATUS_RAW 비트가 설정됩니다.
+DSP_SYS_ERRINT_IRQENABLE_SET에서 사용 가능합니다.
+
+Note that neither of the events, listed in Table 5-5 , is exported as a separate hardware interrupt off the
+DSP boundary.
+표 5-5에 나열된 이벤트 중 어느 것도 DSP 경계에서 분리 된 하드웨어 인터럽트로 내보내지지 않습니다.
+
+5.3.4.2.3 Non-DSP C66x CorePac Generated Peripheral Interrupt Outputs
+5.3.4.2.3 논- DSP C66x CorePac 생성 된 주변 장치 인터럽트 출력
+
+The non-DSP C66x CorePac interrupts generated by peripherals within the DSP subsystem are also
+summarized in the Figure 5-5.
+DSP 서브 시스템 내의 주변 장치에 의해 생성 된 비 DSP C66x CorePac 인터럽트도 그림 5-5에 요약되어있다.
+
+Besides the aggregated error event ERRINT_IRQ interrupts – DSPi_IRQ_TPCC_ERR (where i=1 to 2),  interrupts (see also Figure 5-5) generated individually by DSPSS peripherals located outside the DSP  C66x CorePac, are mapped as separate IRQ outputs at DSP boundaries.
+집계 된 오류 이벤트 ERRINT_IRQ 인터럽트 인 DSPi_IRQ_TPCC_ERR (i = 1 ~ 2), DSP C66x CorePac 외부에있는 DSPSS 는 주변 장치에 의해 개별적으로 생성 된 인터럽트 DSP 경계에서 별도의 IRQ 출력으로 매핑됩니다.
+
+They are sourced by the DSP_EDMA_CC, DSP_EDMA_TC0, DSP_EDMA_TC1, DSP_MMU0, DSP_MMU1 and DSP_NoC and
+exported to other host INTCs via the device IRQ_CROSSBAR.
+이들은 DSP_EDMA_CC, DSP_EDMA_TC0, DSP_EDMA_TC1, DSP_MMU0, DSP_MMU1 및 DSP_NoC에 의해 소스되며 IRQ_CROSSBAR 디바이스를 통해 다른 호스트 INTC로 내보내집니다.
+
+Refer to the Section 5.2, for moreinformation on these DSP interrupt outputs mapping.
+이러한 DSP 인터럽트 출력 매핑에 대한 자세한 내용은 섹션 5.2를 참조하십시오.
+
+5.3.5 DSP DMA Requests
+5.3.5 DSP DMA 요청
+
+The DSP_EDMA_CC (channel controller) supports 64 hardware event inputs, that can be used to synchronize the 64 DMA channels.
+DSP_EDMA_CC (채널 컨트롤러)는 64 개의 하드웨어 이벤트 입력을 지원하며 64 개의 DMA 채널을 동기화하는 데 사용할 수 있습니다.
+
+These event inputs are provided at the DSP subsystem boundary via the device DMA_CROSSBAR and can be mapped to sources within the device.
+이 이벤트 입력은 디바이스 DMA_CROSSBAR를 통해 DSP 서브 시스템 경계에서 제공되며 디바이스 내의 소스에 맵핑 될 수 있습니다.
+
+The DSP subsystem receives DMA requests from certain peripherals, such as the McASP modules.
+DSP 서브 시스템은 McASP 모듈과 같은 특정 주변 장치로부터 DMA 요청을 수신합니다.
+
+The DMA requests path through the DSP logic is shown in Figure 5-7.
+그림 5-7은 DSP 로직을 통한 DMA 요청 경로를 보여줍니다.
+
+Similar to the interrupts received at DSP subsystem boundary, the DSP EDMA requests are first routed
+through the wakeup generation logic of the DSP_SYSTEM module, hence, each DMA request received by
+the DSP subsystem can wakeup the system from DSP low power modes (including wakeup from DSP
+OFF mode).
+DSP 서브 시스템 경계에서 수신 된 인터럽트와 유사하게, DSP EDMA 요청은 먼저 DSP_SYSTEM 모듈의 웨이크 업 생성 로직을 통해 라우팅되므로 DSP 하위 시스템이 수신 한 각 DMA 요청은 DSP 저전력 모드 (웨이크 업을 포함하여 DSP OFF 모드).
+
+To enable the DMA requests mapped via the DMA_CROSSBAR to DSP_EDMA_CC [19:0] inputs, corresponding bits in range [19:0] of the register DSP_SYS_DMAWAKEEN0 must be enabled in software.
+DMA_CROSSBAR를 통해 DSP_EDMA_CC [19 : 0] 입력에 매핑 된 DMA 요청을 활성화하려면 DSP_SYS_DMAWAKEEN0 레지스터의 범위 [19 : 0]에있는 해당 비트가 소프트웨어에서 활성화되어야합니다..
+
+CAUTION
+The DMA request corresponding DSP_SYS_DMAWAKEEN0 / DSP_SYS_DMAWAKEEN1 MUST be enabled, for the DMA requests to be serviced by the DSP regardless of the DSP being in IDLE or active state.
+주의
+DSP가 IDLE 또는 활성 상태에 관계없이 DMA 요청을 처리하려면 해당 DSP_SYS_DMAWAKEEN0 / DSP_SYS_DMAWAKEEN1에 해당하는 DMA 요청을 사용해야합니다 (MUST).
+
+Table 5-6 and Table 5-7 list the default DMA sources for the DSP1_EDMA and DSP2_EDMA controllers.
+표 5-6 및 표 5-7에는 DSP1_EDMA 및 DSP2_EDMA 컨트롤러의 기본 DMA 소스가 나열되어 있습니다.
+
+In addition, DSP1_EDMA / DSP2_EDMA inputs (DMA_DSP1_DREQ_[19:0] / DMA_DSP2_DREQ_[19:0]) can alternatively be sourced through the associated DMA_CROSSBAR from one of the 256 multiplexed device DMA sources listed in Table 16-6.
+또한 DSP1_EDMA / DSP2_EDMA 입력 (DMA_DSP1_DREQ_ [19 : 0] / DMA_DSP2_DREQ_ [19 : 0])은 표 16-6에 나열된 256 개의 멀티플렉싱 장치 DMA 소스 중 하나에서 연관된 DMA_CROSSBAR를 통해 선택할 수도 있습니다.
+
+The CTRL_CORE_DMA_DSP1_DREQ_y_z / CTRL_CORE_DMA_DSP2_DREQ_y_z registers (where y and z are indexes of DSP1_EDMA / DSP2_EDMA input lines) in the Control Module are used to select between the default DMA sources and the multiplexed DMA sources.
+제어 모듈의 CTRL_CORE_DMA_DSP1_DREQ_y_z / CTRL_CORE_DMA_DSP2_DREQ_y_z 레지스터 (y 및 z는 DSP1_EDMA / DSP2_EDMA 입력 라인의 인덱스 임)는 기본 DMA 소스와 다중화 된 DMA 소스를 선택하는 데 사용됩니다
+
+For more details on the device DMA_CROSSBAR multiplexing registers structure, refer to Section 18.4.6.5, DMA_CROSSBAR Module Functional Description of chapter, Control Module.
+장치 DMA_CROSSBAR 다중화 레지스터 구조에 대한 자세한 내용은 섹션 18.4.6.5, DMA_CROSSBAR 모듈 기능 설명 장, 제어 모듈을 참조하십시오.
+
+5.3.5.1 DSP EDMA Wakeup Interrupt
+5.3.5.1 DSP EDMA 웨이크 업 인터럽트
+
+This section provides description of the registers used for the EDMA wakeup interrupt functionality,
+including the EDMA_WAKE_INT IRQ status and enable fields.
+이 절에서는 EDMA_WAKE_INT IRQ 상태 및 사용 가능 필드를 포함하여 EDMA 웨이크 업 인터럽트 기능에 사용되는 레지스터에 대해 설명합니다.
+
+The EDMA Wakeup Interrupt allows incoming EDMA events to be latched and an interrupt sent to the DSP (if enabled).
+EDMA 웨이크 업 인터럽트는 들어오는 EDMA 이벤트를 래치하고 인터럽트를 DSP로 보냅니다 (사용 가능한 경우).
+
+This interrupt is generated in the DSP_SYSTEM as an single "OR-ed" output of all external DMA requests latched in DSP subsystem.
+이 인터럽트는 DSP 서브 시스템에 래치 된 모든 외부 DMA 요청의 단일 "OR-ed"출력으로 DSP_SYSTEM에서 생성됩니다.
+
+This output is further synchronized to DSP_FCLK and mapped as the EDMA_WAKE_INT event to the DSP_IRQ_31 input of the C66x DSP CorePac DSP_INTC.
+이 출력은 DSP_FCLK로 더 동기화되고 EDMA_WAKE_INT 이벤트로 C66x DSP CorePac DSP_INTC의 DSP_IRQ_31 입력으로 매핑됩니다.
+
+ The C66x CPU is expected to service the interrupt by triggering the corresponding EDMA channel manually, or by servicing the request via normal reads and writes (instead of using the EDMA).
+ C66x CPU는 해당 EDMA 채널을 수동으로 트리거하거나 (EDMA 대신) 일반 읽기 및 쓰기를 통해 요청을 처리하여 인터럽트를 처리합니다.
+
+ This functionality is required since the EDMA is not capable of following the smart wakeup protocol.
+EDMA가 스마트 웨이크 업 프로토콜을 따르지 못하기 때문에이 기능이 필요합니다.
+
+NOTE: The DSP_SYS_DMAWAKEEN0 / DSP_SYS_DMAWAKEEN1 registers are used for enabling the assertion of the 'Mwakeup' asynchronous wakeup request to the device PRCM upon DMA requests reception.
+참고 : DSP_SYS_DMAWAKEEN0 / DSP_SYS_DMAWAKEEN1 레지스터는 DMA 요청 수신시 장치 PRCM에 대한 'Mwakeup'비동기식 웨이크 업 요청의 어설 션을 활성화하는 데 사용됩니다.
+
+The interrupt functionality of the registers:
+DSP_SYS_EDMAWAKE0_x covered in this subsection is specifically for generating an wake interrupt to the DSP.
+레지스터의 인터럽트 기능 :
+이 서브 섹션에서 다루는 DSP_SYS_EDMAWAKE0_x는 DSP에 대한 후류 인터럽트를 생성하기위한 것입니다.
+
+ In most cases, the enable mask for the two sets of registers should be set to the same value.
+대부분의 경우 두 레지스터 세트의 활성화 마스크는 같은 값으로 설정해야합니다.
+
+The EDMAWAKE0 registers corresponding to the EDMA Events 19 thru 0 (msbit to lsbit) are as follows:
+EDMA 이벤트 19 ~ 0 (msbit에서 lsbit)에 해당하는 EDMAWAKE0 레지스터는 다음과 같습니다.
+
+• DSP_SYS_EDMAWAKE0_IRQSTATUS_RAW[19:0]
+
+• DSP_SYS_EDMAWAKE0_IRQSTATUS[19:0]
+
+• DSP_SYS_EDMAWAKE0_IRQENABLE_SET[19:0]
+
+• DSP_SYS_EDMAWAKE0_IRQENABLE_CLR[19:0]
+
+Following functional descriptions are valid for the above registers :
+다음 함수 설명은 위의 레지스터에 유효합니다.
+
+• IRQ status raw register - This register provides a per-event raw interrupt status vector.
+• IRQ 상태 원시 레지스터 -이 레지스터는 이벤트 별 원시 인터럽트 상태 벡터를 제공합니다.
+
+The Raw status is set even if the corresponding event is not enabled. Software can write '1' to set the (raw) status for debug purposes.
+원시(Raw) 상태는 해당 이벤트가 사용 가능하지 않은 경우에도 설정됩니다. 소프트웨어는 디버그 목적을 위해 (원시) 상태를 설정하기 위해 '1'을 쓸 수 있습니다.
+
+• IRQ status register - This register provides a per-event enabled interrupt status vector.
+• IRQ 상태 레지스터 -이 레지스터는 이벤트 별 사용 가능 인터럽트 상태 벡터를 제공합니다.
+
+The Enabled status is set if the corresponding event is enabled and the raw status is set.
+사용 가능 상태는 해당 이벤트가 사용 가능하고 원시 상태가 설정된 경우 설정됩니다.
+
+Software can write 1 to clear the (raw) status after the interrupt has been serviced.
+소프트웨어는 인터럽트가 처리 된 후 (원시) 상태를 지우기 위해 1을 쓸 수 있습니다.
+
+The clear takes effect even if the interrupt is not enabled.
+인터럽트가 활성화되지 않은 경우에도 지우기가 적용됩니다.
+
+• IRQ enable register - This register provides a per-event interrupt enable bit vector.
+• IRQ 활성화 레지스터 -이 레지스터는 이벤트 별 인터럽트 활성화 비트 벡터를 제공합니다.
+
+Software can write 1 to set (i.e., enable the corresponding interrupt).
+소프트웨어는 세트에 1을 기록 할 수있다 (즉, 대응하는 인터럽트를 인 에이블한다).
+
+Reads of this register return the actual state of the enable register (and is the same as reading the corresponding "IRQ Clear" - register)
+이 레지스터의 읽기는 활성화 레지스터의 실제 상태를 반환합니다 (해당 "IRQ Clear"레지스터 읽기와 동일)
+
+• IRQ clear register - This register provides a per-event interrupt enable bit vector.
+• IRQ 클리어 레지스터 -이 레지스터는 이벤트 별 인터럽트 활성화 비트 벡터를 제공합니다.
+
+Software can write 1 to clear (i.e., disable the corresponding interrupt).
+소프트웨어는 1을 클리어 (즉, 대응하는 인터럽트를 디스 에이블) 할 수있다.
+
+Reads of this register return the actual state of the enable register (and is the same as reading the corresponding "IRQ Set" register)
+이 레지스터의 읽기는 활성화 레지스터의 실제 상태를 반환합니다 (해당 "IRQ Set"레지스터를 읽는 것과 같습니다)
+
+NOTE: A DSP_SYS_EDMAWAKE0_IRQSTATUS_RAW bit is set even if the corresponding event is NOT enabled in the DSP_SYS_EDMAWAKE0_IRQENABLE_SET[19:0].
+참고 : 해당 이벤트가 DSP_SYS_EDMAWAKE0_IRQENABLE_SET [19 : 0]에서 활성화되지 않은 경우에도 DSP_SYS_EDMAWAKE0_IRQSTATUS_RAW 비트가 설정됩니다.
+
+5.3.6 DSP Intergated Memory Management Units
+5.3.6 DSP 통합 메모리 관리 장치
+
+5.3.6.1 DSP MMUs Overview.
+5.3.6.1 DSP MMUs 개관
+
+A standalone memory management unit (DSP_MMU0) is included within the DSP1 (DSP1_MMU0) and DSP2 (DSP2_MMU0) subsystems boundaries.
+독립형 메모리 관리 장치 (DSP_MMU0)는 DSP1 (DSP1_MMU0) 및 DSP2 (DSP2_MMU0) 서브 시스템 경계에 포함됩니다.
+
+The DSP_MMU0 is integrated on the C66x CPU MDMA path to the device L3_MAIN interconnect.
+DSP_MMU0은 장치 L3_MAIN 상호 연결에 대한 C66x CPU MDMA 경로에 통합되어 있습니다.
+
+This provides several benefits including protection of the system memories from corruption by DSP1 and DSP2 accidental accesses.
+이는 DSP1 및 DSP2 우발적 인 액세스에 의한 시스템 메모리의 손상으로부터 보호하는 것을 포함하여 여러 가지 이점을 제공합니다.
+
+Both DSP MMUs generate interrupts which are internally mapped to the DSP C66x CorePac DSP_INTC and output to the device IRQ_CROSSBAR.
+두 개의 DSP MMU 모두 내부적으로 DSP C66x CorePac DSP_INTC에 매핑되고 IRQ_CROSSBAR 장치로 출력되는 인터럽트를 생성합니다.
+
+ See also the Section 5.2 and Section 5.3.4.
+5.2 절과 5.3.4 절을 참조하십시오.
+
+CAUTION
+In the case of a page fault, a DSP C66x CorePac CPU is unable to service it’s own DSP_MMU0 and DSP_MMU1 interrupts .
+주의
+페이지 폴트의 경우, DSP C66x CorePac CPU는 자신의 DSP_MMU0 및 DSP_MMU1 인터럽트를 처리 할 수 ​​없다.
+
+The device MPU (Cortex- A15) is expected to manage any TLB patches as necessary.
+장치 MPU (Cortex-A15)는 필요에 따라 모든 TLB 패치를 관리해야합니다.
+
+Both DSP MMUs (on MDMA and EDMA paths respectively) have identical functionalities.
+두 개의 DSP MMU (각각 MDMA 및 EDMA 경로에 있음)는 동일한 기능을가집니다.
+
+• 32-bit input and ouput address width (to match L3_MAIN address width)
+• 32 비트 입력 및 출력 주소 너비 (L3_MAIN 주소 너비와 일치시키기 위해)
+
+• 32 TLB cache entries
+• 32 개의 TLB 캐시 엔트리
+
+• 32 + 1 tags
+• 32 + 1 태그
+
+• 128-bit data bus for MDMA and EDMA
+• MDMA 및 EDMA를위한 128 비트 데이터 버스
+
+5.3.6.2 Routing MDMA Traffic through DSP MMU0
+5.3.6.2 DSP를 통한 MDMA 트래픽 라우팅 MMU0
+
+DSP C66x CPU traffic initiated on the DSP MDMA port can be optionally routed through the DSP_MMU0
+on the 32-bit MDMA address path.
+DSP MDM 포트에서 시작된 DSP C66x CPU 트래픽은 32 비트 MDMA 주소 경로 DSP_MMU0 DSP_MMU0을 통해 선택적으로 라우팅 될 수 있습니다
+
+This is controlled in two levels :
+이것은 두 단계로 제어됩니다.
+
+• global by the DSP_SYSTEM register DSP_SYS_MMU_CONFIG [0] MMU0_EN bit.
+• DSP_SYSTEM 레지스터에 의해 전역 DSP_SYS_MMU_CONFIG [0] MMU0_EN 비트.
+
+ This bit acts as a mux-select : setting it to 0b1 enables requests to use the DSP_MMU0; clearing this bit to 0b0 disables MMU table lookup and causes accesses to use the non-translated address (MMU bypass).
+이 비트는 mux-select로 작용합니다 : 0b1로 설정하면 DSP_MMU0; 이 비트를 0b0으로 지울경우 MMU 테이블 검색이 비활성화되고 액세스가 비 번역 주소 (MMU 바이 패스)를 사용하게됩니다.
+
+By default the DSP_MMU0 is disabled in DSP_SYSTEM and MDMA port traffic bypasses the DSP_MMU0.
+기본적으로 DSP_SYSTEM에서는 DSP_MMU0이 비활성화되고 MDMA 포트 트래픽은 DSP_MMU0을 바이 패스합니다.
+
+• local by MMU enable control in a dedicated DSP_MMU0 memory mapped register.
+• local by MMU는 전용 DSP_MMU0 메모리 맵핑 레지스터에서 제어를 활성화합니다.
+
+It is used to enable the MMU functionality after the page tables are programmed for MMU operation.
+For details, refer to the Chapter 20, Memory Management Units.
+MMU 작동을 위해 페이지 테이블이 프로그래밍 된 후 MMU 기능을 활성화하는 데 사용됩니다.
+자세한 내용은 20 장, 메모리 관리 장치를 참조하십시오.
+
+NOTE: For the DSP_MMU0 to operate, SW should enable it both at the DSP_SYSTEM global level
+and DSP_MMU0 local register level.
+참고 : DSP_MMU0이 작동하려면 SW가 DSP_SYSTEM 전역 수준과 DSP_MMU0 로컬 레지스터 수준에서 DSP를 활성화해야합니다.
+
+When enabling the DSP_MMU0, software must take care that no transactions are in flight through that MMU.
+DSP_MMU0을 활성화 할 때, 소프트웨어는 해당 MMU를 통해 비행중인 트랜잭션이 없도록주의해야합니다.
+
+This is typically handled by issueing a DSP "MFENCE" instruction operation.
+이것은 일반적으로 DSP "MFENCE"명령 작업을 발행하여 처리됩니다.
+
+Note that the local enable bit inside the DSP_MMU0 must be configured as normal (refer to the Chapter 20, Memory Management Units.)
+노트: DSP_MMU0 내부의 로컬 인 에이블 비트는 정상적으로 구성되어야합니다 (20 장, 메모리 관리 유닛 참조).
+
+
+For more information on the MFENCE operation, refer to the section, C66x CPU Instruction
+Set of the TMS320C66x DSP CPU and Instruction Set ).
+MFENCE 동작에 대한 자세한 내용은 "TMS320C66x DSP의 CPU와 명령어 세트의 C66x CPU 명령어 세트"를 참조하십시오.
+
+In addition, the DSP_MMU0 traffic can be aborted in case of a lockup via the DSP_SYS_MMU_CONFIG [8] MMU0_ABORT bit.
+또한 DSP_SYS_MMU_CONFIG [8] MMU0_ABORT 비트를 통해 잠금이 발생할 경우 DSP_MMU0 트래픽을 중단 할 수 있습니다.
+
+In other words, this bit can be used to clear a hang condition that may occur if the DSP_MMU0 encounters a page fault that cannot be serviced.
+즉,이 비트는 DSP_MMU0이 서비스 할 수없는 페이지 폴트를 만나는 경우 발생할 수있는 중단 조건을 제거하는 데 사용될 수 있습니다.
+
+For more information on device DSP_MMU0 functionality and register settings, refer to the Section 20.3, MMU Functional Description and Section 20.5, MMU Register Manual, in the chapter, Memory Management Units, respectively.
+장치 DSP_MMU0 기능과 레지스터 설정에 대한 자세한 내용은 제 20.3 항 "MMU 기능 설명"및 제 20.5 항 "MMU 레지스터 설명서"의 "메모리 관리 유닛"장을 각각 참조하십시오.
+
+5.3.7 DSP Integrated EDMA Subsystem
+5.3.7 DSP 통합 EDMA 하부 조직
+
+This section represents an overview of the DSP integrated EDMA functionalities, as well as the subsystem level and device related register controls.
+이 섹션에서는 DSP 통합 EDMA 기능의 개요와 서브 시스템 레벨 및 장치 관련 레지스터 제어에 대해 설명합니다.
+
+ For more details on the EDMA functionalities and programming registers, refer to the Section 16.2, Enhanced DMA.
+EDMA 기능 및 프로그래밍 레지스터에 대한 자세한 내용은 섹션 16.2, 향상된 DMA를 참조하십시오.
+
+5.3.7.1 DSP EDMA Overview
+5.3.7.1 DSP EDMA 개관
+
+The enhanced-DMA subsystem which is part of the DSP1 (DSP1_EDMA) and the DSP2 (DSP2_EDMA)
+subsystems is the primary DMA engine for transfers between system memory (DDR and/or L3_MAIN
+SRAM) and DSP internal memories (L1s and L2).
+DSP1 (DSP1_EDMA) 및 DSP2 (DSP2_EDMA)의 일부인 향상된 DMA 서브 시스템 서브 시스템은 시스템 메모리 (DDR 및 / 또는 L3_MAIN SRAM) 및 DSP 내부 메모리 (L1 및 L2)를 포함한다.
+
+The Channel Controller - DSP_EDMA_CC serves as the “user interface” of the DSP_EDMA.
+채널 컨트롤러 - DSP_EDMA_CC는 DSP_EDMA의 "사용자 인터페이스"역할을합니다.
+
+The two Transfer Controllers - DSP_EDMA_TC0 and DSP_EDMA_TC1 serve as the data transfer engines of the
+DSP_EDMA.
+두 개의 전송 컨트롤러 (DSP_EDMA_TC0 및 DSP_EDMA_TC1)는 DSP_EDMA의 데이터 전송 엔진으로 사용됩니다.
+
+The C66x CPU tipically programs the Channel Controller, which in turn submits Transfer Requests (TR) to the appropriate Transfer Controller. Interrupts are posted in the DSP_EDMA_CC upon transfer completion (if requested), and signaled to the C66x.
+C66x CPU는 채널 컨트롤러를 프로그램하여 채널 컨트롤러가 전송 요청 (TR)을 적절한 전송 컨트롤러로 전송합니다. 인터럽트는 전송 완료시 (요청 된 경우) DSP_EDMA_CC에 게시되고 C66x에 신호됩니다.
+
+The EDMA TC completion interrupt is not supported/connected.
+EDMA TC 완료 인터럽트는 지원 / 연결되지 않습니다.
+
+The DSP_EDMA is primarily used to perform block transfers between DSP C66x CorePac memories (mostly L2 memory) and system memory (mostly DDR or L3 SRAM).
+DSP_EDMA는 주로 DSP C66x CorePac 메모리 (주로 L2 메모리)와 시스템 메모리 (주로 DDR 또는 L3 SRAM) 간의 블록 전송을 수행하는 데 사용됩니다.
+
+The DSP_EDMA is configured with 2 Queues (in the CC).
+DSP_EDMA는 CC에서 2 개의 큐로 구성됩니다.
+
+Two DSP_EDMA traffic controllers (TC) offer high performance and preemptability of transfers.
+두 개의 DSP_EDMA 트래픽 컨트롤러 (TC)는 높은 성능과 전송 우선 순위를 제공합니다.
+
+For typical use cases, it is expected that low latency/small payload transfers ) use Queue0/TC0 and high bandwidth/large payload transfers (e.g., DDR on L3_MAIN or DSP local L2 SRAM) will use Queue1/TC1.
+일반적인 사용의 경우 Queue0 / TC0 및 높은 대역폭 / 대용량 페이로드 전송 (예 : L3_MAIN 또는 DSP 로컬 L2 SRAM의 DDR)은 Queue1 / TC1을 사용하므로 대기 시간이 작거나 페이로드 전송이 적을 것으로 예상됩니다.
+
+DSP_EDMA_CC configuration in the device features :
+장치의 DSP_EDMA_CC 구성 :
+
+• 64x EDMA channels
+• 64x EDMA 채널
+
+• 8x QDMA channels
+• 8x QDMA 채널
+
+• 64x interrupt channels
+• 64x 인터럽트 채널
+
+• 128x PaRAM entries
+• 128x PaRAM 항목
+
+• 2x Event Queues
+• 2x 이벤트 대기열
+
+
+• 2x Traffic controllers
+• 트래픽 컨트롤러 2 개
+
+•memory protection support
+• 메모리 보호 지원
+
+•channel mapping capability
+• 채널 매핑 기능
+
+•8x memory protected and Shadow Regions
+• 8x 메모리 보호 및 그림자 영역
+
+
+DSP_EDMA_TC0/TC1 configuration in the device features :
+장치의 DSP_EDMA_TC0 / TC1 구성 기능 :
+
+• 2048 Byte FIFO support
+• 2048 바이트 FIFO 지원
+
+• multitag support
+• 멀티 태깅 지원
+
+• 16-bit data bus
+• 16 비트 데이터 버스
+
+• 4-level destination register depth
+• 4 레벨 대상 레지스터 깊이
+ 
+• 7-bit address for internal FIFOs
+• 내부 FIFO 용 7 비트 주소
+
+• 16 IDs for Read commands
+• 읽기 명령의 ID 16 개
+
+• 16 IDs for Write commands
+• 쓰기 명령에 대한 16 개의 ID
+
+NOTE: The device DSP integrated EDMA controller instances (DSP_EDMA_CC, DSP_EDMA_TC0 and DSP_EDMA_TC1) are functionally identical with the device EDMA controller instances (EDMA_TPCC, EDMA_TPTC0 and EDMA_TPTC1).
+참고 : 장치 DSP 통합 EDMA 컨트롤러 인스턴스 (DSP_EDMA_CC, DSP_EDMA_TC0 및 DSP_EDMA_TC1)는 장치 EDMA 컨트롤러 인스턴스 (EDMA_TPCC, EDMA_TPTC0 및 EDMA_TPTC1)와 기능적으로 동일합니다.
+
+The only difference is that the DSP_EDMA instances are located at different physical addresses.
+유일한 차이점은 DSP_EDMA 인스턴스가 다른 물리적 주소에 위치한다는 것입니다.
+
+For more details on the DSP_EDMA_CC, DSP_EDMA_TC0 and DSP_EDMA_TC1 controllers functionalities, refer to Section 16.2.5, EDMA Controller Functional Description, in Section 16.2, Enhanced DMA.
+DSP_EDMA_CC, DSP_EDMA_TC0 및 DSP_EDMA_TC1 컨트롤러 기능에 대한 자세한 내용은 섹션 16.2, 향상된 DMA의 섹션 16.2.5, EDMA 컨트롤러 기능 설명을 참조하십시오.
+
+The DSP_EDMA instances, their corresponding registers summary and descriptions are covered in the Section 16.2.8, EDMA Register Manual of the Section 16.2, Enhanced DMA.
+DSP_EDMA 인스턴스, 해당 레지스터 요약 및 설명은 섹션 16.2, 향상된 DMA의 섹션 16.2.8, EDMA 레지스터 설명서에서 다룹니다.
+
+
+5.3.7.2 DSP System and Device Level Settings of DSP EDMA
+5.3.7.2 DSP EDMA의 DSP 시스템 및 장치 레벨 설정
+
+DSP_EDMA traffic TC0 and TC1 controllers "Active" or "Idle" status: can be monitored in
+DSP_SYSTEM located :
+DSP_EDMA 트래픽 TC0 및 TC1 컨트롤러 "Active"또는 "Idle"상태 : DSP_SYSTEM 위치에서 모니터링 할 수 있습니다.
+
+
+• DSP_SYS_STAT[1] TC0_STAT bit
+
+• DSP_SYS_STAT[2] TC1_STAT bit
+
+The default burst size for both the DSP_EDMA_TC0 and DSP_EDMA_TC1 can be defined in DSP_SYSTEM register.
+DSP_EDMA_TC0 및 DSP_EDMA_TC1의 기본 버스트 크기는 DSP_SYSTEM 레지스터에 정의 할 수 있습니다.
+이것은 프로그래밍을 통해 달성됩니다.
+
+This is achieved via programming :
+이것은 프로그래밍을 통해 달성됩니다.
+
+• DSP_SYS_BUS_CONFIG [1:0] TC0_DBS
+
+• DSP_SYS_BUS_CONFIG [5:4] TC1_DBS
+
+There are also other DSP_EDMA controls associated with DSP_NoC interconnect pressure settings.
+For more details, refer to the Section 5.3.8.
+DSP_NoC 인터커넥트 압력 설정과 관련된 다른 DSP_EDMA 컨트롤도 있습니다.
+자세한 내용은 5.3.8 절을 참조하십시오.
+
+The 3 error events associated with the DSP_EDMA_CC, DSP_EDMA_TC0 and DSP_EDMA_TC1 are exported outside the DSP C66x CorePac in the subsystem, and are able to trigger the ERRINT_IRQ aggregated interrupt output.
+DSP_EDMA_CC, DSP_EDMA_TC0 및 DSP_EDMA_TC1과 관련된 3 가지 오류 이벤트는 서브 시스템의 DSP C66x CorePac 외부로 내보내지고 ERRINT_IRQ 집계 된 인터럽트 출력을 트리거 할 수 있습니다.
+
+See also corresponding "tpcc_errint_level", "tptc_errint0_level" and "tptc_errint1_level" events, respectively in the Table 5-5.
+또한 표 5-5의 해당 "tpcc_errint_level", "tptc_errint0_level"및 "tptc_errint1_level"이벤트를 참조하십시오.
+
+NOTE: The DSP_EDMA_CC, DSP_EDMA_TC0 and DSP_EDMA_TC1 events are NOT exported outside DSP subsystem.
+참고 : DSP_EDMA_CC, DSP_EDMA_TC0 및 DSP_EDMA_TC1 이벤트는 DSP 하위 시스템 외부로 내보내지지 않습니다.
+
+ However they are merged (OR-ed) along with other error event sources within the DSP subsystem to produce a single ERRINT_IRQ interrupt exported outside the DSP subsystem.
+그러나 이들은 DSP 서브 시스템 내에서 다른 ERRINT_IRQ 인터럽트를 생성하기 위해 DSP 서브 시스템 내의 다른 오류 이벤트 소스와 함께 병합 (OR-ed)됩니다.
+
+For more details on ERRINT_IRQ generation and asscoiated event registers at DSP_SYSTEM level, refer to the Section 5.3.4.2.2.
+ERRINT_IRQ 생성 및 DSP_SYSTEM 레벨의 asscoiated 이벤트 레지스터에 대한 자세한 내용은 5.3.4.2.2 절을 참조하십시오.
+
+The DSP_SYSTEM logic is assigned to route the external DMA requests to the EDMA hardware request
+inputs.
+DSP_SYSTEM 로직은 외부 DMA 요청을 EDMA 하드웨어 요청 입력으로 라우팅하도록 지정됩니다.
+
+Additionally, EDMA events can conditionally wake-up the DSP system from a low power mode, via
+software enabling DSP_SYSTEM MWakeup handshake with the device PRCM.
+또한, EDMA 이벤트는 DSP PROM에서 DSP_SYSTEM MWakeup 핸드 셰이크를 활성화하는 소프트웨어를 통해 DSP 시스템을 저전력 모드에서 조건부로 웨이크 업할 수 있습니다.
+
+ This mechanism is described in the Section 5.3.5.
+이 메커니즘은 5.3.5 절에 설명되어 있습니다.
+
+The programmable muxing of various external DMA request sources to the DSP EDMA.
+다양한 EDMA 요청 소스를 DSP EDMA에 프로그래밍 가능하게 다중화합니다.
+
+DMA_DSP1_DREQ_x and DMA_DSP2_DREQ_x input lines (where x=0 to 19) is covered in the Section 18.4.6.5, DMA_CROSSBAR Module Functional Description, of the Chapter 18, Control Module.
+DMA_DSP1_DREQ_x 및 DMA_DSP2_DREQ_x 입력 라인 (x = 0-19)은 18 장, 제어 모듈의 18.4.6.5 절, DMA_CROSSBAR 모듈 기능 설명에서 다룹니다.
+
+DSP1/DSP2 subsystem external DMA request sources : For the default DSP1 / DSP2 external DMA request sources, routed via the device DMA_CROSSBAR to the DSP1_EDMA / DSP2_EDMA channel controller inputs (DMA_DSP1_DREQ_i / DMA_DSP2_DREQ_i), respectively, refer to the Section 5.3.5.
+DSP1 / DSP2 서브 시스템 외부 DMA 요청 소스 : 장치 DMA_CROSSBAR를 통해 DSP1_EDMA / DSP2_EDMA 채널 컨트롤러 입력 (DMA_DSP1_DREQ_i / DMA_DSP2_DREQ_i)으로 각각 라우팅되는 기본 DSP1 / DSP2 외부 DMA 요청 소스의 경우 섹션 5.3.5를 참조하십시오.
+
+
+5.3.8 DSP L2 interconnect Network
+5.3.8 DSP L2 상호 연결 네트워크
+
+A 128-bit level 2 (L2) Interconnect from Arteris - FlexNoC ® is instantiated in the DSP subsystem, outside the DSP C66x CorePac.
+Arteris의 128 비트 L2 (Level 2) 인터커넥트 - FlexNoC ®는 DSP C66x CorePac 외부의 DSP 하위 시스템에서 인스턴스화됩니다.
+ 
+It is signified as "DSP_NoC" throughout this chapter.
+이 장 전체에서 "DSP_NoC"로 표시됩니다.
+
+NOTE: The C66x master MDMA data does NOT flow through the DSP_NoC.
+참고 : C66x 마스터 MDMA 데이터는 DSP_NoC를 통해 흐르지 않습니다.
+
+The system and local initiators on DSP_NoC are as follows :
+DSP_NoC의 시스템 및 로컬 초기화 프로그램은 다음과 같습니다.
+
+• local C66x CPU 32-bit CFG master port which traffic is split via DSP_NoC fabric into several
+configuration target traffics inside and outside the DSP subsystem.
+• 로컬 C66x CPU 32 비트 CFG 마스터 포트. 트래픽은 DSP_NoC 패브릭을 통해 DSP 하위 시스템 내부 및 외부의 여러 구성 대상 트래픽으로 분할됩니다.
+
+• SDMA initiator port on DSP_NoC which conveys accesses towards DSP Memories and memory- mapped registers initiated outside the DSP subsystem via the L3_MAIN interconnect.
+• L3_MAIN 상호 연결을 통해 DSP ubsystem 외부에서 시작된 DSP 메모리 및 메모리 맵 레지스터로의 액세스를 전달하는 DSP_NoC의 SDMA 초 기자 포트.
+
+• EDMA traffic controllers - TC0 read / write initiator ports
+• EDMA 트래픽 컨트롤러 - TC0 읽기 / 쓰기 개시 자 포트
+
+• EDMA traffic controllers - TC1 read / write initiator ports
+• EDMA 트래픽 컨트롤러 - TC1 읽기 / 쓰기 개시 자 포트
+
+NOTE: The DSP_ICFG space is not visible to SDMA initiators (DSP_EDMA or DSP hosts on
+L3_MAIN ) with CFG traffic.
+참고 : DSP_ICFG 공간은 CFG 트래픽이있는 SDMA 초기화 프로그램 (DSP_EDMA 또는 L3_MAIN의 DSP 호스트)에서 볼 수 없습니다.
+
+The targets on the DSP_NoC are as follows :
+DSP_NoC의 타겟은 다음과 같습니다.
+
+• DSP C66x CorePac SDMA port
+• DSP C66x CorePac SDMA 포트
+
+• Internal CFG targets on the DSP_NoC :
+• DSP_NoC의 내부 CFG 타겟 :
+
+– DSP_MMU0 Cfg
+
+– DSP_MMU1 Cfg
+
+– DSP_SYSTEM Cfg
+
+– DSP_EDMA_CC Cfg
+
+– DSP_EDMA_TC0 Cfg
+
+– DSP_EDMA_TC1 Cfg
+
+• 32-bit CFG port on L3_MAIN (it acts as master on the L3_MAIN)
+• L3_MAIN의 32 비트 CFG 포트 (L3_MAIN에서 마스터 역할을 함)
+
+• EDMA Target port which conveys EDMA bidi transfers outside the DSP (through or bypassing
+DSP_MMU1).
+EDMA bidi를 DSP 외부로 전달하는 EDMA Target 포트 (DSP_MMU1을 통과하거나 우회).
+
+The Table 5-8 summarizes the interconnections which can be established between DSP initiators and targets over the L2 DSP_NoC in the device.
+표 5-8은 장치의 L2 DSP_NoC를 통해 DSP 이니시에이터와 타깃 사이에 설정 될 수있는 상호 연결을 요약 한 것입니다.
+
+ In this table HW implemented interconnections are marked with an asterics.
+이 표에서 HW 구현 상호 연결은 asterics로 표시됩니다.
+
+A DSP_NoC error event (combination of several local to the interconnect events) is exported outside the DSP C66x CorePac in the subsystem, and can be enabled to trigger the ERRINT_IRQ aggregated interrupt output.
+DSP_NoC 오류 이벤트 (상호 연결 이벤트에 대해 로컬에있는 여러 개의 조합)가 서브 시스템의 DSP C66x CorePac 외부로 내보내지며 ERRINT_IRQ 집계 된 인터럽트 출력을 트리거 할 수 있습니다.
+
+See also corresponding "noc_errint_level" event in the Table 5-5.NOTE: The DSP_NoC event is NOT exported outside DSP subsystem.
+표 5-5의 해당 "noc_errint_level"이벤트를 참조하십시오. 참고 : DSP_NoC 이벤트는 DSP 하위 시스템 외부로 내보내지지 않습니다.
+
+However it is merged (OR- ed) along with other error event sources within the DSP subsystem to produce a single ERRINT_IRQ interrupt exported outside the DSP subsystem.
+그러나 DSP 서브 시스템 내부에서 다른 ERRINT_IRQ 인터럽트를 생성하기 위해 DSP 서브 시스템 내의 다른 에러 이벤트 소스와 함께 병합 (OR)됩니다.
+
+For more details on ERRINT_IRQ generation and asscoiated event registers at DSP_SYSTEM level, refer to the Section 5.3.4.2.2.
+ERRINT_IRQ 생성 및 DSP_SYSTEM 레벨의 asscoiated 이벤트 레지스터에 대한 자세한 내용은 5.3.4.2.2 절을 참조하십시오.
+
+5.3.8.1 DSP Public Firewall Settings
+5.3.8.1 DSP 공개 방화벽 설정
+
+The DSP1 and DSP2 L2 Interconnect (DSP1_NoC and DSP2_NoC, respectively) implements two firewalls – dsp firewall0 (DSP_FW0) is used to protect DSP_MMU0’s configuration space (which includes the TLB) and dsp firewall1 is used to protect DSP_MMU1’s configuration space (which includes the TLB).
+DSP_MMU0의 구성 공간 (TLB를 포함)를 보호하기 위해 dsp firewall0 (DSP_FW0)가 사용되어 DSP_MMU1의 구성 공간 (TLB를 포함)를 보호하기 위해 dsp firewall1가 사용되고 있습니다 (DSP1_NoC 및 DSP2_NoC )).
+
+Access permission is based on the privilege level, domain, ConnID, and access types of a request.
+액세스 권한은 권한 수준, 도메인, ConnID 및 요청의 액세스 유형을 기반으로합니다.
+
+The default value of 0xFFFF_FFFF in the MRM region 0 permission registers:
+MRM 영역 0 권한 레지스터의 기본값 0xFFFF_FFFF는 다음과 같습니다.
+
+• L3_DSPSS_INIT_OCP_MMU0_CTRL_TARG_OCP_FW_503000_MRM_PERMISSION_REGION_LO W_0
+ 
+• L3_DSPSS_INIT_OCP_MMU0_CTRL_TARG_OCP_FW_503000_MRM_PERMISSION_REGION_HIG H_0
+
+• L3_DSPSS_INIT_OCP_MMU1_CTRL_TARG_OCP_FW_504000_MRM_PERMISSION_REGION_LO W_0
+
+• L3_DSPSS_INIT_OCP_MMU1_CTRL_TARG_OCP_FW_504000_MRM_PERMISSION_REGION_HIG H_0
+
+permits any requestor to access the DSP_MMU0 and DSP_MMU1 configuration space.
+모든 요청자가 DSP_MMU0 및 DSP_MMU1 구성 공간에 액세스 할 수있게합니다.
+
+For more information on the access region definitions, public privilege access, public user access and
+initiator permission settings, which are identical between DSP_NoC firewalls and L3_MAIN interconnect
+firewalls, refer to the Section 14.2.3.7.3, L3_MAIN Firewall Functionality, in the, Section 14.2, L3_MAIN Interconnect.
+DSP_NoC 방화벽과 L3_MAIN 상호 연결 방화벽간에 동일한 액세스 영역 정의, 공용 권한 액세스, 공개 사용자 액세스 및 초기화 프로그램 사용 권한 설정에 대한 자세한 내용은 섹션 14.2.3.7.3, L3_MAIN 방화벽 기능 섹션을 참조하십시오. 14.2, L3_MAIN 상호 연결
+
+There are also several other DSP_NoC registers - 3_DSPSS_INIT_OCP_MMU0_CTRL_TARG_OCP_FW_503000_LOGICAL_ADDR_ERRLOG_0, L3_DSPSS_INIT_OCP_MMU0_CTRL_TARG_OCP_FW_503000_REGUPDATE_CONTROL used for error handling, firewall reset and other purposes. These are functionally identical with the corresponding L3_MAIN interconnect registers, described in the Section 14.2.3.8, L3_MAIN Interconnect Error Handling, in the Section 14.2, L3_MAIN Interconnect.
+또한 오류 처리, 방화벽 재설정 및 다른 용도로 사용되는 3_DSPSS_INIT_OCP_MMU0_CTRL_TARG_OCP_FW_503000_LOGICAL_ADDR_ERRLOG_0, L3_DSPSS_INIT_OCP_MMU0_CTRL_TARG_OCP_FW_503000_REGUPDATE_CONTROL 등의 다른 DSP_NoC 레지스터가 있습니다. 이것들은 14.2 절 L3_MAIN 상호 연결 오류 처리 섹션 14.2.3.8, L3_MAIN 상호 연결에서 설명하는 해당 L3_MAIN 상호 연결 레지스터와 기능상 동일합니다.
+
+The various firewall access control registers are part of the C66x CPU local accessible - DSP_FW_L2_NOC_CFG address space, and L3_MAIN initiators accessible DSP1/2_FW_L2_NOC_CFG configuration space.
+다양한 방화벽 액세스 제어 레지스터는 C66x CPU 로컬 액세스 가능 부분 인 DSP_FW_L2_NOC_CFG 주소 공간과 L3_MAIN 초기화 프로그램 액세스 가능 SDP1 / 2_FW_L2_NOC_CFG 구성 공간입니다.
+
+ The corresponding MMU0 and MMU1 configuration space firewall registers ( DSP_FW0 starting at offset 0x0000_0000 , and DSP_FW1 starting at offset 0x0000_1000 ) are summarized and described in the Section 5.4.4.
+해당 MMU0 및 MMU1 구성 공간 방화벽 레지스터 (오프셋 0x0000_0000에서 시작하는 DSP_FW0 및 오프셋 0x0000_1000에서 시작하는 DSP_FW1)가 5.4.4 절에 요약되어 설명되어 있습니다.
+
+5.3.8.2 DSP NoC Flag Mux and Error Log Registers
+5.3.8.2 DSP NoC 플래그 멀티플렉서 및 에러 로그 레지스터
+
+The DSP_NoC registers (starting at offset >= 0x0000_4000) are used for error logging and flag muxing
+purposes.
+DSP_NoC 레지스터 (offset> = 0x0000_4000에서 시작)는 오류 로깅 및 플래그 다중화 목적으로 사용됩니다.
+
+The status information stored in there can be used for example to resolve issues related to DSP_NoC access conflicts, for debug purposes, etc.
+거기에 저장된 상태 정보는 예를 들어 디버그 목적으로 DSP_NoC 액세스 충돌과 관련된 문제를 해결하는 데 사용될 수 있습니다.
+
+For more information, refer to the Section 14.2.3.5, Flag Muxing, in the Section 14.2, L3_MAIN
+Interconnect.
+자세한 내용은 섹션 14.2, L3_MAIN 상호 연결의 14.2.3.5 절, 플래그 다중화를 참조하십시오.
+
+5.3.8.3 DSP NoC Arbitration
+5.3.8.3 DSP NoC 중재
+
+A pressure based arbitration is implemented for the DSP_NoC interconnect.
+압력 기반 중재는 DSP_NoC 상호 연결에 대해 구현됩니다.
+
+A DSP_NoC local MFlag mechanism is used but it is SW controlled in the DSP_SYSTEM configuration
+space.
+DSP_NoC 로컬 MFlag 메커니즘이 사용되지만 DSP_SYSTEM 구성 공간에서 SW로 제어됩니다.
+
+This is done via the register DSP_SYS_BUS_CONFIG bitfields :
+이는 DSP_SYS_BUS_CONFIG 레지스터의 bitfields를 통해 수행됩니다.
+
+• TC0_L2PRES - for DSP_EDMA_TC0 pressure control
+
+• TC1_L2PRES - for DSP_EDMA_TC1 pressure control
+
+• CFG_L2PRES - for the DSP C66x CorePac 32-bit CFG pressure control
+
+• SDMA_L2PRES - for pressure control of the DSP system and L3_MAIN accesses targetting the DSP
+C66x CorePac SDMA slave port The pressure for each port is signaled on a MFlag[1:0] bus and conveys a value of 0 (lowest), 1 (medium), or 3 (highest). A value of 0x2 is reserved/undefined.
+• SDMA_L2PRES - DSP 시스템의 압력 제어 및 DSP C66x CorePac SDMA 슬레이브 포트를 대상으로하는 L3_MAIN 액세스 각각의 포트에 대한 압력은 MFlag [1 : 0] 버스에서 신호되고 0 (최저), 1 (중간 ) 또는 3 (가장 높음)입니다.
+0x2 값은 예약 됨 / 정의되지 않음입니다.
+
+NOTE: The default pressure level for all ports is 0x0 and is recommended for most systems.
+This results in round-robin arbitration across active requests.
+참고 : 모든 포트의 기본 압력 수준은 0x0이며 대부분의 시스템에서 권장됩니다.
+이로 인해 활성 요청간에 라운드 로빈 중재가 발생합니다.
+
+5.3.9 DSP Boot Configuration
+5.3.9 DSP 부팅 설정
+
+DSP1 subsystem boot vector input which defines the 22-bit DSP1 Boot Address is mapped to the device
+core control module register CTRL_CORE_CONTROL_DSP1_RST_VECT[21:0] DSP1_RST_VECT bitfield.
+22 비트 DSP1 부트 주소를 정의하는 DSP1 서브 시스템 부트 벡터 입력이 디바이스에 맵핑 됨
+코어 제어 모듈은 CTRL_CORE_CONTROL_DSP1_RST_VECT [21 : 0] DSP1_RST_VECT 비트 필드를 등록한다.
+
+DSP2 subsystem boot vector input which defines the 22-bit DSP2 Boot Address is mapped to the
+device core control module register CTRL_CORE_CONTROL_DSP2_RST_VECT[21:0] DSP2_RST_VECT bitfield.
+22 비트 DSP2 부팅 주소를 정의하는 DSP2 하위 시스템 부팅 벡터 입력은 장치 코어 제어 모듈 레지스터 CTRL_CORE_CONTROL_DSP2_RST_VECT [21 : 0] DSP2_RST_VECT 비트 필드에 매핑됩니다.
+
+In general, the device MPU (Cortex-A15) host loads code to a given address location in the device system memory, sets the DSP1_RST_VECT / DSP2_RST_VECT bitfield to the address value, and then release the DSP1 / DSP2 from reset.
+일반적으로 장치 MPU (Cortex-A15) 호스트는 장치 시스템 메모리의 지정된 주소 위치에 코드를로드하고 DSP1_RST_VECT / DSP2_RST_VECT 비트 필드를 주소 값으로 설정 한 다음 DSP1 / DSP2를 리셋에서 해제합니다.
+
+At that point, the DSP1 / DSP2 will begin fetching code from that location.
+이 시점에서 DSP1 / DSP2는 해당 위치에서 코드를 가져 오기 시작합니다.
+
+NOTE: If the values of the control core module CTRL_CORE_CONTROL_DSP1_RST_VECT[21:0] / CTRL_CORE_CONTROL_DSP2_RST_VECT [21:0] register change, the values will be taken into account by DSP upon the next reset.
+참고 : 제어 코어 모듈 CTRL_CORE_CONTROL_DSP1_RST_VECT [21 : 0] / CTRL_CORE_CONTROL_DSP2_RST_VECT [21 : 0] 레지스터의 값이 변경되면 다음 재설정시 값이 DSP에서 고려됩니다.
+
+NOTE: Upon device boot time (a power-on reset applied), the device "sysboot15" input latched in
+the Control Module bootstrap register defines the value of DSP functional clock divider (2 or 3).
+참고 : 장치 부팅 시간 (전원 켜기 재설정 적용)에서 장치 "sysboot15"입력은 래치됩니다.
+제어 모듈 부트 스트랩 레지스터는 DSP 기능 클럭 분배기 (2 또는 3)의 값을 정의합니다.
+
+For more details, refer to the Section 5.3.3.1
+자세한 내용은 5.3.3.1 절을 참조하십시오.
+
+5.3.10 DSP Internal and External Memory Views
+5.3.10 DSP 내부 및 외부 메모리 뷰
+
+5.3.10.1 C66x CPU View of the Address Space
+5.3.10.1 C66x CPU의 주소 공간보기
+
+The C66x CPU View represents the view from the DSP, which result from program fetches, or load / store
+instructions.
+C66x CPU View는 프로그램 가져 오기 또는로드 / 저장 명령어로 인해 DSP에서 뷰를 나타냅니다.
+
+Accesses to DSP memories (L1P, L1D, L2) and to DSP Internal configuration space (DSP_ICFG ) are intercepted within the DSP C66x CorePac (whether using local or global addresses).
+DSP 메모리 (L1P, L1D, L2) 및 DSP에 대한 액세스 내부 구성 공간 (DSP_ICFG)은 DSP C66x CorePac (로컬 또는 글로벌 주소 사용 여부)에서 인터셉트됩니다.
+
+The DSP C66x CorePac CFG (C66x CPU 32-bit master port) interface is strictly for non-cacheable loads
+and stores, and is intended to be used for I/O space or memory mapped registers (MMR) space.
+DSP C66x CorePac CFG (C66x CPU 32 비트 마스터 포트) 인터페이스는 캐시 불가능한로드 및 저장을위한 것이며 I / O 공간 또는 메모리 매핑 레지스터 (MMR) 공간 용으로 사용됩니다.
+
+DSP C66x CorePac CFG accesses are routed / arbitrated by the DSP_NoC L2 inteconnect.
+DSP C66x CorePac CFG 액세스는 DSP_NoC L2 inteconnect에 의해 라우트 / 조정됩니다.
+
+DSP C66x CorePac CFG accesses are mapped between 0x01C0_0000 and 0x0FFF_FFFF.
+DSP C66x CorePac CFG 액세스는 0x01C0_0000과 0x0FFF_FFFF 사이에 매핑됩니다.
+
+NOTE: The DSP C66x CorePac CFG initiator interface is strictly for non-cacheable loads and stores
+within MMR and I/O spaces.
+참고 : DSP C66x CorePac CFG 초기 인터페이스는 MMR 및 I / O 공간의 캐시 불가능한 불러오기 및 저장에 엄격한 기준으로합니다.
+
+DSP configuration accesses to external to DSP subsystem peripherals can be issued on either the DSP
+subsystem CFG Master port which is mapped to the device L3_MAIN or DSP 32-bit CFG "system" interface is connected to the chip level L3_MAIN interconnect and used to access L3_MAIN addressses that are mapped between 0x01C0_0000 and 0x0FFF_FFFF.
+DSP 서브 시스템 주변 장치에 대한 DSP 구성 액세스는 DSP 서브 시스템 또는 장치 L3_MAIN 또는 DSP 32 비트 CFG "시스템"인터페이스에 매핑 된 CFG 마스터 포트가 칩 레벨 L3_MAIN 상호 연결에 연결되고 L3_MAIN에 액세스하는 데 사용됩니다 주소는 0x01C0_0000과 0x0FFF_FFFF 사이에 매핑됩니다.
+
+DSP accesses (to non-DSP memories like SDRAM on L3_MAIN) for addresses above 0x1000_0000 are handled via the DSP (XMC) MDMA 128-bit master interface and are routed to the DSP subsystem MDMA Initiator port either through DSP_ MMU0 or bypassing MMU.
+0x1000_0000 이상의 주소에 대한 DSP 액세스 (L3_MAIN의 SDRAM과 같은 비 DSP 메모리로)는 DSP (XMC) MDMA 128 비트 마스터 인터페이스를 통해 처리되며 DSP_ MMU0 또는 우회 MMU를 통해 DSP 하위 시스템 MDMA 초기 자 포트로 라우팅됩니다.
+
+NOTE: In some cases, L3_MAIN peripherals may be mapped to both the MDMA bus and the CFG bus.
+참고 : 경우에 따라 L3_MAIN 주변 장치가 MDMA 버스와 CFG 버스에 모두 매핑 될 수 있습니다.
+
+In that case, there may be a latency advantage of using the CFG address for those peripherals Table 5-9 shows the DSP C66x CPU memory view of the various DSP C66x CorePac internal and external resources.
+이 경우 주변 장치에 CFG 주소를 사용하면 대기 시간 이점이있을 수 있습니다. 표 5-9는 다양한 DSP C66x CorePac 내부 및 외부 리소스의 DSP C66x CPU 메모리보기를 보여줍니다.
+
+Refer to the Section 2.2, L3_MAIN Memory Space Mapping, in the chapter, Memory Mapping, for the addresses of the L3_MAIN space memory-mapped registers.
+L3_MAIN 공간 메모리 맵 레지스터의 주소는 메모리 맵핑 장의 L3_MAIN 메모리 공간 맵핑 2.2 절을 참조하십시오.
+
+Refer to the Section 2.6, DSP Subsystem Memory Space Mapping in the same chapter for a description of the DSP1 and DSP2 internal memory, additional memory, and peripherals that the DSP1 and DSP2 have access to.
+DSP1 및 DSP2 내부 메모리, 추가 메모리 및 DSP1 및 DSP2가 액세스 할 수있는 주변 장치에 대한 설명은 섹션 2.6, DSP 서브 시스템 메모리 공간 매핑을 동일한 장에서 참조하십시오.
+
+5.3.10.3 L3_MAIN View of the DSP Address Space
+5.3.10.3 DSP 주소 공간의 L3_MAIN보기
+
+System initiated accesses (i.e. external-to-DSP accesses over device L3_MAIN) to DSP are issued over
+the DSP SDMA target port.
+DSP에 대한 시스템 개시 액세스 (즉, 장치 L3_MAIN을 통한 외부 - DSP 액세스)는 DSP SDMA 타겟 포트를 통해 발행된다.
+
+NOTE: The MSB-bits of the address are truncated to only provide an 8 MiB view of the memory map
+within the DSP subsystem.
+참고 : 주소의 MSB 비트는 DSP 하위 시스템 내에서 메모리 맵의 8 MiB보기 만 제공하기 위해 잘립니다.
+
+ Notice that the relative offsets of the DSP CFG space is different for the OCP SDMA target port relative to the DSP internal initiators.
+ DSP CFG 공간의 상대적 오프셋은 DSP 내부 이니시에이터를 기준으로 OCP SDMA 대상 포트에 따라 다릅니다.
+
+The SDMA target bus is able to access internal subsystem address space (such as DSP_EDMA,
+DSP_MMU0, DPS_MMU1, etc.), or the DSP local memory address space.
+SDMA 대상 버스는 내부 서브 시스템 주소 공간 (예 : DSP_EDMA, DSP_MMU0, DPS_MMU1 등) 또는 DSP 로컬 메모리 주소 공간에 액세스 할 수 있습니다.
+
+ The SDMA target bus is NOT able to access the DSP ICFG space (such as DSP_INTC, DSP_BWM, etc) or the other initiator ports on the DSP subsystem boundary (i.e., accesses cannot go through DSPSS to get to the DSP_EDMA initiator port, L3_MAIN CFG initiator port ).
+SDMA 대상 버스는 DSP_INTC, DSP_BWM 등과 같은 DSP ICFG 공간 또는 DSP 하위 시스템 경계의 다른 이니시에이터 포트에 액세스 할 수 없습니다 (즉, DSP_EDMA 개시 자 포트, L3_MAIN CFG에 액세스하기 위해 DSPSS를 통과 할 수 없음) 개시 자 포트).
+
+The DSP slave DMA port memory map - Table 5-11 shows an 8 MiB window (23-bit address) both from
+the SDMA Target bus (0x0000_0000 through 0x007F_FFFF), as well as the EDMA (0x0080_0000 through
+0x00FF_FFFF).
+DSP 슬레이브 DMA 포트 메모리 맵 - 표 5-11은 SDMA 대상 버스 (0x0000_0000 ~ 0x007F_FFFF)와 EDMA (0x0080_0000 ~ 0x00FF_FFFF) 모두에서 8 MiB 창 (23 비트 주소)을 보여줍니다.
+
+ The DSP C66x CorePac internally views itself as a 16 MiB window where 0x0000_0000 through 0x007F_FFFF is reserved, L2 SRAM starts at 0x0080_0000, L1P SRAM starts at 0x00E0_0000, and L1D SRAM starts at 0x00F0_0000).
+DSP C66x CorePac은 내부적으로 0x0000_0000에서 0x007F_FFFF까지 예약되고 L2 SRAM은 0x0080_0000에서 시작하며 L1P SRAM은 0x00E0_0000에서 시작하고 L1D SRAM은 0x00F0_0000에서 시작하는 16 MiB 창으로 내부적으로 간주합니다.
+Refer to the Section 2.2, L3_MAIN Memory Space Mapping, in the chapter, Memory Mapping, for the
+addresses of the L3_MAIN space memory-mapped registers.
+L3_MAIN 공간 메모리 맵 레지스터의 주소는 메모리 맵핑 장의 L3_MAIN 메모리 공간 맵핑 2.2 절을 참조하십시오.
+
+Refer to the Section 2.6, DSP Subsystem Memory Space Mapping in the same chapter for a description of the DSP1 and DSP2 internal memory, additional memory, and peripherals that the DSP1 and DSP2 have access to.
+DSP1 및 DSP2 내부 메모리, 추가 메모리 및 DSP1 및 DSP2가 액세스 할 수있는 주변 장치에 대한 설명은 섹션 2.6, DSP 서브 시스템 메모리 공간 매핑을 동일한 장에서 참조하십시오.
+
+5.4 DSP Subsystem Register Manual
+5.4 DSP 서브 시스템 레지스터 매뉴얼
+
+This section describes the DSP Subsystem instances registers.
+이 절에서는 DSP 서브 시스템 인스턴스 레지스터에 대해 설명합니다.
+
+5.4.1 DSP Subsystem Instance Summary
+5.4.1 DSP 하부 조직 인스턴스 요약
+
+NOTE: For more details on the DSP_MMU0 and DSP_MMU1 registers, as well as their :
+참고 : DSP_MMU0 및 DSP_MMU1 레지스터에 대한 자세한 내용은 물론 :
+
+•DSP_MMU0CFG and DSP_MMU1CFG physical addresses accesible only by DSP_C0 CPU core in the DSP subsystem
+• DSP_MMU0CFG 및 DSP_MMU1CFG 물리 주소는 DSP 하위 시스템의 DSP_C0 CPU 코어에서만 액세스 가능
+
+•DSP1_MMU0CFG and DSP1_MMU1CFG physical addresses visible on L3_MAIN
+• L3_MAIN에서 볼 수있는 DSP1_MMU0CFG 및 DSP1_MMU1CFG 물리적 주소
+
+•DSP2_MMU0CFG and DSP2_MMU1CFG physical addresses visible on L3_MAIN
+• L3_MAIN에서 볼 수있는 DSP2_MMU0CFG 및 DSP2_MMU1CFG 물리적 주소
+
+refer to Section 20.5, MMU Register Manual, in Chapter 20, Memory Management Units.
+20 장, MMU 레지스터 매뉴얼, 20 장, 메모리 관리 유닛을 참조하십시오.
+
+NOTE: For more details on the DSP_EDMA_CC, DSP_EDMA_TC0 and DSP_EDMA_TC1 registers,
+as well as their :
+참고 : DSP_EDMA_CC, DSP_EDMA_TC0 및 DSP_EDMA_TC1 레지스터에 대한 자세한 내용은 물론 :
+
+• DSP1_EDMA_CC, DSP1_EDMA_TC0 and DSP1_EDMA_TC1 physical addresses visible on L3_MAIN
+• L3_MAIN에서 볼 수있는 DSP1_EDMA_CC, DSP1_EDMA_TC0 및 DSP1_EDMA_TC1 물리적 주소
+
+• DSP2_EDMA_CC, DSP2_EDMA_TC0 and DSP2_EDMA_TC1 physical addresses visible on L3_MAIN
+• L3_MAIN에서 볼 수있는 DSP2_EDMA_CC, DSP2_EDMA_TC0 및 DSP2_EDMA_TC1 물리적 주소
+
+refer to Section 16.2.8, EDMA Register Manual, in Section 16.2, Enhanced DMA.
+섹션 16.2.8, EDMA 레지스터 매뉴얼, 섹션 16.2, 향상된 DMA를 참조하십시오.
+
+CAUTION
+The L1P,L1D and L2- memory controller registers mapped in the L3_MAIN are limited to 32-bit data access; 16- and 8-bit access are not allowed and can corrupt register content.
+주의
+L3_MAIN에 매핑 된 L1P, L1D 및 L2- 메모리 컨트롤러 레지스터는 32 비트 데이터 액세스로 제한됩니다. 16 비트 및 8 비트 액세스는 허용되지 않으며 레지스터 내용이 손상 될 수 있습니다.
+
+5.4.2 DSP_ICFG Registers
+5.4.2.1 DSP_ICFG Register Summary
+NOTE: The DSP_ICFG addresses are visible only within the DSP core internal configuration space.
+5.4.2 DSP_ICFG 레지스터
+5.4.2.1 DSP_ICFG 레지스터 요약
+참고 : DSP_ICFG 주소는 DSP 코어 내부 구성 공간에서만 볼 수 있습니다.
+
+5.4.2.2 DSP_ICFG Register Description
+5.4.2.2 DSP_ICFG 레지스터 설명
+For bitfield descriptions of all registers which reside within the DSP_ICFG configuration address space, refer to the TMS320C66x DSP CorePac User Guide, ( SPRUGW0C).
+DSP_ICFG 구성 주소 공간에 상주하는 모든 레지스터의 비트 필드 설명은 TMS320C66x DSP CorePac 사용자 안내서 (SPRUGW0C)를 참조하십시오.
+
+
+
+5.4.3 DSP_SYSTEM Registers
+5.4.3 DSP_SYSTEM 레지스터
+
+5.4.3.1 DSP_SYSTEM Register Summary
+5.4.3.1 DSP_SYSTEM 레지스터 요약
+
+NOTE: While the DSP1_SYSTEM and DSP2_SYSTEM addresses are part of the device L3_MAIN memory space, the DSP_SYSTEM addresses are visible only within the DSP_ICFG internal configuration space (visible only to C66x CPU and debug logic).
+참고 : DSP1_SYSTEM 및 DSP2_SYSTEM 주소는 장치 L3_MAIN 메모리 공간의 일부이지만 DSP_SYSTEM 주소는 DSP_ICFG 내부 구성 공간 (C66x CPU 및 디버그 논리에만 표시) 내에서만 볼 수 있습니다.
+
+5.4.3.2 DSP_SYSTEM Register Description
+5.4.3.2 DSP_SYSTEM 레지스터 설명
+테이블 만있다.
+
+
+5.4.4 DSP_FW_L2_NOC_CFG Registers
+5.4.4 DSP_FW_L2_NOC_CFG 레지스터
+
+This section covers the DSPSS level defined public firewall (DSP_MMU0, DSP_MMU1) and L2
+interconnect (DSP_NoC) functional registers.
+이 섹션에서는 DSPSS 레벨로 정의 된 공용 방화벽 (DSP_MMU0, DSP_MMU1) 및 L2 상호 연결 (DSP_NoC) 기능 레지스터에 대해 설명합니다.
+
+5.4.4.1 DSP_FW_L2_NOC_CFG Register Summary
+5.4.4.1 DSP_FW_L2_NOC_CFG 레지스터 요약
+
+NOTE: While the DSP1_FW_L2_NOC_CFG and DSP2_FW_L2_NOC_CFG addresses are part of the device L3_MAIN memory space, the DSP_FW_L2_NOC_CFG addresses are visible only within the DSP_ICFG internal configuration space (visible only to C66x CPU and debug logic).
+참고 : DSP1_FW_L2_NOC_CFG 및 DSP2_FW_L2_NOC_CFG 주소는 장치 L3_MAIN 메모리 공간의 일부이지만 DSP_FW_L2_NOC_CFG 주소는 DSP_ICFG 내부 구성 공간 (C66x CPU 및 디버그 논리에만 표시)에서만 볼 수 있습니다.
+
+
+

@@ -1,0 +1,50 @@
+= Qualcomm QFPROM device tree bindings =
+
+This binding is intended to represent QFPROM which is found in most QCOM SOCs.
+
+Required properties:
+- compatible: should be "qcom,qfprom"
+- reg: Should contain registers location and length
+
+= Data cells =
+Are child nodes of qfprom, bindings of which as described in
+bindings/nvmem/nvmem.txt
+
+= Qualcomm QFPROM 장치 트리 바인딩 =
+
+이 바인딩은 대부분의 QCOM SOC에있는 QFPROM을 나타 내기위한 것입니다.
+
+필수 속성 :
+- 호환 가능 : "qcom, qfprom"이어야합니다.
+- reg : 레지스터 위치와 길이를 포함해야합니다.
+
+= 데이터 셀 =
+qfprom의 자식 노드는 bindings / nvmem / nvmem.txt에 설명 된 것과 같은 바인딩입니다.
+
+
+
+Example:
+
+	qfprom: qfprom@00700000 {
+		compatible 	= "qcom,qfprom";
+		reg		= <0x00700000 0x8000>;
+		...
+		/* Data cells */
+		tsens_calibration: calib@404 {
+			reg = <0x4404 0x10>;
+		};
+	};
+
+
+= Data consumers =
+Are device nodes which consume nvmem data cells.
+= 데이터 소비자 =
+nvmem 데이터 셀을 소비하는 장치 노드입니다.
+
+For example:
+
+	tsens {
+		...
+		nvmem-cells = <&tsens_calibration>;
+		nvmem-cell-names = "calibration";
+	};

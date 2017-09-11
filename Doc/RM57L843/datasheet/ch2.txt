@@ -1,0 +1,1364 @@
+Chapter 2. Architecture
+
+이 Cahpter는 5개의 Sections로 구성된다.
+첫 번째 섹션은 Device Architecture의 특정 측면을 설명한다.
+두 번째 섹션은 Microcontrollers의 Clocking 구조를 설명한다.
+세 번째 섹션은 Device Memory 구성의 개요를 제공한다.
+네 번째 부분은 Device에서 예외 사항,
+그리고 마지막 섹션은 System과 Microcontroller의 주변 장치 제어 레지스터를 설명한다.
+
+
+
+2.1 Introduction
+
+Microcontrollers의 TMS570LC43x 군은 Texas Instruments TMS570 Architecture에 기반한다.
+이 Chapter는 Microcontrollers의 TMS570LC43x 군에 적용 가능한 Architecture의 특정 측면을 설명한다.
+
+
+
+2.1.1 Architecture Block Diagram
+
+TMS570LC43x Microcontrollers는 Bus Masters 와 Bus Slaves 간에
+상호 연결을 정의하는 TMS570 Platform Architecture에 기반한다.
+모든 Masters 와 Slaves를 함께 연결하는 2개의 주요 상호 연결로 구성된다.
+2개의 별도 상호 연결은 2개의 Safety Island 개념을 생성한다.
+CPU Safety Island는 Masters 와 Slaves 를 함께 붙인 CPU 와 상호 연결된 Subsystem 으로 구성되어 있다.
+CPU Safety Island는 Bus System과 Memory에 높은 수준의 안정성 진단이 포함되어 있다.
+메모리와 Bus는 SECDED(Single Bit Correction Double Bit Detection) 방식을 사용하여
+Data 경로상에서 ECC에 의해 보호된다.
+Parity 검출 방식은 모든 Masters 와 Slaves 사이의 모든 주소와 제어 경로에 사용된다.
+들어오고 나가는 모든 Traffic 에 대해 Application 실행 시간 동안 예상되는 행동들에 대해 검사하는
+안정성 진단 Logic은 CPU 와 상호 연결된 Subsystem에 내장되어 있다.
+추가적으로, 발생할 수 있는 오류 진단을 활성화할 수 있는
+자체 검사 Logic은 CPU 와 상호 연결된 Subsystem에 내장되어 있다.
+주변 장치 Safety Island는 Device 에서 Masters의 나머지 부분과 Slaves 를 붙인
+주변 장치와 상호 연결된 Subsystem 으로 구성되어 있다.
+Peripheral Island에서 진단은 주변 장치 메모리와 MPU 보호에서 Parity 보호와 ECC 보호의 수단이다.
+Island는 Masters 와 Slaves 모두를 붙인 CPU 와 상호 연결된 Subsystem 으로 구성되어 있다.
+
+Figure 2-1 Superset Microcontroller 를 위한 고수준의 구조적 Block Diagram을 나타낸다.
+
+
+
+2.1.2 용어 정의
+
+Table 2-1 구조적 Block Diagram 에서 사용되는 용어의 정의를 제공한다.
+
+
+
+ECC : Error Correction Code
+
+설명 :
+
+Cortex-R5F Processors(CPUs) 와 ECC를 지원하는 다양한 Modules 내부의
+SECDED(Single Error Correction Double Error Detection) Logic에 의해 사용되는 Code 다.
+Memory 구성에 따라 ECC bits 의 수는 변할 수 있다.
+Flash 와 RAM 과 같은 CPU Level 에서 Memory 에 접근하는 모든 64 비트 Data의 를 위한 8 비트의 ECC 가 있다.
+CPU 의 Level 1 Cache System은 Instruction Cache 와 Data Cache 로 구성되고
+각각은 추가적으로 data RAM, tag RAM 혹은 dirty RAM 으로 구성된다.
+이러한 RAM 을 보호하는데 사용되는 ECC 비트의 수는 다양하다.
+Local RAM 에서 ECC 보호를 지원하는 Modules 는 RAM 의 구성에 따라 ECC 비트의 서로 다른 수를 활용할 수 있다.
+예로, DMA Module은 Local Control Packet Memory를 보호하기 위해 ECC 의 9 비트를 사용한다.
+
+Lockstep
+
+설명 :
+
+Dual ARM Cortex-R5F CPU 의 동작 Mode 다.
+CPU 2개의 출력은 각각의 CPU Clock Cycle에 비교 된다.
+모든 불일치는 가장 높은 심각도 수준의 오류로 판정된다.
+Lockstep CPU 외에도 2개의 VIM(Vector Interrupt Module) 또한 lockstep에 있다.
+
+Cortex-R5F CPU
+
+Cortex-R5F 는 CPU 와 상호 연결된 CPU Subsystem 에 1개의 AXI-M master Port를 가지며
+저주파 접근을 위한 주변 장치와 상호 연결된 Subsystem 에 AXI-PP 주변 장치 port를 가진다.
+각 master port는 각각의 상호 연결되어 부착된 Resources 접근이 제한된다.
+
+uSCU : Micro Snooping Control Unit
+
+Cortex-R5 프로세서 System의 일부인 nSCU 는
+non-CPU masters 로부터 오는 on write-transactions 스누핑 기능을 제공하는
+ACP(Accelerator Coherency Port) 인터페이스를 포함한다.
+Transactions 는 ACP-S slave port 에서 수신되고,
+ACP-M master port 를 통해 Memory System 에 송신된다.
+SW가 캐시되지 않은 것 뿐만 아니라 write-through Cache Regions 에
+Data 를 위한 free 한 Cache 일관성을 유지할 수 있도록
+ACP 는 자동으로 적절한 시간에 적절한 Level 1 Data Cache Line을 무효화한다.
+
+DMA : Direct Memory Access
+
+DMA Module 은 전체 Device Memory Map 에서 8, 16, 32, 64 비트 Data 를 전송하기 위해 사용된다.
+DMA Module 은 Device 의 Bus Master 중 하나다.
+즉, read 혹은 write Transaction 을 시작할 수 있다.
+DMA 는 DMA_PortA 와 DMA_PortB 라는 2개의 Master port 를 가지고 있다.
+DMA_PortA 는 CPU 와 상호 연결된 Subsystem 에 연결되어 있고
+DMA_PortB 는 주변 장치와 상호 연결된 Subsystem 에 연결되어 있다.
+DMA 는 CPU 와 상호 연결된 Subsystem 에서
+주변 장치와 연결된 Subsystem 에 Resources 로 Data를 전송할 수 있고 그 반대도 가능하다.
+
+DMM : Data Modification Module
+
+DMM은 Device 상의 RAM 의 Data 를 수정하기 위한
+특수한 DMM I/O 인터페이스를 사용하는 Tool 을 허용한다.
+수정은 Application 실행에 최소한의 간섭으로 수행되며
+Application Algorithm 의 교정에 사용될 수 있다.
+DMM 또한 이 Device 에 있는 Bus Master 이다.
+
+POM : Parameter Overlay Module
+
+Parameter Overlay Module 은 On-Chip 혹은 EMIF(외부 메모리 인터페이스)를 통해
+Flash Memory 내에 프로그래밍 가능한 영역에서 RAM Memory로 다시 접근한다.
+사용자가 실제로 Flash 를 다시 프로그램하고 지우는 것 없이
+Flash Memory 에 저장된 상수값 변화를 평가할 수 있다.
+POM 또한 이 Device 의 Bus Master 이다.
+
+DAP : Debug Access Port
+
+DAP 는 Device Memory Map 의 모든 영역에
+읽고 쓸 수 있는 Debugger 와 같은 Tool 을 허용한다.
+DAP 는 이 Device 의 Bus Master 이다.
+
+HTUx : High-end timer Transfer Unit
+
+HTU 는 새롭게 향상된 High-End Timer Module 을 위한 전용 전송 Unit 이다.
+HTU 는 N2HET RAM 에 대한 인터페이스이고
+Device Memory Map 내의 다른 영역과 N2HET RAM 간에 Data 전송을 위해 사용된다.
+N2HET Module 당 HTU 는 1개씩 있고 이 Device 에는 2개의 HTU Module 이 존재한다.
+HTUx 는 이 Device 에서 Bus Master 이다.
+
+FTU : FlexRay Transfer Unit
+
+FTU 는 FlexRay 통신 인터페이스 Controller 를 위한 전용 전송 Unit 이다.
+FTU 는 FlexRay Message RAM 에 대한 인터페이스를 가지며
+Device Memory Map 의 다른 영역과 FlexRay Message RAM 간 Data 전송에 사용된다.
+FTU 는 이 Device 에서 Bus Master 이다.
+
+EMAC : Ethernet Media Access Controller
+
+EMAC 은 Device Memory Map 의 다른 영역과 EMAC Descriptor Memory 간
+Data 전송에 사용되는 전용 DMA-type Component 를 가지고 있다.
+EMAC 의 DMA-type Component 는 이 Device 에서 Bus Master 이다.
+
+PS_SCR_M : Peripheral SCR Master Port
+
+HTUx, FTU, EMAC, DMM, 그리고 DAP 에 의해
+CPU 와 연결된 Subsystem 의 Resource에 접근하기 위한 모든 Transaction 은
+주변 장치와 상호 연결된 Subsystem 에 PS_SCR_S slave port 를 통과하게 될 것이다.
+PS_SCR_S slave 는 NMPU 를 통해 CPU 와 상호 연결된 Subsystem 에 있는
+PS_SCR_M master port에 연결된다.
+
+CPU Interconnect Subsystem : CPU Side Switched Central Resource Controller
+
+Device 에 2개 있는 main SCR 중 하나다.
+Round Robin 우선 순위 방식을 사용하여
+Bus Slave 에 다수의 Bus Master 접근을 중재한다.
+이 Interconnect Subsystem 은 주소에 Parity 검사를 수행하기 위한 진단 Logic 을 포함하고
+Bus Masters 로부터 오는 신호를 제어하고, Slave 로부터 오는 응답 신호의 Parity 검사,
+ECC 생성과 non-CPU masters 에 의해 시작되는 Transactions 를 위한 데이터 경로를 평가하고
+또한 스스로 진단할 수 있는 Self Test Logic 또한 가지고 있다.
+
+Peripheral Interconnect Subsystem : Peripheral Side Switched Central Resource Controller
+
+Device 내에 2개 있는 main SCRs 중 하나다.
+Round Robin 우선 순위 방식을 사용하여
+Bus Slave 에 다수의 Bus Master 접근을 중재한다.
+
+CRCx : Cyclic Redundancy Checker
+
+CRC Module 은 64 비트 Maximum-length LFSR(Linear Feedback Shift Register) 을 사용하여
+어떤 Memory 영역에서도 background signature 검증을 수행할 수 있는 2개의 Channel 을 제공한다.
+CRC Module 은 이 Device 에서 Bus Slave 이다.
+
+Flash Memory : Level 2 Flash Memory
+
+3개의 Flash Bank 로 구성되는 Flash Memory 에
+접근하기 위한 2개의 Slave port(Flash_PortA 와 Flash_PortB) 를 가진다.
+2개의 port 는 병렬로 3개의 Bank 를 접근하기 위해 2개의 Master 를 허용한다.
+2MB 의 Bank 가 있고 하나의 EEPROM Bank 가 있다.
+EEPROM Bank 는 에뮬레이트된 EEPROM 으로 사용하기 위한 Flash Bank 다.
+이 Device 는 에뮬레이트된 EEPROM 을 위해 128 KB 의 Flash 를 지원한다.
+
+SRAM : Level 2 Static RAM
+
+On-Chip SRAM 에 접근하기 위한 1 개의 Slave Port 가 있다.
+
+EMAC slaves : Ethernet Media Access Controller slave ports
+
+4개의 EMAC Slave 가 있다.
+
+1. EMAC Control Module :
+
+EMAC 과 MDIO Module 간에 인터페이스를 제공하며 Bus Master 이다.
+또한 EMAC Packet Buffer Descriptor 를 유지하기 위한 8KB 의 RAM 을 포함한다.
+
+2. EMAC :
+
+RMII(Reduced Media Independent Interface) 혹은 MII(Media Independent Interface) 를 사용하는
+Ethernet Network 상에 다른 Device 를 위한 EMAC Module Interface 이다.
+
+3. Management Data Input / Output(MDIO) :
+
+MDIO Module 은 EMAC Module 에 연결된 물리계층(PHY) Device 를 관리하기 위해 사용된다.
+
+4. Communications Port Programming Interface(CPPI) :
+
+EMAC Packet Buffer Descriptor 를 유지하는데 사용되는 8KB 의 RAM 이다.
+
+EMIF slaves : External Memory Interface slave ports
+
+5개의 EMIF Slave 가 있다:
+- 외부 SDRAM Memory : EMIF Chip Select 0
+- 외부 비동기 메모리들 : EMIF Chip Select 2, 3, 그리고 4
+- EMIF Module 제어와 상태 레지스터들
+
+PCRx : Peripheral Centeral Resource controller
+
+PCR 은 주변 장치 레지스터와 주변 장치 메모리에 대한 접근을 관리한다.
+모든 주변 장치에 대한 Global Reset 을 제공한다.
+또한 선택적인 활성화 혹은 개별적으로 각 주변 장치의 Clock 을 해제할 수 있는 기능을 지원한다.
+PCR 은 또한 Device 의 Clock, Interrupt 등을
+구성하는데 필요한 System Module 레지스터에 대한 접근을 관리한다.
+System Module Register 는 또한 예외 조건(Reset, Abort, Error, Interrupt)을
+나타내기 위한 상태 플래그를 포함한다.
+이 Device 는 Block Diagram 에 보여지듯이
+서로 다른 주변 장치에 접근할 수 있는 3개의 PCR Module 을 가진다.
+3개의 PCR 은 주변 장치와 연결된 Subsystem 에 대한 Slave 이다.
+
+SDC MMR : Safety Diagnostic Checker Memory Map Register Port for CPU Interconnect Subsystem
+
+Run-Time 및 CPU 와 상호 연결된 Subsystem 의 자체 검사 진단을
+모두 기록하기 위한 Memory 에 Mapping 된 상태 레지스터다.
+이 레지스터는 주변 장치와 상호 연결된 Subsystem 에 있는
+SDC MMR Slave port 를 통해 접근할 수 있다.
+
+ADCx : Analog-to-Digital Converter
+
+ADC 는 Successive Approximation Register Architecture 를 사용한다.
+선택 가능한 10 비트 혹은 12 비트 해상도를 제공한다.
+ADC Module 은 또한 변환 결과를 유지하기 위한 RAM 을 포함한다.
+Digital Logic Wrapper 는 제어 레지스터와 상태 레지스터에 대한 접근을 관리한다.
+이 Device 에는 2개의 ADC Module 이 존재한다.
+
+N2HETx : New Enhanced High-End Timer
+
+N2HET 은 Real-Time Application 을 위한
+정교한 Timing 기능을 제공하는 진보된 지능형 Timer 이다.
+RISC(감소된 Instruction Set) 방식을 사용하는 Timer는 SW에 의해 제어되며,
+전문화된 Timer Micromachine 이고, I/O Port에 연결되어 있다.
+N2HET 은 PWM 출력, 캡처, 입력 비교, 혹은 GPIO 로 사용될 수 있다.
+
+GIO : General-purpose Input/Output
+
+GIO Module 은 GPIO로 16개의 단자가 사용된다.
+이들 각각은 또한 CPU 에 대해 Interrupt 를 발생시킬 수 있다.
+
+DCANx : Controller Area Network controller
+
+DCAN 은 CAN 2.0B 프로토콜 표준을 지원하고
+1 Mbps(Megabit Per Second)의 강력한 통신 속도로
+분산된 Real-Time 제어를 지원하는 Serial, Multi-Master 통신 프로토콜을 사용한다.
+DCAN 은 신뢰할 수 있는 Serial 통신 혹은 다중 배선이 필요한
+소음 및 가혹한 환경(예로 자동차 및 산업 분야)에서 작동하는 Application 에 이상적이다.
+
+LINx : Local Interconnect Network controller
+
+LIN Module 은 Local Interconnect 표준 Revision 2.1을 지원하고
+표준 NRZ(Non-Return-to-Zero) 포맷을 사용하는 Full Duplex Mode 에서 UART로 사용될 수 있다.
+
+SCIx : Serial Communication Interface
+
+SCI Module 은 NRZ(Non-Return-to-Zero) 포맷을 사용하는 Full-Duplex Mode 에서 표준 UART 를 지원한다.
+
+I2Cx : Inter-Integrated Circuit controller
+
+I2C Module 은 Device 와 I2C Serial Bus 를 통한 I2C 호환 Device 간에
+인터페이스를 제공하는 Multi-Master 통신 Module 이다.
+I2C 는 100 Kbps 와 400 Kbps 속도 모두를 지원한다.
+
+FlexRay : FlexRay communication controller
+
+FlexRay 는 Dual Channel Serial 과 Channel 당 10 Mbps(Megabits Per Second) 의
+통신 속도로 고정 시간 기준의 Multi Master 통신 프로토콜을 사용한다.
+
+MibSPIx : Multi-Buffered Serial Peripheral Interface
+
+MibSPIx Module 은 또한 표준 SPI 통신 프로토콜을 지원한다.
+전송은 "Transfer Groups" 라 불리는 Transfer Chunks 로 모두 그룹화된다.
+전송 그룹은 MibSPIx RAM 에 있는 하나 이상의 Buffer 로 구성되어 있다.
+RAM 은 수신된 상태 정보와 Data 뿐만 아니라 수신된 Data 와 제어 정보를 유지하기 위해 사용된다.
+이 Device 에는 5개의 MibSPI Module 을 가지고 있다.
+
+ePWM : Enhanced Pulse Width Modulator
+
+ePWM(Enhanced Pulse Width Modulator) 주변 장치는
+상업용 및 산업용 장비의 전력 전자 시스템 제어를 수행하기 위한 핵심적인 요소다.
+이 System 은 Digital Motor Control, Switch Mode 전원 공급 제어,
+UPS(Uninterruptible Power Supplies - 무정전 전원 장치) 및 전력 변환의 다른 형태를 포함한다.
+ePWM 주변 장치는 Duty Cycle이 DAC Analog 값과 동일한 DAC(Digital 2 Analog)의 기능을 수행한다.
+이것은 때때로 전원 DAC 라고 한다.
+
+eCAP : Enhanced Capture Module
+
+eCAP(Enhanced Caputre) Module 은 외부 Event 의 정확한 타이밍이 중요할 때 System 에 필수적이다.
+
+eQEP : Enhanced Quadrature Encoder Pulse Module
+
+eQEP(Enhanced Quadrature Encoder Pulse) Module 은 고성능 모션 및 위치 제어 시스템에서 사용하기 위한
+회전하는 기계로부터 위치, 방향, 그리고 속도 정보를 얻기 위해
+선형 혹은 회전 증분 엔코더와 Direct 인터페이스를 위해 사용된다.
+
+eFuse : Electronically Programmable Fuse controller
+
+eFuse(Electrically Programmable Fuses) 는 PORRST 의 표명 후 Device 를 구성하는데 사용된다.
+Power-On-Reset 절차의 일부로서 eFuse 값을 읽고 내부 레지스터로 로드한다.
+eFuse 값은 SECDED(Single Bit Error Correction, Double Bit Error Detection) Code로 보호된다.
+이러한 Fuse 는 Device 의 초기 팩토리 검사 중에 프로그래밍 된다.
+eFuse Controller 는 Device 를 패키지화 하면 eFuses 의 상태가 변경될 수 없도록 설계된다.
+
+NMPUx : Enhanced Memory Protection Unit
+
+Device 상의 Resource 에 DMA, EMAC, 그리고 다른 Master 에 의해 시작되는
+Memory Transaction 을 보호하는 3개의 독립적인 NMPU 가 존재한다.
+이 Device 에서, non-CPU Master 에 의해 시작되는 모든 Transaction 은 MPU 보호의 두 단계를 통해 이동한다.
+두 수준은 2개의 NMPU가 연속적으로 오거나 1개의 독립적인 NMPU 와
+Master 의 일부로서 1개의 내장 MPU 의 조합이 될 수 있다.
+내장 MPU 안에 있는 DMA 가 First Level 보호를 수행하는 동안
+1개의 NMPU 는 Second Level 보호와 CPU 와 상호 연결된 Subsystem 에 DMA port 를 연결한다.
+HTUx 와 FTU 모두 First Level 보호를 수행하는 내장 MPU 를 가지고 있다.
+주변 장치와 상호 연결된 Subsystem 에서 Master 에 의해 시작되는 모든 접근은
+주변 장치와 상호 연결된 Subsystem 에서 CPU 와 상호 연결된 Subsystem 을
+연결하는 경로 사이에 있는 다른 NMPU 를 통하게 될 것이다.
+이는 HTUx, FTU, 그리고 EMAC 을 위한 Second Level 보호 역할을 수행한다.
+EMAC 은 내장 MPU 를 가지고 있지 않으므로
+독립적인 NMPU 는 EMAC 과 Interconnect 사이에 존재하게 된다.
+
+IOMM : IO Multiplexing Module
+
+이 Module 은 Device I/O 상에 Multiplexing 을 제어한다.
+다수의 기능은 동일한 Device IO 로 다중화될 수 있다.
+IOMM Module 을 통해 사용자는 Device Pin 상에 특정 기능을 사용할 수 있다.
+
+PMM : Power Management Module
+
+이 Module 은 Device 에서 다양한 Logic Power Domain 에 대한 Clock Gating 을 제어한다.
+PMM 을 통해 사용자는 Power Domain 에 Active, Idle 혹은 Off Modes 를 배치할 수 있다.
+이 Device 는 전원이 꺼질 수 있는 물리적인 Power Domain 을 구현하지 않는다.
+Power Domain 을 끄는 것은 전력 소모 관점에서 이 Device 에는 아무런 효과가 없지만
+Clock 은 동적인 전력을 제거하기 위해 Gated Off 될 것이다.
+이 장치에서 Idle 및 Off Modes 는 전력 소비 관점에서 동일하게 동작한다.
+
+EPC : Error Profiling Controller
+
+이 Module 은 CPU 와 CPU 와 상호 연결된 SUbsystem 에 의해 감지되는
+Single Bit 및 Double Bit ECC 오류의 발생을 Profile 하기 위해 사용된다.
+
+SCM : SCR Control Module
+
+이 Module 은 CPU 와 상호 연결된 Subsystem 의 Timeout Counter 등의 특정 구성을 변경하기 위해 사용된다.
+이 Module 은 또한 CPU 와 상호 연결된 Subsystem 을 위해 자체 검사를 시작하기 위해 사용된다.
+
+SYS : System Module
+
+이 Module 은 제어를 위한 Logic 을 포함하고
+전체 System 기능과 Clock Sources, Clock Domains,
+Reset Sources 의 생성 및 수신 설정과 같은 상태를 기록한다.
+
+CCM-R5F : CPU Compare Module for Cortex-R5F core
+
+Lockstep Mode 동안 CPU 2개의 출력은 이 Module 에 의해 각각의 CPU Clock Cycle 에서 비교된다.
+모든 불일치는 가장 높은 심각도 수준의 Error 로 판정된다.
+Lockstep 에서 VIM 2개의 출력은 또한 이 Module 에 의해 각 Cycle 에 비교된다.
+
+STCx : Selftest Controller
+
+이 Device 에는 STC Module 이 2개 있다.
+1개는 CPU Core 와 Test Engine 으로 Deterministic Logic Bist Controller 를
+사용하는 ACP Component 모두를 포함하는 CPU Subsystem 을 검사하기 위해 사용된다.
+다른 1개의 STC 는 Device 에 있는 N2HET 을 검사하는데 사용된다.
+
+DCCx : Dual Clock Comparator
+
+이 Module 은 주로 Application 의 실행 동안 Clock Signal 의 정확성을 결정하기 위해 사용한다.
+이 Module 의 추가적으로 Input Clock 으로 Reference 를 사용하는
+선택 가능한 Clock Source 의 주파수를 측정하는데 사용된다.
+
+RTI : Real Time Interrupt module
+
+RTI Module 은 OS 와 벤치마킹 코드에 대한 Timer 기능을 제공한다.
+Module 은 OS 에서 Scheduling 에 필요한 Timebase 를 정의하는 여러 카운터를 포함한다.
+
+VIM : Vectored Interrupt Manager
+
+VIM 은 Device 에 존재하는 많은 Interrupt Sources 를 제어하고 우선 순위 매기기 위한 HW 지원을 제공한다.
+이 Device 는 2개의 VIM 을 가지고 있다.
+Device 가 Lockstep Mode 에서 구성되는 경우 VIM 2개 또한 Lockstep 에 있다.
+VIM 2개의 출력은 CCM-R5 Module Cycle 에 의한 비교된 Cycle 이다.
+
+ESM : Error Signal Module
+
+ESM 은 Device 에서 다양한 Error 조건을 수집하고 보고한다.
+Error 조건은 심각도 수준에 따라 분류된다.
+Error 응답은 Error 의 종류에 기반하여 생성된다.
+가능한 Error 응답은 낮은 우선 순위 Interrupt,
+높은 우선 순위의 NMI Interrupt, 그리고 외부 Pin 동작을 포함한다.
+
+
+
+2.1.3 Bus Master / Slave Access Privileges
+
+이 Device 는 Figure 2-1 에 보이듯이 Interconnect 의 전체 처리량을 개선하기 위해
+Bus Slave 접근 권한에 일부 제한을 구현한다.
+Table 4-1 은 주변 장치와 상호 연결된 Subsystem 에 연결된
+Master 와 Slave 간에 구현된 P2P 연결을 보여준다.
+Table 4-3 은 CPU 와 상호 연결된 Subsystem 에 연결된
+Master 와 Slave 간에 구현된 P2P 연결을 나열한다.
+
+
+
+2.1.4 CPU Interconnect Subsystem SDC MMR Port
+
+CPU 와 상호 연결된 Subsystem SDC MMR Port 는
+주변 장치와 상호 연결된 Subsystem 에 대한 특수한 Slave 이다.
+FA00 0000h 의 시작 주소에 Mapping 된 Memory 다.
+CPU 와 상호 연결된 Subsystem 의 진단에 대한
+다양한 상태 레지스터를 이 Slave port 를 통해 접근할 수 있다.
+CPU 와 상호 연결된 Subsystem 은 Interconnect 를 통해
+Transaction 의 흐름을 지속적으로 볼 수 있는 내장 HW 진단 검사기를 포함한다.
+CPU 와 상호 연결된 Subsystem 에 연결된 각 Master 와 Slave 에 대한 검사기가 존재한다.
+검사기는 Interconnect 에 의해 생성된 동작에 대해 예상되는 동작을 확인한다.
+예로, CPU 가 Flash 에 Burst Read 요청을 발행하는 경우,
+검사기는 적절한 Slave Module 에 Burst read 요청이 들어왔음을 보장해줄 것이다.
+Interconnect 가 read 하지 않거나 burst 하지 않거나 목적지로 Flash 하지 않는 Transaction 을 생성한다면,
+검사기는 레지스터 중 하나에 flag 를 할 것이다.
+검출된 Error 는 또한 ESM Module 에 신호를 보낼 것이다.
+Table 4-2 는 CPU 와 상호 연결된 Subsystem SDC 레지스터 비트 필드 맵핑을 나열한다.
+
+
+
+2.1.5 Interconnect Subsystem Runtime Status
+
+Section 2.1.4 에서 설명한 바와 같이 실행 검사기 상태 외에,
+Microcontroller 내에 CPU 와 상호 연결된 Subsystem 과 주변 장치와 상호 연결된 Subsystem 은
+또한 SCM(SCR Control Module)에서 캡쳐된 System 의 여러 상태를 생성한다.
+Table 4-4 는 SCM 레지스터 비트 맵핑을 보여준다.
+
+
+
+2.1.6 Master ID to PCRx
+
+주변 장치와 상호 연결된 Subsystem 의 각 Master Port 에 연결된 Master ID 는 4 비트 값을 포함한다.
+Master ID 는 주소 및 제어 신호와 함께 3개의 PCR Modules 에 전달 된다.
+PCR 은 주변 장치를 선택하기 위해 주소 및 제어 신호를 Decode(해석) 한다.
+추가적으로 메모리 보호를 수행하기 위해 4-bit Master ID 값을 해독한다.
+Master ID 4-bit 로 주변 장치 접근을 허용하거나 허용하지 않도록
+서로 다른 16개의 Master 를 구별하기 위해 PCR 을 사용한다.
+각 주변 장치와 연관된 16-bit Master ID Access Protection Register 가 정의되었다.
+각각의 bit 는 Master ID 에 대응하는 BCD(Binary Coded Decimal)의 권한을 거부하거나 획득한다.
+예로, Access Permission Register 의 bit 5가 설정되었다면,
+이것은 주변 장치에 접근하기 위한 Master ID 5 를 부여한다.
+예로 bit 7이 정리되었다면, 주변 장치에 접근하기 위한 Master ID 7 을 거부한다.
+Figure 2-2 는 Master ID 필터링 방식을 보여준다.
+PCRx 에 접근할 수 있는 각각의 Master 의 Master ID 가 Table 4-1에 나열되어 있다.
+또한 레지스터 정의에 대한 세부 사항은 Section 2.5.3 을 참조하라!
+
+Figure 2-2. PCR MasterID Filtering
+
+
+
+2.2 메모리 구성
+
+2.2.1 메모리 맵 개요
+
+Cortex-R5F 는 4GB 의 메모리 공간에 접근할 수 있는 32-bit 주소 버스를 사용한다.
+이 공간은 여러 개의 영역으로 분할되고, 각각은 서로 다른 메모리를 선택하여 배치된다.
+Figure 2-3 은 Microcontroller 의 Memory Map 을 나타낸다.
+
+주된 Flash Instruction Memory 는 기본적으로 0x00000000 에 배치되어 시작된다.
+이것은 또한 Reset Vector의 위치이다 - Core 가 Reset 될 때마다
+ARM Cortex-R5F Processor Core 는 0x00000000 의 Reset Vector 주소에서 실행을 시작한다.
+
+CPU Data RAM 은 기본적으로 0x08000000 에서 배치되어 시작한다.
+
+Device 는 또한 CPU Instruction Memory(Flash) 와
+Data Memory(RAM) 의 Swapping(Page Swap)을 지원한다.
+이것은 BMMCR1(Bus Matrix Module Control Register 1)의 MEM SWAP 필드를 구성함으로써 수행할 수 있다.
+
+Swapping 후, Data RAM 은 0x00000000 에서 시작하여 접근하고
+RAM ECC 위치는 0x00400000 에서 시작하여 접근할 수 있다.
+Flash Memory 는 이제 0x08000000 에서 시작하여 접근할 수 있다.
+
+Note:
+
+0x08000000 에 맵핑된 Flash Memory 를 Swap 한 이후
+Flash Memory 512 KB에 해당하는 0x08000000 ~ 0x0807FFFF 구간은
+Bus Master 에 의해 접근 할 수 있다.
+
+Figure 2-3. Memory Map
+
+
+
+2.2.2 메모리 맵 테이블
+
+각 Module 에 대한 제어 및 상태 레지스터는 CPU 의 4 GB Memory 공간에 맵핑된다.
+일부 Module 은 또한 이 공간에 맵핑된 Memory 와 연결된다.
+
+Table 2-2 는 각 Module 의 Register Frame 과
+모든 연관된 Memory 의 시작과 끝 주소를 보여준다.
+Table 은 또한 Register 혹은 Memory Frame 내에 구현되어 있지 않은 위치에 접근할 때마다
+Module 혹은 Interconnect 에 의해 생성된 응답을 보여준다.
+
+
+
+CRC1			0xFE000200 위에 접근하면 abort 를 생성
+CRC2			0xFB000200 위에 접근하면 abort 를 생성
+
+MIBSPI5 RAM		2 KB 위에 접근하면 abort
+MIBSPI4 RAM		2 KB 위에 접근하면 abort
+MIBSPI3 RAM		2 KB 위에 접근하면 abort
+MIBSPI2 RAM		2 KB 위에 접근하면 abort
+MIBSPI1 RAM		2 KB 위에 접근하면 abort
+
+DCAN4 RAM		Offset 0x2000 을 넘어 접근하면 abort 생성
+DCAN3 RAM		Offset 0x2000 을 넘어 접근하면 abort 생성
+DCAN2 RAM		Offset 0x2000 을 넘어 접근하면 abort 생성
+DCAN1 RAM		Offset 0x2000 을 넘어 접근하면 abort 생성
+
+MIBADC2 RAM		0x1FFF 보다 낮은 구현되지 않은 주소 Offset 에 접근하기 위해 Wrap Around 한다.
+                        (여기서 Wrap Around 는 컴퓨터 용어임)
+MIBADC2 Look-Up Table	ADC2 Wrapper 를 위한 Look-Up Table 이다.
+			시작 주소는 0x2000 이고 끝은 0x217F 이다.
+			오프셋 0x0180 과 0x3FFF 사이에 접근하기 위해 Wrap Around 한다.
+			Offset 0x4000 을 넘어 접근하면 abort 생성
+
+MIBADC1 RAM		0x1FFF 보다 낮은 구현되지 않은 주소 Offset 에 접근하기 위해 Wrap Around 한다.
+MIBADC1 Look-Up Table	ADC1 Wrapper 를 위한 Look-Up Table 이다.
+			시작 주소는 0x2000 이고 끝은 0x217F 이다.
+			오프셋 0x0180 과 0x3FFF 사이에 접근하기 위해 Wrap Around 한다.
+			Offset 0x4000 을 넘어 접근하면 abort 생성
+
+NHET2 RAM		0x3FFF 보다 낮은 Offset 주소에 접근하기 위해 Wrap Around 한다.
+			0x3FFF 를 넘어서 접근하면 abort 생성
+NHET1 RAM		0x3FFF 보다 낮은 Offset 주소에 접근하기 위해 Wrap Around 한다.
+			0x3FFF 를 넘어서 접근하면 abort 생성
+
+CoreSight Debug ROM	read 는 0을 반환하고 write 는 효과가 없다.
+Cortex-R5F Debug	read 는 0을 반환하고 write 는 효과가 없다.
+ETM-R5			read 는 0을 반환하고 write 는 효과가 없다.
+CoreSight TPIU		read 는 0을 반환하고 write 는 효과가 없다.
+POM			read 는 0을 반환하고 write 는 효과가 없다.
+
+CTI1			read 는 0을 반환하고 write 는 효과가 없다.
+CTI2			read 는 0을 반환하고 write 는 효과가 없다.
+CTI3			read 는 0을 반환하고 write 는 효과가 없다.
+CTI4			read 는 0을 반환하고 write 는 효과가 없다.
+CSTF			read 는 0을 반환하고 write 는 효과가 없다.
+
+PCR3 Registers		read 는 0을 반환하고 write 는 효과가 없다.
+FTU			read 는 0을 반환하고 write 는 효과가 없다.
+
+NHET1			read 는 0을 반환하고 write 는 효과가 없다.
+NHET2			read 는 0을 반환하고 write 는 효과가 없다.
+
+GIO			read 는 0을 반환하고 write 는 효과가 없다.
+
+MIBADC1			read 는 0을 반환하고 write 는 효과가 없다.
+MIBADC2			read 는 0을 반환하고 write 는 효과가 없다.
+
+FlexRay			read 는 0을 반환하고 write 는 효과가 없다.
+
+I2C1			read 는 0을 반환하고 write 는 효과가 없다.
+I2C2			read 는 0을 반환하고 write 는 효과가 없다.
+
+DCAN1			read 는 0을 반환하고 write 는 효과가 없다.
+DCAN2			read 는 0을 반환하고 write 는 효과가 없다.
+DCAN3			read 는 0을 반환하고 write 는 효과가 없다.
+DCAN4			read 는 0을 반환하고 write 는 효과가 없다.
+
+LIN1			read 는 0을 반환하고 write 는 효과가 없다.
+SCI3			read 는 0을 반환하고 write 는 효과가 없다.
+LIN2			read 는 0을 반환하고 write 는 효과가 없다.
+SCI4			read 는 0을 반환하고 write 는 효과가 없다.
+
+MibSPI1			read 는 0을 반환하고 write 는 효과가 없다.
+MibSPI2			read 는 0을 반환하고 write 는 효과가 없다.
+MibSPI3			read 는 0을 반환하고 write 는 효과가 없다.
+MibSPI4			read 는 0을 반환하고 write 는 효과가 없다.
+MibSPI5			read 는 0을 반환하고 write 는 효과가 없다.
+
+VIM RAM			0x2FFF 보다 낮은 구현되지 않은 주소에 접근하기 위해 Wrap Around 한다.
+
+FMTM			read 는 0을 반환하고 write 는 효과가 없다.
+			Note : TI 에서 Test 하는 동안 사용된 Module 이다.
+
+STC2 (NHET 1/2)		read 는 0을 반환하고 write 는 효과가 없다.
+
+PCR1 Registers		read 는 0을 반환하고 write 는 효과가 없다.
+
+Pin Mux Control(IOMM)	read 는 0을 반환하고 write 는 효과가 없다.
+
+System Module Frame 2	read 는 0을 반환하고 write 는 효과가 없다.
+			(Platform Architecture 명세를 보라)
+
+PBIST			read 는 0을 반환하고 write 는 효과가 없다.
+
+STC1(Cortex-R5F)	read 는 0을 반환하고 write 는 효과가 없다.
+
+DCC1			read 는 0을 반환하고 write 는 효과가 없다.
+
+DCC2			read 는 0을 반환하고 write 는 효과가 없다.
+
+ESM Register		read 는 0을 반환하고 write 는 효과가 없다.
+
+CCM-R5			read 는 0을 반환하고 write 는 효과가 없다.
+
+DMM			read 는 0을 반환하고 write 는 효과가 없다.
+
+RTP			read 는 0을 반환하고 write 는 효과가 없다.
+
+RTI + DWWD		read 는 0을 반환하고 write 는 효과가 없다.
+
+VIM			read 는 0을 반환하고 write 는 효과가 없다.
+
+System Module Frame 1	read 는 0을 반환하고 write 는 효과가 없다.
+			(Platform Architecture 명세를 보라)
+
+
+
+2.2.3 Microcontroller 에 있는 Flash
+
+TMS570LC43x Microcontroller 는 Program Memory 로 사용하기 위해 Flash 를 4 MB 까지 지원한다.
+Microcontroller 는 또한 에뮬레이트된 EEPROM 으로 사용하기 위한 별도의 128 KB Flash Bank 를 지원한다.
+
+
+
+2.2.3.1 Flash Bank 섹터화 구성
+
+Bank 는 다수의 섹터로 분할된다.
+Flash Sector 는 반드시 지워질 Flash Bank 내의 가장 작은 영역이다.
+각 Flash Bank 의 섹터화 구성은 Table 2-3 에 표시된다.
+
+* Flash Bank 는 ECC 를 지원하는 288-bit 폭 Bank 이다.
+* Flash Bank0 에서 코드를 실행하는 동안 Flash Bank7 은 Program 될 수 있다.
+* Flash Bank7 에서 Code 실행은 허용되지 않는다.
+
+
+
+2.2.3.2 Flash 접근을 위한 ECC 보호
+
+TMS570LC43x Microcontroller 는 SECDED(Single Error Correction Double Error Detection) Logic 에
+전념함으로써 On-Chip Level 에서 Flash Memory 로의 모든 접근을 보호한다.
+
+Porgram Memory - Flash Bank 0, 1, 그리고 7 에 대한 접근은
+ARM Cortex-R5F CPU 내부에 구현된 SECDED Logic 에 의해 보호된다.
+
+SECDED Logic 구현은 Flash Array 로부터 읽은 값을 Single Bit Error 를 보정하고
+Multiple Bit Error 를 감지하기 위해 ECC(Error Correction Codes) 를 사용한다.
+모든 64 비트 Data 를 위해 8 비트 ECC 가 존재한다.
+Level 2 Flash Memory Contents 를 위한 ECC 는 nowECC 와 같은 외부 도구에 의해 계산될 필요가 있다.
+ECC 는 실제 Application Code 와 함께 Flash Array 로 Program 될 수 있다.
+
+Flash Array 를 위한 ECC 는 Flash 자체에 저장되며
+Main Flash Bank 0 과 1 을 위한 0xF0400000 시작 영역에 맵핑되며,
+EEPROM Emulation Flash Bank 7 을 위한 0xF0100000 시작 영역에 맵핑된다.
+
+Note :
+
+CPU 내부의 SECDED Logic 은 AXI-M 과 AXI-S 인터페이스를 영구적으로 사용할 수 있다.
+
+
+
+Main Flash 접근을 위한 ECC 보호를 활성화하는 코드 예제
+
+CPU 가 Flash Memory 로 부터 ECC Single 혹은 Double Bit Error 를 감지하면
+전용 "Event" Bus 에 신호를 보낸다.
+이 Event Bus Signaling 은 기본적으로 사용되지 않으며 Application 에 의해 반드시 활성화 되어야만 한다.
+아래의 Code 예는 CPU Event Signaling 을 활성화 하기 위해 사용 할 수 있다.
+
+MRC p15,#0,r1,c9,c12,#0 ;Enabling Event monitor states
+ORR r1, r1, #0x00000010
+MCR p15,#0,r1,c9,c12,#0 ;Set 4th bit ('X') of PMNC register
+MRC p15,#0,r1,c9,c12,#0
+
+Event Bus 에 보내진 ECC Error Event 는 EPC(Error Profiling Controller) 에 의해 먼저 캡쳐되고
+차례로 중앙 ESM(Error Signaling Module)에 입력되는 Error Signal 을 생성한다.
+
+
+
+2.2.3.3 Error Profiling Module(EPC)
+
+EPC 의 주요 개념은 최소의 Run-Time Overhead 로 Memory System 내에
+반복적인 동일 주소상의 ECC 정정 가능한 오류의 일정량을 허용하기 위해 사용하는 System 이다.
+EPC 는 CAM(Content Addressable Memory)에 서로 다른 Single Bit Error 주소를 기록한다.
+정정 가능한 ECC Error 가 반복된 주소상에 생성되었다면, EPC 는 ESM Module 에 Error 를 발생시키지 않을 것이다.
+이 허용은 코드가 반복적인 Loop 내에 있을 때 동일한 오류를 처리하는 Application 을 금기한다.
+4개의 서로 다른 발생원으로부터 정정 가능한 Error 를 캡쳐하기 위해
+EPC 내에 구현된 4개의 정정 가능한 Error Interface 가 존재한다.
+2개의 서로 다른 발생원으로부터 정정 가능한 Error 를 캡쳐하기 위해
+EPC 내에 구현된 2개의 정정 불가능한 Error Interface 또한 존재한다.
+EPC 의 주요 기능은 아래와 같다:
+
+* CPU Core, L2 SRAM 과 16개의 항목을 가진 CAM(Content Addressable Memory) 으로의 Interconnect 와 같은
+  서로 다른 발생원으로부터 수정 가능한 ECC 오류의 주소를 캡쳐한다.
+* 정정 가능한 오류의 경우, 에러 처리는 아래의 조건에 따라 달라진다:
+  - 들어오는 주소가 이미 16개 항목의 CAM 에 있다면, 실패를 폐기한다.
+    ESM 에 오류가 생성되지 않는다.
+  - 주소가 CAM 목록에 있지 않고, CAM 의 항목이 비었다면, CAM 리스트에 주소를 추가한다.
+    추가적으로 이 기능이 활성화되었다면 ESM Group 1 에 Error Signal 을 발생시킨다.
+  - 주소가 CAM 리스트에 존재 하지 않고 CAM 이 빈 항목을 가지고 있지 않다면
+    항상 ESM Group 1 에 Error Signal 을 발생시킨다.
+* 각 채널 Interface 를 위해 정정 가능한 Error Event 와 주소를 저장하는 4개의 항목을 가진 FIFO
+* 정정할 수 없는 오류를 위해 주소를 캡쳐하고 ESM Group 2 에 Error Signal 을 발생시킨다.
+
+각 EPC Interface 는 EPC 레지스터의 일부 비트 필드에 대응한다.
+Table 2-4 는 이 Device 를 위한 특정 Interface 에 대한 bit 와 연관된 Register 를 보여준다.
+Register 의 전체 리스트를 보기 원한다면 EPC Chapter 를 보길 바란다.
+
+Table 2-4. EPC Registers Bit Mapping
+
+UERRSTAT	* DMA Interface 를 위한 CPU 와 상호 연결된 Subsystem 에 의해
+		  감지되는 정정할 수 없는 ECC Error 와 연관된 Bit 이다.
+		* DMA Interface 에 대한 평가와 ECC 생성상에
+		  세부사항을 위한 Interconnect Chapter 를 참조하라!
+
+		* PS_SCR_M Interface 를 위한 CPU 와 상호 연결된 Subsystem 에 의해
+		  감지되는 정정할 수 없는 ECC Error 와 연관된 Bit 이다.
+		* DMA Interface 에 대한 평가화 ECC 생성상에
+		  세부사항을 위한 Interconnect Chapter 를 참조하라!
+
+FIFOFULLSTAT	* CPU 의 정정 가능한 Error Event 를 캡쳐하기 위해 사용되는
+		  Interface 에 대한 FIFO 전체 상태와 연관된 Bit 이다.
+		* 정정 가능한 Error Event 는 CPU 의 Event Bus 에 의해 보내진다.
+
+		* DMA 의 정정 가능한 Error Event 를 캡쳐하기 위해 사용되는
+		  Interface 에 대한 FIFO 전체 상태와 연관된 Bit 이다.
+		* 정정 가능한 Error Event 는 DMA PortA Interface 를 위한
+		  CPU 와 상호 연결된 Subsystem 에 의해 보내진다.
+
+		* PS_SCR_M 의 정정 가능한 Error Event 를 캡쳐하기 위해 사용되는
+		  Interface 에 대한 FIFO 전체 상태와 연관된 Bit 이다.
+		* 정정 가능한 Error Event 는 PS_SCR_M Interface 를 위한
+		  CPU 와 상호 연결된 Subsystem 에 의해 보내진다.
+
+		* L2 SRAM 의 정정 가능한 Error Event 를 캡쳐하기 위해 사용되는
+		  Interface 에 대한 FIFO 전체 상태와 연관된 Bit 이다.
+		* Bus Master 로부터 64-bit 보다 작은 write 로 인한
+		  Read-Modify-Write 동작의 read 단계 동안
+		  정정 가능한 Error Event 는 L2 SRAM Wrapper 에 의해 감지된다.
+
+OVRFLWSTAT	* CPU 의 정정 가능한 Error Event 를 캡쳐하기 위해 사용되는
+		  Interface 에 대한 FIFO Overflow Status 와 연관된 Bit 이다.
+		* DMA 의 정정 가능한 Error Event 를 캡쳐하기 위해 사용되는
+		  Interface 에 대한 FIFO Overflow Status 와 연관된 Bit 이다.
+		* PS_SCR_M 의 정정 가능한 Error Event 를 캡쳐하기 위해 사용되는
+		  Interface 에 대한 FIFO Overflow Status 와 연관된 Bit 이다.
+		* L2 SRAM 의 정정 가능한 Error Event 를 캡쳐하기 위해 사용되는
+		  Interface 에 대한 FIFO Overflow Status 와 연관된 Bit 이다.
+
+UERRADDR0	* DMA Interface 를 위한 정정 불가능한 Error Address Register 이다.
+
+UERRADDR1	* PS_SCR_M Interface 를 위한 정정 불가능한 Error Address Register 이다.
+
+
+
+2.2.4 On-Chip SRAM
+
+몇몇 SRAM Module 은 포함된 Module 의 기능을 지원하는 Device 상에서 구현된다.
+
+Level 1 과 Level 2 SRAM 모두에서 read 는 CPU 내부에서 계산된 ECC 에 의해 보호된다.
+다른 모든 Memory 로부터 read 는 실제 read 와 병렬로 평가된 ECC 혹은 구성 가능한
+짝수 혹은 홀수 패리티 방식으로 패리티 중 하나에 의해 보호된다.
+
+TMS570LC43x microcontrollers 는 안전에 매우 중요한 방향으로 어플리케이션을 선정하고,
+안전에 중요한 기능들을 사용하기 전에 on-chip SRAM 모듈들에서 발견되는 어떤 오류도 치명적이다.
+이 Microcontroller 는 오류에 대한 각각의 On-Chip SRAM Module 을 test 하는데 사용되는
+PBIST(Programmable Built-In Self-Test) 메커니즘을 지원한다.
+PBIST 는 파괴적인 Test 로서 일반적으로 Device Start-Up 에서 실행되며
+검사된 SRAM Module 의 모든 내용은 test 동안 덮어써진다.
+
+Microcontroller 는 또한 On-Chip SRAM Modules 의 HW 기반의 자동 초기화를 지원한다.
+이 작업은 또한 각각의 SRAM Module 에 대해 구현된 read 보호 방식 - (ECC 혹은 패리티)을 고려한다.
+
+TI 는 자동 초기화에 앞서 SRAM 모듈에서 실행될 PBIST 절차를 추천한다.
+다음 섹션에서 이러한 두 가지 작업을 설명한다.
+
+
+
+2.2.4.1 PBIST RAM Grouping 과 On-Chip SRAM Modules 을 위한 Algorithm Mapping
+
+Table 2-5 는 PBIST 를 위한 다양한 On-Chip Memory 의 Grouping 을 보여준다.
+이것은 또한 Memory Type 과 그들의 할당된 RGS(Ram Group Select) 와 RDS(Return Data Select) 를 나열한다.
+RGS 와 RDS 정보의 사용에 대한 자세한 내용은 PBIST 사용자 설명서를 참조하라!
+
+Table 2-5. PBIST Memory Grouping
+
+Table 2-6 은 RAM Groups 에 대한 Application Mode 내에 지원되는 서로 다른 Algorithm 을 맵핑한다.
+표는 또한 각 알고리즘에 대해 사용할 수 있는 Background Pattern Options 를 나열한다.
+
+Table 2-6. PBIST Algorithm Mapping
+
+Note: 추천된 Memory Test Algorithm
+
+March13 은 Memory Self-Test 를 위한 가장 추천이 많이되는 알고리즘이다.
+
+GCLK = 300 MHz, HCLK = 150 MHz, VCLK = 75 MHz, PBIST ROM_CLK = 75 MHz 에 대한
+March13 Algorithm 은 모든 On-Chip SRAM 상에서 29.08 ms 를 소요한다.
+
+Note:
+
+PBIST ROM_CLK 는 MSTGCR Register 의 ROM_DIV 비트를 통해 GCLK 로부터 Prescale 될 수 있다.
+유효한 비율은 /1, /2 혹은 /4 혹은 /8 이다.
+보다 자세한 사항은 Section 2.5.1.20 을 보라!
+지원되는 최대 PBIST ROM_CLK 주파수는 82.5 MHz 이다.
+
+
+
+2.2.4.2 On-Chip SRAM Module 의 자동 초기화
+
+
+
+2.3 Exceptions
+
+
+
+2.3.1 Resets
+
+
+
+2.3.2 Aborts
+
+
+
+2.3.2.1 Prefetch Aborts
+
+
+
+2.3.2.2 Data Aborts
+
+
+
+2.3.2.3 Precise Aborts
+
+
+
+2.3.2.4 Imprecise Aborts
+
+
+
+2.3.2.5 Aborts 생성 조건
+
+
+
+2.3.3 System Software Interrupts
+
+
+
+2.4 Clocks
+
+
+
+2.4.1 Clock SOurces
+
+
+
+2.4.1.1 Clock Sources 활성화 / 비활성화
+
+
+
+2.4.1.2 유효한 Clock Sources 검사하기
+
+
+
+2.4.2 Clock Domains
+
+
+
+2.4.2.1 Clock Domains 활성화 / 비활성화
+
+
+
+2.4.2.2 Clock Domains 에 Clock Sources 맵핑하기
+
+
+
+2.4.3 Low Power Modes
+
+
+
+2.4.3.1 Low-Power Mode 로 진입하기 위한 전형적인 SW 절차
+
+
+
+2.4.3.2 Low Power Mode 에 항목을 위한 특별한 고려사항
+
+
+
+2.4.3.3 Wake Up 시에 Clock Source 를 선택
+
+
+
+2.4.4 Clock Test Mode
+
+
+
+2.4.5 ETM-R5(Embedded Trace Macrocell)
+
+
+
+2.4.6 Clocks 를 위한 안정성 고려사항
+
+
+
+2.4.6.1 Oscillator Monitor
+
+
+
+2.4.6.2 PLL Slip Detector
+
+
+
+2.4.6.3 External Clock Monitor
+
+
+
+2.4.6.4 Dual-Clock Comparators
+
+
+
+2.4.6.4.1 DCC1
+
+
+
+2.4.6.4.2 DCC2
+
+
+
+2.5. System and Peripheral Control Registers
+
+
+
+2.5.1 Primary System Control Registers(SYS)
+
+
+
+2.5.1.1 SYS Pin Control Register 1(SYSPC1)
+
+
+
+2.5.1.2 SYS Pin Control Register 2(SYSPC2)
+
+
+
+2.5.1.3 SYS Pin Control Register 3(SYSPC3)
+
+
+
+2.5.1.4 SYS Pin Control Register 4(SYSPC4)
+
+
+
+2.5.1.5 SYS Pin Control Register 5(SYSPC5)
+
+
+
+2.5.1.6 SYS Pin Control Register 6(SYSPC6)
+
+
+
+2.5.1.7 SYS Pin Control Register 7(SYSPC7)
+
+
+
+2.5.1.8 SYS Pin Control Register 8(SYSPC8)
+
+
+
+2.5.1.9 SYS Pin Control Register 9(SYSPC9)
+
+
+
+2.5.1.10 Clock Source Disable Register(CSDIS)
+
+
+
+2.5.1.11 Clock Source Disable Set Register(CSDISSET)
+
+
+
+2.5.1.12 Clock Source Disable Clear Register(CSDISCLR)
+
+
+
+2.5.1.13 Clock Domain Disable Register(CDDIS)
+
+
+
+2.5.1.14 Clock Domain Disable Set Register(CDDISSET)
+
+
+
+2.5.1.15 Clock Domain Disable Clear Register(CDDISCLR)
+
+
+
+2.5.1.16 GCLK, HCLK, VCLK, and VCLK2 Source Register(GHVSRC)
+
+
+
+2.5.1.17 Peripheral Asynchronous Clock Source Register(VCLKASRC)
+
+
+
+2.5.1.18 RTI Clock Source Register(RCLKSRC)
+
+
+
+2.5.1.19 Clock Source Valid Status Register(CSVSTAT)
+
+
+
+2.5.1.20 Memory Self-Test Global Control Register(MSTGCR)
+
+
+
+2.5.1.21 Memory Hardware Initialization Global Control Register(MINITGCR)
+
+
+
+2.5.1.22 MBIST Controller / Memory Initialization Enable Register(MSINENA)
+
+
+
+2.5.1.23 MSTC Global Status Register(MSTCGSTAT)
+
+
+
+2.5.1.24 Memory Hardware Initialization Status Register(MINISTAT)
+
+
+
+2.5.1.25 PLL Control Register 1(PLLCTL1)
+
+
+
+2.5.1.26 PLL Control Register 2(PLLCTL2)
+
+
+
+2.5.1.27 SYS Pin Control Register 10(SYSPC10)
+
+
+
+2.5.1.28 Die Identification Register Lower Word(DIEIDL)
+
+
+
+2.5.1.29 Die Identification Register Upper Word(DIEIDH)
+
+
+
+2.5.1.30 LPO / Clock Monitor Control Register(LPOMONCTL)
+
+
+
+2.5.1.31 Clock Test Register(CLKTEST)
+
+
+
+2.5.1.32 DFT Control Register(DFTCTRLREG)
+
+
+
+2.5.1.33 DFT Control Register 2(DFTCTRLREG2)
+
+
+
+2.5.1.34 General Purpose Register(GPREG1)
+
+
+
+2.5.1.35 System Software Interrupt Request 1 Register(SSIR1)
+
+
+
+2.5.1.36 System Software Interrupt Request 2 Register(SSIR2)
+
+
+
+2.5.1.37 System Software Interrupt Request 3 Register(SSIR3)
+
+
+
+2.5.1.38 System Software Interrupt Request 4 Register(SSIR4)
+
+
+
+2.5.1.39 RAM Control Register(RAMGCR)
+
+
+
+2.5.1.40 Bus Matrix Module Control Register 1(BMMCR1)
+
+
+
+2.5.1.41 CPU Reset Control Register(CPURSTCR)
+
+
+
+2.5.1.42 Clock Control Register(CLKCNTL)
+
+
+
+2.5.1.43 ECP Control Register(ECPCNTL)
+
+
+
+2.5.1.44 DEV Parity Control Register 1
+
+
+
+2.5.1.45 System Exception Control Register(SYSECR)
+
+
+
+2.5.1.46 System Exception Status Register(SYSESR)
+
+
+
+2.5.1.47 System Test Abort Status Register
+
+
+
+2.5.1.48 Global Status Register(GLBSTAT)
+
+
+
+2.5.1.49 Device Identification Register(DEVID)
+
+
+
+2.5.1.50 Software Interrupt Vector Register(SSIVEC)
+
+
+
+2.5.1.51 System Software Interrupt Flag Register(SSIF)
+
+
+
+2.5.2 Secondary System Control Register(SYS2)
+
+
+
+2.5.2.1 PLL Control Register 3(PLLCTL3)
+
+
+
+2.5.2.2 CPU Logic Bist Clock Divider(STCLKDIV)
+
+
+
+2.5.2.3 ECP Control Register 1(ECPCNTL1)
+
+
+
+2.5.2.4 Clock 2 Control Register(CLK2CNTRL)
+
+
+
+2.5.2.5 Peripheral Asynchronous Clock Configuration 1 Register(VCLKACON1)
+
+
+
+2.5.2.6 HCLK Control Register(HCLKCNTL)
+
+
+
+2.5.2.7 Clock Slip Control Register(CLKSLIP)
+
+
+
+2.5.2.8 IP ECC Error Enable Register(IP1ECCERREN)
+
+
+
+2.5.2.9 EFUSE Controller Control Register(EFC_CTLREG)
+
+
+
+2.5.2.10 Die Identification Register Lower Word(DIEIDL_REG0)
+
+
+
+2.5.2.11 Die Identification Register Upper Word(DIEIDH_REG1)
+
+
+
+2.5.2.12 Die Identification Register Lower Word(DIEIDL_REG2)
+
+
+
+2.5.2.13 Die Identification Register Upper Word(DIEIDH_REG3)
+
+
+
+2.5.3 Peripheral Central Resource(PCR) Control Registers
+
+
+
+2.5.3.1 Peripheral Memory Protection Set Register 0(PMPROTSET0)
+
+
+
+2.5.3.2 Peripheral Memory Protection Set Register 1(PMPROTSET1)
+
+
+
+2.5.3.3 Peripheral Memory Protection Clear Register 0(PMPROTCLR0)
+
+
+
+2.5.3.4 Peripheral Memory Protection Clear Register 1(PMPROTCLR1)
+
+
+
+2.5.3.5 Peripheral Protection Set Register 0(PPROTSET0)
+
+
+
+2.5.3.6 Peripheral Protection Set Register 1(PPROTSET1)
+
+
+
+2.5.3.7 Peripheral Protection Set Register 2(PPROTSET2)
+
+
+
+2.5.3.8 Peripheral Protection Set Register 3(PPROTSET3)
+
+
+
+2.5.3.9 Peripheral Protection Clear Register 0(PPROTCLR0)
+
+
+
+2.5.3.10 Peripheral Protection Clear Register 1(PPROTCLR1)
+
+
+
+2.5.3.11 Peripheral Protection Clear Register 2(PPROTCLR2)
+
+
+
+2.5.3.12 Peripheral Protection Clear Register 3(PPROTCLR3)
+
+
+
+2.5.3.13 Peripheral Memory Power-Down Set Register 0(PCSPWRDWNSET0)
+
+
+
+2.5.3.14 Peripheral Memory Power-Down Set Register 1(PCSPWRDWNSET1)
+
+
+
+2.5.3.15 Peripheral Memory Power-Down Clear Register 0(PCSPWRDWNCLR0)
+
+
+
+2.5.3.16 Peripheral Memory Power-Down Clear Register 1(PCSPWRDWNCLR1)
+
+
+
+2.5.3.17 Peripheral Power-Down Set Register 0(PSPWRDWNSET0)
+
+
+
+2.5.3.18 Peripheral Power-Down Set Register 1(PSPWRDWNSET1)
+
+
+
+2.5.3.19 Peripheral Power-Down Set Register 2(PSPWRDWNSET2)
+
+
+
+2.5.3.20 Peripheral Power-Down Set Register 3(PSPWRDWNSET3)
+
+
+
+2.5.3.21 Peripheral Power-Down Clear Register 0(PSPWRDWNCLR0)
+
+
+
+2.5.3.22 Peripheral Power-Down Clear Register 1(PSPWRDWNCLR1)
+
+
+
+2.5.3.23 Peripheral Power-Down Clear Register 2(PSPWRDWNCLR2)
+
+
+
+2.5.3.24 Peripheral Power-Down Clear Register 3(PSPWRDWNCLR3)
+
+
+
+2.5.3.25 Debug Frame Powerdown Set Register(PDPWRDWNSET)
+
+
+
+2.5.3.26 Debug Frame Powerdown Clear Register(PDPWRDWNCLR)
+
+
+
+2.5.3.27 MasterID Protection Write Enable Register(MSTIDWRENA)
+
+
+
+2.5.3.28 MasterID Enable Register(MSTIDENA)
+
+
+
+2.5.3.29 MasterID Diagnostic Control Register(MSTIDDIAGCTRL)
+
+
+
+2.5.3.30 Peripheral Frame 0 MasterID Protection Register_L(PS0MSTID_L)
+
+
+
+2.5.3.31 Peripheral Frame 0 MasterID Protection Register_H(PS0MSTID_H)
+
+
+
+2.5.3.32 Peripheral Frame n MasterID Protection Register_L/H(PS[1-31]MSTID_L/H)
+
+
+
+2.5.3.33 Privileged Peripheral Frame 0 MasterID Protection Register_L(PPS0MSTID_L)
+
+
+
+2.5.3.34 Privileged Peripheral Frame 0 MasterID Protection Register_H(PPS0MSTID_H)
+
+
+
+2.5.3.35 Privileged Peripheral Frame n MasterID Protection Register_L/H(PPS[1-7]MSTID_L/H)
+
+
+
+2.5.3.36 Privileged Peripheral Extended Frame 0 MasterID Protection Register_L(PPSE0MSTID_L)
+
+
+
+2.5.3.37 Privileged Peripheral Extended Frame 0 MasterID Protection Register_H(PPSE0MSTID_H)
+
+
+
+2.5.3.38 Privileged Peripheral Extended Frame n MasterID Protection Register_L/H(PPSE[1-31]MSTID_L/H)
+
+
+
+2.5.3.39 Peripheral Memory Frame MasterID Protection Register(PCS[0-31]MSTID)
+
+
+
+2.5.3.40 Privileged Peripheral Memory Frame MasterID Protection Register(PPCS[0-7]MSTID)

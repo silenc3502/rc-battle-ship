@@ -1,0 +1,285 @@
+Information you need to know about netdev
+-----------------------------------------
+
+Q: What is netdev?
+Q : netdev 란 무엇입니까?
+
+A: It is a mailing list for all network-related Linux stuff.  This includes
+   anything found under net/  (i.e. core code like IPv6) and drivers/net
+   (i.e. hardware specific drivers) in the Linux source tree.
+A : 모든 네트워크 관련 리눅스 관련 메일 링리스트입니다. 여기에는 Linux 소스 트리에서 net / (IPv6와 같은 i.e. 코어 코드) 및 drivers / net (i.e. 하드웨어 전용 드라이버) 아래에있는 항목이 포함됩니다.
+
+   Note that some subsystems (e.g. wireless drivers) which have a high volume
+   of traffic have their own specific mailing lists.
+   트래픽 양이 많은 일부 하위 시스템 (e.g. 무선 드라이버)은 고유의 특정 메일 목록을 가지고 있습니다.
+
+   The netdev list is managed (like many other Linux mailing lists) through
+   VGER ( http://vger.kernel.org/ ) and archives can be found below:
+   netdev 목록은 VGER (http://vger.kernel.org/)를 통해 (다른 리눅스 메일 링리스트와 마찬가지로) 관리되며 아카이브는 아래에서 찾을 수 있습니다.
+
+	http://marc.info/?l=linux-netdev
+	http://www.spinics.net/lists/netdev/
+
+   Aside from subsystems like that mentioned above, all network-related Linux
+   development (i.e. RFC, review, comments, etc.) takes place on netdev.
+위에서 언급 한 서브 시스템 외에도 모든 네트워크 관련 Linux 개발 (i.e. RFC, review, comments 등)은 netdev에서 수행됩니다.
+
+Q: How do the changes posted to netdev make their way into Linux?
+Q : netdev에 게시 된 변경 사항은 어떻게 Linux에 반영됩니까?
+
+A: There are always two trees (git repositories) in play.  Both are driven
+   by David Miller, the main network maintainer.  There is the "net" tree,
+   and the "net-next" tree.  As you can probably guess from the names, the
+   net tree is for fixes to existing code already in the mainline tree from
+   Linus, and net-next is where the new code goes for the future release.
+   You can find the trees here:
+A : 항상  two trees (git 저장소)가 있습니다. 둘 다 데이비드 밀러 (David Miller)가 주도하고있다. "net"트리와 "net-next"트리가 있습니다. 이름에서 추측 할 수 있듯이, net tree는 이미 Linus의 mainline tree에있는 기존 코드를 수정하기위한 것이고, net-next는 새로운 코드가 향후 릴리스를 위해 쓰이는 곳입니다. 여기에서 tree 를 찾을 수 있습니다.
+
+	http://git.kernel.org/?p=linux/kernel/git/davem/net.git
+	http://git.kernel.org/?p=linux/kernel/git/davem/net-next.git
+
+Q: How often do changes from these trees make it to the mainline Linus tree?
+Q :이 트리의 변경으로 얼마나 자주 Linus 트리가 mainline 이됩니까?
+
+A: To understand this, you need to know a bit of background information
+   on the cadence of Linux development.  Each new release starts off with
+   a two week "merge window" where the main maintainers feed their new
+   stuff to Linus for merging into the mainline tree.  After the two weeks,
+   the merge window is closed, and it is called/tagged "-rc1".  No new
+   features get mainlined after this -- only fixes to the rc1 content
+   are expected.  After roughly a week of collecting fixes to the rc1
+   content, rc2 is released.  This repeats on a roughly weekly basis
+   until rc7 (typically; sometimes rc6 if things are quiet, or rc8 if
+   things are in a state of churn), and a week after the last vX.Y-rcN
+   was done, the official "vX.Y" is released.
+A : 이것을 이해하려면 리눅스 개발의 종지에 대한 약간의 배경 정보를 알아야합니다. 각각의 새로운 릴리스는 주 메인테이너들이 메인 라인 트리에 병합하기 위해 리누스 (LIusus)에 새 물건을 공급하는 2 주간의 "병합 창 (merge window)"으로 시작합니다. 2 주 후에 병합 창이 닫히고 "-rc1"태그가 붙습니다. 이 이후에 새 기능이 유지되지는 않습니다 - rc1 컨텐츠에 대한 픽스 만 예상됩니다. 대략 1 주일 후 rc1 컨텐츠에 대한 수정 사항을 수집 한 후 rc2가 릴리스됩니다. 이것은 대략 매주 rc7 (보통 상황이 조용한 경우 rc6, 상황이 변동될 경우 rc8)까지 그리고 마지막 vX.Y-rcN이 완료된 후 일주일에 공식 "vX.Y"가 공개 될 때까지 반복됩니다 .
+
+
+
+   Relating that to netdev:  At the beginning of the 2-week merge window,
+   the net-next tree will be closed - no new changes/features.  The
+   accumulated new content of the past ~10 weeks will be passed onto
+   mainline/Linus via a pull request for vX.Y -- at the same time,
+   the "net" tree will start accumulating fixes for this pulled content
+   relating to vX.Y
+ Relating that to netdev : 2 주 병합 창을 시작할 때 net-next tree가 닫히고 새로운 변경 사항은 없습니다. 지난 10 주 동안 축적 된 새로운 내용은 vX.Y에 대한 요청을 통해 메인 라인 / 리누스로 전달 될 것입니다. 동시에 "net"트리는 vX.Y와 관련된이 풀 컨텐츠에 대한 누적을 시작합니다
+
+   An announcement indicating when net-next has been closed is usually
+   sent to netdev, but knowing the above, you can predict that in advance.
+net-next가 닫힌 시점을 알려주는 공지 사항은 일반적으로 netdev로 보내지 만 위의 내용을 알고 있다면 미리 예측할 수 있습니다.
+
+   IMPORTANT:  Do not send new net-next content to netdev during the
+   period during which net-next tree is closed.
+   중요 : net-next 트리가 닫히는 기간 동안 netdev에 새로운 net-next 컨텐츠를 보내지 마십시오.
+
+   Shortly after the two weeks have passed (and vX.Y-rc1 is released), the
+   tree for net-next reopens to collect content for the next (vX.Y+1) release.
+   2 주가 지나면 (그리고 vX.Y-rc1이 릴리스 됨) net-next 트리가 다음 (vX.Y + 1) 릴리스의 컨텐트를 수집하기 위해 다시 열립니다.
+
+   If you aren't subscribed to netdev and/or are simply unsure if net-next
+   has re-opened yet, simply check the net-next git repository link above for
+   any new networking-related commits.
+   netdev에 가입하지 않았거나 net-next가 아직 열리지 않았다는 것을 단순히 알 수 있다면 위의 net-next git 저장소 링크에서 새로운 네트워킹 관련 커밋을 확인하기 만하면됩니다.
+
+   The "net" tree continues to collect fixes for the vX.Y content, and
+   is fed back to Linus at regular (~weekly) intervals.  Meaning that the
+   focus for "net" is on stabilization and bugfixes.
+"net"나무는 vX.Y 콘텐츠에 대한 수정 사항을 계속 수집하고 정기적으로 (~ 주간) 간격으로 Linus에게 피드백됩니다. "net"의 초점이 안정화 및 버그 수정에 있음을 의미합니다.
+   
+   Finally, the vX.Y gets released, and the whole cycle starts over.
+   마지막으로 vX.Y가 해제되고 전체주기가 시작됩니다.
+
+Q: So where are we now in this cycle?
+Q : 그렇다면 이번주기에 우리는 어디에 있습니까?
+
+A: Load the mainline (Linus) page here:
+A : mainline (Linus) 페이지를로드하십시오.
+
+	http://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git
+
+   and note the top of the "tags" section.  If it is rc1, it is early
+   in the dev cycle.  If it was tagged rc7 a week ago, then a release
+   is probably imminent.
+'태그'섹션의 상단을 확인하십시오. 그것이 rc1이라면, 그것은 dev주기의 초기 단계이다. 일주일 전에 rc7 태그가 붙은 경우 릴리스가 임박했습니다.
+
+
+Q: How do I indicate which tree (net vs. net-next) my patch should be in?
+Q : 내 패치가 있어야하는 트리 (net vs. -next)를 어떻게 나타낼 수 있습니까?
+
+A: Firstly, think whether you have a bug fix or new "next-like" content.
+   Then once decided, assuming that you use git, use the prefix flag, i.e.
+A:첫째, 버그 수정이나 새로운 'next-like'콘텐츠가 있는지 생각해보십시오.
+    그런 다음 일단 git을 사용한다고 가정하면 접두어 플래그 i.e. 를 사용하십시오.
+
+	git format-patch --subject-prefix='PATCH net-next' start..finish
+   git 형식 - 패치  --제목 - 접두사 = '패치 넷 - 다음'시작 .. 마무리
+
+   Use "net" instead of "net-next" (always lower case) in the above for
+   bug-fix net content.  If you don't use git, then note the only magic in
+   the above is just the subject text of the outgoing e-mail, and you can
+   manually change it yourself with whatever MUA you are comfortable with.
+   위의 "버그 수정 네트워크 콘텐츠"의 경우 "net-next"대신 "net"을 사용하십시오 (항상 소문자). git을 사용하지 않는다면 위의 유일한 마법은 보내는 전자 메일의 제목 텍스트 일 뿐이며 사용자가 편안하게 사용할 수있는 MUA로 직접 변경할 수 있습니다.
+
+Q: I sent a patch and I'm wondering what happened to it.  How can I tell
+   whether it got merged?
+Q : 패치를 보냈는데 무슨 일이 일어 났는지 궁금합니다. 그것이 합병되었는지 어떻게 알 수 있습니까?
+
+A: Start by looking at the main patchworks queue for netdev:
+A : netdev의 패치 워크 큐를 살펴보십시오.
+
+	http://patchwork.ozlabs.org/project/netdev/list/
+
+   The "State" field will tell you exactly where things are at with
+   your patch.
+   "State (상태)"필드는 패치가있는 곳의 정확한 위치를 알려줍니다.
+
+Q: The above only says "Under Review".  How can I find out more?
+Q : 위 내용은 "Under Review"이라고 말합니다. 더 자세한 정보는 어떻게 찾을 수 있습니까?
+
+A: Generally speaking, the patches get triaged quickly (in less than 48h).
+   So be patient.  Asking the maintainer for status updates on your
+   patch is a good way to ensure your patch is ignored or pushed to
+   the bottom of the priority list.
+A : 일반적으로 말해서, 패치는 (48 시간 이내에) 신속하게 get triaged(검진?) 됩니다.
+    그러니 참을성 있으십시오. maintainer에게 패치의 상태 업데이트를 요청하는 것은 패치가 무시되거나 우선 순위 목록의 맨 아래로 밀려나도록하는 좋은 방법입니다.
+
+Q: How can I tell what patches are queued up for backporting to the
+   various stable releases?
+Q : 다양한 안정 버전에 대한 백 포트를 위해 대기중인 패치는 어떻게 알 수 있습니까?
+
+A: Normally Greg Kroah-Hartman collects stable commits himself, but
+   for networking, Dave collects up patches he deems critical for the
+   networking subsystem, and then hands them off to Greg.
+A : 일반적으로 Greg Kroah-Hartman은 안정적인 커밋을 수집하지만 네트워킹을 위해 Dave는 네트워킹 하위 시스템에 중요하다고 판단되는 패치를 수집 한 다음 Greg에게 넘깁니다.
+
+   There is a patchworks queue that you can see here:
+   여기에서 볼 수있는 패치 워크 큐가 있습니다 :
+	http://patchwork.ozlabs.org/bundle/davem/stable/?state=*
+
+   It contains the patches which Dave has selected, but not yet handed
+   off to Greg.  If Greg already has the patch, then it will be here:
+	http://git.kernel.org/cgit/linux/kernel/git/stable/stable-queue.git
+Dave가 선택한 패치가 포함되어 있지만 아직 Greg로 전달되지 않았습니다. Greg에 이미 패치가 있다면, http://git.kernel.org/cgit/linux/kernel/git/stable/stable-queue.git에 있습니다.
+
+   A quick way to find whether the patch is in this stable-queue is
+   to simply clone the repo, and then git grep the mainline commit ID, e.g.
+패치가이 안정 대기열에 있는지를 확인하는 빠른 방법은 단순히 repo를 복제 한 다음 git grep mainline 커밋 ID 인 e.g
+
+	stable-queue$ git grep -l 284041ef21fdf2e
+	releases/3.0.84/ipv6-fix-possible-crashes-in-ip6_cork_release.patch
+	releases/3.4.51/ipv6-fix-possible-crashes-in-ip6_cork_release.patch
+	releases/3.9.8/ipv6-fix-possible-crashes-in-ip6_cork_release.patch
+	stable/stable-queue$
+
+Q: I see a network patch and I think it should be backported to stable.
+   Should I request it via "stable@vger.kernel.org" like the references in
+   the kernel's Documentation/stable_kernel_rules.txt file say?
+Q : 네트워크 패치가있어서 안정적으로 백 포트해야한다고 생각합니다. 커널의 Documentation / stable_kernel_rules.txt 파일에있는 참조 사항과 같이 "stable@vger.kernel.org"를 통해 요청해야합니까?
+
+A: No, not for networking.  Check the stable queues as per above 1st to see
+   if it is already queued.  If not, then send a mail to netdev, listing
+   the upstream commit ID and why you think it should be a stable candidate.
+A : 아니오, 네트워킹이 아닙니다. 위의 1 단계에 따라 stable queue를 확인하여 이미 대기 중인지 확인하십시오.
+그렇지 않은 경우는 netdev 메일을 보내고 상류의 커밋 ID와 그것이 안정된 후보하다고 생각하는 이유를 열거합니다.
+
+   Before you jump to go do the above, do note that the normal stable rules
+   in Documentation/stable_kernel_rules.txt still apply.  So you need to
+   explicitly indicate why it is a critical fix and exactly what users are
+   impacted.  In addition, you need to convince yourself that you _really_
+   think it has been overlooked, vs. having been considered and rejected.
+위 작업을 수행하기 전에 Documentation / stable_kernel_rules.txt의 정상적인 안정적인 규칙이 계속 적용된다는 점에 유의하십시오. 따라서 중요한 수정 프로그램 인 이유와 사용자에게 어떤 영향을 주는지 정확히 명시해야합니다.  또한, 당신은 자신이 그것이 간과되었다고 생각하거나, 고려되고 거절 당했다고 생각할 필요가 있습니다.
+   
+   Generally speaking, the longer it has had a chance to "soak" in mainline,
+   the better the odds that it is an OK candidate for stable.  So scrambling
+   to request a commit be added the day after it appears should be avoided.
+일반적으로, mainline에 "soak"할 기회가 길어질수록 안정적인 후보가 될 확률이 높아진다. 따라서 커밋을 요청하기 위해 scrambling하는 것은 피해야한다.
+
+Q: I have created a network patch and I think it should be backported to
+   stable.  Should I add a "Cc: stable@vger.kernel.org" like the references
+   in the kernel's Documentation/ directory say?
+Q : 네트워크 패치를 만들었습니다. 안정적인 백 포트가되어야한다고 생각합니다. 커널의 Documentation / 디렉토리에있는 참조와 같이 "Cc : stable@vger.kernel.org"를 추가해야합니까?
+
+A: No.  See above answer.  In short, if you think it really belongs in
+   stable, then ensure you write a decent commit log that describes who
+   gets impacted by the bugfix and how it manifests itself, and when the
+   bug was introduced.  If you do that properly, then the commit will
+   get handled appropriately and most likely get put in the patchworks
+   stable queue if it really warrants it.
+A : 아니요. 위의 대답을 참조하십시오. 간단히 말해서, 이것이 정말로 안정되어 있다고 생각한다면, 버그 픽스에 영향을받는 것과 그것이 어떻게 나타나는지, 그리고 버그가 도입되었을 때 알맞은 커밋 로그를 작성하도록하십시오. 그렇게하면, 커밋은 적절히 처리되고 패치 워크 안정적인 대기열에 들어가게됩니다.
+
+   If you think there is some valid information relating to it being in
+   stable that does _not_ belong in the commit log, then use the three
+   dash marker line as described in Documentation/SubmittingPatches to
+   temporarily embed that information into the patch that you send.
+커밋 로그에 속하지 않는 안정된 것에 관한 유용한 정보가 있다고 생각하면은 Documentation / SubmittingPatches에 설명 된대로 3 개의 dash marker line을 사용하여 제출 한 패치에 대한 정보를 일시적으로 포함합니다.
+
+
+
+Q: Someone said that the comment style and coding convention is different
+   for the networking content.  Is this true?
+Q : 코멘트 스타일과 코딩 규칙은 네트워킹 내용에 따라 다릅니다. 이게 사실입니까?
+
+A: Yes, in a largely trivial way.  Instead of this:
+A : 네, 대체로 사소한 방법입니다. 대신 이것 :
+
+	/*
+	 * foobar blah blah blah
+	 * another line of text
+	 */
+
+   it is requested that you make it look like this:
+   다음과 같이 만들어야합니다.
+
+	/* foobar blah blah blah
+	 * another line of text
+	 */
+
+Q: I am working in existing code that has the former comment style and not the
+   latter.  Should I submit new code in the former style or the latter?
+Q : 전 주석 스타일을 가지고 있고 후자 스타일이 아닌 기존 코드에서 작업하고 있습니다. 전 스타일 또는 후자로 새 코드를 제출해야합니까?
+
+A: Make it the latter style, so that eventually all code in the domain of
+   netdev is of this format.
+A : netdev의 도메인에있는 모든 코드가 결국이 형식이되도록 후자의 스타일로 만듭니다.
+
+Q: I found a bug that might have possible security implications or similar.
+   Should I mail the main netdev maintainer off-list?
+Q : 보안상의 관련성이나 그와 유사한 가능성이있는 버그를 발견했습니다.
+    기본 netdev 관리자에게 메일을 보내야합니까?
+
+A: No. The current netdev maintainer has consistently requested that people
+   use the mailing lists and not reach out directly.  If you aren't OK with
+   that, then perhaps consider mailing "security@kernel.org" or reading about
+   http://oss-security.openwall.org/wiki/mailing-lists/distros
+   as possible alternative mechanisms.
+A : 아니요. 현재 netdev 관리자는 지속적으로 사람들에게 메일 링리스트를 사용하고 직접 연락하지 말 것을 요청했습니다. 확인이 안되면, 아마도 "security@kernel.org"로 메일을 보내거나 http://oss-security.openwall.org/wiki/mailing-lists/distros에 대해 읽어보십시오.
+
+Q: What level of testing is expected before I submit my change?
+Q : 변경 사항을 제출하기 전에 어떤 수준의 테스트가 필요합니까?
+
+A: If your changes are against net-next, the expectation is that you
+   have tested by layering your changes on top of net-next.  Ideally you
+   will have done run-time testing specific to your change, but at a
+   minimum, your changes should survive an "allyesconfig" and an
+   "allmodconfig" build without new warnings or failures.
+A : net-next에 대한 변경 사항이있는 경우 net-next 위에 변경 사항을 레이어하여 테스트 한 것입니다. 이상적으로는 변경 사항에 대한 런타임 테스트를 완료해야하지만, 최소한 변경 사항은 "allyesconfig"및 "allmodconfig"빌드에서 새로운 경고 또는 실패없이 유지되어야합니다.
+
+Q: Any other tips to help ensure my net/net-next patch gets OK'd?
+Q : 내 net / net-next 패치를 확인하는 데 도움이되는 다른 팁은 있습니까?
+
+A: Attention to detail.  Re-read your own work as if you were the
+   reviewer.  You can start with using checkpatch.pl, perhaps even
+   with the "--strict" flag.  But do not be mindlessly robotic in
+   doing so.  If your change is a bug-fix, make sure your commit log
+   indicates the end-user visible symptom, the underlying reason as
+   to why it happens, and then if necessary, explain why the fix proposed
+   is the best way to get things done.   Don't mangle whitespace, and as
+   is common, don't mis-indent function arguments that span multiple lines.
+   If it is your first patch, mail it to yourself so you can test apply
+   it to an unpatched tree to confirm infrastructure didn't mangle it.
+A : 세부 사항에주의하십시오. 자신의 작품을 평론가처럼 다시 읽으십시오. "--strict"플래그를 사용해도 checkpatch.pl을 사용하여 시작할 수 있습니다. 그러나 그런 일에 마음 편하게 로봇을 사용하지 마십시오.변경 사항이 버그 수정 인 경우 커밋 로그에 최종 사용자에게 표시되는 증상이 표시되는지, 원인에 대한 근본적인 이유를 확인한 다음 필요한 경우 제안 된 수정이 최선의 방법 일 수있는 이유를 설명하십시오. 공백 문자를 사용하지 마십시오. 일반적으로 여러 줄에 걸쳐있는 함수 인수를 들여 쓰지 마십시오.
+첫 번째 패치 인 경우 직접 패치를 보내서 패치되지 않은 트리에 테스트를 적용하여 인프라 스트럭처가 제대로 작동하는지 확인하십시오.
+
+   Finally, go back and read Documentation/SubmittingPatches to be
+   sure you are not repeating some common mistake documented there.
+   마지막으로 돌아가서 Documentation / SubmittingPatches를 읽어서 문서화 된 실수를 반복하지 않도록하십시오.

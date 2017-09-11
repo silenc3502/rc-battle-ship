@@ -1,0 +1,136 @@
+﻿Samsung LD9040 AMOLED LCD parallel RGB panel with SPI control bus
+
+Required properties:
+  - compatible: "samsung,ld9040"
+  - reg: address of the panel on SPI bus
+  - vdd3-supply: core voltage supply
+  - vci-supply: voltage supply for analog circuits
+  - reset-gpios: a GPIO spec for the reset pin
+  - display-timings: timings for the connected panel according to [1]
+
+The panel must obey rules for SPI slave device specified in document [2].
+
+Optional properties:
+  - power-on-delay: delay after turning regulators on [ms]
+  - reset-delay: delay after reset sequence [ms]
+  - panel-width-mm: physical panel width [mm]
+  - panel-height-mm: physical panel height [mm]
+
+The device node can contain one 'port' child node with one child
+'endpoint' node, according to the bindings defined in [3]. This
+node should describe panel's video bus.
+
+[1]: Documentation/devicetree/bindings/display/display-timing.txt
+[2]: Documentation/devicetree/bindings/spi/spi-bus.txt
+[3]: Documentation/devicetree/bindings/media/video-interfaces.txt
+
+Example:
+
+	lcd@0 {
+		compatible = "samsung,ld9040";
+		reg = <0>;
+		vdd3-supply = <&ldo7_reg>;
+		vci-supply = <&ldo17_reg>;
+		reset-gpios = <&gpy4 5 0>;
+		spi-max-frequency = <1200000>;
+		spi-cpol;
+		spi-cpha;
+		power-on-delay = <10>;
+		reset-delay = <10>;
+		panel-width-mm = <90>;
+		panel-height-mm = <154>;
+
+		display-timings {
+			timing {
+				clock-frequency = <23492370>;
+				hactive = <480>;
+				vactive = <800>;
+				hback-porch = <16>;
+				hfront-porch = <16>;
+				vback-porch = <2>;
+				vfront-porch = <28>;
+				hsync-len = <2>;
+				vsync-len = <1>;
+				hsync-active = <0>;
+				vsync-active = <0>;
+				de-active = <0>;
+				pixelclk-active = <0>;
+			};
+		};
+
+		port {
+			lcd_ep: endpoint {
+				remote-endpoint = <&fimd_dpi_ep>;
+			};
+		};
+	};
+
+/*
+삼성 LD9040 AMOLED LCD 병렬 RGB 패널 (SPI 제어 버스 포함)
+
+필수 속성 :
+  - 호환 : "samsung, ld9040"
+  - reg : SPI 버스의 패널 주소
+  - vdd3 공급 : 코어 전압 공급
+  - vci-supply : 아날로그 회로 용 전압 공급 장치
+  - reset-gpios : 리셋 핀을위한 GPIO 스펙
+  - 디스플레이 타이밍 : [1]에 따라 연결된 패널의 타이밍
+
+패널은 문서 [2]에 명시된 SPI 슬레이브 장치에 대한 규칙을 따라야합니다.
+
+선택적 속성 :
+  - 파워 온 지연 : [ms]에서 레귤레이터를 돌린 후 지연
+  - 리셋 지연 : 리셋 시퀀스 후의 지연 [ms]
+  - panel-width-mm : 실제 패널 너비 [mm]
+  - panel-height-mm : 물리적 패널 높이 [mm]
+
+디바이스 노드는 [3]에서 정의 된 바인딩에 따라 하나의 자식 '엔드 포인트'노드가있는 하나의 '포트'자식 노드를 포함 할 수 있습니다. 
+
+이 노드는 패널의 비디오 버스를 설명해야합니다.
+
+[1]: Documentation/devicetree/bindings/display/display-timing.txt
+[2]: Documentation/devicetree/bindings/spi/spi-bus.txt
+[3]: Documentation/devicetree/bindings/media/video-interfaces.txt
+
+Example:
+
+	lcd@0 {
+		compatible = "samsung,ld9040";
+		reg = <0>;
+		vdd3-supply = <&ldo7_reg>;
+		vci-supply = <&ldo17_reg>;
+		reset-gpios = <&gpy4 5 0>;
+		spi-max-frequency = <1200000>;
+		spi-cpol;
+		spi-cpha;
+		power-on-delay = <10>;
+		reset-delay = <10>;
+		panel-width-mm = <90>;
+		panel-height-mm = <154>;
+
+		display-timings {
+			timing {
+				clock-frequency = <23492370>;
+				hactive = <480>;
+				vactive = <800>;
+				hback-porch = <16>;
+				hfront-porch = <16>;
+				vback-porch = <2>;
+				vfront-porch = <28>;
+				hsync-len = <2>;
+				vsync-len = <1>;
+				hsync-active = <0>;
+				vsync-active = <0>;
+				de-active = <0>;
+				pixelclk-active = <0>;
+			};
+		};
+
+		port {
+			lcd_ep: endpoint {
+				remote-endpoint = <&fimd_dpi_ep>;
+			};
+		};
+	};
+
+*/

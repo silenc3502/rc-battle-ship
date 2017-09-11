@@ -1,0 +1,78 @@
+Qualcomm SuperSpeed DWC3 USB SoC controller
+
+Required properties:
+- compatible:	should contain "qcom,dwc3"
+- clocks:		A list of phandle + clock-specifier pairs for the
+				clocks listed in clock-names
+- clock-names:	Should contain the following:
+  "core"		Master/Core clock, have to be >= 125 MHz for SS
+				operation and >= 60MHz for HS operation
+
+Optional clocks:
+  "iface"		System bus AXI clock.  Not present on all platforms
+  "sleep"		Sleep clock, used when USB3 core goes into low
+				power mode (U3).
+
+필수 속성 :
+- compatible : "qcom, dwc3"을 포함해야합니다.
+- clocks : clock-names에 나열된 clocks에 대한 phandle + clock-specifier 쌍 목록
+- clock-names : 다음을 포함해야합니다 :
+      "코어"    마스터 / 코어 클록은 SS 동작을 위해서는 125MHz 이상이어야하고 HS 동작을 위해서는 60MHz 이상이어야한다.
+
+선택 사양 클럭 :
+   "iface"시스템 버스 AXI 클록. 모든 플랫폼에 존재하지 않음
+   "sleep"Sleep clock, USB3 코어가 저전력 모드 (U3)로 전환 될 때 사용됩니다.
+
+Required child node:
+A child node must exist to represent the core DWC3 IP block. The name of
+the node is not important. The content of the node is defined in dwc3.txt.
+필수 자식 노드 :
+핵심 DWC3 IP 블록을 나타내는 하위 노드가 있어야합니다. 노드의 이름은 중요하지 않습니다. 노드의 내용은 dwc3.txt에 정의됩니다.
+
+Phy documentation is provided in the following places:
+Phy 문서는 다음 장소에서 제공됩니다.
+Documentation/devicetree/bindings/phy/qcom,dwc3-usb-phy.txt
+
+Example device nodes:
+
+		hs_phy: phy@100f8800 {
+			compatible = "qcom,dwc3-hs-usb-phy";
+			reg = <0x100f8800 0x30>;
+			clocks = <&gcc USB30_0_UTMI_CLK>;
+			clock-names = "ref";
+			#phy-cells = <0>;
+
+			status = "ok";
+		};
+
+		ss_phy: phy@100f8830 {
+			compatible = "qcom,dwc3-ss-usb-phy";
+			reg = <0x100f8830 0x30>;
+			clocks = <&gcc USB30_0_MASTER_CLK>;
+			clock-names = "ref";
+			#phy-cells = <0>;
+
+			status = "ok";
+		};
+
+		usb3_0: usb30@0 {
+			compatible = "qcom,dwc3";
+			#address-cells = <1>;
+			#size-cells = <1>;
+			clocks = <&gcc USB30_0_MASTER_CLK>;
+			clock-names = "core";
+
+			ranges;
+
+			status = "ok";
+
+			dwc3@10000000 {
+				compatible = "snps,dwc3";
+				reg = <0x10000000 0xcd00>;
+				interrupts = <0 205 0x4>;
+				phys = <&hs_phy>, <&ss_phy>;
+				phy-names = "usb2-phy", "usb3-phy";
+				tx-fifo-resize;
+				dr_mode = "host";
+			};
+		};

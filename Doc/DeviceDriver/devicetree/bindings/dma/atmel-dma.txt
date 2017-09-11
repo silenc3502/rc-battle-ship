@@ -1,0 +1,87 @@
+﻿* Atmel Direct Memory Access Controller (DMA)
+
+Required properties:
+- compatible: Should be "atmel,<chip>-dma".
+- reg: Should contain DMA registers location and length.
+- interrupts: Should contain DMA interrupt.
+- #dma-cells: Must be <2>, used to represent the number of integer cells in
+the dmas property of client devices.
+
+Example:
+
+dma0: dma@ffffec00 {
+	compatible = "atmel,at91sam9g45-dma";
+	reg = <0xffffec00 0x200>;
+	interrupts = <21>;
+	#dma-cells = <2>;
+};
+
+DMA clients connected to the Atmel DMA controller must use the format
+described in the dma.txt file, using a three-cell specifier for each channel:
+a phandle plus two integer cells.
+The three cells in order are:
+
+1. A phandle pointing to the DMA controller.
+2. The memory interface (16 most significant bits), the peripheral interface
+(16 less significant bits).
+3. Parameters for the at91 DMA configuration register which are device
+dependent:
+  - bit 7-0: peripheral identifier for the hardware handshaking interface. The
+  identifier can be different for tx and rx.
+  - bit 11-8: FIFO configuration. 0 for half FIFO, 1 for ALAP, 2 for ASAP.
+
+Example:
+
+i2c0@i2c@f8010000 {
+	compatible = "atmel,at91sam9x5-i2c";
+	reg = <0xf8010000 0x100>;
+	interrupts = <9 4 6>;
+	dmas = <&dma0 1 7>,
+	       <&dma0 1 8>;
+	dma-names = "tx", "rx";
+};
+
+/*
+Atmel 직접 메모리 액세스 컨트롤러 (DMA)
+
+필수 속성 :
+- 호환 : "atmel, <chip> -dma"여야합니다.
+- reg : DMA 레지스터 위치와 길이를 포함해야합니다.
+- interrupts : DMA 인터럽트를 포함해야합니다.
+- # dma-cells : <2> 여야하며 클라이언트 장치의 dmas 등록 정보에있는 정수 셀 수를 나타냅니다.
+
+
+Example:
+
+dma0: dma@ffffec00 {
+	compatible = "atmel,at91sam9g45-dma";
+	reg = <0xffffec00 0x200>;
+	interrupts = <21>;
+	#dma-cells = <2>;
+};
+
+Atmel DMA 컨트롤러에 연결된 DMA 클라이언트는 각 채널에 3 셀 지정자를 사용하여 dma.txt 파일에 설명 된 형식을 사용해야합니다.
+phandle과 2 개의 정수 셀.
+세 개의 셀은 순서대로 있습니다.
+
+1. DMA 컨트롤러를 가리키는 phandle.
+2. 메모리 인터페이스 (16 개의 최상위 비트), 주변 장치 인터페이스
+(16 개의 하위 비트).
+3. 장치 인 at91 DMA 구성 레지스터의 매개 변수
+매달린:
+  - 비트 7-0 : 하드웨어 핸드 쉐이킹 인터페이스의 주변 장치 식별자. 식별자는 tx와 rx에서 다를 수 있습니다.
+  - 비트 11-8 : FIFO 구성. 절반 FIFO의 경우 0, ALAP의 경우 1, ASAP의 경우 2.
+
+Example:
+
+i2c0@i2c@f8010000 {
+	compatible = "atmel,at91sam9x5-i2c";
+	reg = <0xf8010000 0x100>;
+	interrupts = <9 4 6>;
+	dmas = <&dma0 1 7>,
+	       <&dma0 1 8>;
+	dma-names = "tx", "rx";
+};
+
+
+*/

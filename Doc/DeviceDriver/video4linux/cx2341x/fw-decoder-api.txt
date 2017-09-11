@@ -1,0 +1,321 @@
+Decoder firmware API description
+디코더 펌웨어 API 설명
+================================
+ 
+Note: this API is part of the decoder firmware, so it's cx23415 only.
+        이 API는 디코더 펌웨어의 일부이므로 cx23415에만 해당됩니다.
+ 
+-------------------------------------------------------------------------------
+ 
+Name 	CX2341X_DEC_PING_FW
+Enum 	0/0x00
+Description
+	This API call does nothing. It may be used to check if the firmware is responding.
+	이 API 호출은 아무 작업도 수행하지 않습니다. 펌웨어가 응답하는지 확인하는 데 사용할 수 있습니다.
+ 
+-------------------------------------------------------------------------------
+ 
+Name 	CX2341X_DEC_START_PLAYBACK
+Enum 	1/0x01
+Description
+	Begin or resume playback.
+Param[0]
+	0 based frame number in GOP to begin playback from.
+Param[1]
+	Specifies the number of muted audio frames to play before normal audio resumes. (This is not implemented in the firmware, leave at 0)
+일반 오디오가 다시 시작되기 전에 재생할 음소거 된 오디오 프레임 수를 지정합니다. (이것은 펌웨어에 구현되지 않았으므로 0으로 두십시오)
+ 
+-------------------------------------------------------------------------------
+ 
+Name 	CX2341X_DEC_STOP_PLAYBACK
+Enum 	2/0x02
+Description
+	Ends playback and clears all decoder buffers. If PTS is not zero, playback stops at specified PTS.
+	재생을 종료하고 모든 디코더 버퍼를 지웁니다. PTS가 0이 아니면 지정된 PTS에서 재생이 중지됩니다.
+Param[0]
+	Display 0=last frame, 1=black
+	Note: this takes effect immediately, so if you want to wait for a PTS, then use '0', otherwise the screen goes to black at once.
+	참고 :이 설정은 즉시 적용되므로 PTS를 기다리고 싶다면 '0'을 사용하십시오. 그렇지 않으면 화면이 한 번에 검정색으로 바뀝니다.
+	You can call this later (even if there is no playback) with a 1 value to set the screen to black.
+	화면을 검은색으로 설정하려면 1 값을 사용하여 나중에 재생할 수는 없지만 이 값을 호출 할 수 있습니다.
+Param[1]
+	PTS low
+Param[2]
+	PTS high
+ 
+-------------------------------------------------------------------------------
+ 
+Name 	CX2341X_DEC_SET_PLAYBACK_SPEED
+Enum 	3/0x03
+Description
+	Playback stream at speed other than normal. There are two modes of operation:
+	    Smooth: host transfers entire stream and firmware drops unused frames.
+	    Coarse: host drops frames based on indexing as required to achieve desired speed.
+	정상 속도가 아닌 속도로 재생 스트림을 재생합니다. 두 가지 작동 모드가 있습니다.
+	    부드럽게 : 호스트 전송 전체 스트림 및 펌웨어 사용하지 않는 프레임을 삭제합니다.
+	    Coarse : 호스트는 원하는 속도를 달성하는 데 필요한 인덱싱을 기반으로 프레임을 삭제합니다.
+Param[0]
+	Bitmap:
+	    0:7  0 normal
+		 1 fast only "1.5 times"
+		 n nX fast, 1/nX slow
+	    30   Framedrop:
+		     '0' during 1.5 times play, every other B frame is dropped
+		         1.5 배 재생 동안, 모든 다른 B 프레임은 드롭된다
+		     '1' during 1.5 times play, stream is unchanged (bitrate must not exceed 8mbps)
+		         1.5 배 재생시 스트림이 변경되지 않음 (비트 전송률이 8mbps를 초과하지 않아야 함)
+	    31   Speed:
+		     '0' slow
+		     '1' fast
+	Note: n is limited to 2. Anything higher does not result in faster playback. Instead the host should start dropping frames.
+	참고 : n은 2로 제한됩니다. 더 높은 값을 지정해도 더 빨리 재생되지는 않습니다. 대신 호스트는 프레임을 삭제하기 시작해야합니다.
+Param[1]
+	Direction: 0=forward, 1=reverse
+	Note: to make reverse playback work you have to write full GOPs in reverse order.
+	참고 : 역방향 재생을하려면 역순으로 전체 GOP를 작성해야합니다.
+Param[2]
+	Picture mask:
+	    1=I frames
+	    3=I, P frames
+	    7=I, P, B frames
+Param[3]
+	B frames per GOP (for reverse play only)
+	GOP 당 B 프레임 (역방향 재생 전용)
+ 
+	Note: for reverse playback the Picture Mask should be set to I or I, P.
+	참고 : 역방향 재생의 경우 그림 마스크를 I 또는 I, P로 설정해야합니다.
+ 
+	Adding B frames to the mask will result in corrupt video. This field has to be set to the correct value in order to keep the timing correct.
+	B 프레임을 마스크에 추가하면 비디오가 손상됩니다. 타이밍을 올바르게 유지하려면이 필드를 올바른 값으로 설정해야합니다.
+ 
+Param[4]
+	Mute audio: 0=disable, 1=enable
+Param[5]
+	Display 0=frame, 1=field
+Param[6]
+	Specifies the number of muted audio frames to play before normal audio resumes. (Not implemented in the firmware, leave at 0)
+	일반 오디오가 다시 시작되기 전에 재생할 음소거 된 오디오 프레임 수를 지정합니다. (펌웨어에 구현되지 않았으면 0으로 두십시오)
+ 
+-------------------------------------------------------------------------------
+ 
+Name 	CX2341X_DEC_STEP_VIDEO
+Enum 	5/0x05
+Description
+	Each call to this API steps the playback to the next unit defined below in the current playback direction.
+	이 API를 호출 할 때마다 현재 재생 방향에서 아래에 정의 된 다음 단위로 재생이 수행됩니다.
+Param[0]
+	0=frame, 1=top field, 2=bottom field
+ 
+-------------------------------------------------------------------------------
+ 
+Name 	CX2341X_DEC_SET_DMA_BLOCK_SIZE
+Enum 	8/0x08
+Description
+	Set DMA transfer block size. Counterpart to API 0xC9
+Param[0]
+	DMA transfer block size in bytes. A different size may be specified when issuing the DMA transfer command.
+	DMA 전송 블록 크기 (바이트). DMA 전송 명령을 발행 할 때 다른 크기가 지정 될 수 있습니다.
+ 
+-------------------------------------------------------------------------------
+ 
+Name 	CX2341X_DEC_GET_XFER_INFO
+Enum 	9/0x09
+Description
+	This API call may be used to detect an end of stream condition.
+	이 API 호출은 스트림 상태의 끝을 감지하는 데 사용될 수 있습니다.
+Result[0]
+	Stream type
+Result[1]
+	Address offset
+Result[2]
+	Maximum bytes to transfer
+Result[3]
+	Buffer fullness
+ 
+-------------------------------------------------------------------------------
+ 
+Name 	CX2341X_DEC_GET_DMA_STATUS
+Enum 	10/0x0A
+Description
+	Status of the last DMA transfer
+Result[0]
+	Bit 1 set means transfer complete
+	Bit 2 set means DMA error
+	Bit 3 set means linked list error
+Result[1]
+	DMA type: 0=MPEG, 1=OSD, 2=YUV
+ 
+-------------------------------------------------------------------------------
+ 
+Name 	CX2341X_DEC_SCHED_DMA_FROM_HOST
+Enum 	11/0x0B
+Description
+	Setup DMA from host operation. Counterpart to API 0xCC
+	호스트 작동에서 DMA를 설정하십시오. API 0xCC에 해당합니다.
+Param[0]
+	Memory address of link list
+Param[1]
+	Total # of bytes to transfer
+Param[2]
+	DMA type (0=MPEG, 1=OSD, 2=YUV)
+ 
+-------------------------------------------------------------------------------
+ 
+Name 	CX2341X_DEC_PAUSE_PLAYBACK
+Enum 	13/0x0D
+Description
+	Freeze playback immediately. In this mode, when internal buffers are full, no more data will be accepted and data request IRQs will be masked.
+	즉시 재생을 정지하십시오. 이 모드에서 내부 버퍼가 꽉 차면 더 이상 데이터가 수용되지 않고 데이터 요청 IRQ가 마스크됩니다.
+ 
+Param[0]
+	Display: 0=last frame, 1=black
+ 
+-------------------------------------------------------------------------------
+ 
+Name 	CX2341X_DEC_HALT_FW
+Enum 	14/0x0E
+Description
+	The firmware is halted and no further API calls are serviced until the firmware is uploaded again.
+	펌웨어가 다시 업로드 될 때까지 펌웨어가 중지되고 더 이상 API 호출이 처리되지 않습니다.
+ 
+-------------------------------------------------------------------------------
+ 
+Name 	CX2341X_DEC_SET_STANDARD
+Enum 	16/0x10
+Description
+	Selects display standard
+Param[0]
+	0=NTSC, 1=PAL
+ 
+-------------------------------------------------------------------------------
+ 
+Name 	CX2341X_DEC_GET_VERSION
+Enum 	17/0x11
+Description
+	Returns decoder firmware version information
+Result[0]
+	Version bitmask:
+	    Bits  0:15 build
+	    Bits 16:23 minor
+	    Bits 24:31 major
+ 
+-------------------------------------------------------------------------------
+ 
+Name 	CX2341X_DEC_SET_STREAM_INPUT
+Enum 	20/0x14
+Description
+	Select decoder stream input port
+Param[0]
+	0=memory (default), 1=streaming
+ 
+-------------------------------------------------------------------------------
+ 
+Name 	CX2341X_DEC_GET_TIMING_INFO
+Enum 	21/0x15
+Description
+	Returns timing information from start of playback
+	재생 시작시 타이밍 정보를 반환합니다.
+Result[0]
+	Frame count by decode order
+	디코드 순서에 따른 프레임 수
+Result[1]
+	Video PTS bits 0:31 by display order
+	디스플레이 순서에 의한 비디오 PTS 비트 0:31
+Result[2]
+	Video PTS bit 32 by display order
+	디스플레이 순서에 의한 비디오 PTS 비트 32
+Result[3]
+	SCR bits 0:31 by display order
+	디스플레이 순서에 의한 SCR 비트 0:31
+Result[4]
+	SCR bit 32 by display order
+	디스플레이 순서에 의한 SCR 비트 32
+ 
+-------------------------------------------------------------------------------
+ 
+Name 	CX2341X_DEC_SET_AUDIO_MODE
+Enum 	22/0x16
+Description
+	Select audio mode
+Param[0]
+	Dual mono mode action
+	    0=Stereo, 1=Left, 2=Right, 3=Mono, 4=Swap, -1=Unchanged
+Param[1]
+	Stereo mode action:
+	    0=Stereo, 1=Left, 2=Right, 3=Mono, 4=Swap, -1=Unchanged
+ 
+-------------------------------------------------------------------------------
+ 
+Name 	CX2341X_DEC_SET_EVENT_NOTIFICATION
+Enum 	23/0x17
+Description
+	Setup firmware to notify the host about a particular event.
+	Counterpart to API 0xD5
+	특정 이벤트에 대해 호스트에 알리기 위해 펌웨어를 설정하십시오.
+	API 0xD5에 대한 대응
+Param[0]
+	Event: 0=Audio mode change between mono, (joint) stereo and dual channel.
+		모노 와 (joint)스테레오 및 듀얼 채널 간, 오디오 모드 변경.
+	Event: 3=Decoder started
+		디코더 시작됨
+	Event: 4=Unknown: goes off 10-15 times per second while decoding.
+		알 수 없음 : 디코딩중에 초당 10-15 회 간다.
+	Event: 5=Some sync event: goes off once per frame.
+		일부 동기화 이벤트 : 프레임 당 한 번씩 해제됩니다.
+Param[1]
+	Notification 0=disabled, 1=enabled
+Param[2]
+	Interrupt bit
+Param[3]
+	Mailbox slot, -1 if no mailbox required.
+ 
+-------------------------------------------------------------------------------
+ 
+Name 	CX2341X_DEC_SET_DISPLAY_BUFFERS
+Enum 	24/0x18
+Description
+	Number of display buffers. To decode all frames in reverse playback you must use nine buffers.
+	디스플레이 버퍼의 수. 역방향 재생에서 모든 프레임을 디코딩하려면 9 개의 버퍼를 사용해야합니다.
+Param[0]
+	0=six buffers, 1=nine buffers
+ 
+-------------------------------------------------------------------------------
+ 
+Name 	CX2341X_DEC_EXTRACT_VBI
+Enum 	25/0x19
+Description
+	Extracts VBI data
+Param[0]
+	0=extract from extension & user data, 1=extract from private packets
+ 	   확장 및 사용자 데이터에서 추출,      1=개인 패킷에서 추출
+Result[0]
+	VBI table location
+Result[1]
+	VBI table size
+ 
+-------------------------------------------------------------------------------
+ 
+Name 	CX2341X_DEC_SET_DECODER_SOURCE
+Enum 	26/0x1A
+Description
+	Selects decoder source. Ensure that the parameters passed to this	API match the encoder settings.
+	디코더 소스를 선택합니다. 이 API에 전달 된 매개 변수가 인코더 설정과 일치하는지 확인하십시오.
+Param[0]
+	Mode: 0=MPEG from host, 1=YUV from encoder, 2=YUV from host
+Param[1]
+	YUV picture width
+Param[2]
+	YUV picture height
+Param[3]
+	Bitmap: see Param[0] of API 0xBD
+ 
+-------------------------------------------------------------------------------
+ 
+Name 	CX2341X_DEC_SET_PREBUFFERING
+Enum 	30/0x1E
+Description
+	Decoder prebuffering, when enabled up to 128KB are buffered for	streams <8mpbs or 640KB for streams >8mbps
+	디코더 프리 버퍼링 (최대 128KB 사용시 스트림은 8MB 미만) 또는 스트림용 버퍼가 8MB보다 큽니다.
+Param[0]
+	0=off, 1=on
+

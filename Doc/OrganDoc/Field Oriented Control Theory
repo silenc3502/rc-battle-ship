@@ -1,0 +1,35 @@
+Field Oriented Control Theory
+
+DC 모터에서, 흐름(current)에서 생산되어지는 유동(flux) 과 torque 는 개별적으로 컨트롤 되며, 직교한다. 
+흐름의 의해 개발되어진 magneto motive forces(기자력)은 직교하여 고정된다.
+개발된 토크는 해당 등식에 의 주어진다. 
+Te = Ka (If) Ia
+(If) - flux
+Ia - armature current(전기자 코일)
+자속은 오직 field winding current 에 의존한다.. 
+이 이유로 인해 DC 기계는 토크와 자속의 제어에 독립적이며 decoupled(분리)된다고 불려진다.
+AC 기계는 stator(스테이터, 고정자) 와 rotor(회전자) fileds 는 서로 직교하지 않는다.
+컨트롤 되는 흐름은 오직 stator(고정자)뿐이다. 
+Field Oriented Controle 은 
+
+Advantages of FOC:
+
+• 복잡한 변화 그리고 linear system 안에 AC 모델 과 비슷한 coupled
+• DC모터의 비슷한, 유동과 토그의 독립적 제어
+• 빠르고 유동적인 반응 그리고 good transident and steady state performance
+
+• High torque and low current at startup
+• High Efficiency
+• Wide speed range through field weakening
+
+FOC 기술은  three reference frames 관련이 있고 하나에서 다른 프레임으로 변환이 필요 하다.
+1. Stator reference frame (a,b,c) 는 coplanar이며 120도의 동일 평면 상에 있다. 
+	(고정 기준 프레임)
+2. An orthogonal reference frame (ab) 는 120도 대신 90도의 두개의 축 사이의 stator reference frame을 동일한 평명에 놓은 것이다.
+	(직교 기준 프레임)
+3. Rotor reference frame(dp) 은 d 축이 N 과 S 극을 따르거나, 로터(rotor)의 자속 벡터를 따르고 q 축이 d 축과 90도에 있는 프레임
+	(회전 기준 프레임)
+
+Transformations
+
+FOC에서 lq와 ld components(부품?)은 rotating reference frame 을 기준으로 한다. 

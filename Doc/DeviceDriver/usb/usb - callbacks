@@ -1,0 +1,236 @@
+What callbacks will usbcore do?
+===============================
+
+Usbcore will call into a driver through callbacks defined in the driver
+structure and through the completion handler of URBs a driver submits.
+Only the former are in the scope of this document. These two kinds of
+callbacks are completely independent of each other. Information on the
+completion callback can be found in Documentation/usb/URB.txt.
+
+Usbcore는 드라이버 구조체에 정의된 콜백과 URB의 완료 핸들러를 통해 드라이버를 호출하여 드라이버가 제출합니다.
+전자(구조체에 정의된 콜백)만이 이 문서의 범위에 속합니다.
+이 두 종류의 콜백은 서로 완전히 독립적입니다. (구조체에 정의된 콜백과 완료 핸들러로 인한 콜백이 있는가보다)
+완료 콜백에 대한 정보는 Documentation/usb/URB.txt에 있습니다.
+(URB 파일에 나오는 완료 핸들러가 완료 후에 다시 보내야 하는 콜백을 이야기하는 거구나)
+
+The callbacks defined in the driver structure are:
+드라이버 구조에 정의된 콜백은 다음과 같습니다:
+(구조체 안에 이런 식으로 코드가 들어있는건가? 밑에 나온다)
+
+1. Hotplugging callbacks:
+
+ * @probe: Called to see if the driver is willing to manage a particula
+ *	interface on a device.
+
+ * @probe: 드라이버가 장치의 특정 인터페이스를 관리할 의향이 있는지 확인하기 위해 호출됩니다.
+
+ * @disconnect: Called when the interface is no longer accessible, usually
+ *	because its device has been (or is being) disconnected or the
+ *	driver module is being unloaded.
+
+ * @disconnect: 인터페이스가 더 이상 액세스 할 수 없을 때 (일반적으로 장치 연결이 끊어졌거나 연결이 끊기거나 
+ *	드라이버 모듈이 언로드되고 있기 때문에) 호출됩니다.
+
+2. Odd backdoor through usbfs:
+
+ * @ioctl: Used for drivers that want to talk to userspace through
+ *	the "usbfs" filesystem.  This lets devices provide ways to
+ *	expose information to user space regardless of where they
+ *	do (or don't) show up otherwise in the filesystem.
+
+ * @ioctl: "usbfs"파일 시스템을 통해 사용자 공간과 대화하고 싶은 드라이버에 사용됩니다. 
+ *	이를 통해 장치는 파일 시스템에서 어디에 나타나는지 (또는 나타나지 않는지)에 관계없이 
+ *	사용자 공간에 정보를 노출하는 방법을 제공할 수 있습니다. (장치에 대한 정보)
+
+3. Power management (PM) callbacks:
+
+ * @suspend: Called when the device is going to be suspended.
+
+ * @suspend: 장치가 일시 중단될 때 호출됩니다.
+
+ * @resume: Called when the device is being resumed.
+
+ * @resume: 장치가 다시 시작될 때 호출됩니다.
+
+ * @reset_resume: Called when the suspended device has been reset instead
+ *	of being resumed.
+
+ * @reset_resume: 일시 중단된 장치가 다시 시작(resume)되는 대신 reset 된 경우 호출됩니다.
+
+4. Device level operations:
+
+ * @pre_reset: Called when the device is about to be reset.
+
+ * @pre_reset: 장치가 reset 될 때 호출됩니다.
+
+ * @post_reset: Called after the device has been reset
+
+ * @post_reset: 기기가 reset 된 후에 호출됩니다.
+
+The ioctl interface (2) should be used only if you have a very good
+reason. Sysfs is preferred these days. The PM callbacks are covered
+separately in Documentation/usb/power-management.txt.
+
+아주 좋은 이유가있는 경우에만 ioctl 인터페이스 (2)를 사용해야합니다. 요즘 Sysfs가 선호됩니다.
+PM(파워매니저) 콜백은 Documentation/usb/power-management.txt에서 별도로 다루어집니다.
+
+
+Calling conventions
+===================
+
+All callbacks are mutually exclusive. There's no need for locking
+against other USB callbacks. All callbacks are called from a task
+context. You may sleep. However, it is important that all sleeps have a
+small fixed upper limit in time. In particular you must not call out to
+user space and await results.
+
+모든 콜백은 상호 배타적입니다.(독립적이다) 다른 USB 콜백에 대해 잠글 필요가 없습니다. (서로 독립적으로 작동한다)
+모든 콜백은 작업 컨텍스트에서 호출됩니다. sleep모드를 사용할 수 있다.
+그러나, 모든 sleep모드에는 고정된 작은 상한 시간이 있어야합니다. (얼마동안만 sleep모드를 할 수 있다?)
+특히 사용자 공간을 호출하여 결과를 기다리지 않아야합니다.
+
+
+Hotplugging callbacks (위에서 나왔던 것이 코드로 나온다)
+=====================
+
+These callbacks are intended to associate and disassociate a driver with
+an interface. A driver's bond to an interface is exclusive.
+
+이러한 콜백은 드라이버를 인터페이스와 연결 및 연결 해제하기 위한 것입니다.
+인터페이스에 대한 드라이브의 연결은 독점적입니다. 
+(드라이브 하나만 연결 가능하다는 뜻인가? 한 드라이브가 인터페이스와 연결되면 그 인터페이스는 그 드라이버만?)
+
+
+The probe() callback 
+--------------------
+드라이버가 장치의 특정 인터페이스를 관리할 의향이 있는지 확인하기 위해 호출됩니다.
+
+int (*probe) (struct usb_interface *intf,
+		const struct usb_device_id *id);
+
+Accept or decline an interface. If you accept the device return 0,
+otherwise -ENODEV or -ENXIO. Other error codes should be used only if a
+genuine error occurred during initialisation which prevented a driver
+from accepting a device that would else have been accepted.
+You are strongly encouraged to use usbcore's facility,
+usb_set_intfdata(), to associate a data structure with an interface, so
+that you know which internal state and identity you associate with a
+particular interface. The device will not be suspended and you may do IO
+to the interface you are called for and endpoint 0 of the device. Device
+initialisation that doesn't take too long is a good idea here.
+
+인터페이스를 수락하거나 거부하십시오. (콜백은 드라이버를 인터페이스와 연결, 해제하기 위해 사용)
+장치를 수락하면 0을 반환하고, 그렇지 않으면 -ENODEV 또는 -ENXIO를 반환합니다. (연결 상태를 확인)
+다른 오류 코드는 초기화 도중 오류가 발생하여 드라이버가 수락 한 장치를 수락하지 못하는 경우에만 사용해야합니다.
+usbcore의 기능, usb_set_intfdata()를 사용하여 데이터 구조를 인터페이스와 연결하는 것이 좋다. 
+특정 인터페이스와 연관된 내부 상태와 identity를 알 수 있도록 하기 위해서.
+장치가 일시 중단되지 않고 호출된 인터페이스와 장치의 endpoint 0에 대해 IO(입출력)를 수행 할 수 있습니다. 
+너무 오래 걸리지 않는 장치 초기화는 여기서 하는 것이 좋다.
+
+
+The disconnect() callback
+-------------------------
+인터페이스가 더 이상 액세스 할 수 없을 때 (일반적으로 장치 연결이 끊어졌거나 연결이 끊기거나 
+드라이버 모듈이 언로드 되고 있기 때문에) 호출됩니다.
+
+void (*disconnect) (struct usb_interface *intf);
+
+This callback is a signal to break any connection with an interface.
+You are not allowed any IO to a device after returning from this
+callback. You also may not do any other operation that may interfere
+with another driver bound the interface, eg. a power management
+operation.
+If you are called due to a physical disconnection, all your URBs will be
+killed by usbcore. Note that in this case disconnect will be called some
+time after the physical disconnection. Thus your driver must be prepared
+to deal with failing IO even prior to the callback.
+
+이 콜백은 인터페이스와의 연결을 끊는 신호입니다.
+이 콜백에서 돌아온 후에는 장치에 IO가 허용되지 않습니다. (이미 연결이 끊어졌다)
+인터페이스에 연결된 다른 드라이버를 방해 할 수 있는 다른 작업을 수행하지 않을 수도 있습니다. 
+(예 : 전원 관리 작업) 
+(방해할 수 있는 작업을 끝낼때도 이 함수를 사용?, 이 함수를 사용하면서 방해할 만한 작업은 수행하지 않는다?
+앞에 것이 맞은 거 같은데..)
+물리적 연결 해제로 인해 호출을 받으면 모든 URB가 usbcore에 의해 사망합니다.
+(실제로 장치 연결을 해제하면 usbcore가 모든 URB를 죽인다)
+이 경우 disconnect는 물리적 연결 해제 후 얼마간 호출됩니다. (연결해제가 호출된다, 끊어진 후 얼마간)
+따라서 드라이버는 콜백 이전에 실패한 IO(입출력)를 처리할 준비가되어 있어야합니다.
+(끊기기 이전에 하고 있던 입출력들을 정리해야 한다)
+
+
+Device level callbacks
+======================
+
+pre_reset
+---------
+장치가 reset 될 때 호출됩니다.
+
+int (*pre_reset)(struct usb_interface *intf);
+
+A driver or user space is triggering a reset on the device which
+contains the interface passed as an argument. Cease IO, wait for all
+outstanding URBs to complete, and save any device state you need to
+restore.  No more URBs may be submitted until the post_reset method
+is called.
+
+드라이버 또는 사용자(user space)가 인수로 전달된 인터페이스가 포함된 장치에서 reset을 트리거합니다.
+IO를 중단하고 모든 미해결 된 URB가 완료 될 때까지 기다렸다가 복원해야 하는 장치 상태를 저장합니다.
+(reset후 장치가 되어야 하는 상태)
+post_reset 메소드(함수)가 호출 될 때까지 더 이상 URB를 제출할 수 없습니다.
+(post_reset 메소드: 기기가 reset 된 후에 호출되는 함수)
+
+If you need to allocate memory here, use GFP_NOIO or GFP_ATOMIC, if you
+are in atomic context.
+
+여기에 메모리를 할당해야한다면, 원자적(atomic) 맥락에서라면 GFP_NOIO 또는 GFP_ATOMIC을 사용하십시오.
+
+
+post_reset
+----------
+기기가 reset 된 후에 호출됩니다.
+
+int (*post_reset)(struct usb_interface *intf);
+
+The reset has completed.  Restore any saved device state and begin
+using the device again.
+
+reset이 완료되었습니다. 저장된 장치 상태를 복원하고 장치를 다시 사용하십시오.
+(pre_reset 메소드를 사용했을 때 저장한 장치 상태로 복원)
+
+If you need to allocate memory here, use GFP_NOIO or GFP_ATOMIC, if you
+are in atomic context.
+
+여기에 메모리를 할당해야한다면, 원자적(atomic) 맥락에서라면 GFP_NOIO 또는 GFP_ATOMIC을 사용하십시오.
+
+Call sequences
+==============
+
+No callbacks other than probe will be invoked for an interface
+that isn't bound to your driver.
+
+드라이버에 바인딩되지(연결되지) 않은 인터페이스에 대해 probe가 아닌 콜백이 호출되지 않습니다.
+(장치와 인터페이스를 연결하는 probe 함수말고 다른 함수는 호출되지 않는다)
+
+Probe will never be called for an interface bound to a driver.
+Hence following a successful probe, disconnect will be called
+before there is another probe for the same interface.
+
+probe는 드라이버에 바인드 된(연결된) 인터페이스에 대해 절대로 호출되지 않습니다.
+따라서 성공적인 probe에 이어 동일한 인터페이스에 대한 다른 probe가 있기 전에 연결 해제가 호출됩니다.
+(다른 장치가 연결되려고 한다면 반드시 연결 해제가 호출된 이후에 연결되어야 한다)
+
+Once your driver is bound to an interface, disconnect can be
+called at any time except in between pre_reset and post_reset.
+pre_reset is always followed by post_reset, even if the reset
+failed or the device has been unplugged.
+
+드라이버가 인터페이스에 바인드되면(연결되면) pre_reset과 post_reset 사이를 제외하고 
+언제든지 disconnect를 호출 할 수 있습니다. (연결해제할 때는 disconnect 호출)
+pre_reset은 reset이 실패하거나 장치가 분리 된 경우에도 항상 post_reset이옵니다.
+(reset이 정상 종료되도 비정상 종료되도 post_reset이 호출된다)
+
+suspend is always followed by one of: resume, reset_resume, or
+disconnect.
+
+suspend에는 항상 resume, reset_resume 또는 disconnect 중 하나가 옵니다.
+(suspend: 장치가 일시 중단될 때 호출됩니다.)

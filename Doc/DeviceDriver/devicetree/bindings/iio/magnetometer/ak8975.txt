@@ -1,0 +1,41 @@
+* AsahiKASEI AK8975 magnetometer sensor
+
+Required properties:
+
+  - compatible : should be "asahi-kasei,ak8975"
+  - reg : the I2C address of the magnetometer
+
+Optional properties:
+
+  - gpios : should be device tree identifier of the magnetometer DRDY pin
+
+Example:
+
+ak8975@0c {
+        compatible = "asahi-kasei,ak8975";
+        reg = <0x0c>;
+        gpios = <&gpj0 7 0>;
+};
+
+/*
+
+* 아사히 카세이 AK8975 자력계 센서
+
+필수 속성 :
+
+   - 호환 가능 : "asahi-kasei, ak8975"여야합니다.
+   - reg : 자력계의 I2C 주소
+
+선택 속성 :
+
+   - gpios : 자력계 DRDY 핀의 장치 트리 식별자 여야합니다.
+
+Example:
+
+ak8975@0c {
+        compatible = "asahi-kasei,ak8975";
+        reg = <0x0c>;
+        gpios = <&gpj0 7 0>;
+};
+
+*/

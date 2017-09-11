@@ -1,0 +1,11 @@
+uio-module-drv DKMS module for Debian
+-----------------
+
+Please see ./README for a description of the uio-module-drv software.
+
+The Debian uio-module-drv source package provides:
+
+ 1) uio-module-drv Package summary
+ 2) uio-module-drv-kernel-source, which provides the source for the kernel modules
+
+ -- TI Keystone PPA  <ti-keystone-ppa@list.ti.com>  Wed, 11 Dec 2013 10:36:15 -0500

@@ -1,0 +1,72 @@
+TPO TD043MTEA1 Panel
+====================
+
+Required properties:
+- compatible: "tpo,td043mtea1"
+- reset-gpios: panel reset gpio
+
+Optional properties:
+- label: a symbolic name for the panel
+
+Required nodes:
+- Video port for DPI input
+
+Example
+-------
+
+lcd-panel: panel@0 {
+	compatible = "tpo,td043mtea1";
+	reg = <0>;
+	spi-max-frequency = <100000>;
+	spi-cpol;
+	spi-cpha;
+
+	label = "lcd";
+
+	reset-gpios = <&gpio7 7 0>;
+
+	port {
+		lcd_in: endpoint {
+			remote-endpoint = <&dpi_out>;
+		};
+	};
+};
+
+/*
+TPO TD043MTEA1 패널
+================
+
+필수 속성 :
+- 호환 : "tpo, td043mtea1"
+- reset-gpios : 패널 재설정 gpio
+
+선택적 속성 :
+- label : 패널의 상징적 인 이름
+
+필수 노드 :
+- DPI 입력 용 비디오 포트
+
+
+Example
+-------
+
+lcd-panel: panel@0 {
+	compatible = "tpo,td043mtea1";
+	reg = <0>;
+	spi-max-frequency = <100000>;
+	spi-cpol;
+	spi-cpha;
+
+	label = "lcd";
+
+	reset-gpios = <&gpio7 7 0>;
+
+	port {
+		lcd_in: endpoint {
+			remote-endpoint = <&dpi_out>;
+		};
+	};
+};
+
+
+*/

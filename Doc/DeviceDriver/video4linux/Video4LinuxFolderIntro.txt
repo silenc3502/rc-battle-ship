@@ -1,0 +1,145 @@
+Video4Linux 폴더는 Linux에서 Video를 사용하기 위한 device driver와 API 집합체이다.
+
+짧게 표현하여, V4L, Video4Linux는 많은 USB webcams, TV tuners, 그리고 관련 장치를 지원한다.
+MythTV, tvtime 그리고 TVHeadend가 V4L 프레임워크를 사용하는 전형적 어플리케이션이다.
+
+다음은 Video4Linux 폴더 안에 있는 하위 폴더 3개와 파일에 대한 간단한 설명이며, 자신에게 필요한 폴더 및 파일을 찾는데 
+도움이 되길 바란다. 
+
+BTTV 하위 폴더는 Linux TV 관련.
+
+cx88 하위 폴더는 TV Audio, FM radio 등이 있음.
+
+cx2341x 하위 폴더는 googling 해보니, ivtv MPEG2 encoder 등과 관련.
+
+4CCs.txt : 리눅스 비디오 픽셀 포맷인 4CC 관련.
+
+API.html : Video For Linux APIs 관련 링크.
+
+CARDLIST.au0828 : PC에서 실행되는 TV 오디오 관련.
+
+CARDLIST.bttv : BTTV(Linux TV) 카드 리스트.
+
+CARDLIST.cx88 : cx88(TV Audio, FM radio 등) 카드 리스트.
+
+CARDLIST.cx23885 : TV 카드 리스트.
+
+CARDLIST.em28xx : TV, Webcam 카드 리스트.
+
+CARDLIST.ivtv : IVTV 카드 리스트.
+
+CARDLIST.saa7134 : TV 등 카드 리스트.
+
+CARDLIST.saa7164 : TV 등 카드 리스트.
+
+CARDLIST.tm6000 : TV 등 카드 리스트.
+
+CARDLIST.tuner : Tuner cards list (예 : Philips NTSC (FI1236,FM1236 and compatibles)
+
+CARDLIST.usbvision : USB TV, CAM 등 카드 리스트.
+
+Makefile : Makefile 이름 그대로.
+
+README.cpia2 : STMicroelectronics's CPiA2 카메라 드라이버.
+
+README.cx88 : cx2388x chip 용 디바이스 드라이버.
+
+README.davinci-vpbe : LCD 등 디바이스 드라이버.
+
+README.ir : infrared remote control 관련.
+
+README.ivtv : Conexant cx23415/6 MPEG encoder/decoder 드라이버 관련.
+
+README.pvrusb2 : USB 2.0 hosted TV Tuner 드라이버.
+
+README.saa7134 : TV 디바이스 드라이버.
+
+Zoran : 통합형 zoran driver (zr360x7, zoran, buz, dc10(+), dc30(+), lml33)
+
+cafe_ccic : Marvell 88ALP01 "cafe" CMOS camera controller 디바이스 드라이버.
+
+cpia2_overview.txt : STMicroelectronics's CPiA2 카메라 개요.
+
+cx18.txt : Conexant CX23418 MPEG encoder의 cx18 driver 관련 노트.
+
+extract_xc3028.pl : 프로그램(?)
+
+fimc.txt : 삼성의 FIMC (Fully Interactive Mobile Camera) device 드라이버.
+
+gspca.txt : webcams 리스트.
+
+hauppauge-wintv-cx88-ir.txt : cx88(TV Audio, FM radio 등) GPIO.
+
+lifeview.txt : LifeView FlyTV Platinum FM GPIO.
+
+meye.txt : Motion Eye Camera Driver.
+
+not-in-cx2388x-datasheet.txt : MO_OUTPUT_FORMAT.
+
+omap3isp.txt : OMAP 3 Image Signal Processor (ISP) driver.
+
+omap4_camera.txt : OMAP44XX family of chips contains the Imaging SubSystem 드라이버.
+
+pxa_camera.txt : PXA-Camera Host Driver.
+
+radiotrack.txt : RadioTrack card은 ISA 8-bit FM radio card.
+
+sh_mobile_ceu_camera.txt : sh_mobile_ceu_camera driver.
+
+si470x.txt : Driver for USB radios for the Silicon Labs Si470x FM Radio Receivers.
+
+si476x.txt : SI476x Driver.
+
+si4713.txt : Driver for I2C radios for the Silicon Labs Si4713 FM Radio Transmitters.
+
+soc-camera.txt : soc-camera subsystem initially provided a unified API between camera host
+drivers and camera sensor drivers.
+
+uvcvideo.txt : Linux USB Video Class (UVC) driver.
+
+v4l2-controls.txt : V4L2 and sub-device drivers 사용법.
+
+v4l2-framework.txt : V4L2 framework과 관계 설명.
+
+v4l2-pci-skeleton.c : V4L2 PCI Skeleton Driver.
+
+videobuf : videobuf layer (a V4L2 driver와 user space 사이 접촉 레이어) 소개.
+
+vivid.txt : Virtual Video Test Driver.
+
+zr364xx.txt : Zoran 364xx based USB webcam module 관련.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

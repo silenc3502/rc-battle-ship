@@ -1,0 +1,59 @@
+USB COMPARATOR OF TWL CHIPS
+
+TWL6030 USB COMPARATOR
+ - compatible : Should be "ti,twl6030-usb"
+ - interrupts : Two interrupt numbers to the cpu should be specified. First
+   interrupt number is the otg interrupt number that raises ID interrupts when
+   the controller has to act as host and the second interrupt number is the
+   usb interrupt number that raises VBUS interrupts when the controller has to
+   act as device
+ - usb-supply : phandle to the regulator device tree node. It should be vusb
+   if it is twl6030 or ldousb if it is twl6032 subclass.
+
+
+TWL6030 USB COMPARATOR
+  - compatible : "ti, twl6030-usb"여야합니다.
+  - interrupts : CPU에 대한 두 개의 인터럽트 번호를 지정해야합니다. 첫 번째 인터럽트 번호는 컨트롤러가 호스트로 작동해야하는 경우 ID 인터럽트를 발생시키는 두 번째 인터럽트 번호이며 두 번째 인터럽트 번호는 컨트롤러가 장치로 작동해야하는 경우 VBUS 인터럽트를 발생시키는 USB 인터럽트 번호입니다
+
+  - usb-supply : 조절기 장치 트리 노드에 연결합니다. twl6030이면 vusb이거나 twl6032 서브 클래스이면 ldousb 여야합니다.
+
+twl6030-usb {
+	compatible = "ti,twl6030-usb";
+	interrupts = < 4 10 >;
+};
+
+Board specific device node entry
+&twl6030-usb {
+	usb-supply = <&vusb>;
+};
+
+TWL4030 USB PHY AND COMPARATOR
+ - compatible : Should be "ti,twl4030-usb"
+ - interrupts : The interrupt numbers to the cpu should be specified. First
+   interrupt number is the otg interrupt number that raises ID interrupts
+   and VBUS interrupts. The second interrupt number is optional.
+ - <supply-name>-supply : phandle to the regulator device tree node.
+   <supply-name> should be vusb1v5, vusb1v8 and vusb3v1
+ - usb_mode : The mode used by the phy to connect to the controller. "1"
+   specifies "ULPI" mode and "2" specifies "CEA2011_3PIN" mode.
+
+If a sibling node is compatible "ti,twl4030-bci", then it will find
+this device and query it for USB power status.
+
+ - compatible : "ti, twl4030-usb"이어야합니다.
+  - interrupts : CPU에 대한 인터럽트 번호를 지정해야합니다. 첫 번째 인터럽트 번호는 ID 인터럽트 및 VBUS 인터럽트를 발생시키는 OTG 인터럽트 번호입니다. 두 번째 인터럽트 번호는 선택 사항입니다.
+  - <supply-name> -supply : 조절 장치 트리 노드에 대한 지시.
+    <공급 이름>은 vusb1v5, vusb1v8 및 vusb3v1이어야합니다.
+  - usb_mode : phy가 컨트롤러에 연결하는 데 사용하는 모드. "1"은 "ULPI"모드를 지정하고 "2"는 "CEA2011_3PIN"모드를 지정합니다.
+
+형제 노드가 "ti, twl4030-bci"와 호환되면이 장치를 찾아서 USB 전원 상태를 쿼리합니다.
+
+
+twl4030-usb {
+	compatible = "ti,twl4030-usb";
+	interrupts = < 10 4 >;
+	usb1v5-supply = <&vusb1v5>;
+	usb1v8-supply = <&vusb1v8>;
+	usb3v1-supply = <&vusb3v1>;
+	usb_mode = <1>;
+};

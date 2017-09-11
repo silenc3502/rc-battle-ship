@@ -1,0 +1,2 @@
+Please go to the below webpage to access the SDK's Getting Started Guide.
+http://processors.wiki.ti.com/index.php?title=Processor_SDK_Linux_Getting_Started_Guide

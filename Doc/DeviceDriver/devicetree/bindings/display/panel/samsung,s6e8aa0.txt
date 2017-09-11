@@ -1,0 +1,117 @@
+﻿Samsung S6E8AA0 AMOLED LCD 5.3 inch panel
+
+Required properties:
+  - compatible: "samsung,s6e8aa0"
+  - reg: the virtual channel number of a DSI peripheral
+  - vdd3-supply: core voltage supply
+  - vci-supply: voltage supply for analog circuits
+  - reset-gpios: a GPIO spec for the reset pin
+  - display-timings: timings for the connected panel as described by [1]
+
+Optional properties:
+  - power-on-delay: delay after turning regulators on [ms]
+  - reset-delay: delay after reset sequence [ms]
+  - init-delay: delay after initialization sequence [ms]
+  - panel-width-mm: physical panel width [mm]
+  - panel-height-mm: physical panel height [mm]
+  - flip-horizontal: boolean to flip image horizontally
+  - flip-vertical: boolean to flip image vertically
+
+The device node can contain one 'port' child node with one child
+'endpoint' node, according to the bindings defined in [2]. This
+node should describe panel's video bus.
+
+[1]: Documentation/devicetree/bindings/display/display-timing.txt
+[2]: Documentation/devicetree/bindings/media/video-interfaces.txt
+
+Example:
+
+	panel {
+		compatible = "samsung,s6e8aa0";
+		reg = <0>;
+		vdd3-supply = <&vcclcd_reg>;
+		vci-supply = <&vlcd_reg>;
+		reset-gpios = <&gpy4 5 0>;
+		power-on-delay= <50>;
+		reset-delay = <100>;
+		init-delay = <100>;
+		panel-width-mm = <58>;
+		panel-height-mm = <103>;
+		flip-horizontal;
+		flip-vertical;
+
+		display-timings {
+			timing0: timing-0 {
+				clock-frequency = <57153600>;
+				hactive = <720>;
+				vactive = <1280>;
+				hfront-porch = <5>;
+				hback-porch = <5>;
+				hsync-len = <5>;
+				vfront-porch = <13>;
+				vback-porch = <1>;
+				vsync-len = <2>;
+			};
+		};
+	};
+
+/*
+삼성 S6E8AA0 AMOLED LCD 5.3 인치 패널
+
+필수 속성 :
+  - 호환 : "samsung, s6e8aa0"
+  - reg : DSI 주변 장치의 가상 채널 번호
+  - vdd3 공급 : 코어 전압 공급
+  - vci-supply : 아날로그 회로 용 전압 공급 장치
+  - reset-gpios : 리셋 핀을위한 GPIO 스펙
+  - 디스플레이 타이밍 : [1]에 설명 된 바와 같이 연결된 패널의 타이밍
+
+선택적 속성 :
+  - 파워 온 지연 : [ms]에서 레귤레이터를 돌린 후 지연
+  - 리셋 지연 : 리셋 시퀀스 후의 지연 [ms]
+  - 초기화 지연 : 초기화 시퀀스 후의 지연 [ms]
+  - panel-width-mm : 실제 패널 너비 [mm]
+  - panel-height-mm : 물리적 패널 높이 [mm]
+  - flip-horizontal : 이미지를 수평으로 뒤집기위한 부울
+  - flip-vertical : 이미지를 수직으로 뒤집기위한 부울
+
+디바이스 노드는 [2]에서 정의 된 바인딩에 따라 하나의 자식 '엔드 포인트'노드가있는 하나의 '포트'자식 노드를 포함 할 수 있습니다. 
+
+이 노드는 패널의 비디오 버스를 설명해야합니다.
+
+
+[1]: Documentation/devicetree/bindings/display/display-timing.txt
+[2]: Documentation/devicetree/bindings/media/video-interfaces.txt
+
+Example:
+
+	panel {
+		compatible = "samsung,s6e8aa0";
+		reg = <0>;
+		vdd3-supply = <&vcclcd_reg>;
+		vci-supply = <&vlcd_reg>;
+		reset-gpios = <&gpy4 5 0>;
+		power-on-delay= <50>;
+		reset-delay = <100>;
+		init-delay = <100>;
+		panel-width-mm = <58>;
+		panel-height-mm = <103>;
+		flip-horizontal;
+		flip-vertical;
+
+		display-timings {
+			timing0: timing-0 {
+				clock-frequency = <57153600>;
+				hactive = <720>;
+				vactive = <1280>;
+				hfront-porch = <5>;
+				hback-porch = <5>;
+				hsync-len = <5>;
+				vfront-porch = <13>;
+				vback-porch = <1>;
+				vsync-len = <2>;
+			};
+		};
+	};
+
+*/

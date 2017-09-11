@@ -1,0 +1,65 @@
+Broadcom Cygnus PCIe PHY
+
+Required properties:
+- compatible: must be "brcm,cygnus-pcie-phy"
+- reg: base address and length of the PCIe PHY block
+- #address-cells: must be 1
+- #size-cells: must be 0
+
+Each PCIe PHY should be represented by a child node
+
+Required properties For the child node:
+- reg: the PHY ID
+0 - PCIe RC 0
+1 - PCIe RC 1
+- #phy-cells: must be 0
+
+
+필수 속성 :
+- compatible : "brcm, cygnus-pcie-phy"여야합니다.
+- reg : PCIe PHY 블록의 기본 주소 및 길이
+- # address-cells : 1이어야합니다.
+- # size-cells : 0이어야합니다.
+
+각 PCIe PHY는 하위 노드로 나타내야합니다.
+
+필수 속성 자식 노드 :
+- reg : PHY ID
+0 - PCIe RC 0
+1 - PCIe RC 1
+- # phy-cells : 0이어야합니다.
+
+
+
+Example:
+	pcie_phy: phy@0301d0a0 {
+		compatible = "brcm,cygnus-pcie-phy";
+		reg = <0x0301d0a0 0x14>;
+
+		pcie0_phy: phy@0 {
+			reg = <0>;
+			#phy-cells = <0>;
+		};
+
+		pcie1_phy: phy@1 {
+			reg = <1>;
+			#phy-cells = <0>;
+		};
+	};
+
+	/* users of the PCIe phy */
+	/ * PCIe phy 사용자 * /
+
+	pcie0: pcie@18012000 {
+		...
+		...
+		phys = <&pcie0_phy>;
+		phy-names = "pcie-phy";
+	};
+
+	pcie1: pcie@18013000 {
+		...
+		...
+		phys = <pcie1_phy>;
+		phy-names = "pcie-phy";
+	};

@@ -1,0 +1,46 @@
+﻿Device-Tree bindings for tilcdc DRM TFP410 output driver
+
+Required properties:
+ - compatible: value should be "ti,tilcdc,tfp410".
+ - i2c: the phandle for the i2c device to use for DDC
+
+Recommended properties:
+ - pinctrl-names, pinctrl-0: the pincontrol settings to configure
+   muxing properly for pins that connect to TFP410 device
+ - powerdn-gpio: the powerdown GPIO, pulled low to power down the
+   TFP410 device (for DPMS_OFF)
+
+Example:
+
+	dvicape {
+		compatible = "ti,tilcdc,tfp410";
+		i2c = <&i2c2>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&bone_dvi_cape_dvi_00A1_pins>;
+		powerdn-gpio = <&gpio2 31 0>;
+	};
+
+/*
+tilcdc DRM TFP410 출력 드라이버에 대한 Device 트리 바인딩
+
+필수 속성 :
+  - compatible : 값은 "ti, tilcdc, tfp410"이어야합니다.
+  - i2c : DDC에 사용할 i2c Device의 phandle
+
+권장 속성 :
+  - pinctrl-names, pinctrl-0 : 구성 할 핀 제어 설정
+    TFP410 Device에 연결되는 핀에 대해 적절하게 멀티플렉싱
+  - powerdn-gpio : TFF410 디바이스의 전원을 끄기 위해 로우로 풀 된 파워 다운 GPIO (DPMS_OFF의 경우)
+
+
+Example:
+
+	dvicape {
+		compatible = "ti,tilcdc,tfp410";
+		i2c = <&i2c2>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&bone_dvi_cape_dvi_00A1_pins>;
+		powerdn-gpio = <&gpio2 31 0>;
+	};
+
+*/

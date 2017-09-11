@@ -1,0 +1,167 @@
+Texas Instruments OMAP3 Display Subsystem
+=========================================
+
+See Documentation/devicetree/bindings/display/ti/ti,omap-dss.txt for generic
+description about OMAP Display Subsystem bindings.
+
+DSS Core
+--------
+
+Required properties:
+- compatible: "ti,omap3-dss"
+- reg: address and length of the register space
+- ti,hwmods: "dss_core"
+- clocks: handle to fclk
+- clock-names: "fck"
+
+Optional nodes:
+- Video ports:
+	- Port 0: DPI output
+	- Port 1: SDI output
+
+DPI Endpoint required properties:
+- data-lines: number of lines used
+
+SDI Endpoint required properties:
+- datapairs: number of datapairs used
+
+
+DISPC
+-----
+
+Required properties:
+- compatible: "ti,omap3-dispc"
+- reg: address and length of the register space
+- ti,hwmods: "dss_dispc"
+- interrupts: the DISPC interrupt
+- clocks: handle to fclk
+- clock-names: "fck"
+
+
+RFBI
+----
+
+Required properties:
+- compatible: "ti,omap3-rfbi"
+- reg: address and length of the register space
+- ti,hwmods: "dss_rfbi"
+- clocks: handles to fclk and iclk
+- clock-names: "fck", "ick"
+
+
+VENC
+----
+
+Required properties:
+- compatible: "ti,omap3-venc"
+- reg: address and length of the register space
+- ti,hwmods: "dss_venc"
+- vdda-supply: power supply for DAC
+- clocks: handle to fclk
+- clock-names: "fck"
+
+VENC Endpoint required properties:
+- ti,invert-polarity: invert the polarity of the video signal
+- ti,channels: 1 for composite, 2 for s-video
+
+
+DSI
+---
+
+Required properties:
+- compatible: "ti,omap3-dsi"
+- reg: addresses and lengths of the register spaces for 'proto', 'phy' and 'pll'
+- reg-names: "proto", "phy", "pll"
+- interrupts: the DSI interrupt line
+- ti,hwmods: "dss_dsi1"
+- vdd-supply: power supply for DSI
+- clocks: handles to fclk and pll clock
+- clock-names: "fck", "sys_clk"
+
+DSI Endpoint required properties:
+- lanes: list of pin numbers for the DSI lanes: CLK+, CLK-, DATA0+, DATA0-,
+  DATA1+, DATA1-, ...
+
+/*
+Texas Instruments OMAP3 디스플레이 서브 시스템
+=============================
+
+OMAP 디스플레이 서브 시스템 바인딩에 대한 일반적인 설명은 Documentation / devicetree / bindings / display / ti / ti, omap-dss.txt를 참조하십시오.
+
+DSS 코어
+--------
+
+필수 속성 :
+- 호환 : "ti, omap3-dss"
+- reg : 레지스터 공간의 주소와 길이
+- 티, hwmods : "dss_core"
+- 시계 : fclk 핸들
+- 시계 이름 : "fck"
+
+선택적 노드 :
+- 비디오 포트 :
+- 포트 0 : DPI 출력
+- Port 1 : SDI 출력
+
+DPI 끝점 필수 속성 :
+- data-lines : 사용 된 라인 수
+
+SDI 엔드 포인트 필수 속성 :
+- datapairs : 사용 된 데이터 연결 수
+
+
+DISPC
+-----
+
+필수 속성 :
+- 호환 : "ti, omap3-dispc"
+- reg : 레지스터 공간의 주소와 길이
+- 티, hwmods : "dss_dispc"
+- 인터럽트 : DISPC 인터럽트
+- 시계 : fclk 핸들
+- 시계 이름 : "fck"
+
+
+RFBI
+----
+
+필수 속성 :
+- 호환 : "ti, omap3-rfbi"
+- reg : 레지스터 공간의 주소와 길이
+- 티, hwmods : "dss_rfbi"
+- 시계 : fclk 및 iclk 핸들
+- 시계 이름 : "fck", "ick"
+
+
+VENC
+----
+
+필수 속성 :
+- 호환 : "ti, omap3-venc"
+- reg : 레지스터 공간의 주소와 길이
+- 티, hwmods : "dss_venc"
+- vdda-supply : DAC 용 전원 공급 장치
+- 시계 : fclk 핸들
+- 시계 이름 : "fck"
+
+VENC 엔드 포인트 필수 속성 :
+- ti, invert-polarity : 비디오 신호의 극성을 반전시킵니다.
+- 티, 채널 : 합성물 1, s- 비디오 2
+
+
+DSI
+---
+
+필수 속성 :
+- 호환 : "ti, omap3-dsi"
+- reg : 'proto', 'phy'및 'pll'에 대한 레지스터 공간의 주소와 길이
+- reg-names : "proto", "phy", "pll"
+- 인터럽트 : DSI 인터럽트 라인
+- ti, hwmods : "dss_dsi1"
+- vdd-supply : DSI 용 전원 공급 장치
+- clocks : fclk 및 pll 시계를 처리합니다.
+- clock-names : "fck", "sys_clk"
+
+DSI 엔드 포인트 필수 특성 :
+- 차선 : DSI 레인의 핀 번호 목록 : CLK +, CLK-, DATA0 +, DATA0-, DATA1 +, DATA1-, ...
+*/

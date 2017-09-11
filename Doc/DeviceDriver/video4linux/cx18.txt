@@ -1,0 +1,44 @@
+Some notes regarding the cx18 driver for the Conexant CX23418 MPEG
+encoder chip:
+1) Currently supported are:
+	- Hauppauge HVR-1600
+	- Compro VideoMate H900
+	- Yuan MPC718
+	- Conexant Raptor PAL/SECAM devkit
+
+2) Some people have problems getting the i2c bus to work.
+   The symptom is that the eeprom cannot be read and the card is unusable. This is probably fixed, but if you have problems then post to the video4linux or ivtv-users mailing list.
+
+3) VBI (raw or sliced) has not yet been implemented.
+
+4) MPEG indexing is not yet implemented.
+
+5) The driver is still a bit rough around the edges, this should improve over time.
+
+Firmware:
+You can obtain the firmware files here:
+http://dl.ivtvdriver.org/ivtv/firmware/cx18-firmware.tar.gz
+Untar and copy the .fw files to your firmware directory.
+
+Conexant CX23418 MPEG 용 cx18 드라이버 관련 정보
+인코더 칩 :
+
+1) 현재 지원되는 항목은 다음과 같습니다.
+	- Hauppauge HVR-1600
+	- Compro VideoMate H900
+	- Yuan MPC718
+	- Conexant Raptor PAL/SECAM devkit
+
+2) 일부 사람들은 i2c 버스를 작동시키는 데 문제가 있습니다.
+    증상은 eeprom을 읽을 수 없고 카드를 사용할 수 없다는 것입니다. 이것은 아마도 수정되었지만 문제가 있을 경우 video4linux 또는 ivtv-users 메일링리스트 에 게시하십시오.
+
+3) VBI (원시 또는 슬라이스)는 아직 구현되지 않았습니다.
+
+4) MPEG 인덱싱은 아직 구현되지 않았습니다.
+
+5) 드라이버는 여전히 약간 별로고(…매끄럽지 않다는 의미인 것 같음), 시간이 지남에 따라 향상됩니다.
+
+펌웨어 :
+여기에서 펌웨어 파일을 구할 수 있습니다.
+http://dl.ivtvdriver.org/ivtv/firmware/cx18-firmware.tar.gz
+펌웨어 디렉토리에 .fw 파일을 풀고 복사하십시오.

@@ -1,0 +1,61 @@
+* Freescale MPC512x and MPC8308 DMA Controller
+
+The DMA controller in Freescale MPC512x and MPC8308 SoCs can move
+blocks of memory contents between memory and peripherals or
+from memory to memory.
+
+Refer to "Generic DMA Controller and DMA request bindings" in
+the dma/dma.txt file for a more detailed description of binding.
+
+Required properties:
+- compatible: should be "fsl,mpc5121-dma" or "fsl,mpc8308-dma";
+- reg: should contain the DMA controller registers location and length;
+- interrupt for the DMA controller: syntax of interrupt client node
+	is described in interrupt-controller/interrupts.txt file.
+- #dma-cells: the length of the DMA specifier, must be <1>.
+	Each channel of this DMA controller has a peripheral request line,
+	the assignment is fixed in hardware. This one cell
+	in dmas property of a client device represents the channel number.
+
+Example:
+
+	dma0: dma@14000 {
+		compatible = "fsl,mpc5121-dma";
+		reg = <0x14000 0x1800>;
+		interrupts = <65 0x8>;
+		#dma-cells = <1>;
+	};
+
+DMA clients must use the format described in dma/dma.txt file.
+
+
+/*
+
+* 프리 스케일 MPC512x 및 MPC8308 DMA 컨트롤러
+
+Freescale MPC512x 및 MPC8308 SoC의 DMA 컨트롤러는 메모리와 주변 장치 사이의 메모리 내용 블록을 이동할 수 있습니다.
+메모리에서 메모리로.
+
+바인딩에 대한 자세한 설명은 dma / dma.txt 파일의 "일반 DMA 컨트롤러 및 DMA 요청 바인딩"을 참조하십시오.
+
+필수 속성 :
+- 호환 가능 : "fsl, mpc5121-dma"또는 "fsl, mpc8308-dma"여야합니다.
+- reg : DMA 컨트롤러 레지스터 위치와 길이를 포함해야합니다.
+- DMA 컨트롤러에 대한 인터럽트 : 인터럽트 클라이언트 노드의 구문은 인터럽트 컨트롤러 / 인터럽트 .txt 파일에 설명되어 있습니다.
+- # dma-cells : DMA 지정자의 길이는 <1>이어야합니다.
+이 DMA 컨트롤러의 각 채널에는 주변 요구 라인이 있으며,
+할당은 하드웨어로 고정됩니다. 클라이언트 장치의 dmas 속성에있는이 한 셀은 채널 번호를 나타냅니다.
+
+
+Example:
+
+	dma0: dma@14000 {
+		compatible = "fsl,mpc5121-dma";
+		reg = <0x14000 0x1800>;
+		interrupts = <65 0x8>;
+		#dma-cells = <1>;
+	};
+
+DMA 클라이언트는 dma / dma.txt 파일에 설명 된 형식을 사용해야합니다.
+
+*/

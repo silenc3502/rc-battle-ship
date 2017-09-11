@@ -1,0 +1,37 @@
+* Allwinner Security System found on A20 SoC
+
+Required properties:
+- compatible : Should be "allwinner,sun4i-a10-crypto".
+- reg: Should contain the Security System register location and length.
+- interrupts: Should contain the IRQ line for the Security System.
+- clocks : List of clock specifiers, corresponding to ahb and ss.
+- clock-names : Name of the functional clock, should be
+	* "ahb" : AHB gating clock
+	* "mod" : SS controller clock
+
+Optional properties:
+ - resets : phandle + reset specifier pair
+ - reset-names : must contain "ahb"
+
+필수 속성 :
+- compatible : "allwinner, sun4i-a10-crypto"여야합니다.
+- reg : 보안 시스템 레지스터 위치와 길이를 포함해야합니다.
+- interrupts : 보안 시스템에 대한 IRQ 라인을 포함해야합니다.
+- clocks : ahb 및 ss에 해당하는 시계 지정자 목록입니다.
+- clock-names : 기능 클록의 이름 은 아래와 같아야 한다.
+* "ahb": AHB 게이팅 시계
+* "mod": SS 컨트롤러 클럭
+
+선택적 속성 :
+  - 재설정 : phandle + 재설정 지정자 쌍
+  - reset-names : "ahb"를 포함해야합니다.
+
+
+Example:
+	crypto: crypto-engine@01c15000 {
+		compatible = "allwinner,sun4i-a10-crypto";
+		reg = <0x01c15000 0x1000>;
+		interrupts = <GIC_SPI 86 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&ahb_gates 5>, <&ss_clk>;
+		clock-names = "ahb", "mod";
+	};

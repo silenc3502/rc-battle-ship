@@ -1,0 +1,110 @@
+Texas Instruments OMAP2 Display Subsystem
+=========================================
+
+See Documentation/devicetree/bindings/display/ti/ti,omap-dss.txt for generic
+description about OMAP Display Subsystem bindings.
+
+DSS Core
+--------
+
+Required properties:
+- compatible: "ti,omap2-dss"
+- reg: address and length of the register space
+- ti,hwmods: "dss_core"
+
+Optional nodes:
+- Video port for DPI output
+
+DPI Endpoint required properties:
+- data-lines: number of lines used
+
+
+DISPC
+-----
+
+Required properties:
+- compatible: "ti,omap2-dispc"
+- reg: address and length of the register space
+- ti,hwmods: "dss_dispc"
+- interrupts: the DISPC interrupt
+
+
+RFBI
+----
+
+Required properties:
+- compatible: "ti,omap2-rfbi"
+- reg: address and length of the register space
+- ti,hwmods: "dss_rfbi"
+
+
+VENC
+----
+
+Required properties:
+- compatible: "ti,omap2-venc"
+- reg: address and length of the register space
+- ti,hwmods: "dss_venc"
+- vdda-supply: power supply for DAC
+
+VENC Endpoint required properties:
+
+Required properties:
+- ti,invert-polarity: invert the polarity of the video signal
+- ti,channels: 1 for composite, 2 for s-video
+
+/*
+Texas Instruments OMAP2 디스플레이 서브 시스템
+=============================
+
+OMAP 디스플레이 서브 시스템 바인딩에 대한 일반적인 설명은 Documentation / devicetree / bindings / display / ti / ti, omap-dss.txt를 참조하십시오.
+
+DSS 코어
+--------
+
+필수 속성 :
+- 호환 : "ti, omap2-dss"
+- reg : 레지스터 공간의 주소와 길이
+- 티, hwmods : "dss_core"
+
+선택적 노드 :
+- DPI 출력을위한 비디오 포트
+
+DPI endpoint 필수 속성 :
+- data-lines : 사용 된 라인 수
+
+
+DISPC
+-----
+
+필수 속성 :
+- 호환 : "ti, omap2-dispc"
+- reg : 레지스터 공간의 주소와 길이
+- 티, hwmods : "dss_dispc"
+- 인터럽트 : DISPC 인터럽트
+
+
+RFBI
+----
+
+필수 속성 :
+- 호환 : "ti, omap2-rfbi"
+- reg : 레지스터 공간의 주소와 길이
+- 티, hwmods : "dss_rfbi"
+
+
+VENC
+----
+
+필수 속성 :
+- 호환 : "ti, omap2-venc"
+- reg : 레지스터 공간의 주소와 길이
+- 티, hwmods : "dss_venc"
+- vdda-supply : DAC 용 전원 공급 장치
+
+VENC 엔드 포인트 필수 속성 :
+
+필수 속성 :
+- ti, invert-polarity : 비디오 신호의 극성을 반전시킵니다.
+- 티, 채널 : 합성물 1, s- 비디오 2
+*/

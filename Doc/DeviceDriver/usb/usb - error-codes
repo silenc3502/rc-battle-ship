@@ -1,0 +1,282 @@
+Revised: 2004-Oct-21
+
+This is the documentation of (hopefully) all possible error codes (and
+their interpretation) that can be returned from usbcore.
+
+이것은 usbcore에서 반환 될 수있는 가능한 모든 오류 코드 (및 해당 해석)의 문서입니다.
+
+Some of them are returned by the Host Controller Drivers (HCDs), which
+device drivers only see through usbcore.  As a rule, all the HCDs should
+behave the same except for transfer speed dependent behaviors and the
+way certain faults are reported.
+
+그 중 일부는 호스트 컨트롤러 드라이버 (HCD)에 의해 반환되며, 장치 드라이버는 usbcore를 통해서만 볼 수 있습니다.
+일반적으로 모든 HCD는 전송 속도에 의존하는 동작과 특정 오류가 보고되는 방식을 제외하고는 동일하게 동작해야 합니다.
+(전송 속도에 의존하는 동작과 오류가 보고되는 방식만 특별하다)
+
+
+**************************************************************************
+*                   Error codes returned by usb_submit_urb               *
+**************************************************************************
+		    usb_submit_urb에 의해 반환 된 오류 코드
+		    (usb_submit_urb: urb를 제출한는 코드)
+
+Non-USB-specific:
+
+0		URB submission went fine
+		URB 제출은 잘되었다.
+
+-ENOMEM		no memory for allocation of internal structures	
+		내부 구조의 할당을 위한 메모리가 없다.
+
+USB-specific:
+
+-EBUSY		The URB is already active.
+		URB는 이미 활성화되어 있습니다.
+
+-ENODEV		specified USB-device or bus doesn't exist
+		지정된 USB 장치 또는 버스가 존재하지 않습니다.
+
+-ENOENT		specified interface or endpoint does not exist or
+		is not enabled
+		지정된 인터페이스 또는 endpoint가 없거나 사용 가능하지 않습니다.
+
+-ENXIO		host controller driver does not support queuing of this type
+		of urb.  (treat as a host controller bug.)
+		호스트 컨트롤러 드라이버는 이러한 유형의 urb의 대기열을 지원하지 않습니다. 
+		(호스트 컨트롤러 버그로 취급하십시오.)
+		(실제로 지원하는데 오류로 지원하지 않는다고 나오는건가?)
+
+-EINVAL		a) Invalid transfer type specified (or not supported)
+		   잘못된 전송 유형이 지정되었거나 지원되지 않습니다.
+		b) Invalid or unsupported periodic transfer interval
+		   유효하지 않거나 지원되지 않는 정기 전송 간격
+		c) ISO: attempted to change transfer interval
+		   ISO : 전송 간격을 변경하려고 했습니다. (ISO는 그 즉시 나온다는 건가?)
+		d) ISO: number_of_packets is < 0
+		   ISO : number_of_packets가 0보다 작을 때
+		e) various other cases
+		   다양한 다른 경우들
+
+-EXDEV		ISO: URB_ISO_ASAP wasn't specified and all the frames
+		the URB would be scheduled in have already expired.
+		ISO: URB_ISO_ASAP가 지정되지 않았고 URB가 예정된 모든 프레임이 이미 만료되었습니다.
+
+-EFBIG		Host controller driver can't schedule that many ISO frames.
+		호스트 컨트롤러 드라이버는 많은 ISO 프레임을 예약 할 수 없습니다.
+
+-EPIPE		The pipe type specified in the URB doesn't match the
+		endpoint's actual type.
+		URB에 지정된 파이프 유형이 endpoint의 실제 유형과 일치하지 않습니다.
+
+-EMSGSIZE	(a) endpoint maxpacket size is zero; it is not usable
+		    in the current interface altsetting.
+		    endpoint maxpacket 크기는 0입니다; 
+		    현재 인터페이스 altsetting에서는 사용할 수 없습니다.
+		(b) ISO packet is larger than the endpoint maxpacket.
+		    ISO 패킷이 endpoint maxpacket보다 큽니다. (받을 수가 없지 않을까?)
+		(c) requested data transfer length is invalid: negative
+		    or too large for the host controller.
+		    요청 된 데이터 전송 길이가 유효하지 않습니다: 
+		    호스트 컨트롤러에 대해 음수이거나 너무 큽니다.
+
+-ENOSPC		This request would overcommit the usb bandwidth reserved
+		for periodic transfers (interrupt, isochronous).
+		이 요청은 정기적인 전송 (인터럽트, 등시성)을 위해 예약된 usb 대역폭을 오버 커밋합니다.
+		(대역폭을 넘어가게 잡는다)
+
+-ESHUTDOWN	The device or host controller has been disabled due to some
+		problem that could not be worked around.
+		해결할 수없는 몇 가지 문제로 인해 장치 또는 호스트 컨트롤러가 비활성화되었습니다.
+
+-EPERM		Submission failed because urb->reject was set.
+		urb-> reject가 설정되어 제출하지 못했습니다.
+
+-EHOSTUNREACH	URB was rejected because the device is suspended.
+		장치가 일시 중단되어 URB가 거부되었습니다.
+
+-ENOEXEC	A control URB doesn't contain a Setup packet.
+		제어 URB에는 설정 패킷이 포함되어 있지 않습니다.
+
+
+**************************************************************************
+*                   Error codes returned by in urb->status               *
+*                   or in iso_frame_desc[n].status (for ISO)             *
+**************************************************************************
+urb-> status 또는 iso_frame_desc [n] .status (ISO의 경우)에서 반환된 오류 코드
+
+USB device drivers may only test urb status values in completion handlers.
+This is because otherwise there would be a race between HCDs updating
+these values on one CPU, and device drivers testing them on another CPU.
+
+USB 장치 드라이버는 완료 핸들러에서 urb 상태 값만 테스트 할 수 있습니다.
+그렇지 않으면 한 CPU에서 이 값을 업데이트하는 HCD와 다른 CPU에서 
+장치 드라이버를 테스트하는 HCD간에 경쟁이 있기 때문입니다.
+(서로 먼저 하겠다고 경쟁하는 건가?)
+
+A transfer's actual_length may be positive even when an error has been
+reported.  That's because transfers often involve several packets, so that
+one or more packets could finish before an error stops further endpoint I/O.
+
+오류가 보고 된 경우에도 전송의 actual_length는 양수일 수 있습니다.
+전송은 종종 여러 패킷을 포함하기 때문에 오류가 추가 endpoint I/O를 중지하기 전에 
+하나 이상의 패킷이 완료 될 수 있습니다.
+
+For isochronous URBs, the urb status value is non-zero only if the URB is
+unlinked, the device is removed, the host controller is disabled, or the total
+transferred length is less than the requested length and the URB_SHORT_NOT_OK
+flag is set.  Completion handlers for isochronous URBs should only see
+urb->status set to zero, -ENOENT, -ECONNRESET, -ESHUTDOWN, or -EREMOTEIO.
+Individual frame descriptor status fields may report more status codes.
+
+isochronous URB의 경우, URB의 연결이 끊어 지거나, 장치가 제거되거나, 호스트 컨트롤러가 비활성화되거나, 
+총 전송 된 길이가 요청 된 길이보다 작고 URB_SHORT_NOT_OK 플래그가 설정된 경우에만 
+urb status 값이 0이 아닙니다. (0이여야 정상 상태)
+등시성 URB를 위한 완료 핸들러는 urb-> status가 0, -ENOENT, -ECONNRESET, -ESHUTDOWN 또는 -EREMOTEIO로만 설정되어야합니다. 
+개별 프레임 설명자 상태 필드는 더 많은 상태 코드를보고 할 수 있습니다.
+
+
+0			Transfer completed successfully
+			전송이 완료되었습니다.
+
+-ENOENT			URB was synchronously unlinked by usb_unlink_urb
+			URB는 usb_unlink_urb에 의해 동기식으로 연결 해제되었습니다.
+
+-EINPROGRESS		URB still pending, no results yet
+			(That is, if drivers see this it's a bug.)
+			URB가 아직 진행 중이며 아직 결과가 없습니다.
+			(즉, 드라이버가 이것을 보는 경우 버그입니다.)
+
+-EPROTO (*, **)		a) bitstuff error
+			   비트 오류
+			b) no response packet received within the
+			   prescribed bus turn-around time
+			   소정의 버스 돌아설 시간 내에 응답 패킷을 수신하지 않음
+			c) unknown USB error
+			   알 수 없는 USB 오류
+
+-EILSEQ (*, **)		a) CRC mismatch
+			   CRC 불일치
+			b) no response packet received within the
+			   prescribed bus turn-around time
+			   소정의 버스 돌아설 시간 내에 응답 패킷을 수신하지 않음
+			c) unknown USB error
+			   알 수 없는 USB 오류 
+
+			Note that often the controller hardware does not
+			distinguish among cases a), b), and c), so a
+			driver cannot tell whether there was a protocol
+			error, a failure to respond (often caused by
+			device disconnect), or some other fault.
+
+			컨트롤러 하드웨어는 종종 a), b) 및 c)를 구분하지 않기 때문에 
+			드라이버는 프로토콜 오류, 응답 실패 (종종 장치 분리로 인해 발생 함) 
+			또는 다른 오류가 있는지 여부를 알 수 없습니다.
+
+-ETIME (**)		No response packet received within the prescribed
+			bus turn-around time.  This error may instead be
+			reported as -EPROTO or -EILSEQ.
+
+			규정 된 버스 반환 시간 내에 응답 패킷을 수신하지 못했습니다.
+			이 오류는 대신 -EPROTO 또는 -EILSEQ로 보고 될 수 있습니다.
+
+-ETIMEDOUT		Synchronous USB message functions use this code
+			to indicate timeout expired before the transfer
+			completed, and no other error was reported by HC.
+			
+			동기식 USB 메시지 기능은 이 코드를 사용하여 전송이 완료되기 전에 
+			만료 된 시간 만료를 나타내며 HC는 다른 오류를 보고하지 않습니다.
+
+-EPIPE (**)		Endpoint stalled.  For non-control endpoints,
+			reset this status with usb_clear_halt().
+
+			endpoint가 정지되었습니다. 
+			비 제어 endpoint의 경우 usb_clear_halt()로 이 상태를 재설정하십시오.
+
+-ECOMM			During an IN transfer, the host controller
+			received data from an endpoint faster than it
+			could be written to system memory
+
+			IN 전송 중에 호스트 컨트롤러는 시스템 메모리에 기록 될 수 있는 것보다 
+			빠른 속도로 endpoint에서 데이터를 수신했습니다. (능력 초과)
+
+-ENOSR			During an OUT transfer, the host controller
+			could not retrieve data from system memory fast
+			enough to keep up with the USB data rate
+
+			OUT 전송 중에 호스트 컨트롤러가 USB 데이터 속도를 따라 잡을만큼 
+			빨리 시스템 메모리에서 데이터를 검색 할 수 없었습니다
+
+-EOVERFLOW (*)		The amount of data returned by the endpoint was
+			greater than either the max packet size of the
+			endpoint or the remaining buffer size.  "Babble".
+
+			endpoint가 리턴 한 데이터의 양은 endpoint의 최대 패킷 크기 
+			또는 남아있는 버퍼 크기보다 큽니다. "Babble". (들어갈 수 없다)
+
+-EREMOTEIO		The data read from the endpoint did not fill the
+			specified buffer, and URB_SHORT_NOT_OK was set in
+			urb->transfer_flags.
+
+			endpoint에서 읽은 데이터가 지정된 버퍼를 채우지 못했으며 
+			urb-> transfer_flags에 URB_SHORT_NOT_OK가 설정되었습니다.
+
+-ENODEV			Device was removed.  Often preceded by a burst of
+			other errors, since the hub driver doesn't detect
+			device removal events immediately.
+
+			기기가 삭제되었습니다. 종종 허브 드라이버가 장치 제거 이벤트를 
+			즉시 감지하지 않기 때문에 다른 오류가 자주 발생합니다.
+
+-EXDEV			ISO transfer only partially completed
+			(only set in iso_frame_desc[n].status, not urb->status)
+
+			ISO 전송은 부분적으로만 완료 됨 
+			(urb-> status가 아닌 iso_frame_desc [n] .status에서만 설정 됨)
+
+-EINVAL			ISO madness, if this happens: Log off and go home
+
+			ISO 광기, 이런 일이 생기면 로그오프하고 집에 가라.
+
+-ECONNRESET		URB was asynchronously unlinked by usb_unlink_urb
+
+			URB가 usb_unlink_urb에 의해 비동기적으로 연결 해제 되었습니다.
+
+-ESHUTDOWN		The device or host controller has been disabled due
+			to some problem that could not be worked around,
+			such as a physical disconnect.
+
+			물리적 장치 연결 끊김과 같이 해결할 수 없는 문제로 인해 
+			장치 또는 호스트 컨트롤러가 비활성화되었습니다.
+
+
+(*) Error codes like -EPROTO, -EILSEQ and -EOVERFLOW normally indicate
+hardware problems such as bad devices (including firmware) or cables.
+
+-EPROTO, -EILSEQ 및 -EOVERFLOW와 같은 오류 코드는 
+일반적으로 불량 장치 (펌웨어 포함) 또는 케이블과 같은 하드웨어 문제를 나타냅니다.
+
+(**) This is also one of several codes that different kinds of host
+controller use to indicate a transfer has failed because of device
+disconnect.  In the interval before the hub driver starts disconnect
+processing, devices may receive such fault reports for every request.
+
+또한 여러 종류의 호스트 컨트롤러가 장치 연결 해제로 인해 전송이 실패했음을 나타내는 몇 가지 코드 중 하나입니다.
+허브 드라이버가 연결 해제 처리를 시작하기 전에 장치는 모든 요청에 대해 이러한 오류 보고서를 수신 할 수 있습니다.
+
+
+**************************************************************************
+*              Error codes returned by usbcore-functions                 *
+*           (expect also other submit and transfer status codes)         *
+**************************************************************************
+usbcore-functions가 반환 한 오류 코드 (다른 제출 및 전송 상태 코드도 필요함)
+
+usb_register():
+-EINVAL			error during registering new driver
+			새 드라이버 등록 중 오류
+
+usb_get_*/usb_set_*():
+usb_control_msg():
+usb_bulk_msg():
+-ETIMEDOUT		Timeout expired before the transfer completed.
+			전송이 완료되기 전에 시간이 만료되었습니다.

@@ -1,0 +1,174 @@
+* AT91's Analog to Digital Converter (ADC)
+
+Required properties:
+  - compatible: Should be "atmel,<chip>-adc"
+    <chip> can be "at91sam9260", "at91sam9g45" or "at91sam9x5"
+  - reg: Should contain ADC registers location and length
+  - interrupts: Should contain the IRQ line for the ADC
+  - clock-names: tuple listing input clock names.
+	Required elements: "adc_clk", "adc_op_clk".
+  - clocks: phandles to input clocks.
+  - atmel,adc-channels-used: Bitmask of the channels muxed and enabled for this
+    device
+  - atmel,adc-startup-time: Startup Time of the ADC in microseconds as
+    defined in the datasheet
+  - atmel,adc-vref: Reference voltage in millivolts for the conversions
+  - atmel,adc-res: List of resolutions in bits supported by the ADC. List size
+		   must be two at least.
+  - atmel,adc-res-names: Contains one identifier string for each resolution
+			 in atmel,adc-res property. "lowres" and "highres"
+			 identifiers are required.
+
+Optional properties:
+  - atmel,adc-use-external-triggers: Boolean to enable the external triggers
+  - atmel,adc-use-res: String corresponding to an identifier from
+		       atmel,adc-res-names property. If not specified, the highest
+		       resolution will be used.
+  - atmel,adc-sleep-mode: Boolean to enable sleep mode when no conversion
+  - atmel,adc-sample-hold-time: Sample and Hold Time in microseconds
+  - atmel,adc-ts-wires: Number of touchscreen wires. Should be 4 or 5. If this
+                        value is set, then the adc driver will enable touchscreen
+                        support.
+    NOTE: when adc touchscreen is enabled, the adc hardware trigger will be
+          disabled. Since touchscreen will occupy the trigger register.
+  - atmel,adc-ts-pressure-threshold: a pressure threshold for touchscreen. It
+                                     makes touch detection more precise.
+
+Optional trigger Nodes:
+  - Required properties:
+    * trigger-name: Name of the trigger exposed to the user
+    * trigger-value: Value to put in the Trigger register
+      to activate this trigger
+  - Optional properties:
+    * trigger-external: Is the trigger an external trigger?
+
+Examples:
+adc0: adc@fffb0000 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	compatible = "atmel,at91sam9260-adc";
+	reg = <0xfffb0000 0x100>;
+	interrupts = <20 IRQ_TYPE_LEVEL_HIGH 0>;
+	clocks = <&adc_clk>, <&adc_op_clk>;
+	clock-names = "adc_clk", "adc_op_clk";
+	atmel,adc-channels-used = <0xff>;
+	atmel,adc-startup-time = <40>;
+	atmel,adc-use-external-triggers;
+	atmel,adc-vref = <3300>;
+	atmel,adc-res = <8 10>;
+	atmel,adc-res-names = "lowres", "highres";
+	atmel,adc-use-res = "lowres";
+
+	trigger@0 {
+		reg = <0>;
+		trigger-name = "external-rising";
+		trigger-value = <0x1>;
+		trigger-external;
+	};
+	trigger@1 {
+		reg = <1>;
+		trigger-name = "external-falling";
+		trigger-value = <0x2>;
+		trigger-external;
+	};
+
+	trigger@2 {
+		reg = <2>;
+		trigger-name = "external-any";
+		trigger-value = <0x3>;
+		trigger-external;
+	};
+
+	trigger@3 {
+		reg = <3>;
+		trigger-name = "continuous";
+		trigger-value = <0x6>;
+	};
+};
+
+
+
+/*
+
+* AT91의 아날로그 - 디지털 변환기 (ADC)
+
+필수 속성 :
+  - 호환 : "atmel, <chip> -adc"여야합니다. <chip>은 "at91sam9260", "at91sam9g45"또는 "at91sam9x5"일 수 있습니다.
+  - reg : ADC 레지스터 위치와 길이를 포함해야한다.
+  - 인터럽트 : ADC의 IRQ 라인을 포함해야합니다.
+  - clock-names : 튜플에 입력 클럭 이름을 나열합니다.
+필수 요소 : "adc_clk", "adc_op_clk".
+  - clocks : 입력 클락에 대한 phandles.
+  - atmel, adc-channels-used :이 장치에 다중화되고 활성화 된 채널의 비트 마스크
+  - atmel, adc-startup-time : 데이터 시트에 정의 된대로 ADC의 시작 시간 (마이크로 초)
+  - atmel, adc-vref : 전환 당 밀리 볼트 단위의 기준 전압
+  - atmel, adc-res : ADC가 지원하는 비트 단위의 해상도 목록. 목록 크기는 적어도 2 여야합니다.
+  - atmel, adc-res-names : atmel의 각 해상도에 대한 하나의 식별자 문자열, adc-res 속성을 포함합니다. "lowres"및 "highres"식별자가 필요합니다.
+
+선택적 속성 :
+  - atmel, adc-use-external-triggers : 외부 트리거를 활성화하는 부울
+  - atmel, adc-use-res : atmel의 식별자에 해당하는 문자열, ad-res-names 속성. 지정하지 않으면 가장 높은 해상도가 사용됩니다.
+  - atmel, adc-sleep-mode : 전환이 없을 때 절전 모드를 활성화하는 부울
+  - atmel, adc-sample-hold-time : 샘플 및 대기 시간 (마이크로 초)
+  - atmel, adc-ts-wires : 터치 스크린 와이어의 수. 4 또는 5 여야합니다.
+	이 값을 설정하면 adc 드라이버가 터치 스크린 지원을 활성화합니다.
+    참고 : adc 터치 스크린이 활성화되면 adc 하드웨어 트리거가 활성화됩니다.
+          사용할 수 없습니다. 터치 스크린이 트리거 레지스터를 차지할 것이기 때문입니다.
+  - atmel, adc-ts-pressure-threshold : 터치 스크린 압력 임계 값. 터치 감지가 더욱 정확합니다.
+
+선택적 트리거 노드 :
+  - 필수 속성 :
+    * trigger-name : 사용자에게 노출 된 트리거의 이름
+    * trigger-value :이 트리거를 활성화하기 위해 Trigger 레지스터에 넣을 값
+  - 선택적 속성 :
+    * trigger-external : 트리거가 외부 트리거인지 확인
+
+
+Examples:
+adc0: adc@fffb0000 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	compatible = "atmel,at91sam9260-adc";
+	reg = <0xfffb0000 0x100>;
+	interrupts = <20 IRQ_TYPE_LEVEL_HIGH 0>;
+	clocks = <&adc_clk>, <&adc_op_clk>;
+	clock-names = "adc_clk", "adc_op_clk";
+	atmel,adc-channels-used = <0xff>;
+	atmel,adc-startup-time = <40>;
+	atmel,adc-use-external-triggers;
+	atmel,adc-vref = <3300>;
+	atmel,adc-res = <8 10>;
+	atmel,adc-res-names = "lowres", "highres";
+	atmel,adc-use-res = "lowres";
+
+	trigger@0 {
+		reg = <0>;
+		trigger-name = "external-rising";
+		trigger-value = <0x1>;
+		trigger-external;
+	};
+	trigger@1 {
+		reg = <1>;
+		trigger-name = "external-falling";
+		trigger-value = <0x2>;
+		trigger-external;
+	};
+
+	trigger@2 {
+		reg = <2>;
+		trigger-name = "external-any";
+		trigger-value = <0x3>;
+		trigger-external;
+	};
+
+	trigger@3 {
+		reg = <3>;
+		trigger-name = "continuous";
+		trigger-value = <0x6>;
+	};
+};
+
+
+*/
+
+

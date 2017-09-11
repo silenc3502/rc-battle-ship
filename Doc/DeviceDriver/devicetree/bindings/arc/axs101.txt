@@ -1,0 +1,19 @@
+Synopsys DesignWare ARC Software Development Platforms Device Tree Bindings
+
+
+//Synopsys DesignWare ARC 소프트웨어 개발 플랫폼 장치 트리 바인딩
+
+---------------------------------------------------------------------------
+
+SDP Main Board with an AXC001 CPU Card hoisting ARC700 core in silicon
+
+Required root node properties:
+    - compatible = "snps,axs101", "snps,arc-sdp";
+
+
+/*
+실리콘에 ARC700 코어를 탑재 한 AXC001 CPU 카드가있는 SDP 메인 보드
+
+필수 루트 노드 속성
+ - compatible = "snps,axs101", "snps,arc-sdp";
+*/

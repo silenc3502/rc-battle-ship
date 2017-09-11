@@ -1,0 +1,166 @@
+Samsung Exynos SoC USB controller
+
+The USB devices interface with USB controllers on Exynos SOCs.
+The device node has following properties.
+USB 장치는 Exynos SOC의 USB 컨트롤러와 인터페이스합니다.
+장치 노드에는 다음과 같은 속성이 있습니다.
+
+EHCI
+Required properties:
+ - compatible: should be "samsung,exynos4210-ehci" for USB 2.0
+   EHCI controller in host mode.
+ - reg: physical base address of the controller and length of memory mapped
+   region.
+ - interrupts: interrupt number to the cpu.
+ - clocks: from common clock binding: handle to usb clock.
+ - clock-names: from common clock binding: Shall be "usbhost".
+ - port: if in the SoC there are EHCI phys, they should be listed here.
+   One phy per port. Each port should have following entries:
+	- reg: port number on EHCI controller, e.g
+	       On Exynos5250, port 0 is USB2.0 otg phy
+			      port 1 is HSIC phy0
+			      port 2 is HSIC phy1
+	- phys: from the *Generic PHY* bindings; specifying phy used by port.
+
+필수 속성 :
+  - 호환 : 호스트 모드에서 USB 2.0 EHCI 컨트롤러의 경우 "synex, exynos4210-ehci"여야합니다.
+  - reg : 컨트롤러의 물리적 인 기본 주소와 메모리 매핑 된 영역의 길이.
+  - interrupts : CPU에 대한 인터럽트 번호.
+  - clocks : 일반적인 clocks 바인딩 : usb clocks 처리.
+  - clock-names : common clock 바인딩에서 : "usbhost"가되어야합니다.
+  - 포트 : SoC에 EHCI phys가있는 경우 여기에 나열되어야합니다.
+    포트 당 하나의 phy. 각 포트에는 다음 항목이 있어야합니다.
+- reg : EHCI 컨트롤러의 포트 번호, e.g가  Exynos5250에서 포트 0은 USB2.0 포트입니다.
+포트 1은 HSIC phy0입니다.
+포트 2는 HSIC phy1입니다.
+- phys : * 일반 PHY * 바인딩에서. 포트가 사용하는 phy를 지정합니다.
+
+
+
+Optional properties:
+ - samsung,vbus-gpio:  if present, specifies the GPIO that
+   needs to be pulled up for the bus to be powered.
+선택적 속성 :
+  - samsung, vbus-gpio :있는 경우 버스 전원 공급을 위해 끌어 올릴 필요가있는 GPIO를 지정합니다.
+
+Example:
+
+	usb@12110000 {
+		compatible = "samsung,exynos4210-ehci";
+		reg = <0x12110000 0x100>;
+		interrupts = <0 71 0>;
+		samsung,vbus-gpio = <&gpx2 6 1 3 3>;
+
+		clocks = <&clock 285>;
+		clock-names = "usbhost";
+
+		#address-cells = <1>;
+		#size-cells = <0>;
+		port@0 {
+		    reg = <0>;
+		    phys = <&usb2phy 1>;
+		    status = "disabled";
+		};
+	};
+
+OHCI
+Required properties:
+ - compatible: should be "samsung,exynos4210-ohci" for USB 2.0
+   OHCI companion controller in host mode.
+ - reg: physical base address of the controller and length of memory mapped
+   region.
+ - interrupts: interrupt number to the cpu.
+ - clocks: from common clock binding: handle to usb clock.
+ - clock-names: from common clock binding: Shall be "usbhost".
+ - port: if in the SoC there are OHCI phys, they should be listed here.
+   One phy per port. Each port should have following entries:
+	- reg: port number on OHCI controller, e.g
+	       On Exynos5250, port 0 is USB2.0 otg phy
+			      port 1 is HSIC phy0
+			      port 2 is HSIC phy1
+	- phys: from the *Generic PHY* bindings, specifying phy used by port.
+
+OHCI
+필수 속성 :
+  - 호환 : 호스트 모드에서 USB 2.0 OHCI 도우미 컨트롤러의 경우 "samsung, exynos4210-ohci"여야합니다.
+  - reg : 컨트롤러의 물리적 인 기본 주소와 메모리 매핑 된 영역의 길이.
+  - interrupts : CPU에 대한 인터럽트 번호.
+  - clocks : 일반적인 clocks 바인딩 : usb clocks 처리.
+  - clock-names :common clock 바인딩에서 : "usbhost"가되어야합니다.
+  - 포트 : SoC에 OHCI가 있으면 여기에 나열되어야합니다.
+포트 당 하나의 phy. 각 포트에는 다음 항목이 있어야합니다.
+- reg : OHCI 컨트롤러의 포트 번호, e.g 가 Exynos5250, 포트 0이 USB2.0 포트입니다.
+포트 1은 HSIC phy0입니다.
+포트 2는 HSIC phy1입니다.
+- phys : * 일반 PHY * 바인딩에서 포트가 사용하는 phy를 지정합니다.
+
+
+Example:
+	usb@12120000 {
+		compatible = "samsung,exynos4210-ohci";
+		reg = <0x12120000 0x100>;
+		interrupts = <0 71 0>;
+
+		clocks = <&clock 285>;
+		clock-names = "usbhost";
+
+		#address-cells = <1>;
+		#size-cells = <0>;
+		port@0 {
+		    reg = <0>;
+		    phys = <&usb2phy 1>;
+		    status = "disabled";
+		};
+
+	};
+
+DWC3
+Required properties:
+ - compatible: should be one of the following -
+	       "samsung,exynos5250-dwusb3": for USB 3.0 DWC3 controller on
+					    Exynos5250/5420.
+	       "samsung,exynos7-dwusb3": for USB 3.0 DWC3 controller on Exynos7.
+ - #address-cells, #size-cells : should be '1' if the device has sub-nodes
+				 with 'reg' property.
+ - ranges: allows valid 1:1 translation between child's address space and
+	   parent's address space
+ - clocks: Clock IDs array as required by the controller.
+ - clock-names: names of clocks correseponding to IDs in the clock property
+
+Sub-nodes:
+The dwc3 core should be added as subnode to Exynos dwc3 glue.
+- dwc3 :
+   The binding details of dwc3 can be found in:
+   Documentation/devicetree/bindin필수 속성 :
+  
+
+- compatible : 다음 중 하나 여야합니다 -
+"samsung, exynos5250-dwusb3": Exynos5250 / 5420의 USB 3.0 DWC3 컨트롤러 용.
+"samsung, exynos7-dwusb3": Exynos7의 USB 3.0 DWC3 컨트롤러 용.
+  - # address-cells, # size-cells : 장치에 'reg'속성이있는 하위 노드가있는 경우 '1'이어야합니다.
+  - 범위 : 하위 주소 공간과 상위 주소 공간 간의 유효한 1 : 1 변환을 허용합니다.
+  - clocks : 컨트롤러에서 요구하는대로 clocks ID 배열.
+  - clock-names : clock 속성의 ID와 일치하는 시계의 이름
+
+하위 노드 :
+dwc3 코어는 Exynos dwc3 glue의 서브 노드로 추가되어야합니다.
+- dwc3 :
+    dwc3의 바인딩 세부 사항은 다음에서 찾을 수 있습니다.
+    문서 / devicetree / bindings / usb / dwc3.txtgs/usb/dwc3.txt
+
+Example:
+	usb@12000000 {
+		compatible = "samsung,exynos5250-dwusb3";
+		clocks = <&clock 286>;
+		clock-names = "usbdrd30";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		dwc3 {
+			compatible = "synopsys,dwc3";
+			reg = <0x12000000 0x10000>;
+			interrupts = <0 72 0>;
+			usb-phy = <&usb2_phy &usb3_phy>;
+		};
+	};

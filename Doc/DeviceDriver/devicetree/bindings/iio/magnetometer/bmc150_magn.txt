@@ -1,0 +1,49 @@
+* Bosch BMC150 magnetometer sensor
+
+http://ae-bst.resource.bosch.com/media/products/dokumente/bmc150/BST-BMC150-DS000-04.pdf
+
+Required properties:
+
+  - compatible : should be "bosch,bmc150_magn"
+  - reg : the I2C address of the magnetometer
+
+Optional properties:
+
+  - interrupt-parent : phandle to the parent interrupt controller
+  - interrupts : interrupt mapping for GPIO IRQ
+
+Example:
+
+bmc150_magn@12 {
+        compatible = "bosch,bmc150_magn";
+        reg = <0x12>;
+        interrupt-parent = <&gpio1>;
+        interrupts = <0 1>;
+};
+
+/*
+* Bosch BMC150 자력계 센서
+
+http://ae-bst.resource.bosch.com/media/products/dokumente/bmc150/BST-BMC150-DS000-04.pdf
+
+필수 속성 :
+
+   - 호환 가능 : "bosch, bmc150_magn"이어야합니다.
+   - reg : 자력계의 I2C 주소
+
+선택 속성 :
+
+   --interrupt-parent : 부모 인터럽트 컨트롤러와 연결
+   - 인터럽트 : GPIO IRQ에 대한 인터럽트 매핑
+
+Example:
+
+bmc150_magn@12 {
+        compatible = "bosch,bmc150_magn";
+        reg = <0x12>;
+        interrupt-parent = <&gpio1>;
+        interrupts = <0 1>;
+};
+
+
+*/

@@ -1,0 +1,33 @@
+From 5ffec0666b51098698fc371fb0f0a1db0477f307 Mon Sep 17 00:00:00 2001
+From: Iain Hunter <i-hunter1@ti.com>
+Date: Tue, 16 Aug 2016 09:50:57 +0100
+Subject: [PATCH 1/2] add Wilink8 support to sdk3 defconfig
+
+---
+ arch/arm/configs/tisdk_am57xx-evm_defconfig | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/arch/arm/configs/tisdk_am57xx-evm_defconfig b/arch/arm/configs/tisdk_am57xx-evm_defconfig
+index 7d4d68e..5fe69d8 100644
+--- a/arch/arm/configs/tisdk_am57xx-evm_defconfig
++++ b/arch/arm/configs/tisdk_am57xx-evm_defconfig
+@@ -2010,8 +2010,14 @@ CONFIG_RTL_CARDS=m
+ # CONFIG_RTL8192EE is not set
+ # CONFIG_RTL8821AE is not set
+ # CONFIG_RTL8192CU is not set
+-# CONFIG_RTL8XXXU is not set
+-# CONFIG_WL_TI is not set
++CONFIG_WL_TI=y
++# CONFIG_WL1251 is not set
++CONFIG_WL12XX=m
++CONFIG_WL18XX=m
++CONFIG_WLCORE=m
++CONFIG_WLCORE_SPI=m
++CONFIG_WLCORE_SDIO=m
++CONFIG_WILINK_PLATFORM_DATA=y
+ # CONFIG_ZD1211RW is not set
+ CONFIG_MWIFIEX=m
+ CONFIG_MWIFIEX_SDIO=m
+-- 
+1.9.1
+

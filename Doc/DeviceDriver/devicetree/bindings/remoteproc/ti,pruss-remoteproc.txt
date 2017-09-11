@@ -1,0 +1,405 @@
+PRU-ICSS on TI SoCs
+===================
+
+Binding status: Unstable - Subject to changes to account for all sub-modules
+
+The Programmable Real-Time Unit and Industrial Communication Subsystem
+(PRU-ICSS) is present on various TI SoCs such as AM335x or AM437x. A
+PRUSS consists of dual 32-bit RISC cores (Programmable Real-Time Units,
+or PRUs), shared RAM, data and instruction RAMs, some internal peripheral
+modules to facilitate industrial communication, and an interrupt controller.
+The programmable nature of the PRUs provide flexibility to implement custom
+peripheral interfaces, fast real-time responses, or specialized data handling.
+The common peripheral modules include the following,
+  - an Ethernet MII_RT module with two MII ports
+  - an MDIO port to control external Ethernet PHYs
+  - an Industrial Ethernet Peripheral (IEP) to manage/generate Industrial
+    Ethernet functions
+  - an Enhanced Capture Module (eCAP)
+  - an Industrial Ethernet Timer with 7/9 capture and 16 compare events
+  - a 16550-compatible UART to support PROFIBUS
+
+바인딩 상태 : 불안정 - 모든 하위 모듈의 계정 변경 대상
+
+프로그래머블 리얼 타임 유닛 및 산업 통신 서브 시스템 (PRU-ICSS)은 AM335x 또는 AM437x와 같은 다양한 TI SoC에 제공됩니다. PRUSS는 듀얼 32 비트 RISC 코어 (프로그래머블 리얼 타임 유닛 또는 PRU), 공유 RAM, 데이터 및 명령어 RAM, 산업용 통신을 용이하게하는 일부 내부 주변 모듈 및 인터럽트 컨트롤러로 구성됩니다. PRU의 프로그래밍 가능 특성은 맞춤 주변 장치 인터페이스, 빠른 실시간 응답 또는 특수 데이터 처리를 구현할 수있는 유연성을 제공합니다.
+   - 2 개의 MII 포트가있는 이더넷 MII_RT 모듈
+   - 외부 이더넷 PHY를 제어하는 MDIO 포트
+   - 산업용 이더넷 기능을 관리 / 생성하는 산업용 이더넷 주변 장치 (IEP)
+   - eCAP (Enhanced Capture Module)
+   - 7/9 캡처 및 16 개 비교 이벤트가있는 산업용 이더넷 타이머
+   - PROFIBUS를 지원하는 16550 호환 UART
+
+A PRU-ICSS subsystem can have up to three shared data memories. A PRU core
+acts on a primary Data RAM (there are usually 2 Data RAMs) at its address
+0x0, but also has access to a secondary Data RAM (primary to the other PRU
+core) at its address 0x2000. A shared Data RAM, if present, can be accessed
+by both the PRU cores. The Interrupt Controller (INTC) and a CFG module are
+common to both the PRU cores. Each PRU core also has a private instruction RAM,
+and specific register spaces for Control and Debug functionalities.
+PRU-ICSS 서브 시스템은 최대 3 개의 공유 데이터 메모리를 가질 수 있습니다.
+PRU 코어는 자신의 어드레스 0x0에 1 차 데이터 RAM (일반적으로 2 개의 데이터 RAM이 있음)에서 
+작동하지만 어드레스 0x2000에서 2 차 데이터 RAM (다른 PRU 코어에 1 차)에 대한 액세스도 갖는다.
+공유 데이터 RAM (있는 경우)은 두 PRU 코어에서 액세스 할 수 있습니다.
+인터럽트 컨트롤러 (INTC) 및 CFG 모듈은 두 PRU 코어에 공통적입니다. 
+각각의 PRU 코어는 또한 개인 명령어 RAM 및 제어 및 디버그 기능을위한 특정 레지스터 공간을 갖는다.
+
+PRU-ICSS SYSCFG wrapper Parent Node
+====================================
+This node is _required only_ for AM437x SoCs due to the chained SYSCFG
+integration. The PRU-ICSS parent nodes are defined as child nodes of
+this node on AM437x SoCs in addition to the following properties.
+이 노드는 체인 된 SYSCFG 통합으로 인해 AM437x SoC에 대해 _required only_ 입니다.
+ PRU-ICSS 상위 노드는 다음 특성 외에도 AM437x SoC에서이 노드의 하위 노드로 정의됩니다.
+
+Required Properties:
+필수 등록 정보 :
+
+--------------------
+- compatible     : should be,
+                       "ti,am4372-pruss-wrapper" for AM437x family of SoCs
+                       AM437x SoC 제품군을위한 "ti, am4372-pruss-wrapper"여야합니다.
+- ti,hwmods      : name of the hwmod associated with the PRUSS instance
+					PRUSS 인스턴스와 연관된 hwmod의 ame
+
+- reg            : base address and size of the PRUSS1 CFG sub-module
+					PRUSS1 CFG 하위 모듈의 기본 주소 및 크기
+- #address-cells : should be 1
+- #size-cells    : should be 1
+- ranges         : no specific range translations required, child nodes have the
+                   same address view as the parent, so should be mentioned without
+                   any value for the property
+- 범위 : 특정 범위 변환 필요 없음, 하위 노드는 부모와 동일한 주소보기를 가지므로 속성에 대한 값없이 언급해야합니다.
+
+PRU-ICSS Parent Node
+=====================
+Each PRU-ICSS subsystem instance is represented as a node with
+the individual PRU processor cores, an INTC node and an MDIO node
+represented as child nodes within the parent PRUSS node.
+각각의 PRU-ICSS 서브 시스템 인스턴스는 개별 PRU 프로세서 코어, 
+INTC 노드 및 부모 PRUSS 노드 내의 자식 노드로서 표현 된 MDIO 노드를 갖는 노드로서 표현된다.
+
+Required Properties:
+--------------------
+- compatible     : should be one of,
+				   다음 중 하나 여야합니다.
+                       "ti,am3352-pruss" for AM335x family of SoCs
+                       "ti,am4372-pruss" for AM437x family of SoCs
+                       "ti,am5728-pruss" for AM57xx family of SoCs
+                       "ti,k2g-pruss" for K2G SoC
+- ti,hwmods      : name of the hwmod associated with the PRUSS instance
+                   (does not apply for AM437x and K2G SoCs)
+                   PRUSS 인스턴스와 연관된 hwmod의 이름 (AM437x 및 K2G SoC에는 적용되지 않음)
+
+- reg            : base address and size for each of the sub-modules as
+                   mentioned in reg-names, and in the same order as the
+                   reg-names
+                   reg-name에 기술 된 바와 같이, 각 서브 모듈의베이스 주소와 크기, reg-names와 같은 순서
+
+- reg-names      : should contain a string from among the following names,
+                   each representing a specific sub-module. A PRU-ICSS may
+                   not have all of the Data RAMs. The binding is agnostic
+                   of the order of these reg-names
+                   다음 name들 중에서 하나의 특정 하위 모듈을 나타내는 문자열을 포함해야합니다. PRU-ICSS는 모든 데이터 RAM을 가지고 있지 않을 수도 있습니다. 
+                   바인딩은 이러한 reg-name의 순서를 불가지론합니다.
+                       "dram0" for Data RAM0,
+                       "dram1" for Data RAM1,
+                       "shrdram2" for Shared Data RAM,
+                       "cfg" for CFG sub-module,
+                       "iep" for IEP sub-module,
+                       "mii_rt" for MII-RT sub-module,
+- #address-cells : should be 1
+- #size-cells    : should be 1
+- ranges         : no specific range translations required, child nodes have the
+                   same address view as the parent, so should be mentioned without
+                   any value for the property
+- 범위 : 특정 범위 변환 필요 없음, 하위 노드는 부모와 동일한 주소보기를 가지므로 속성에 대한 값없이 언급해야합니다.
+
+
+PRUSS INTC Child Node
+======================
+Each PRUSS has a single interrupt controller instance that is common to both
+the PRU cores. Each interrupt controller can detect 64 input events which are
+then mapped to 10 possible output interrupts through two levels of mapping. The
+input events can be triggered by either the PRUs and/or various other PRUSS
+internal and external peripherals.  The first 2 output interrupts are fed
+exclusively to the internal PRU cores, with the remaining 8 connected to
+external interrupt controllers including the MPU.
+각 PRUSS는 두 PRU 코어에 공통 인 single interrupt controller 인스턴스를 가지고 있습니다. 각 인터럽트 컨트롤러는 64 개의 입력 이벤트를 감지 할 수 있으며 두 가지 매핑 레벨을 통해 10 개의 가능한 출력 인터럽트에 매핑됩니다. 입력 이벤트는 PRU 및 / 또는 다양한 다른 PRUSS 내부 및 외부 주변 장치에 의해 트리거 될 수있다. 첫 번째 2 개의 출력 인터럽트는 내부 PRU 코어에만 공급되고 나머지 8 개는 MPU를 포함한 외부 인터럽트 컨트롤러에 연결됩니다.
+
+Required Properties:
+--------------------
+- compatible           : should be one of,
+                             "ti,am3352-pruss-intc" for AM335x family of SoCs
+                             "ti,am4372-pruss-intc" for AM437x family of SoCs
+                             "ti,am5728-pruss-intc" for AM57xx family of SoCs
+                             "ti,k2g-pruss-intc" for K2G SoC
+- reg                  : base address and size for the PRUSS INTC sub-module
+						 PRUSS INTC 하위 모듈의 기본 주소 및 크기
+
+- reg-names            : should contain the string "intc"
+						 문자열 "intc"를 포함해야합니다.
+
+- interrupts           : all the interrupts generated towards the main host
+                         processor in the SoC. The format depends on the
+                         interrupt specifier for the particular SoC's MPU
+                         parent interrupt controller
+                         모든 인터럽트는 SoC의 주 호스트 프로세서쪽으로 생성됩니다. 
+                         형식은 특정 SoC의 MPU 부모 인터럽트 컨트롤러에 대한 인터럽트 지정자에 따라 다릅니다		
+
+- interrupt-names      : should use one of the following names for each
+                         interrupt, the name should match the corresponding
+                         host interrupt number,
+                             "host2", "host3", "host4", "host5", "host6",
+                             "host7", "host8" or "host9"
+                         NOTE: AM437x and K2G SoCs do not have "host7" interrupt
+                               connected to MPU
+                          각 인터럽트에 대해 다음 이름 중 하나를 사용할 수 있습니다. 이름은 해당 호스트 인터럽트 번호와 일치해야합니다.
+                              "host2", "host3", "host4", "host5", "host6"
+                              "host7", "host8"또는 "host9"
+                          참고 : AM437x 및 K2G SoC에는 "host7"인터럽트가 MPU에 연결되어 있지 않습니다. 
+    	
+- interrupt-controller : mark this node as an interrupt controller
+							이 노드를 인터럽트 컨트롤러로 표시한다.
+
+- #interrupt-cells     : should be 1. Client users shall use the PRU System
+                         event number (the interrupt source that the client
+                         is interested in) as the value of the interrupts
+                         property in their node
+                         클라이언트 사용자는 자신의 노드에서 인터럽트 속성의 값으로 
+                         PRU 시스템 이벤트 번호 (클라이언트가 관심있는 인터럽트 소스)를 사용해야한다	
+
+PRU Child Node
+===============
+Each PRUSS has dual PRU cores, each represented by a PRU child node. Each node
+can optionally be rendered inactive by using the standard DT string property,
+"status".
+
+Each PRU child node must either be named "pru0" or "pru1", for the first and
+and second PRUs respectively.
+각각의 PRUSS는 PRU 자식 노드에 의해 표현되는 이중 PRU 코어를 갖는다. 각 노드는 표준 DT 문자열 속성 인 "status"를 사용하여 선택적으로 비활성화 될 수 있습니다.
+각 PRU 자식 노드는 "pru0"또는 "pru1"중 첫 번째 노드와 및 제 2 PRU를 포함한다.
+
+Required Properties:
+--------------------
+- compatible     : should be
+                       "ti,am3352-pru" for AM335x family of SoCs
+                       "ti,am4372-pru" for AM437x family of SoCs
+                       "ti,am5728-pru" for AM57xx family of SoCs
+                       "ti,k2g-pru" for K2G SoC
+- reg            : base address and size for each of the 3 sub-module address
+                   spaces as mentioned in reg-names, and in the same order as
+                   the reg-names
+                   reg-names에 설명되어있는 3 개의 서브 모듈 주소 공간의 
+                   각각의베이스 주소와 크기, reg-names와 같은 순서
+
+- reg-names      : should contain each of the following 3 names, with the "iram"
+                   entry being the first one
+                       "iram" for Instruction RAM,
+                       "control" for the CTRL sub-module registers,
+                       "debug" for the Debug sub-module registers,
+"iram"항목은 명령어 RAM의 첫 번째 "iram", CTRL 하위 모듈 레지스터의 "control", Debug 하위 모듈 레지스터의 "debug", 다음과 같은 3 개의 이름을 포함해야합니다.
+
+Optional Properties:
+--------------------
+The virtio based communication between the MPU and a PRU core _requires_
+either the 'mboxes' property to be defined, or the set of 'interrupt-parent',
+'interrupts' and 'interrupt-names' properties to be defined. The 'mboxes'
+property is not applicable for K2G SoC.
+MPU와 PRU 코어 간의 virtio 기반 통신은 'mboxes'속성을 정의하거나 'interrupt-parent',
+ 'interrupts'및 'interrupt-names'속성을 정의해야합니다. 'mboxes'속성은 K2G SoC에는 적용 할 수 없습니다.
+
+- mboxes           : OMAP Mailbox specifier denoting the sub-mailbox, if using
+                     a mailbox for IPC signalling between host and a PRU core.
+                     The specifier format is as per the bindings,
+                         Documentation/devicetree/bindings/mailbox/omap-mailbox.txt
+                     This property should match with the sub-mailbox node used
+                     in the corresponding firmware image.
+                     OMAP Mailbox  specifier 와 PRU 코어 간의 IPC 시그널링을 위해 mailbox 를 사용하는 경우 서브 sub-mailbox를 나타내는 메일 박스 지정자. 지정자 형식은 바인딩에 따라 다릅니다. Documentation / devicetree / bindings / mailbox / omap-mailbox.txt이 등록 정보는 해당 펌웨어 이미지에서 사용되는 하위 사서함 노드와 일치해야합니다.
+
+- interrupt-parent : phandle to the PRUSS INTC node. Should be defined if
+                     interrupts property is to be used.
+                     PRUSS INTC 노드에 pHandle. interrupt 속성이 사용될 경우 정의되어야합니다.
+
+- interrupts       : array of interrupt specifiers if using PRU system events
+                     for IPC signalling between host and a PRU core. This
+                     property should match with the PRU system event used in
+                     the corresponding firmware image.
+                     호스트와 PRU 코어 간의 IPC 시그널링을 위해 PRU 시스템 이벤트를 사용하는 경우 인터럽트 지정자의 배열.
+                      이 등록 정보는 해당 펌웨어 이미지에 사용 된 PRU 시스템 이벤트와 일치해야합니다.
+
+- interrupt-names  : should use one of the following names for each interrupt,
+                     the name should match the corresponding PRU system event
+                     number,
+                         "vring" - for PRU to HOST virtqueue signalling
+                         "kick"  - for HOST to PRU virtqueue signalling
+               각 인터럽트에 대해 다음 이름 중 하나를 사용해야하며 이름은 해당하는 PRU 시스템 이벤트 번호와 일치해야합니다.
+						  "vring"- PRU에서 HOST virtqueue 신호 전달
+                          "kick"- HOST to PRU virtqueue 신호용
+
+- ti,pruss-gp-mux-sel : integer value of the GP MUX mode needed by an
+                        application to be run on a PRU. Currently to be used
+                        _only_ for PRU Ethernet usecase on AM571x IDK board
+                        and K2G ICE EVM boards.
+                        PRU에서 실행될 응용 프로그램에 필요한 GP MUX 모드의 정수 값.
+                         현재 AM571x IDK 보드 및 K2G ICE EVM 보드의 PRU 이더넷 용도로 _only_ 가 사용됩니다.
+
+MDIO Child Node
+================
+Each PRUSS has an MDIO module that can be used to control external PHYs. The
+MDIO module used within the PRU-ICSS is an instance of the MDIO Controller
+used in TI Davinci SoCs. Please refer to the corresponding binding document,
+Documentation/devicetree/bindings/net/davinci-mdio.txt for details.
+각 PRUSS에는 외부 PHY를 제어하는 데 사용할 수있는 MDIO 모듈이 있습니다. PRU-ICSS에서 
+사용되는 MDIO 모듈은 TI Davinci SoC에서 사용되는 MDIO 컨트롤러의 인스턴스입니다. 
+자세한 내용은 해당 바인딩 문서 인 Documentation / devicetree / bindings / net / davinci-mdio.txt를 참조하십시오.
+
+Application/User Nodes
+=======================
+The PRUSS device node will typically get used by application/user nodes that
+define/represent a PRU application. Each application/client node would need a
+reference to the PRUSS node or directly the PRU nodes in general.
+PRUSS 장치 노드는 일반적으로 application/user nodes that define/represent a PRU application에 의해 사용됩니다. 각각의 애플리케이션 / 클라이언트 노드는 PRUSS 노드에 대한 레퍼런스 또는 일반적으로 PRU 노드에 대한 직접적인 레퍼런스를 필요로 할 것이다.
+
+Optional Properties:
+--------------------
+- pruss          : phandle to a PRUSS node
+	- pruss : PRUSS 노드로 연결
+
+Example:
+========
+1.	/* AM33xx PRU-ICSS */
+	pruss: pruss@4a300000 {
+		compatible = "ti,am3352-pruss";
+		ti,hwmods = "pruss";
+		reg = <0x4a300000 0x2000>,
+		      <0x4a302000 0x2000>,
+		      <0x4a310000 0x3000>,
+		      <0x4a326000 0x2000>,
+		      <0x4a32e000 0x31c>,
+		      <0x4a332000 0x58>;
+		reg-names = "dram0", "dram1", "shrdram2", "cfg",
+			    "iep", "mii_rt";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		pruss_intc: intc@4a320000 {
+			compatible = "ti,am3352-pruss-intc";
+			reg = <0x4a320000 0x2000>;
+			reg-names = "intc";
+			interrupts = <20 21 22 23 24 25 26 27>;
+			interrupt-names = "host2", "host3", "host4",
+					  "host5", "host6", "host7",
+					  "host8", "host9";
+			interrupt-controller;
+			#interrupt-cells = <1>;
+		};
+
+		pru0: pru0@4a334000 {
+			compatible = "ti,am3352-pru";
+			reg = <0x4a334000 0x2000>,
+			      <0x4a322000 0x400>,
+			      <0x4a322400 0x100>;
+			reg-names = "iram", "control", "debug";
+			mboxes = <&mailbox &mbox_pru0>;
+		};
+
+		pru1: pru1@4a338000 {
+			compatible = "ti,am3352-pru";
+			reg = <0x4a338000 0x2000>,
+			      <0x4a324000 0x400>,
+			      <0x4a324400 0x100>;
+			reg-names = "iram", "control", "debug";
+			interrupt-parent = <&pruss_intc>;
+			interrupts = <18>, <19>;
+			interrupt-names = "vring", "kick";
+		};
+
+		pruss_mdio: mdio@4a332400 {
+			compatible = "ti,davinci_mdio";
+			reg = <0x4a332400 0x90>;
+			clocks = <&dpll_core_m4_ck>;
+			clock-names = "fck";
+			bus_freq = <1000000>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+		};
+	};
+
+2.	/* AM43xx PRU-ICSS with PRUSS1 node (PRUSS0 not shown) */
+	pruss_wrapper: pruss_wrapper@54426000 {
+		compatible = "ti,am4372-pruss-wrapper";
+		reg = <0x54426000 0x2000>;
+		ti,hwmods = "pruss";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		pruss1: pruss@54400000 {
+			compatible = "ti,am4372-pruss";
+			reg = <0x54400000 0x2000>,
+			      <0x54402000 0x2000>,
+			      <0x54410000 0x8000>,
+			      <0x54426000 0x2000>,
+			      <0x5442e000 0x31c>,
+			      <0x54432000 0x58>;
+			reg-names = "dram0", "dram1", "shrdram2", "cfg",
+				    "iep", "mii_rt";
+			#address-cells = <1>;
+			#size-cells = <1>;
+			ranges;
+
+			pruss1_intc: intc@54420000 {
+				compatible = "ti,am4372-pruss-intc";
+				reg = <0x54420000 0x2000>;
+				reg-names = "intc";
+				interrupts =
+				    <GIC_SPI 20 IRQ_TYPE_LEVEL_HIGH
+				     GIC_SPI 21 IRQ_TYPE_LEVEL_HIGH
+				     GIC_SPI 22 IRQ_TYPE_LEVEL_HIGH
+				     GIC_SPI 23 IRQ_TYPE_LEVEL_HIGH
+				     GIC_SPI 24 IRQ_TYPE_LEVEL_HIGH
+				     GIC_SPI 26 IRQ_TYPE_LEVEL_HIGH
+				     GIC_SPI 27 IRQ_TYPE_LEVEL_HIGH>;
+				interrupt-names = "host2", "host3",
+						  "host4", "host5",
+						  "host6", "host8",
+						  "host9";
+				interrupt-controller;
+				#interrupt-cells = <1>;
+			};
+
+			pru1_0: pru0@54434000 {
+				compatible = "ti,am4372-pru";
+				reg = <0x54434000 0x3000>,
+				      <0x54422000 0x400>,
+				      <0x54422400 0x100>;
+				reg-names = "iram", "control", "debug";
+				interrupt-parent = <&pruss1_intc>;
+				interrupts = <16>, <17>;
+				interrupt-names = "vring", "kick";
+			};
+
+			pru1_1: pru1@54438000 {
+				compatible = "ti,am4372-pru";
+				reg = <0x54438000 0x3000>,
+				      <0x54424000 0x400>,
+				      <0x54424400 0x100>;
+				reg-names = "iram", "control", "debug";
+				interrupt-parent = <&pruss1_intc>;
+				interrupts = <18>, <19>;
+				interrupt-names = "vring", "kick";
+			};
+
+			pruss1_mdio: mdio@54432400 {
+				compatible = "ti,davinci_mdio";
+				reg = <0x54432400 0x90>;
+				clocks = <&dpll_core_m4_ck>;
+				clock-names = "fck";
+				bus_freq = <1000000>;
+				#address-cells = <1>;
+				#size-cells = <0>;
+				status = "disabled";
+			};
+		};
+	};

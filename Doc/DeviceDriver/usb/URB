@@ -1,0 +1,405 @@
+Revised: 2000-Dec-05.
+Again:   2002-Jul-06
+Again:   2005-Sep-19
+
+    NOTE:
+
+    The USB subsystem now has a substantial section in "The Linux Kernel API"
+    guide (in Documentation/DocBook), generated from the current source
+    code.  This particular documentation file isn't particularly current or
+    complete; don't rely on it except for a quick overview.
+USB 서브시스템은 이제 상당한 섹션을 가지게 되었다. 현재 소스 코드로부터 생성된 "리눅스 커널 API"안에서
+이 특정한 문서파일은 완성되지 않았다. 퀵 오버뷰를 제외하고 이것을 의지하지 마라
+
+
+1.1. Basic concept or 'What is an URB?'
+기본 컨셉 혹은 'URB란 무엇인가?'
+
+The basic idea of the new driver is message passing, the message itself is 
+called USB Request Block, or URB for short.
+새 드라이버의 기본 아이디어는 메세지 패싱(메세지 전달), 
+메세지 자체가 짧은 시간동안 USB 요청 블록이나 URB를 호출한다. 
+
+- An URB consists of all relevant information to execute any USB transaction 
+  and deliver the data and status back.
+URB는 어느 USB 상호교류를 실행하고 데이터와 상태를 전달하기 위해 연관된 모든 정보로 구성된다.
+
+- Execution of an URB is inherently an asynchronous operation, i.e. the 
+  usb_submit_urb(urb) call returns immediately after it has successfully
+  queued the requested action.
+URB의 실행은 원래 비동기적 실행이다. urb 콜은 그것이 요청된 작업을 성공적으로 큐에 넣은 후 즉시 되돌아온다.
+
+- Transfers for one URB can be canceled with usb_unlink_urb(urb) at any time.
+하나의 URB의 전송은 어떤 시간에서든 urb로 취소될 수 있다. 
+
+- Each URB has a completion handler, which is called after the action
+  has been successfully completed or canceled. The URB also contains a
+  context-pointer for passing information to the completion handler.
+각 URB 완료 핸들러를 가진다. 그 핸들러는 작업이 성공적으로 완료되거나 취소된 후에 요청된다.
+URB는 정보를 완료 핸들러에 전달하기 위해 내용-포인터도 포함한다.
+
+- Each endpoint for a device logically supports a queue of requests.
+  You can fill that queue, so that the USB hardware can still transfer
+  data to an endpoint while your driver handles completion of another.
+  This maximizes use of USB bandwidth, and supports seamless streaming
+  of data to (or from) devices when using periodic transfer modes.
+각 디바이스의 마침포인트는 논리적으로 요청들의 큐를 지원한다.
+너의 드라이버가 다른 완료를 처리하는 동안 USB 하드웨어가 데이터를 마침포인터로 전송할 수 있게 하기 위해서 너는 그 큐를 채울 수 있다.
+이것은 주기적인 옮기기 모드들을 사용할 때, USB 대역폭 사용을 최대화한다.
+그리고 디바이스로나 디바이스로부터 데이터의 원활한 스트리밍을 지원한다.
+
+
+1.2. The URB structure
+URB의 구조
+
+Some of the fields in an URB are:
+URB안에 있는 몇가지 필드
+
+struct urb
+{
+// (IN) device and pipe specify the endpoint queue
+// (입력) 디바이스와 파이프는 마침포인트의 큐를 지정한다.
+	struct usb_device *dev;         // pointer to associated USB device
+					// 관련된 USB 장치를 가리키는 포인터
+	unsigned int pipe;              // endpoint information
+					// 마침포인터 정보
+
+	unsigned int transfer_flags;    // ISO_ASAP, SHORT_NOT_OK, etc.
+					// ?
+
+// (IN) all urbs need completion routines
+// (입력) 모든 urb는 완료 과정이 필요하다.
+	void *context;                  // context for completion routine
+					// 완료 과정을 위한 내용
+	void (*complete)(struct urb *); // pointer to completion routine
+					// 완료 과정을 가리키는 포인터
+
+// (OUT) status after each completion
+// (출력) 각 완료 후의 상태
+	int status;                     // returned status
+					// 복귀한 상태
+
+// (IN) buffer used for data transfers
+// (입력) 데이더 전송을 위해 사용되는 버퍼
+	void *transfer_buffer;          // associated data buffer
+					// 관련된 데이터 버퍼
+	int transfer_buffer_length;     // data buffer length
+					// 데이터 버퍼 길이
+	int number_of_packets;          // size of iso_frame_desc
+					// iso_frame_desc의 크기
+
+// (OUT) sometimes only part of CTRL/BULK/INTR transfer_buffer is used
+// (출력) 때때로 오직 CTRL/BULK/INTR 전송_버퍼의 부분이 사용된다.
+	int actual_length;              // actual data buffer length
+					// 실제 데이터 버퍼 길이
+
+// (IN) setup stage for CTRL (pass a struct usb_ctrlrequest)
+// (입력) CTRL을 위한 준비 단계 (구조체 usb_ctrlrequest를 보냄)
+	unsigned char* setup_packet;    // setup packet (control only)
+					// 준비 패킷 (오직 컨트롤만)
+
+// Only for PERIODIC transfers (ISO, INTERRUPT)
+// 오직 주기적인 전송을 위해 (ISO, 인터럽트)
+    // (IN/OUT) start_frame is set unless ISO_ASAP isn't set
+    // (입/출력) 시작 프레임은 ISO_ASAP가 준비되지 않았다면 준비된다. 
+	int start_frame;                // start frame
+					// 시작 프레임
+	int interval;                   // polling interval
+					// 폴링 간격 (폴링: 송신요구의 유무를 문의하는 과정)
+    // ISO only: packets are only "best effort"; each can have errors
+    // ISO 전용: 패킷은 오직 "가장 좋은 성능"으로 한다; 각각이 에러를 가질 수 있다.
+	int error_count;                // number of errors
+					// 에러의 개수
+	struct usb_iso_packet_descriptor iso_frame_desc[0];
+};
+
+Your driver must create the "pipe" value using values from the appropriate
+endpoint descriptor in an interface that it's claimed.
+너의 드라이버는 반드시 할당된 인터페이스 안에 있는 알맞은 마침포인트 디스크립터의 값을 사용하여
+"파이프" 값을 생성해야 한다.
+
+
+1.3. How to get an URB?
+어떻게 URB를 얻을 수 있는가?
+
+URBs are allocated with the following call
+URB는 다음에 나오는 콜로 할당된다. 
+
+	struct urb *usb_alloc_urb(int isoframes, int mem_flags)
+
+Return value is a pointer to the allocated URB, 0 if allocation failed.
+The parameter isoframes specifies the number of isochronous transfer frames
+you want to schedule. For CTRL/BULK/INT, use 0. The mem_flags parameter
+holds standard memory allocation flags, letting you control (among other
+things) whether the underlying code may block or not.
+리턴값은 할당된 URB를 가리키는 포인터이다. 만약 할당을 실패한다면 0이 리턴된다.
+isoframe 매개변수는 니가 스케쥴하기 원하는 등시 전송 프레임의 수를 지정한다.
+CTRL/BULK/INT를 위해서는 0을 사용한다.(매개변수를 0으로 한다는 뜻인 것 같다.)
+mem_flags 값은 표준 메모리 할당 플래그를 가지고 있고 
+니가 밑에 놓인 코드를 블락할건지 안 할건지 컨트롤하게 한다. 
+
+
+
+To free an URB, use
+URB를 해제하려면 밑의 코드를 써라
+
+	void usb_free_urb(struct urb *urb)
+
+You may free an urb that you've submitted, but which hasn't yet been
+returned to you in a completion callback.  It will automatically be
+deallocated when it is no longer in use.
+너는 니가 제출한 urb를 해제할 수 있다.
+그러나 아직 완료 콜백 안에서 너에게 되돌아가지 않았다.
+그것(해제하는 것?)이 더이상 사용되지 않을 때 자동적으로 할당되지 않는다(해제된다).
+
+
+1.4. What has to be filled in?
+무엇을 채워야 하는가? 
+
+Depending on the type of transaction, there are some inline functions 
+defined in <linux/usb.h> to simplify the initialization, such as
+fill_control_urb() and fill_bulk_urb().  In general, they need the usb
+device pointer, the pipe (usual format from usb.h), the transfer buffer,
+the desired transfer length, the completion  handler, and its context. 
+Take a look at the some existing drivers to see how they're used.
+상호교류(상호작용?)의 타입에 따라 초기화를 간소화하기 위해서
+fill_control_urb()와 fill_bulk_urb()처럼
+<linux/urb.h>안에 정의된 몇가지 인라인 함수가 있다.
+일반적으로 그들은 usb 장치 포인터, 파이프(usb.h로부터의 보통 포맷), 전송 버퍼,
+요구되는 전송 길이, 완료 핸들러, 그것의 내용이 필요하다. 
+어떻게 그들이 사용되는지 보기 위해 몇개의 존재하는 드라이버를 보라.
+
+Flags:
+For ISO there are two startup behaviors: Specified start_frame or ASAP.
+For ASAP set URB_ISO_ASAP in transfer_flags.
+플래그:
+ISO를 위해 두가지 시작 동작이 있다.: 지정된 start_frame 이나 ASAP
+ASAP를 위해 URB_ISO_ASAP가 transfer_flags안에 설정되어 있다.
+
+If short packets should NOT be tolerated, set URB_SHORT_NOT_OK in 
+transfer_flags.
+만약 짧은 패킷들이 허용되지 않아야 하는 경우, transfer_flags안에 URB_SHORT_NOT_OK를 설정해라.
+
+1.5. How to submit an URB?
+어떻게 URB를 제출하는가?
+
+Just call
+불러라
+
+	int usb_submit_urb(struct urb *urb, int mem_flags)
+
+The mem_flags parameter, such as SLAB_ATOMIC, controls memory allocation,
+such as whether the lower levels may block when memory is tight.
+SLAB_ATOMIC같은 mem_flags 값은 메모리 할당을 컨트롤 한다.
+메모리가 꽉 차있을 때 더 낮은 레벨이 블락이 될지 안될지 같은 메모리 할당 
+
+It immediately returns, either with status 0 (request queued) or some
+error code, usually caused by the following:
+상태 0이나 몇가지 에러 코드가 즉시 되돌아온다. 다음과 같은 상황으로 보통 발생한다. 
+
+- Out of memory (-ENOMEM)
+메모리 부족
+- Unplugged device (-ENODEV)
+분리된 디바이스
+- Stalled endpoint (-EPIPE)
+지연된 마침포인트
+- Too many queued ISO transfers (-EAGAIN)
+큐에 올라간 너무 많은 ISO 전송들
+- Too many requested ISO frames (-EFBIG)
+너무 많이 요구된 ISO 프레임
+- Invalid INT interval (-EINVAL)
+잘못된 INT 간격
+- More than one packet for INT (-EINVAL)
+INT를 위한 하나보다 많은 패킷
+
+After submission, urb->status is -EINPROGRESS; however, you should never
+look at that value except in your completion callback.
+제출 후에 urb->status는 -EINPROGRESS이다;
+하지만, 너는 너의 완료 콜백 안에서 제외된 값을 절대 볼 수 없다.
+
+For isochronous endpoints, your completion handlers should (re)submit
+URBs to the same endpoint with the ISO_ASAP flag, using multi-buffering,
+to get seamless ISO streaming.
+등시성의 마침포인트를 위해, 너의 완성 핸들러는 URB를 같은 마침포인트에 ISO_ASAP flag와 함께 (다시)제출해야 한다.
+원활한 ISO 스트리밍을 얻기 위해
+
+
+1.6. How to cancel an already running URB?
+어떻게 이미 진행중인 URB를 취소하는가?
+
+There are two ways to cancel an URB you've submitted but which hasn't
+been returned to your driver yet.  For an asynchronous cancel, call
+니가 제출한 URB를 취소할 두 가지 방법이 있다. 그러나 아직 너의 드라이버로 돌아오지 않게 하는 방법은 없다.
+비동기적인 취소를 위해 아래의 코드를 부른다.
+
+	int usb_unlink_urb(struct urb *urb)
+
+It removes the urb from the internal list and frees all allocated
+HW descriptors. The status is changed to reflect unlinking.  Note
+that the URB will not normally have finished when usb_unlink_urb()
+returns; you must still wait for the completion handler to be called.
+이것은 내부의 목록으로부터 urb를 제거하고 모든 할당된 HW 디스크립터를 해제한다.
+연결 해제를 반영하기 위해 상태가 변한다.
+usb_unlink_urb()가 리턴할 때 URB는 정상적으로 끝나지 않는 것을 주의해라.
+너는 완성 핸들러가 불려질 때까지 반드시 기다려야한다. 
+
+
+To cancel an URB synchronously, call
+동기적으로 URB를 취소하려면 다음 코드를 불러라.
+
+	void usb_kill_urb(struct urb *urb)
+
+It does everything usb_unlink_urb does, and in addition it waits
+until after the URB has been returned and the completion handler
+has finished.  It also marks the URB as temporarily unusable, so
+that if the completion handler or anyone else tries to resubmit it
+they will get a -EPERM error.  Thus you can be sure that when
+usb_kill_urb() returns, the URB is totally idle.
+이것은 usb_unlink_urb가 하는 모든 것이다. 
+그리고 추가로 URB가 되돌아온 후까지 그리고 완성 핸들러가 끝날 때까지 이것은 기다린다.
+이것은 또한 일시적으로 사용불가할 때 URB를 표시한다.
+만약 완성 핸들러나 어느거나 이것을 다시 제출을 시도한다면 그들이 -EPERM 에러 얻을 수 있게 하기 위해.
+그리고나면 너는 sub_kill_urb()가 리턴할 때 URB가 완전히 휴면상태가 된다는 것을 확신할 수 있다. 
+
+There is a lifetime issue to consider.  An URB may complete at any
+time, and the completion handler may free the URB.  If this happens
+while usb_unlink_urb or usb_kill_urb is running, it will cause a
+memory-access violation.  The driver is responsible for avoiding this,
+which often means some sort of lock will be needed to prevent the URB
+from being deallocated while it is still in use.
+고려해야할 라이프타임 이슈가 있다. URB는 어느 시간에나 완성된다.
+그리고 완성 핸들러는 URB를 해제한다. 
+만약 usb_unlink_urb 또는 usb_kill_usb가 실행되는 동안 이것이 실행된다면
+메모리 접근 위반이 일어날 것이다. 드라이버는 이것을 피할 책임이 있다.
+이것은 보통 URB가 여전히 사용되는 동안 할당해제로부터 예방하기 위해 
+몇가지 종류의 락이 필요해 진다는 것을 의미한다.
+
+On the other hand, since usb_unlink_urb may end up calling the
+completion handler, the handler must not take any lock that is held
+when usb_unlink_urb is invoked.  The general solution to this problem
+is to increment the URB's reference count while holding the lock, then
+drop the lock and call usb_unlink_urb or usb_kill_urb, and then
+decrement the URB's reference count.  You increment the reference
+count by calling
+반면에, usb_unlink_urb가 완성 핸들러를 부르는 것을 끝날때까지(?), 
+usb_unlink_urb가 호출될 때 핸들러는 어느 락도 취하지 말아야 한다.
+이 문제를 푸는 일반적인 해결방법은 락을 하는 동안 URB의 참조 횟수를 늘리는 것이다.
+그리고 나서 URB의 참조 횟수를 줄인다. 너는 다음 코드를 불러 참조 횟수를 증가시킨다. 
+
+	struct urb *usb_get_urb(struct urb *urb)
+
+(ignore the return value; it is the same as the argument) and
+decrement the reference count by calling usb_free_urb.  Of course,
+none of this is necessary if there's no danger of the URB being freed
+by the completion handler.
+(리턴값을 무시해라; 이것은 인수와 동일하다(?))
+그리고 usb_free_urb를 불러서 참조 횟수를 줄인다.
+물론, 이것의 아무것도 필수적이지는 않다.
+만약 완성 핸들러에 의해 URB가 해제되는 것이 아무 위험이 없다면. 
+
+1.7. What about the completion handler?
+완성 핸들러는 어떤가?
+
+The handler is of the following type:
+핸들러는 다음의 타입이 있다.
+
+	typedef void (*usb_complete_t)(struct urb *)
+
+I.e., it gets the URB that caused the completion call. In the completion
+handler, you should have a look at urb->status to detect any USB errors.
+Since the context parameter is included in the URB, you can pass
+information to the completion handler.
+이것은 완성 콜을 일으키는 URB를 갖는다. 완성 핸들러에서 너는 모든 USB 에러를 감지하기 위해
+urb->status 확인해야 한다. 내용 파라미터가 URB안에 포함되어 있어서 너는 완성 컴파일러로
+정보를 전달할 수 있다.
+
+Note that even when an error (or unlink) is reported, data may have been
+transferred.  That's because USB transfers are packetized; it might take
+sixteen packets to transfer your 1KByte buffer, and ten of them might
+have transferred successfully before the completion was called.
+에러(또는 연결 해제)가 나타났을 때에도 데이터가 전송된다는 것을 주의하라.
+USB 전송이 패킷화되기 때문이다. 너의 1바이트 버퍼를 전송하는 것이 16패킷을 가진다.
+그리고 그것의 10개는 완성이 호출되기 전에 성공적으로 전송된다.
+
+NOTE:  ***** WARNING *****
+주의: ***** 주의사항 *****
+NEVER SLEEP IN A COMPLETION HANDLER.  These are often called in atomic
+context.
+절대로 완성 핸들러를 슬립모드로 하지 마라. 이것은 종종 atomic context(원자적 내용?)으로 불린다.
+
+In the current kernel, completion handlers run with local interrupts
+disabled, but in the future this will be changed, so don't assume that
+local IRQs are always disabled inside completion handlers.
+현재 커널에서는 지역의 인터럽트를 사용하지 않고 완성 핸들러가 실행된다.
+그러나 미래의 커널에서는 변화할 것이다. 지역 IRQ가 항상 완성핸들러 안에서 사용되지 않는다고 가정하지 마라.
+
+1.8. How to do isochronous (ISO) transfers?
+어떻게 동시성 전송을 하는가?
+
+For ISO transfers you have to fill a usb_iso_packet_descriptor structure,
+allocated at the end of the URB by usb_alloc_urb(n,mem_flags), for each
+packet you want to schedule.   You also have to set urb->interval to say
+how often to make transfers; it's often one per frame (which is once
+every microframe for highspeed devices).  The actual interval used will
+be a power of two that's no bigger than what you specify.
+ISO 전송을 너는 usb_iso_packet_descroptor 구조를 채워야하고
+usb_alloc_urb(n, mem_flags)에 의해 URB의 끝에 니가 원하는 패킷을 할당해야 한다.
+너는 urb->interval도 설정해야 한다. 얼마나 자주 전송을 할 것인지 알려주기 위해;
+이것은 보통 프레임 당 한번이다. (하이스피드 장치를 위한 모든 마이크로 프레임) 
+실제 사용되는 인터벌은 니가 지정한 것보다 크지 않은 값의 제곱이 된다.
+
+The usb_submit_urb() call modifies urb->interval to the implemented interval
+value that is less than or equal to the requested interval value.  If
+ISO_ASAP scheduling is used, urb->start_frame is also updated.
+usb_submit_urb() 콜은 urb->interval을 실행된 인터벌 값으로 수정한다.
+요청한 인터벌 값보다 같거나 작은 값이다.
+만약 ISO_ASAP 스케줄링을 사용한다면 urb->start_frame도 업데이트 된다.
+
+For each entry you have to specify the data offset for this frame (base is
+transfer_buffer), and the length you want to write/expect to read.
+After completion, actual_length contains the actual transferred length and 
+status contains the resulting status for the ISO transfer for this frame.
+It is allowed to specify a varying length from frame to frame (e.g. for
+audio synchronisation/adaptive transfer rates). You can also use the length 
+0 to omit one or more frames (striping).
+각 엔트리마다 니가 프레임(베이스는 transfer_buffer)의 데이터 오프셋을 지정해야한다.
+니가 쓰기 원하고 읽기를 기대하는 길이에 맞게.
+완성 후에 actual_length는 실제 전송된 길이를 포함한다.
+그리고 status는 이 프레임 ISO 전송 결과 상태를 포함한다.
+프레임으로부터 프레임까지 댜양한 길이를 지정하는 것이 허용된다. (예를 들어 오디오 동기화/알맞은 전송 속도)
+너는 하나 또는 그 이상의 프레임을 생략하기 위해 길이 0도 사용할수 있다. (striping)
+
+For scheduling you can choose your own start frame or ISO_ASAP. As explained
+earlier, if you always keep at least one URB queued and your completion
+keeps (re)submitting a later URB, you'll get smooth ISO streaming (if usb
+bandwidth utilization allows).
+스케쥴링을 위해 너는 너 자신의 시작 프레임이나 ISO_ASAP를 선택할 수 있다.
+앞에 설명했던대로 만약 니가 항상 최소한 하나의 URB를 큐에 유지하고 너의 완성이
+나중의 URB를 다시 재출하는 것을 유지한다면 너는 부드러운 ISO 스트리밍을 얻을 수 있다.
+
+If you specify your own start frame, make sure it's several frames in advance
+of the current frame.  You might want this model if you're synchronizing
+ISO data with some other event stream.
+만약 니가 너의 시작 프레임을 지정한다면 현재의 프레임보다 몇 프레임이 앞인지 확인하라.
+너는 이 모델을 원할지 모른다. 만약 니가 ISO 데이터를 몇가지 다른 이벤트 스트림에 동기화한다면
+
+1.9. How to start interrupt (INT) transfers?
+어떻게 인터럽트 전송을 시작하나?
+
+Interrupt transfers, like isochronous transfers, are periodic, and happen
+in intervals that are powers of two (1, 2, 4 etc) units.  Units are frames
+for full and low speed devices, and microframes for high speed ones.
+The usb_submit_urb() call modifies urb->interval to the implemented interval
+value that is less than or equal to the requested interval value.
+인터럽트 전송(등시성의 전송 같은)은 주기적이고 인터벌을 두고 발생한다. 인터벌은 제곱수 단위로 간다.
+단위는 제일 높고 낮은 스피드 디바이스의 프레임이고 그리고 마이크로프레임은 높은 스피드를 위한 것이다.
+usb_submit_urb() 콜은 urb->interval을 사용된 인터벌 값으로 수정한다. 
+사용된 인터벌 값은 요청된 값과 같거나 작다. 
+
+In Linux 2.6, unlike earlier versions, interrupt URBs are not automagically
+restarted when they complete.  They end when the completion handler is
+called, just like other URBs.  If you want an interrupt URB to be restarted,
+your completion handler must resubmit it.
+리눅스 2.6에서는 이전 버전과 다르게 인터럽트 URB가 완료되었을 때 자동적으로 재시작을 하지 않는다.
+그들은 완성 핸들러가 호출되었을 때 끝난다. 다른 URB들처럼.
+만약 니가 인터럽트 URB가 재시작하길 원한다면 너의 완성 핸들러는 인터럽트 URB를 반드시 다시 제출해야 한다.

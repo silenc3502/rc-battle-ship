@@ -1,0 +1,149 @@
+STMicroelectronics STi MIPHY28LP PHY binding
+============================================
+
+This binding describes a miphy device that is used to control PHY hardware
+for SATA, PCIe or USB3.
+
+Required properties (controller (parent) node):
+- compatible	: Should be "st,miphy28lp-phy".
+- st,syscfg	: Should be a phandle of the system configuration register group
+		  which contain the SATA, PCIe or USB3 mode setting bits.
+
+Required nodes	:  A sub-node is required for each channel the controller
+		   provides. Address range information including the usual
+		   'reg' and 'reg-names' properties are used inside these
+		   nodes to describe the controller's topology. These nodes
+		   are translated by the driver's .xlate() function.
+
+이 바인딩은 SATA, PCIe 또는 USB3 용 PHY 하드웨어를 제어하는 데 사용되는 miphy device를 나타냅니다.
+
+필수 속성 (컨트롤러 (부모) 노드) :
+- compatible : "st, miphy28lp-phy"여야합니다.
+- st, syscfg : SATA, PCIe 또는 USB3 모드 설정 비트를 포함하는 시스템 구성 레지스터 그룹의 패킷이어야합니다.
+
+Required nodes : controller가 제공하는 각 채널마다 하위 노드가 필요합니다. 일반적인 'reg'및 'reg-names'속성을 포함한 주소 범위 정보는 컨트롤러의 topology를 설명하기 위해이 노드 내부에서 사용됩니다. 이 노드는 드라이버의 .xlate () 함수로 변환됩니다.
+
+Required properties (port (child) node):
+- #phy-cells	: Should be 1 (See second example)
+		  Cell after port phandle is device type from:
+			- PHY_TYPE_SATA
+			- PHY_TYPE_PCI
+			- PHY_TYPE_USB3
+- reg		: Address and length of the register set for the device.
+- reg-names	: The names of the register addresses corresponding to the registers
+		  filled in "reg". It can also contain the offset of the system configuration
+		  registers used as glue-logic to setup the device for SATA/PCIe or USB3
+		  devices.
+- st,syscfg	: Offset of the parent configuration register.
+- resets	: phandle to the parent reset controller.
+- reset-names	: Associated name must be "miphy-sw-rst".
+
+필수 속성 (포트 (하위) 노드) :
+- # phy-cells : 1이어야합니다 (두 번째 예 참조).
+포트 phandle 이후의 셀은 다음과 같은 장치 유형입니다.
+- PHY_TYPE_SATA
+- PHY_TYPE_PCI
+- PHY_TYPE_USB3
+- reg : 장치에 설정된 레지스터의 주소와 길이.
+- reg-names : "reg"로 채워진 레지스터에 해당하는 레지스터 주소의 이름. 또한 SATA / PCIe 또는 USB3 장치 용 장치를 설정하기위한 glue-logic으로 사용되는 시스템 구성 레지스터의 오프셋을 포함 할 수 있습니다.
+- st, syscfg : 상위 구성 레지스터의 오프셋입니다.
+- resets : parent reset controller 에 phandle
+- reset-names : 관련 이름은 "miphy-sw-rst"여야합니다.
+
+
+Optional properties (port (child) node):
+- st,osc-rdy		: to check the MIPHY0_OSC_RDY status in the glue-logic. This
+			  is not available in all the MiPHY. For example, for STiH407, only the
+			  MiPHY0 has this bit.
+- st,osc-force-ext	: to select the external oscillator. This can change from
+			  different MiPHY inside the same SoC.
+- st,sata_gen		: to select which SATA_SPDMODE has to be set in the SATA system config
+			  register.
+- st,px_rx_pol_inv	: to invert polarity of RXn/RXp (respectively negative line and positive
+			  line).
+- st,scc-on		: enable ssc to reduce effects of EMI (only for sata or PCIe).
+- st,tx-impedance-comp	: to compensate tx impedance avoiding out of range values.
+
+선택적 속성 (포트 (하위) 노드) :
+- st, osc-rdy : 글루 로직에서 MIPHY0_OSC_RDY 상태를 확인합니다. 이것은 모든 MiPHY에서 사용할 수있는 것은 아닙니다. 예를 들어 STiH407의 경우 MiPHY0만이이 비트를 갖습니다.
+- st, osc-force-ext : 외부 발진기를 선택합니다. 이는 동일한 SoC 내부의 다른 MiPHY에서 변경 될 수 있습니다.
+- st, sata_gen : SATA 시스템 구성 레지스터에 설정할 SATA_SPDMODE를 선택합니다.
+- st, px_rx_pol_inv : RXn / RXp (각각 음의 라인과 양의 라인)의 극성 반전.
+- st, scc-on : ssc가 EMI의 영향을 줄이도록 합니다 (sata 또는 PCIe에만 해당).
+- st, tx-impedance-comp : 범위 값을 벗어나는 tx 임피던스를 보상합니다.
+
+example:
+
+		miphy28lp_phy: miphy28lp@9b22000 {
+			compatible = "st,miphy28lp-phy";
+			st,syscfg = <&syscfg_core>;
+			#address-cells	= <1>;
+			#size-cells	= <1>;
+			ranges;
+
+			phy_port0: port@9b22000 {
+				reg = <0x9b22000 0xff>,
+				      <0x9b09000 0xff>,
+				      <0x9b04000 0xff>;
+				reg-names = "sata-up",
+					    "pcie-up",
+					    "pipew";
+
+				st,syscfg = <0x114 0x818 0xe0 0xec>;
+				#phy-cells = <1>;
+				st,osc-rdy;
+				reset-names = "miphy-sw-rst";
+				resets = <&softreset STIH407_MIPHY0_SOFTRESET>;
+			};
+
+			phy_port1: port@9b2a000 {
+				reg = <0x9b2a000 0xff>,
+				      <0x9b19000 0xff>,
+				      <0x9b14000 0xff>;
+				reg-names = "sata-up",
+					    "pcie-up",
+					    "pipew";
+
+				st,syscfg = <0x118 0x81c 0xe4 0xf0>;
+
+				#phy-cells = <1>;
+				st,osc-force-ext;
+				reset-names = "miphy-sw-rst";
+				resets = <&softreset STIH407_MIPHY1_SOFTRESET>;
+			};
+
+			phy_port2: port@8f95000 {
+				reg = <0x8f95000 0xff>,
+				      <0x8f90000 0xff>;
+				reg-names = "pipew",
+					    "usb3-up";
+
+				st,syscfg = <0x11c 0x820>;
+
+				#phy-cells = <1>;
+				reset-names = "miphy-sw-rst";
+				resets = <&softreset STIH407_MIPHY2_SOFTRESET>;
+			};
+		};
+
+
+Specifying phy control of devices
+=================================
+
+Device nodes should specify the configuration required in their "phys"
+property, containing a phandle to the miphy device node and an index
+specifying which configuration to use, as described in phy-bindings.txt.
+
+디바이스 노드는 phy-bindings.txt에 설명 된 것처럼, miphy 디바이스 노드에 대한 phandle과 사용할 구성을 지정하는 색인을 포함하는 "phys"등록 정보에 필요한 구성을 지정해야합니다.
+
+example:
+		sata0: sata@9b20000  {
+			...
+			phys		= <&phy_port0 PHY_TYPE_SATA>;
+			...
+		};
+
+Macro definitions for the supported miphy configuration can be found in:
+지원되는 miphy 구성에 대한 매크로 정의는 다음에서 찾을 수 있습니다.
+
+include/dt-bindings/phy/phy.h

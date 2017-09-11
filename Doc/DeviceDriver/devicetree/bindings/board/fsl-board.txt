@@ -1,0 +1,169 @@
+Freescale Reference Board Bindings
+
+This document describes device tree bindings for various devices that
+exist on some Freescale reference boards.
+
+* Board Control and Status (BCSR)
+
+Required properties:
+
+ - compatible : Should be "fsl,<board>-bcsr"
+ - reg : Offset and length of the register set for the device
+
+프리 스케일 레퍼런스 보드 바인딩
+
+이 문서는 일부 Freescale 레퍼런스 보드에 존재하는 다양한 디바이스를위한 디바이스 트리 바인딩을 설명합니다.
+
+* 보드 제어 및 상태 (BCSR)
+
+필수 속성 :
+
+  - 호환 가능 : "fsl, <board> -bcsr"이어야합니다.
+  - reg : 장치에 설정된 레지스터 오프셋 및 길이
+
+
+
+Example:
+
+	bcsr@f8000000 {
+		compatible = "fsl,mpc8360mds-bcsr";
+		reg = <f8000000 8000>;
+	};
+
+* Freescale on-board FPGA
+
+This is the memory-mapped registers for on board FPGA.
+
+Required properties:
+- compatible: should be a board-specific string followed by a string
+  indicating the type of FPGA.  Example:
+	"fsl,<board>-fpga", "fsl,fpga-pixis", or
+	"fsl,<board>-fpga", "fsl,fpga-qixis"
+- reg: should contain the address and the length of the FPGA register set.
+
+Optional properties:
+- interrupt-parent: should specify phandle for the interrupt controller.
+- interrupts: should specify event (wakeup) IRQ.
+프리 스케일 온보드 FPGA
+
+이것은 보드상의 FPGA를위한 메모리 매핑 레지스터이다.
+
+필수 속성 :
+- 호환 : FPGA의 유형을 나타내는 문자열이 뒤에 오는 보드 특정 문자열이어야합니다. 예:
+"fsl, <board> -fpga", "fsl, fpga-pixis"또는
+"fsl, <board> -fpga", "fsl, fpga-qixis"
+- reg : FPGA 레지스터 세트의 주소와 길이를 포함해야합니다.
+
+선택적 속성 :
+- interrupt-parent : 인터럽트 컨트롤러에 대해 phandle을 지정해야합니다.
+- 인터럽트 : 이벤트 (wakeup) IRQ를 지정해야합니다.
+
+Example (P1022DS):
+
+	 board-control@3,0 {
+		 compatible = "fsl,p1022ds-fpga", "fsl,fpga-ngpixis";
+		 reg = <3 0 0x30>;
+		 interrupt-parent = <&mpic>;
+		 interrupts = <8 8 0 0>;
+	 };
+
+Example (LS2080A-RDB):
+
+        cpld@3,0 {
+                compatible = "fsl,ls2080ardb-fpga", "fsl,fpga-qixis";
+                reg = <0x3 0 0x10000>;
+        };
+
+* Freescale BCSR GPIO banks
+
+Some BCSR registers act as simple GPIO controllers, each such
+register can be represented by the gpio-controller node.
+
+Required properities:
+- compatible : Should be "fsl,<board>-bcsr-gpio".
+- reg : Should contain the address and the length of the GPIO bank
+  register.
+- #gpio-cells : Should be two. The first cell is the pin number and the
+  second cell is used to specify optional parameters (currently unused).
+- gpio-controller : Marks the port as GPIO controller.
+
+* 프리 스케일 BCSR GPIO 뱅크
+
+일부 BCSR 레지스터는 간단한 GPIO 컨트롤러의 역할을하며, 각 레지스터는 GPIO 컨트롤러 노드로 나타낼 수 있습니다.
+
+필수 사항 :
+- 호환 : "fsl, <board> -bcsr-gpio"여야합니다.
+- reg : 주소와 GPIO 뱅크 레지스터의 길이를 포함해야합니다.
+- # gpio-cells : 2 여야합니다. 첫 번째 셀은 핀 번호이며 두 번째 셀은 선택적 매개 변수 (현재 사용되지 않음)를 지정하는 데 사용됩니다.
+- gpio-controller : 포트를 GPIO 컨트롤러로 표시합니다.
+
+
+Example:
+
+	bcsr@1,0 {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		compatible = "fsl,mpc8360mds-bcsr";
+		reg = <1 0 0x8000>;
+		ranges = <0 1 0 0x8000>;
+
+		bcsr13: gpio-controller@d {
+			#gpio-cells = <2>;
+			compatible = "fsl,mpc8360mds-bcsr-gpio";
+			reg = <0xd 1>;
+			gpio-controller;
+		};
+	};
+
+* Freescale on-board FPGA connected on I2C bus
+
+Some Freescale boards like BSC9132QDS have on board FPGA connected on
+the i2c bus.
+
+Required properties:
+- compatible: Should be a board-specific string followed by a string
+  indicating the type of FPGA.  Example:
+	"fsl,<board>-fpga", "fsl,fpga-qixis-i2c"
+- reg: Should contain the address of the FPGA
+
+* I2C 버스에 연결된 Freescale 온보드 FPGA
+
+BSC9132QDS와 같은 일부 프리 스케일 보드에는 FPGA가 i2c 버스에 연결되어 있습니다.
+
+필수 속성 :
+- 호환 : FPGA의 유형을 나타내는 문자열 다음에 보드 특정 문자열이어야합니다. 예:
+"fsl, <board> -fpga", "fsl, fpga-qixis-i2c"
+- reg : FPGA의 주소를 포함해야한다.
+
+Example:
+	fpga: fpga@66 {
+		compatible = "fsl,bsc9132qds-fpga", "fsl,fpga-qixis-i2c";
+		reg = <0x66>;
+	};
+
+* Freescale on-board CPLD
+
+Some Freescale boards like T1040RDB have an on board CPLD connected.
+
+Required properties:
+- compatible: Should be a board-specific string like "fsl,<board>-cpld"
+  Example:
+	"fsl,t1040rdb-cpld", "fsl,t1042rdb-cpld", "fsl,t1042rdb_pi-cpld"
+- reg: should describe CPLD registers
+
+* 프리 스케일 온보드 CPLD
+
+T1040RDB와 같은 일부 프리 스케일 보드에는 온보드 CPLD가 연결되어있다.
+
+필수 속성 :
+- 호환 : "fsl, <board> -cpld"와 같은 보드 특정 문자열이어야합니다.
+   예:
+"fsl, t1040rdb - cpld", "fsl, t1042rdb-cpld", "fsl, t1042rdb_pi-cpld"
+- reg : CPLD 레지스터를 설명해야합니다.
+
+
+Example:
+	cpld@3,0 {
+		compatible = "fsl,t1040rdb-cpld";
+		reg = <3 0 0x300>;
+	};

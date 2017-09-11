@@ -1,0 +1,147 @@
+1. How to test OTG FSM(HNP and SRP)
+-----------------------------------
+To show how to demo OTG HNP and SRP functions via sys input files
+with 2 Freescale i.MX6Q sabre SD boards.
+
+2개의 Freescale i.MX6Q saber SD 보드를 사용하여 sys 입력 파일을 통해 
+OTG HNP 및 SRP 기능을 데모하는 방법을 보여줍니다.
+
+1.1 How to enable OTG FSM in menuconfig
+---------------------------------------
+Select CONFIG_USB_OTG, rebuild kernel Image and modules.
+If you want to check some internal variables for otg fsm,
+select CONFIG_USB_CHIPIDEA_DEBUG, there are 2 files which
+can show otg fsm variables and some controller registers value:
+cat /sys/kernel/debug/ci_hdrc.0/otg
+cat /sys/kernel/debug/ci_hdrc.0/registers
+
+CONFIG_USB_OTG를 선택하고 커널 이미지와 모듈을 다시 빌드하십시오.
+otg fsm에 대한 내부 변수를 확인하려면 CONFIG_USB_CHIPIDEA_DEBUG를 선택하십시오. 
+otg fsm 변수와 일부 컨트롤러 레지스터 값을 표시 할 수 있는 두 개의 파일이 있습니다:
+cat /sys/kernel/debug/ci_hdrc.0/otg
+cat /sys/kernel/debug/ci_hdrc.0/registers
+
+1.2 Test operations
+-------------------
+1) Power up 2 Freescale i.MX6Q sabre SD boards with gadget class driver loaded
+   (e.g. g_mass_storage).
+
+1) 가젯 클래스 드라이버가 로드 된 2개의 Freescale i.MX6Q 세이버 SD 보드의 전원을 켭니다.
+   (이 보드가 있어야 되는건가?)
+   (예 : g_mass_storage).
+
+2) Connect 2 boards with usb cable with one end is micro A plug, the other end
+   is micro B plug.
+
+   The A-device(with micro A plug inserted) should enumrate B-device.
+
+2) 2개의 보드를 USB 케이블로 연결하십시오. (장치가 두 개, 2개의 SD 보드)
+   한쪽 끝은 마이크로 A 플러그이고, 다른 쪽 끝은 마이크로 B 플러그입니다.
+
+   A 디바이스 (마이크로 A 플러그가 삽입 된 상태)는 B 디바이스를 열거해야합니다.
+
+3) Role switch
+
+3) 역할 전환
+
+   On B-device:
+   echo 1 > /sys/bus/platform/devices/ci_hdrc.0/inputs/b_bus_req
+
+   if HNP polling is not supported, also need:
+   HNP 폴링이 지원되지 않는 경우:
+
+   On A-device:
+   echo 0 > /sys/bus/platform/devices/ci_hdrc.0/inputs/a_bus_req
+
+   B-device should take host role and enumrate A-device.
+   B 디바이스는 호스트 역할을 맡고 A 디바이스를 나열해야합니다.
+
+4) A-device switch back to host.
+
+4) A 디바이스가 호스트로 다시 전환 (왜 이렇게 하는 거지? 서로 나열해보기 위해서?)
+
+   On B-device:
+   echo 0 > /sys/bus/platform/devices/ci_hdrc.0/inputs/b_bus_req
+
+   A-device should switch back to host and enumrate B-device.
+   A 디바이스는 다시 호스트로 전환하고 B 디바이스를 열거해야합니다.
+
+5) Remove B-device(unplug micro B plug) and insert again in 10 seconds,
+   A-device should enumrate B-device again.
+
+5) B 장치 제거 (마이크로 B 플러그 분리) 및 10 초 후에 다시 삽입하십시오. 
+   A 장치는 B 장치를 다시 열거해야합니다.
+
+6) Remove B-device(unplug micro B plug) and insert again after 10 seconds,
+   A-device should NOT enumrate B-device.
+
+6) B 장치를 제거하고 (마이크로 B 플러그를 뺀다) 10 초 후에 다시 삽입하십시오. 
+   A 장치는 B 장치를 열거하지 않아야합니다.
+
+   if A-device wants to use bus:
+   A 디바이스가 버스를 사용하려는 경우:
+
+   On A-device:
+   echo 0 > /sys/bus/platform/devices/ci_hdrc.0/inputs/a_bus_drop
+   echo 1 > /sys/bus/platform/devices/ci_hdrc.0/inputs/a_bus_req
+
+   if B-device wants to use bus:
+   B 디바이스가 버스를 사용하려는 경우
+
+   On B-device:
+   echo 1 > /sys/bus/platform/devices/ci_hdrc.0/inputs/b_bus_req
+
+7) A-device power down the bus.
+
+7) A 디바이스가 버스 전원을 끕니다.
+
+   On A-device:
+   echo 1 > /sys/bus/platform/devices/ci_hdrc.0/inputs/a_bus_drop
+
+   A-device should disconnect with B-device and power down the bus.
+   A 디바이스는 B 디바이스와 연결을 끊고 버스의 전원을 꺼야합니다.
+
+8) B-device does data pulse for SRP.
+
+8) B 장치는 SRP에 대한 데이터 펄스를 처리합니다.
+
+   On B-device:
+   echo 1 > /sys/bus/platform/devices/ci_hdrc.0/inputs/b_bus_req
+
+   A-device should resume usb bus and enumrate B-device.
+   A 디바이스는 USB 버스를 resume하고 B 디바이스를 열거해야합니다.
+
+1.3 Reference document
+----------------------
+"On-The-Go and Embedded Host Supplement to the USB Revision 2.0 Specification
+July 27, 2012 Revision 2.0 version 1.1a"
+
+2. How to enable USB as system wakeup source
+-----------------------------------
+Below is the example for how to enable USB as system wakeup source
+at imx6 platform.
+다음은 imx6 플랫폼에서 USB를 시스템 웨이크 업 소스로 사용하는 방법에 대한 예입니다.
+
+2.1 Enable core's wakeup
+2.1 코어의 웨이크 업 활성화
+echo enabled > /sys/bus/platform/devices/ci_hdrc.0/power/wakeup
+2.2 Enable glue layer's wakeup
+2.2 접착 레이어의 웨이크 업 활성화
+echo enabled > /sys/bus/platform/devices/2184000.usb/power/wakeup
+2.3 Enable PHY's wakeup (optional)
+2.3 PHY의 웨이크 업 활성화 (선택적)
+echo enabled > /sys/bus/platform/devices/20c9000.usbphy/power/wakeup
+2.4 Enable roothub's wakeup
+2.4 roothub의 웨이크 업 활성화
+echo enabled > /sys/bus/usb/devices/usb1/power/wakeup
+2.5 Enable related device's wakeup
+2.5 관련 장치의 웨이크 업 활성화
+echo enabled > /sys/bus/usb/devices/1-1/power/wakeup
+
+If the system has only one usb port, and you want usb wakeup at this port, you
+can use below script to enable usb wakeup.
+for i in $(find /sys -name wakeup | grep usb);do echo enabled > $i;done;
+
+시스템에 단 하나의 USB 포트가 있고 이 포트에서 USB 웨이크 업을 원한다면 
+아래 스크립트를 사용하여 USB 웨이크 업을 활성화 할 수 있습니다.
+for i in $(find /sys -name wakeup | grep usb);do echo enabled > $i;done;

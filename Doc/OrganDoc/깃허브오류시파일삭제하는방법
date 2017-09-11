@@ -1,0 +1,126 @@
+git push 할때 -- 100M 이상 안올라갈때 -- 삭제하는 방법
+
+키워드 : BFG Repo-Cleaner 적용
+URL : https://medium.com/@stargt/github%EC%97%90-100mb-%EC%9D%B4%EC%83%81%EC%9D%98-%ED%8C%8C%EC%9D%BC%EC%9D%84-%EC%98%AC%EB%A6%AC%EB%8A%94-%EB%B0%A9%EB%B2%95-9d9e6e3b94ef
+
+기존 Commit에서 100MB보다 큰 파일의 로그를 강제로 없애줘야 한다. BFG Repo-Cleaner — BFG Repo-Cleaner https://rtyley.github.io/bfg-repo-cleaner/ — 를 이용하면 그 작업을 손쉽게 적용할 수 있다.
+공식 사이트에서 bfq-x.x.x.jar — x.x.x는 버전 — 를 받고, 대상이 되는 Repository에서 다음과 같이 그동안의 Commit에 포함된 100MB 이상의 파일을 정리하는 명령을 실행한다.
+
+[1_설치]
+:~$ sudo apt install ~~
+
+ * default-jre
+ * gcj-5-jre-headless
+ * openjdk-8-jre-headless
+ * gcj-4.8-jre-headless
+ * gcj-4.9-jre-headless
+ * openjdk-9-jre-headless
+
+[2_다운로드]
+공식사이트 : https://rtyley.github.io/bfg-repo-cleaner/
+에서, bfg-x.x.x.jar 다운로드 받는다
+
+[3_터미널에 입력]
+다운로드 받은 파일 을 GitHub 폴더로 이동한다.
+이 경로에서 다음을 터미널에 입력한다.
+> java -jar bfg-1.12.15.jar --strip-blobs-bigger-than 100M
+
+[4_확인]
+간혹 다음과 같은 오류가 나타날 수 있다
+===========================================
+$ java -jar bfg-x.x.x.jar --strip-blobs-bigger-than 100M
+Using repo : C:\***\.git
+Scanning packfile for large blobs: 132
+Scanning packfile for large blobs completed in 13 ms.
+Warning : no large blobs matching criteria found in packfiles — does the repo need to be packed?
+Please specify tasks for The BFG :
+bfg x.x.x
+(...)
+==========================================
+
+그럴 땐 아래 명령을 먼저 터미널에 입력하고,
+다시 [3]번을 수행한다.
+==========================================
+$ git repack && git gc
+Counting objects: 3002, done.
+(...)
+==========================================
+
+[5_git-push재시도]
+아래와 같은 메세지가 나오면 git-push 재시도가 가능하다
+git-push 재시도 해보자
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Using repo : /home/koitt/git_proj/RCBattleShip/.git
+
+Scanning packfile for large blobs: 162093
+Scanning packfile for large blobs completed in 135,976 ms.
+Found 2 blob ids for large blobs - biggest=518729332 smallest=452685260
+Total size (unpacked)=971414592
+Found 72020 objects to protect
+Found 4 commit-pointing refs : HEAD, refs/heads/master, refs/remotes/origin/HEAD, refs/remotes/origin/master
+
+Protected commits
+-----------------
+
+These are your protected commits, and so their contents will NOT be altered:
+
+ * commit 3ced63d6 (protected by 'HEAD')
+
+Cleaning
+--------
+
+Found 513 commits
+Cleaning commits:       100% (513/513)
+Cleaning commits completed in 5,848 ms.
+
+Updating 1 Ref
+--------------
+
+	Ref                 Before     After   
+	---------------------------------------
+	refs/heads/master | 3ced63d6 | 932895ed
+
+Updating references:    100% (1/1)
+...Ref update completed in 89 ms.
+
+Commit Tree-Dirt History
+------------------------
+
+	Earliest                                              Latest
+	|                                                          |
+	...........................................................D
+
+	D = dirty commits (file tree fixed)
+	m = modified commits (commit message or parents changed)
+	. = clean commits (no changes to file tree)
+
+	                        Before     After   
+	-------------------------------------------
+	First modified commit | bfb1300b | 447db5e3
+	Last dirty commit     | bfb1300b | 447db5e3
+
+Deleted files
+-------------
+
+	Filename     Git id             
+	--------------------------------
+	cscope.out | bfd499cc (494.7 MB)
+	tags       | d136f062 (431.7 MB)
+
+
+In total, 5 object ids were changed. Full details are logged here:
+
+	/home/koitt/git_proj/RCBattleShip.bfg-report/2017-06-22/14-37-12
+
+BFG run is complete! When ready, run: git reflog expire --expire=now --all && git gc --prune=now --aggressive
+
+
+--
+You can rewrite history in Git - don't let Trump do it for real!
+Trump's administration has lied consistently, to make people give up on ever
+being told the truth. Don't give up: https://github.com/bkeepers/stop-trump
+--
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+

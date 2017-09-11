@@ -1,0 +1,64 @@
+Improving Area and Resource Utilization Lab
+
+Introduction
+
+이 Lab 에서는 Vivado HLS 에서 Area 및 Resource 사용은 물론
+Design 성능을 향상시키는데 사용할 수 있는 다양한 기법과 지침을 소개한다.
+고려중인 Design 은 8 x 8 Block 의 데이터에 대해
+DCT(Discrete Cosine Transformation) 을 수행한다.
+
+
+
+Objectives
+
+이 Lab 을 완료한 이후 아래를 수행할 수 있다:
+
+* Design 에 Directives 를 추가한다.
+* PIPELINE Directive 를 사용하여 성능 향상
+* DATAFLOW Directive 와 구성 명령 기능을 구별한다.
+* Memory Partitions 기술을 적용하여 Resource 사용률 향상
+
+
+
+Procedure
+
+이 Lab 은 세부적인 지침에 대한 정보를 제공하는 일반적인 개요부터 단계별로 구성된다.
+Lab 을 진행하려면 이 세부 지침을 따르라
+이 Lab 은 9 가지 기본 단계로 구성된다.
+
+Vivado HLS 명령 프롬프트에서 Design 의 유효성 검사,
+Vivado HLS GUI 를 사용하여 새 프로젝트 만들기,
+Design 합성, RTL Simulation 실행, 성능 개선을 위한 PIPELINE 지시문 적용,
+PARTITION 지시문 적용을 통한 Memory Bandwidth 개선,
+DATAFLOW 지시문 적용, INLINE 적용, 마지막으로 RESHAPE 지시문을 적용한다.
+
+
+
+General Flow For this Lab
+
+1. Design 검사
+2. 새로운 프로젝트 생성
+3. Design 합성
+4. RTL Simulation 을 수행
+5. PIPELINE 지시어 적용
+6. Memory Bandwidth 를 향상
+7. DATAFLOW 지시어 적용
+8. INLINE 지시어 적용
+9. RESHAPE 지시어 적용
+
+
+
+Validate the Design from Command Line
+
+1-1. Vivado HLS Command Line 에서 Design 검증하기
+
+1-1-1. Vivado HLS 를 띄운다.
+       /opt/Xilinx/Vivado_HLS/2017.1/bin/vivado_hls
+
+1-1-2. Vivado HLS Command Prompt 에서, 디렉토리를 lab3 으로 변경한다.
+
+1-1-3. 자체 점검 프로그램(dct_test.c)가 제공된다.
+       이것을 사용하여 Design 을 검증할 수 있다.
+       Makefile 도 제공된다.
+       Makefile 을 사용하여 필요한 Source 를 컴파일하고 컴파일 된 프로그램을 실행할 수 있다.
+       Vivado HLS Command Prompt 에서 make 를 입력하여 Program 을 컴파일하고 실행한다.

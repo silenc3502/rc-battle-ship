@@ -1,0 +1,36 @@
+* NXP ISP1301 USB transceiver
+
+Required properties:
+- compatible: must be "nxp,isp1301"
+- reg: I2C address of the ISP1301 device
+
+Optional properties of devices using ISP1301:
+- transceiver: phandle of isp1301 - this helps the ISP1301 driver to find the
+               ISP1301 instance associated with the respective USB driver
+
+* NXP ISP1301 USB 트랜시버
+
+필수 속성 :
+- 호환 가능 : "nxp, isp1301"이어야합니다.
+- reg : ISP1301 장치의 I2C 주소
+
+ISP1301을 사용하는 장치의 선택적 속성 :
+- transceiver : isp1301의 phandle - 이것은 ISP1301 드라이버가 각각의 USB 드라이버와 연관된 ISP1301 인스턴스를 찾도록 도와줍니다.
+
+
+
+Example:
+
+	isp1301: usb-transceiver@2c {
+		compatible = "nxp,isp1301";
+		reg = <0x2c>;
+	};
+
+	usbd@31020000 {
+		compatible = "nxp,lpc3220-udc";
+		reg = <0x31020000 0x300>;
+		interrupt-parent = <&mic>;
+		interrupts = <0x3d 0>, <0x3e 0>, <0x3c 0>, <0x3a 0>;
+		transceiver = <&isp1301>;
+		status = "okay";
+	};

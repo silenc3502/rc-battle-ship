@@ -1,0 +1,54 @@
+* Melexis MLX90614 contactless IR temperature sensor
+
+http://melexis.com/Infrared-Thermometer-Sensors/Infrared-Thermometer-Sensors/MLX90614-615.aspx
+
+Required properties:
+
+  - compatible: should be "melexis,mlx90614"
+  - reg: the I2C address of the sensor
+
+Optional properties:
+
+  - wakeup-gpios: device tree identifier of the GPIO connected to the SDA line
+      to hold low in order to wake up the device.  In normal operation, the
+      GPIO is set as input and will not interfere in I2C communication.  There
+      is no need for a GPIO driving the SCL line.  If no GPIO is given, power
+      management is disabled.
+
+Example:
+
+mlx90614@5a {
+	compatible = "melexis,mlx90614";
+	reg = <0x5a>;
+	wakeup-gpios = <&gpio0 2 GPIO_ACTIVE_HIGH>;
+};
+
+
+
+/*
+
+* Melexis MLX90614 비접촉식 IR 온도 센서
+
+http://melexis.com/Infrared-Thermometer-Sensors/Infrared-Thermometer-Sensors/MLX90614-615.aspx
+
+필수 속성 :
+
+   - 호환 가능 : "melexis, mlx90614"여야합니다.
+   - reg : 센서의 I2C 주소
+
+선택 속성 :
+
+   - wakeup-gpios : 장치를 깨우기 위해 SDA 라인에 연결된 GPIO의 장치 트리 식별자입니다. 정상 동작에서 GPIO는 입력으로 설정되며 I2C 통신을 방해하지 않습니다.
+SCL 라인을 구동하는 GPIO는 필요 없습니다. GPIO가 제공되지 않으면 전원 관리가 비활성화됩니다.
+
+Example:
+
+mlx90614@5a {
+	compatible = "melexis,mlx90614";
+	reg = <0x5a>;
+	wakeup-gpios = <&gpio0 2 GPIO_ACTIVE_HIGH>;
+};
+
+
+
+*/

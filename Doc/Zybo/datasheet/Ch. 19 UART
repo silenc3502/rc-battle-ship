@@ -1,0 +1,464 @@
+19.1.1 Features
+각 UART controller(UART 0, UART 1)은 다음과 같은 특징들이 있다.
+• Programmable baud rate(유의미한 심볼 단위 전송율) generator
+• 64-byte receive and transmit FIFOs
+• Programmable protocol:
+	° 6, 7, or 8 data bits
+	° 1, 1.5, or 2 stop bits
+	° Odd, even, space, mark 모드나 no parity(None)모드
+• Parity, framing and overrun error detection
+• Line-break generation
+• Interrupts generation
+• RxD and TxD modes: 모드 스위치를 사용한 일반/반복 및 진단 루프백 가능
+• UART 1 옵션으로 UART 0 반복(loop)
+• Modem control signals: CTS, RTS, DSR, DTR, RI and DCD are available only on the EMIO interface
+
+19.1.2 System Viewpoint 시스템 관점
+아래는 UART controller를 위한 시스템 관점 도표이다. (Figure 19-1 참조)
+
+slcr register set은
+1) UART clocks
+2) reset
+3) MIO-EMIO signal mapping
+을 위한 control bits을 포함한다.
+
+소프트웨어는
+PS AXI interconnect가 연결된 APB 32-bit slave interface를 사용하여
+UART controller registers에 접근한다.
+
+각 controller의 IRQ(Interrupt Request)는
+PS interrupt controller에 연결되어
+PL에 route된다.
+
+19.1.3 Notices
+Reference Clock Operating Restrictions
+7z007s and 7z010 CLG225 Devices
+
+19.2 Functional Description (기능 설명)
+19.2.1 Block Diagram
+아래는 UART module을 위한 블록 도표이다. (Figure 19-2 참조)
+
+19.2.2 Control Logic (제어 로직)
+control logic은
+Control register와 Mode register를 갖고 있는데
+이는 다양한 UART 모드들을 작동하는데 사용된다.
+
+Control register는
+송수신 모듈에 대한
+soft reset을 허용, 비허용 및 알린다.
+
+Receive line break detection은
+소프트웨어적으로 구현돼야 한다.
+
+Receive line break detection 구현체는
+RxFIFO에서 하나 또는 여러 개의 zero byte로
+Frame Error를 알린다.
+
+Mode register는
+baud rate generator가 사용하는 clock을 선택한다.
+
+Mode register는 또한
+송수신 데이터에 사용되는
+비트 길이, parity bit, stop bit를 선택한다.
+
+Mode register는
+UART의 운영 모드를 선택하고
+필요하다면 normal UART mode, automatic echo,
+local loopback 또는 remote loopback 사이를 전환한다.
+
+19.2.3 Baud Rate Generator
+Baud rate generator는
+수신기와 송신기 모두를 위해
+bit period clock 또는 baud rate clock을 제공한다.
+
+baud rate clock은
+base clock uart_clk과 single cycle clock이 가능하게 분할하여 구현함됨으로서
+적합한 주파수 분배(appropriate frequency division)에서 clocking 효과를 얻을 수 있다.
+
+baud rate generation를 위한 효과적인 로직은 Figure 19-3 참조.
+
+baud rate generator는
+uart_ref_clk(master clock signal) 또는 uart_ref_clk / 8(master clock divided by eight)을 사용할 수 있다.
+
+사용된 clock signal은
+Mode register(uart.mode_reg0)의 CLKS bit 값에 따라서 선택되어 사용된다.
+
+다음의 설명에서의 결과물인 선택된 clock은 sel_clk이라 불린다.
+
+sel_clk clock은 세 개의 다른 clock을 생성하기 위해 분할되는데
+baud_sample, baud_tx_rate, baud_rx_rate이 그것들이다.
+
+baud_tx_rate은 데이터 송신 baud rate이다.
+
+baud_rx_rate은 명목적으로 baud_tx_rate와 같은 baud rate이지만,
+수신 받은 데이터를 재동기한다.
+
+baud_sample은 baud_rx_rate과 baud_tx_rate의 배수([BDIV] + 1)에서 실행되며
+수신 데이터를 over-sample 하는데 사용된다.
+
+sel_clk clock 주파수는
+baud_sample clock의 활성을 위해
+Baud Rate Generator register의 CD field의 값으로 나눠진다.
+
+Baud Rate Generator register는 1부터 65535 사이의 값으로 프로그램 할 수 있다.
+
+baud_sample clock은 [BDIV + 1]으로 나눠진다.
+
+BDIV는 Baud Rate Divier register의 프로그래밍 될 수 있는 field로
+4부터 255 사이의 값으로 프로그램 할 수 있다.
+
+It has a reset value of 15, inferring a default ratio of 16 baud_sample clocks per baud_tx_clock / baud_rx_rate.
+
+19.2.4 Transmit FIFO
+transmit FIFO는 TxFIFO이다.
+
+transmit FIFO는
+transmit module의 shift register에 데이터가 적재되고 나서
+transmit module에 의해 데이터가 제거되기 전까지
+APB interface를 사용하여 데이터를 저장하고 있는다.
+
+TxFIFO에 데이터가 적재되면, TxFIFO의 empty flag가 비워지고
+이 적재된 데이터의 Low state가 기억된다.
+이것은 TxFIFO의 last word가 제거되고
+transmitter의 shift register에 적재될 때까지 기억된다.
+
+이것이 의미하는 것은
+소프트웨어가 다음 데이터가 필요할 때까지
+또 다른 full serial word를 갖고 있을 수 있다는 것이다.
+이렇게 되면 empty flag에 반응하여 TxFIFO에 별다른 송신 시간을 낭비하지 않고
+다른 word들을 쓸 수 있게 된다.
+
+TxFIFO full interrupt status(TFULL)은 다음과 같을 때 사용된다.
+TxFIFO가 가득 차서 그것을 초과하는 데이터들은 TxFIFO에 적재되지 않도록 막는다.
+만약 또 다른 APB가 TxFIFO에 쓰여지려고 하면,
+overflow가 발생되고 쓰여지려는 데이터는 TxFIFO에 적재되지 않는다.
+
+transmit FIFO nearly full flag(TNFULL)은
+한 번 이상의 programmed size를 쓰기 위한 충분한 공간이 없음을 나타낸다.
+(이 programmed size는 Mode register의 WSIZE bits에 의해 제어된다.)
+
+TxFIFO nearly-full flag(TNFULL, transmit FIFO = TxFIFO)는
+TxFIFO에 단 하나의 여유 byte가 있음을 나타낸다.
+
+threshold trigger(TTRIG)는 TxFIFO의 fill level에서 설정될 수 있다.
+이 트리거(TTRIG)가 TxFIFO의 fill level이 프로그램된 값에 도달하면 설정되도록
+Transmitter Trigger register의 값을 사용하여 설정할 수 있다.
+
+19.2.5 Transmitter Data Stream
+transmit module은 TxFIFO의 병렬 데이터를 제거하고
+transmitter shift register에 적재함으로써
+직렬화 할 수 있다.
+
+transmit module은
+serial data stream으로
+start bit // data bits // parity bit // stop bits 순으로 shift out한다.
+
+transmit baud clock enable(baud_tx_rate)의 edge가 떨어질 때
+최하위 비트(least significant bit)가 먼저 송신된다.
+
+A typical transmitted data stream is illustrated in Figure 19-4.
+
+uart.mode_reg0[CHRL] register bit는
+data bits의 수로 문자 길이를 선택한다.
+
+uart.mode_reg0[NBSTOP] register bit는
+송신할 stop bits의 수를 선택한다.
+
+19.2.6 Receiver FIFO
+RxFIFO는
+receiver serial shift register에 의해 수신된 데이터를 저장한다.
+
+RxFIFO의 최대 데이터 크기는 8비트이다.
+
+RxFIFO에 데이터가 적재되면(TxFIFO와 비슷하다)
+RxFIFO의 empty flag가 비워지고
+APB interface에 의해 모든 데이터가 전송 될 때까지 state가 Low로 유지된다.
+
+아무 것도 없는 RxFIFO를 읽으면 0을 반환한다.
+
+RxFIFO full status(Chnl_int_sts_reg0 [RFUL]과 Channel_sts_reg0 [RFUL] bits)는
+RxFIFO가 가득 차서 그것을 초과하는 어떤 데이터도 RxFIFO에 적재되는 것을 막는다.
+
+RxFIFO의 공간을 다시 사용할 수 있을 때
+recevier에 저장돼 있던 character가 적재된다.
+
+19.2.7 Receiver Data Capture
+UART는
+uARTx REF_CLK과 clock enable(baud_sample)을 사용하여
+UARTx_RxD signal을 지속적으로 오버 샘플링한다.
+
+샘플(지속적으로 오버 샘플링한 그 샘플)이
+Low level로의 전환을 감지했을 때
+이것은 start bit의 시작을 나타낼 수 있다.
+
+UART가 UART_RxD의 input에서 Low level을 감지했을 때
+BDIV baud rate clock cycle count의 절반을 기다리고
+그리고 나서 세 번 더 샘플링 한다.
+
+만약 세 번의 비트가 모두 Low level을 나타내면(아마도 위에서 샘플링한 세 번의 결과)
+receiver는 이것이 (기본 BDIV 15에 대해) 유효한 start bit라고 판단하고(Figure 19-5처럼)
+
+유효한 start bit가 확인됐을 때,
+recevier baud rate clock enable(baud_rx_rate)는 재동기화(resynchronised) 된다.
+이것은 계속 들어오는 UART RxD signal의 샘플링이
+이론적으로 각 bit(아마도 data bit)의 중간 지점에서 발생함을 의미한다.
+(Figure 19-6 참조)
+
+재동기화된 baud_rx_rate이 높을 때
+마지막 세 개의 샘플링된 bit가 비교된다.
+
+로직 값은 다수결 투표에 의해 결정되는데,
+같은 값을 가지는 두 샘플이 그 값으로 data bit을 정의한다.
+
+serial data가 결정되었을 때(위의 투표 등에 의해)
+이것은 receive shift register로 쉬프트된다.
+
+완성된 character가 조합됐을 때,
+register의 contents는 RxFIFO에 push된다.
+
+• Receiver Parity Error
+매번 character가 수신되면, receiver는 수신된 데이터의 패리티를 계산한다.
+이때 계산은 uart.mode_reg0[PAR]의 bit field와 대조해보는 것이다.
+만약 다른 것이 감지된다면, uart.Chnl_int_sts_reg0 [PARE]의 parity error bit가 1로 설정되고 인터럽트가 생성된다.
+
+• Receiver Framing Error
+receiver가 frame의 끝에 있는 stop bit의 유효한 값을 받지 못했을 때
+uart.Chnl_int_sts_reg0 [FRAME]의 frame error bit를 1로 설정하고
+인터럽트를 발생한다.
+
+• Receiver Overflow Error
+character가 수신되면, controller는 RxFIFO에 여유 공간이 있는지 확인한다.
+만약 여유 공간이 있다면 character는 RxFIFO에 쓰여진다.
+만약 RxFIFO가 꽉 찼다면, controller는 대기한다.
+만약 RxD의 다음 start bit가 감지됐음에도 계속해서 RxFIFO가 꽉 차 있다면,
+data는 사라지고 controller는 Rx overflow interrupt bit인 Chnl_int_sts_reg0 [ROVR]을 1로 설정한다.
+그리고 인터럽트를 생성한다.
+
+• Receiver Timeout Mechanism
+receiver timeout machanism은 receiver가 비활성 RxD signal(a persistent High level)을 감지하도록 한다.
+
+timeout 시간은 uart.Rcvr_timeout_reg0 [RTO] bit field에 쓰여짐으로써 프로그래밍 된다.
+
+timeout mechanism은 10bit의 감소 카운터(점점 감소하며 카운팅 한다는 것인듯)를 사용한다.
+카운터는 reload되는 식이며
+RxD signal로 새로운 start bit가 수신되거나
+소프트웨어가 uart.Control.reg0 [RSTTO](이전 [RSTTO] 값과 관계 없음)을 1로 설정했을 때
+감소 카운트를 시작한다.
+
+만약 1023 bit의 시간 동안 start bit나 reset timeout이 발생하지 않으면
+timout이 발생한다.
+
+Receiver timeout error bit [TIMEOUT]이 interrupt status register에 설정되며,
+Control register의 [RSTTO] bit가 timeout 카운터의 재시작을 위해 1로 설정된다.
+재시작되면 이미 프로그래밍된 timeout value로 새로 쓰여진다.
+
+카운터의 상위 8비트는 [RTO] bit field의 값들로 다시 쓰여지고(reload)
+하위 2비트는 0으로 초기화된다.
+
+카운터의 clock은 UART bit clock이 된다.
+예를 들어, [RTO]가 0xFF이면 timeout 시간(period)은 1023 bit clocks이며,
+이는 256 x 4 - 1이다.
+만약 [RTO]에 0이 쓰여지면, timout mechanism은 비활성화된다.
+
+감소 카운터가 0일 때 receiver timeout이 발생하며,
+controller는 timeout interrupt status bit인 uart.Chnl_int_sts_reg0 [TIMEOUT]을 1로 설정한다.
+
+interrupt가 활성됐을 때(uart.Intrpt_mask_reg0 [TIMEOUT] = 1)
+PS interrupt controller의 IRQ signal이 발생(assert)된다.
+
+19.2.8 I/O Mode Switch
+mode switch는 컨트롤러 내에서 RxD와 TxD signal의 routing을 제어한다.
+(Figure 19-7 참조)
+
+mode switch를 사용하는 loopback은
+UARTx TxD/RxD I/O signal의 MIO-EMIO routing에 관계 없이 발생한다.
+
+여기에는 네 가지 운영 모드가 있으며 이것은 Figure 19-7 참조.
+
+이 모드는 uart.mode_reg0 [CHMODE] register bit field의 normal, automatic echo, local loopback, remote loopback에 의해 제어 된다.
+
+• Normal Mode
+Normal mode는 표준 UART 운영(operation)에 사용된다.
+
+• Automatic Echo Mode
+Echo mode는 RxD에서 data를 수신하고
+mode switch는 이 data를
+receiver와 TxD pin에 route한다.
+송신기의 data는 controller에서 보낼 수 없다.
+
+• Local Loopback Mode
+Local loopback mode는 RxD나 RxD pin과 연결되지 않고,
+송신된 data는 receiver로 다시 돌아간다.(looped back)
+
+• Remote Loopback Mode
+Remote loopback mode는 RxD signal을 TxD signal에 연결한다.
+이 mode에서, controller는
+TxD에서 아무것도 보낼 수 없고, RxD에서 그 무엇도 수신할 수 없다.
+
+19.2.9 UART0-to-UART1 Connection
+PS에 있는 두 개의 UART controller의 I/O signal은
+서로 연결될 수 있다.
+
+이 mode에서, 하나의 controller의 RxD, CTS input signal은
+slcr.LOOP [UA0_LOOP_UA1] bit를 1로 설정하여,
+다른 UART controller의 TxD, RTS output signal과 연결된다.
+
+다른 flow control signal은 연결되지 않는다.
+
+이러한 UART-to-UART 연결은 MIO-EMIO 프로그래밍에 관계 없이 발생한다.
+
+19.2.10 Status and Interrupts
+• Interrupt and Status Registers
+소프트웨어가 읽을 수 있는 두 가지 status register가 있다.
+이 두 register는 raw status를 보여준다.
+
+Chnl_int_sts_reg0 register는 status와 interrupt의 발생을 위해 읽힐 수 있다.
+
+Channel_sts_reg0 register는 오직 status만을 위해 읽혀진다.
+
+Chnl_int_sts_reg0 register는 sticky인데,
+bit이 설정되면
+소프트웨어가 이 register 값을 비울 때까지 유지된다.
+
+비우기 위해서는 값 1을 쓴다.
+
+이 register는
+Intrpt_mask_reg0 mask register와
+bit 방식(bit-wise)의 AND 연산을 한다.
+
+만약 어떤 AND function이라고 결과가 1이면,
+UART intterupt는 PS interrupt controller에 들어(assert)간다.
+
+	° Channel_sts_reg0 : 읽기 전용 raw status이며 쓰기는 무시된다.
+다양한 FIFO와 system indicator는
+uart.Channel_sts_reg0 register와(또는)
+uart.Chnl_int_sts_reg0 register에 routing된다.
+(Figuer 19-8 참조)
+
+Table 19-2에 interrupt register들과 bit field가 요약돼 있다.
+
+• Interrupt Mask Register
+Intrpt_mask_reg0은
+읽기 전용 interrupt mask/enable register이며,
+Chnl_int_sts_reg0 register의 raw interrupt의 개개인 mask를 위해 사용된다.
+
+	° mask bit = 0일 때 interrupt는 마스크 된다.
+	° mask bit = 1일 때 interrupt는 활성된다.
+
+이 mask는 쓰기 전용 Intrpt_en_reg0, Intrpt_dis_reg0 register에 의해 제어된다.
+
+각 연관된 enable/disable interrupt bit는
+서로 배타적으로 설정해야 한다.(should be set mutually exclusive)
+(예를 들어, interrupt 활성화를 위해선, Intrpt_en_reg0 [x]에 1을 쓰고, Intrpt_dis_reg0 [x]에 0을 쓴다.)
+
+Channel Status
+이 status bit들은 Channel_sts_reg0 register에 있는 것들이다.
+
+• TACTIVE : Transmitter state machine active status.
+만약 이것이 활성 상태이면,
+송신기는 현재 character를 이동시키고(shift out) 있다.
+
+• RACTIVE : Receiver state machine active status.
+만약 이것이 활성 상태면,
+수신기는 start bit를 감지했고 character로 옮기고(shift) 있다.
+
+• FDELT: Receiver flow delay trigger continuous status.
+FDELT status bit는
+flow delay trigger level과 비교하여
+RxFIFO level를 모니터링하는데 사용한다.
+
+Non-FIFO Interrupts
+이 interrupt status bit들은 Chnl_int_sts_reg0 register에 있는 것들이다.
+
+• TIMEOUT : Receiver Timeout Error interrupt status.
+이 이벤트는
+receiver timeout counter가 장기간 idle condition이여서 expired됐을 때 발생한다.
+
+• PARE : Receiver Parity Error interrupt status.
+이 이벤트는
+수신된 parity bit가 기대한 값과 일치하지 않을 때 발생한다.
+
+• FRAME : Receiver Framing Error interrupt status.
+이 이벤트는
+receiver가 유효한 stop bit를 감지하는데 실패했을 때 발생한다.
+(19.2.7 Receiver Data Capture 참조)
+
+• DMSI : DCD, DSR, RI 또는 CTS modem flow control signal에서 logic level의 변화를 알린다.
+
+이 변화를 알리는 DMSI는
+위 signal들 중 어느 것에서든지
+High-to-Low, Low-to-High logic 전환을 포함한다.
+
+FIFO Interrupts
+FIFO interrupt를 위한 status bit들은 Table 19-2에 리스트 돼 있다.
+도해는 Figure 19-9에 있다.
+
+이 interrupt status bit들은
+[TOVR], [ROVR] bit는 uart.Channel_sts_reg0 register의 일부가 아닐 때,
+Channel Status (uart.Channel_sts_reg0)와 Channel Interrupt Status (uart.Chnl_int_sts_reg0) register에 있다.
+
+FIFO trigger levels는 아래와 같은bit field에 의해 제어된다.
+• uart.Rcvr_FIFO_trigger_level0[RTRIG], a 6-bit field
+• uart.Tx_FIFO_trigger_level0[TTRIG], a 6-bit field
+
+19.2.11 Modem Control
+modem control module은
+modem과 UART 사이의 communication 제어를 용이하게 하고,
+
+Modem Status register, Modem Control register,
+interrupt status register안에 있는 DMSI bit,
+channel status register안에 있는 FDELT를 포함하고 있다.
+
+이 이벤트는
+modem status register의 DCTS, DDSR, TERI, 또는 DDCD가 설정될 때마다 발생한다.
+
+읽기 전용 Modem Status register는
+clear to send (CTS),
+data carrier detect (DCD),
+data set ready (DSR),
+ring indicator (RI)
+modem input의 값을 읽기 위해 사용된다.
+
+또한 위의 어떤 input이 바뀐 것을 기록하고
+automatic flow control mode가 활성됐을 때 이것을 알린다.
+
+Modem Status register의 bit들은 특정 bit에 1을 씀으로써 비워진다.
+
+읽기/쓰기 전용 Modem Control register은
+data terminal ready(DTR)과
+request to send(RTS) output을 설정하고
+Automatic Flow Control Mode register를 활성하는데 사용된다.
+
+기본적으로 automatic flow control mode는 비활성화 되어 있고,
+이것은 modem의 input, output이 완벽히 소프트웨어의 제어에 의해 동작함을 의미한다.
+
+Modem Control register의 FCM bit를 설정하여 automatic flow control mode가 활성화된 경우
+UART 송수신 상태는 modem handshake input, output을 사용하여 자동적으로 제어된다.
+
+automatic flow control mode에서 send output request는
+현재 receiver FIFO의 fill level에 따라
+asserted 및 de-asserted된다.
+
+이런 결과로 far-end transmitter가
+송신을 일시적으로 중단하여
+UART reciver FIFO의 overflow를 막는다.
+
+Flow Delay register (Flow_delay_reg0)의 FDEL field는
+Receiver FIFO의 trigger level을 설정해서
+request to send의 de-assertion을 발생하는 데 사용된다.
+
+이것은 FIFO level이 FDEL보다 4 미만으로 작아질 때까지 유지된다.
+
+추가적으로 automatic flow control mode에서
+UART는 clear to send input이 assert되는 동안에만 전송한다.
+
+
+clear to send가 de-assert되면
+UART는 다음 character의 끝에서 전송을 일시 정지한다.
+
+만약 flow control가 자동적으로 선택되면
+RTS signal을 de-assert함으로써
+data의 유입(inflow)을 제어하기 위해
+Flow Delay register를 프로그래밍해야 한다.
+
+//TODO

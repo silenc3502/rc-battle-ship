@@ -1,0 +1,345 @@
+00-INDEX
+	- this file
+3c509.txt
+	- information on the 3Com Etherlink III Series Ethernet cards.
+	- 3Com Etherlink III 시리즈 이더넷 카드에 대한 정보.
+6pack.txt
+	- info on the 6pack protocol, an alternative to KISS for AX.25
+	- AX.25 용 KISS의 대안 인 6pack 프로토콜에 대한 정보
+LICENSE.qla3xxx
+	- GPLv2 for QLogic Linux Networking HBA Driver
+	- QLogic Linux 네트워킹 HBA 드라이버 용 GPLv2
+LICENSE.qlge
+	- GPLv2 for QLogic Linux qlge NIC Driver
+	- QLogic Linux qlge NIC 드라이버 용 GPLv2
+LICENSE.qlcnic
+	- GPLv2 for QLogic Linux qlcnic NIC Driver
+	- QLogic Linux 용 qlcnic NIC 드라이버 용 GPLv2
+Makefile
+	- Makefile for docsrc.
+	- docsrc에 대한 Makefile.
+PLIP.txt
+	- PLIP: The Parallel Line Internet Protocol device driver
+	- PLIP : 병렬 선 인터넷 프로토콜 장치 드라이버
+README.ipw2100
+	- README for the Intel PRO/Wireless 2100 driver.
+	- 인텔 PRO / 무선 2100 드라이버 용 README
+README.ipw2200
+	- README for the Intel PRO/Wireless 2915ABG and 2200BG driver.
+	- 인텔 PRO / 무선 2915ABG 및 2200BG 드라이버 용 README
+README.sb1000
+	- info on General Instrument/NextLevel SURFboard1000 cable modem.
+	- General Instrument / NextLevel SURFboard1000 케이블 모뎀 정보.
+alias.txt
+	- info on using alias network devices.
+	- alias 네트워크 장치 사용에 대한 정보.
+altera_tse.txt
+	- Altera Triple-Speed Ethernet controller.
+arcnet-hardware.txt
+	- tons of info on ARCnet, hubs, jumper settings for ARCnet cards, etc.
+	- ARCnet, 허브, ARCnet 카드의 점퍼 설정 등에 관한 많은 정보
+arcnet.txt
+	- info on the using the ARCnet driver itself.
+	- ARCnet 드라이버 자체에 대한 정보.
+atm.txt
+	- info on where to get ATM programs and support for Linux.
+	- ATM 프로그램을 구할 수있는 곳과 Linux 지원에 관한 정보.	
+ax25.txt
+	- info on using AX.25 and NET/ROM code for Linux
+	- Linux 용 AX.25 및 NET / ROM 코드 사용에 대한 정보
+batman-adv.txt
+	- B.A.T.M.A.N routing protocol on top of layer 2 Ethernet Frames.
+	- 계층 2 이더넷 프레임 상단에 라우팅 프로토콜 B.A.T.M.A.N.
+baycom.txt
+	- info on the driver for Baycom style amateur radio modems
+	- Baycom 스타일 아마추어 라디오 모뎀 드라이버 정보
+bonding.txt
+	- Linux Ethernet Bonding Driver HOWTO: link aggregation in Linux.
+	- Linux Ethernet Bonding Driver HOWTO : 리눅스에서 링크 집성.
+bridge.txt
+	- where to get user space programs for ethernet bridging with Linux.
+	- Linux와의 이더넷 브리징을위한 사용자 공간 프로그램을 얻을 수있는 곳.
+can.txt
+	- documentation on CAN protocol family.
+	- CAN 프로토콜 제품군에 대한 문서.
+cdc_mbim.txt
+	- 3G/LTE USB modem (Mobile Broadband Interface Model)
+	- 3G / LTE USB 모뎀 (모바일 광대역 인터페이스 모델)
+cops.txt
+	- info on the COPS LocalTalk Linux driver
+	- COPS LocalTalk Linux 드라이버에 대한 정보
+cs89x0.txt
+	- the Crystal LAN (CS8900/20-based) Ethernet ISA adapter driver
+	- Crystal LAN (CS8900 / 20 기반) 이더넷 ISA 어댑터 드라이버
+cxacru.txt
+	- Conexant AccessRunner USB ADSL Modem
+	- Conexant AccessRunner USB ADSL 모뎀
+cxacru-cf.py
+	- Conexant AccessRunner USB ADSL Modem configuration file parser
+	- Conexant AccessRunner USB ADSL 모뎀 구성 파일 parser
+cxgb.txt
+	- Release Notes for the Chelsio N210 Linux device driver.
+	- Chelsio N210 Linux 장치 드라이버 릴리스 노트.
+dccp.txt
+	- the Datagram Congestion Control Protocol (DCCP) (RFC 4340..42).
+dctcp.txt
+	- DataCenter TCP congestion control
+de4x5.txt
+	- the Digital EtherWORKS DE4?? and DE5?? PCI Ethernet driver
+	- 디지털 Etherwork DE4 ?? 및 DE5 ?? PCI 이더넷 드라이버
+decnet.txt
+	- info on using the DECnet networking layer in Linux.
+	- Linux에서 DECnet 네트워킹 레이어 사용에 대한 정보.
+dl2k.txt
+	- README for D-Link DL2000-based Gigabit Ethernet Adapters (dl2k.ko).
+	- D-Link DL2000 기반 기가비트 이더넷 어댑터 (dl2k.ko) 용 README
+dm9000.txt
+	- README for the Simtec DM9000 Network driver.
+	- Simtec DM9000 네트워크 드라이버 용 README.
+dmfe.txt
+	- info on the Davicom DM9102(A)/DM9132/DM9801 fast ethernet driver.
+	- Davicom DM9102 (A) / DM9132 / DM9801 고속 이더넷 드라이버에 대한 정보.
+dns_resolver.txt
+	- The DNS resolver module allows kernel servies to make DNS queries.
+	- DNS 분석기 모듈을 사용하면 커널 서비스가 DNS 조회를 할 수 있습니다.
+driver.txt
+	- Softnet driver issues.
+	- Softnet 드라이버 문제.
+e100.txt
+	- info on Intel's EtherExpress PRO/100 line of 10/100 boards
+	-   10/100 보드 에 대한 인텔의 EtherExpress PRO/100라인 정보
+e1000.txt
+	- info on Intel's E1000 line of gigabit ethernet boards
+	- Intel E1000 기가비트 이더넷 보드 라인 정보
+e1000e.txt
+	- README for the Intel Gigabit Ethernet Driver (e1000e).3
+	- 인텔 기가비트 이더넷 드라이버 (e1000e) 용 README.
+eql.txt
+	- serial IP load balancing.
+	- 직렬 IP로드 밸런싱
+fib_trie.txt
+	- Level Compressed Trie (LC-trie) notes: a structure for routing.
+	- 레벨 압축 트리 (LC-trie) 노트 : 라우팅을위한 구조.
+filter.txt
+	- Linux Socket Filtering
+	- 리눅스 소켓 필터링
+fore200e.txt
+	- FORE Systems PCA-200E/SBA-200E ATM NIC driver info.
+framerelay.txt
+	- info on using Frame Relay/Data Link Connection Identifier (DLCI).
+	- 프레임 릴레이 / 데이터 링크 연결 식별자 (DLCI) 사용에 대한 정보.
+gen_stats.txt
+	- Generic networking statistics for netlink users.
+	- netlink 사용자를위한 일반적인 네트워킹 통계.
+generic-hdlc.txt
+	- The generic High Level Data Link Control (HDLC) layer.
+	 일반적인 고수준 데이터 링크 제어 (HDLC) 계층.
+generic_netlink.txt
+	- info on Generic Netlink
+	- 일반 Netlink 정보
+gianfar.txt
+	- Gianfar Ethernet Driver.
+	- Gianfar 이더넷 드라이버.
+i40e.txt
+	- README for the Intel Ethernet Controller XL710 Driver (i40e).
+	- README 인텔 이더넷 컨트롤러 XL710 드라이버 (i40e).
+i40evf.txt
+	- Short note on the Driver for the Intel(R) XL710 X710 Virtual Function
+	- 인텔 (R) XL710 X710 가상 기능 용 드라이버 요약
+ieee802154.txt
+	- Linux IEEE 802.15.4 implementation, API and drivers
+	- Linux IEEE 802.15.4 구현, API 및 드라이버
+igb.txt
+	- README for the Intel Gigabit Ethernet Driver (igb).
+	- 인텔 기가비트 이더넷 드라이버 (igb) 용 README.
+igbvf.txt
+	- README for the Intel Gigabit Ethernet Driver (igbvf).
+	- 인텔 기가비트 이더넷 드라이버 (igbvf) 용 README.
+ip-sysctl.txt
+	- /proc/sys/net/ipv4/* variables
+ip_dynaddr.txt
+	- IP dynamic address hack e.g. for auto-dialup links
+	- IP 동적 주소 해킹 예 : 자동 전화 접속 링크
+ipddp.txt
+	- AppleTalk-IP Decapsulation and AppleTalk-IP Encapsulation
+	- AppleTalk-IP 디 캡슐 레이션 및 AppleTalk-IP 캡슐화
+iphase.txt
+	- Interphase PCI ATM (i)Chip IA Linux driver info.
+ipsec.txt
+	- Note on not compressing IPSec payload and resulting failed policy check.
+	- IPSec 페이로드를 압축하지 않아 실패한 정책 검사 결과에주의하십시오.
+ipv6.txt
+	- Options to the ipv6 kernel module.
+	- ipv6 커널 모듈에 대한 옵션.
+ipvs-sysctl.txt
+	- Per-inode explanation of the /proc/sys/net/ipv4/vs interface.
+	- / proc / sys / net / ipv4 / vs 인터페이스에 대한 inode 설명.
+irda.txt
+	- where to get IrDA (infrared) utilities and info for Linux.
+	- Linux에서 IrDA (적외선) 유틸리티 및 정보를 얻을 수있는 곳.
+ixgb.txt
+	- README for the Intel 10 Gigabit Ethernet Driver (ixgb).
+	- 인텔 10 기가비트 이더넷 드라이버 (ixgb) 용 README.
+ixgbe.txt
+	- README for the Intel 10 Gigabit Ethernet Driver (ixgbe).
+	- 인텔 10 기가비트 이더넷 드라이버 (ixgbe)에 대한 README
+ixgbevf.txt
+	- README for the Intel Virtual Function (VF) Driver (ixgbevf).
+	- 인텔 가상 함수 (VF) 드라이버 (ixgbevf)에 대한 추가 정보
+l2tp.txt
+	- User guide to the L2TP tunnel protocol.
+	- L2TP 터널 프로토콜에 대한 사용자 안내서.
+lapb-module.txt
+	- programming information of the LAPB module.
+	- LAPB 모듈의 프로그래밍 정보
+ltpc.txt
+	- the Apple or Farallon LocalTalk PC card driver
+	- Apple 또는 Farallon LocalTalk PC 카드 드라이버
+mac80211-auth-assoc-deauth.txt
+	- authentication and association / deauth-disassoc with max80211
+	- max80211을 사용한 인증 및 연결 / deauth-disassoc
+mac80211-injection.txt
+	- HOWTO use packet injection with mac80211
+	- mac80211과 함께 패킷 주입 사용 방법
+multiqueue.txt
+	- HOWTO for multiqueue network device support.
+	- 다중 네트워크 장치 지원을위한 HOWTO.
+netconsole.txt
+	- The network console module netconsole.ko: configuration and notes.
+	- 네트워크 콘솔 모듈 netconsole.ko : 구성 및 메모.
+netdev-FAQ.txt
+	- FAQ describing how to submit net changes to netdev mailing list.
+	 - netdev 메일 링리스트에 순 변경을 제출하는 방법을 설명하는 FAQ.
+netdev-features.txt
+	- Network interface features API description.
+	- 네트워크 인터페이스는 API 설명을 제공합니다.
+netdevices.txt
+	- info on network device driver functions exported to the kernel.
+	- 커널에 내 보낸 네트워크 장치 드라이버 기능 정보.
+netif-msg.txt
+	- Design of the network interface message level setting (NETIF_MSG_*).
+	- 네트워크 인터페이스 메시지 레벨 설정 (NETIF_MSG_ *).
+netlink_mmap.txt
+	- memory mapped I/O with netlink
+	- netlink를 사용한 메모리 매핑 I / O
+nf_conntrack-sysctl.txt
+	- list of netfilter-sysctl knobs.
+	- netfilter-sysctl knobs 목록.
+nfc.txt
+	- The Linux Near Field Communication (NFS) subsystem.
+	- Linux 근거리 통신 (NFS) 서브 시스템.
+openvswitch.txt
+	- Open vSwitch developer documentation.
+	- vSwitch 개발자 문서를 엽니 다.
+operstates.txt
+	- Overview of network interface operational states.
+	- 네트워크 인터페이스 작동 상태 개요.
+packet_mmap.txt
+	- User guide to memory mapped packet socket rings (PACKET_[RT]X_RING).
+	- 메모리 매핑 된 패킷 소켓 링 (PACKET_ [RT] X_RING)에 대한 사용자 안내서.
+phonet.txt
+	- The Phonet packet protocol used in Nokia cellular modems.
+	- Nokia 셀룰러 모뎀에 사용되는 Phonet 패킷 프로토콜.
+phy.txt
+	- The PHY abstraction layer.
+	- PHY 추상화 계층.
+pktgen.txt
+	- User guide to the kernel packet generator (pktgen.ko).
+	- 커널 패킷 생성기 (pktgen.ko)에 대한 사용자 안내서.
+policy-routing.txt
+	- IP policy-based routing
+	- IP 정책 기반 라우팅
+ppp_generic.txt
+	- Information about the generic PPP driver..
+	- 일반 PPP 드라이버에 대한 정보.
+proc_net_tcp.txt
+	- Per inode overview of the /proc/net/tcp and /proc/net/tcp6 interfaces.
+	- / proc / net / tcp 및 / proc / net / tcp6 인터페이스에 대한 inode 개요.
+radiotap-headers.txt
+	- Background on radiotap headers.
+	- 라디오 타일 헤더 배경.
+ray_cs.txt
+	- Raylink Wireless LAN card driver info.
+	- Raylink 무선 LAN 카드 드라이버 정보.
+rds.txt
+	- Background on the reliable, ordered datagram delivery method RDS.
+	- 신뢰할 수있는 데이터 그램 전달 방법 RDS에 대한 배경
+regulatory.txt
+	- Overview of the Linux wireless regulatory infrastructure.
+	- Linux 무선 규제 인프라 개요.
+rxrpc.txt
+	- Guide to the RxRPC protocol.
+	- RxRPC 프로토콜 안내.
+s2io.txt
+	- Release notes for Neterion Xframe I/II 10GbE driver.
+	- Neterion Xframe I / II 10GbE 드라이버에 대한 릴리스 노트.
+scaling.txt
+	- Explanation of network scaling techniques: RSS, RPS, RFS, aRFS, XPS.
+	- 네트워크 스케일링 기술에 대한 설명 : RSS, RPS, RFS, aRFS, XPS.
+sctp.txt
+	- Notes on the Linux kernel implementation of the SCTP protocol.
+	- SCTP 프로토콜의 Linux 커널 구현에 대한 참고 사항.
+secid.txt
+	- Explanation of the secid member in flow structures.
+	- 흐름 구조의 secid 멤버에 대한 설명.
+skfp.txt
+	- SysKonnect FDDI (SK-5xxx, Compaq Netelligent) driver info.
+smc9.txt
+	- the driver for SMC's 9000 series of Ethernet cards
+	- SMC의 9000 시리즈 이더넷 카드 용 드라이버
+spider_net.txt
+	- README for the Spidernet Driver (as found in PS3 / Cell BE).
+	- Spidernet 드라이버에 대한 README (PS3 / Cell BE에 있음).
+stmmac.txt
+	- README for the STMicro Synopsys Ethernet driver.
+	- STMicro Synopsys 이더넷 드라이버 용 README.
+tc-actions-env-rules.txt
+	- rules for traffic control (tc) actions.
+	- 트래픽 제어 (tc) 작업에 대한 규칙
+timestamping.txt
+	- overview of network packet timestamping variants.
+	- 네트워크 패킷 타임 스탬프 변형의 개요.
+tcp.txt
+	- short blurb on how TCP output takes place.
+	- TCP 출력이 이루어지는 방법에 대한 짧은 설명.
+tcp-thin.txt
+	- kernel tuning options for low rate 'thin' TCP streams.
+	- 저비용 'thin' TCP 스트림을위한 커널 튜닝 옵션.
+team.txt
+	- pointer to information for ethernet teaming devices.
+	- 이더넷 팀 구성 장치에 대한 정보의 포인터.
+tlan.txt
+	- ThunderLAN (Compaq Netelligent 10/100, Olicom OC-2xxx) driver info.
+tproxy.txt
+	- Transparent proxy support user guide.
+	- Transparent 프록시 지원 사용자 안내서.
+tuntap.txt
+	- TUN/TAP device driver, allowing user space Rx/Tx of packets.
+	- TUN / TAP 장치 드라이버. 패킷의 사용자 공간 Rx / Tx를 허용합니다.
+udplite.txt
+	- UDP-Lite protocol (RFC 3828) introduction.
+	- UDP-Lite 프로토콜 (RFC 3828) 소개.
+vortex.txt
+	- info on using 3Com Vortex (3c590, 3c592, 3c595, 3c597) Ethernet cards.
+vxge.txt
+	- README for the Neterion X3100 PCIe Server Adapter.
+vxlan.txt
+	- Virtual extensible LAN overview
+	- 가상 확장 LAN 개요
+x25.txt
+	- general info on X.25 development.
+x25-iface.txt
+	- description of the X.25 Packet Layer to LAPB device interface.
+	- LAPB 장치 인터페이스에 대한 X.25 패킷 계층 설명
+xfrm_proc.txt
+	- description of the statistics package for XFRM.
+	- XFRM에 대한 통계 패키지에 대한 설명.
+xfrm_sync.txt
+	- sync patches for XFRM enable migration of an SA between hosts.
+	- XFRM 용 동기화 패치를 사용하여 호스트간에 SA를 마이그레이션 할 수 있습니다.
+xfrm_sysctl.txt
+	- description of the XFRM configuration options.
+	- XFRM 구성 옵션에 대한 설명.
+z8530drv.txt
+	- info about Linux driver for Z8530 based HDLC cards for AX.25
+	- AX.25 용 Z8530 기반 HDLC 카드 용 Linux 드라이버 정보

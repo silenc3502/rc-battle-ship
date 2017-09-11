@@ -1,0 +1,115 @@
+* BCM2835 DMA controller
+
+The BCM2835 DMA controller has 16 channels in total.
+Only the lower 13 channels have an associated IRQ.
+Some arbitrary channels are used by the firmware
+(1,3,6,7 in the current firmware version).
+The channels 0,2 and 3 have special functionality
+and should not be used by the driver.
+
+Required properties:
+- compatible: Should be "brcm,bcm2835-dma".
+- reg: Should contain DMA registers location and length.
+- interrupts: Should contain the DMA interrupts associated
+		to the DMA channels in ascending order.
+- #dma-cells: Must be <1>, the cell in the dmas property of the
+		client device represents the DREQ number.
+- brcm,dma-channel-mask: Bit mask representing the channels
+			 not used by the firmware in ascending order,
+			 i.e. first channel corresponds to LSB.
+
+Example:
+
+dma: dma@7e007000 {
+	compatible = "brcm,bcm2835-dma";
+	reg = <0x7e007000 0xf00>;
+	interrupts = <1 16>,
+		     <1 17>,
+		     <1 18>,
+		     <1 19>,
+		     <1 20>,
+		     <1 21>,
+		     <1 22>,
+		     <1 23>,
+		     <1 24>,
+		     <1 25>,
+		     <1 26>,
+		     <1 27>,
+		     <1 28>;
+
+	#dma-cells = <1>;
+	brcm,dma-channel-mask = <0x7f35>;
+};
+
+DMA clients connected to the BCM2835 DMA controller must use the format
+described in the dma.txt file, using a two-cell specifier for each channel.
+
+Example:
+
+bcm2835_i2s: i2s@7e203000 {
+	compatible = "brcm,bcm2835-i2s";
+	reg = <	0x7e203000 0x20>,
+	      < 0x7e101098 0x02>;
+
+	dmas = <&dma 2>,
+	       <&dma 3>;
+	dma-names = "tx", "rx";
+};
+
+
+/*
+* BCM2835 DMA 컨트롤러
+
+BCM2835 DMA 컨트롤러에는 총 16 개의 채널이 있습니다.
+하위 13 개 채널에만 관련 IRQ가 있습니다.
+일부 임의 채널은 펌웨어 (현재 펌웨어 버전의 1,3,6,7)에서 사용됩니다.
+채널 0,2 및 3은 특수 기능을 가지므로 드라이버에서 사용하면 안됩니다.
+
+필수 속성 :
+- 호환 : "brcm, bcm2835-dma"여야합니다.
+- reg : DMA 레지스터 위치와 길이를 포함해야합니다.
+- 인터럽트 : DMA 채널과 연관된 DMA 인터럽트를 오름차순으로 포함해야합니다.
+- # dma-cells : <1>이어야하며, 클라이언트 장치의 dmas 등록 정보에있는 셀은 DREQ 번호를 나타냅니다.
+- brcm, dma-channel-mask : 펌웨어에서 사용하지 않는 채널을 오름차순으로 나타내는 비트 마스크입니다. 즉, 첫 번째 채널은 LSB에 해당합니다.
+
+Example:
+
+dma: dma@7e007000 {
+	compatible = "brcm,bcm2835-dma";
+	reg = <0x7e007000 0xf00>;
+	interrupts = <1 16>,
+		     <1 17>,
+		     <1 18>,
+		     <1 19>,
+		     <1 20>,
+		     <1 21>,
+		     <1 22>,
+		     <1 23>,
+		     <1 24>,
+		     <1 25>,
+		     <1 26>,
+		     <1 27>,
+		     <1 28>;
+
+	#dma-cells = <1>;
+	brcm,dma-channel-mask = <0x7f35>;
+};
+
+DMA clients connected to the BCM2835 DMA controller must use the format
+described in the dma.txt file, using a two-cell specifier for each channel.
+
+Example:
+
+bcm2835_i2s: i2s@7e203000 {
+	compatible = "brcm,bcm2835-i2s";
+	reg = <	0x7e203000 0x20>,
+	      < 0x7e101098 0x02>;
+
+	dmas = <&dma 2>,
+	       <&dma 3>;
+	dma-names = "tx", "rx";
+};
+
+*/
+
+

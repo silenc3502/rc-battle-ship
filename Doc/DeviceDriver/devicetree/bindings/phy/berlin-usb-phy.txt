@@ -1,0 +1,23 @@
+* Marvell Berlin USB PHY
+
+Required properties:
+- compatible: "marvell,berlin2-usb-phy" or "marvell,berlin2cd-usb-phy"
+- reg: base address and length of the registers
+- #phys-cells: should be 0
+- resets: reference to the reset controller
+
+필수 속성 :
+- compatible : "marvell, berlin2-usb-phy"또는 "marvell, berlin2cd-usb-phy"
+- reg : 레지스터의 기본 주소와 길이
+- # phys-cells : 0이어야합니다.
+- resets : reset controller에 대한 참조
+
+
+Example:
+
+	usb-phy@f774000 {
+		compatible = "marvell,berlin2-usb-phy";
+		reg = <0xf774000 0x128>;
+		#phy-cells = <0>;
+		resets = <&chip 0x104 14>;
+	};

@@ -1,0 +1,74 @@
+VGA Connector
+=============
+
+Required properties:
+
+- compatible: "vga-connector"
+
+Optional properties:
+
+- label: a symbolic name for the connector corresponding to a hardware label
+- ddc-i2c-bus: phandle to the I2C bus that is connected to VGA DDC
+
+Required nodes:
+
+The VGA connector internal connections are modeled using the OF graph bindings
+specified in Documentation/devicetree/bindings/graph.txt.
+
+The VGA connector has a single port that must be connected to a video source
+port.
+
+
+Example
+-------
+
+vga0: connector@0 {
+	compatible = "vga-connector";
+	label = "vga";
+
+	ddc-i2c-bus = <&i2c3>;
+
+	port {
+		vga_connector_in: endpoint {
+			remote-endpoint = <&adv7123_out>;
+		};
+	};
+};
+
+/*
+VGA 커넥터
+=============
+
+필수 속성 :
+
+- 호환 : "vga-connector"
+
+선택적 속성 :
+
+- label : 하드웨어 레이블에 해당하는 커넥터의 기호 이름
+- ddc-i2c-bus : VGA DDC에 연결된 I2C 버스로 연결합니다.
+
+필수 노드 :
+
+VGA 커넥터 내부 연결은 OF 그래프 바인딩을 사용하여 모델링됩니다.
+Documentation / devicetree / bindings / graph.txt에 지정되어 있습니다.
+
+VGA 커넥터에는 비디오 소스 포트에 연결해야하는 단일 포트가 있습니다.
+
+Example
+-------
+
+vga0: connector@0 {
+	compatible = "vga-connector";
+	label = "vga";
+
+	ddc-i2c-bus = <&i2c3>;
+
+	port {
+		vga_connector_in: endpoint {
+			remote-endpoint = <&adv7123_out>;
+		};
+	};
+};
+
+*/

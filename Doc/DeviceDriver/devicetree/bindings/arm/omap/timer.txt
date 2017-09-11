@@ -1,0 +1,56 @@
+OMAP Timer bindings
+
+Required properties:
+- compatible:		Should be set to one of the below. Please note that
+			OMAP44xx devices have timer instances that are 100%
+			register compatible with OMAP3xxx devices as well as
+			newer timers that are not 100% register compatible.
+			So for OMAP44xx devices timer instances may use
+			different compatible strings.
+			//필수 속성 :
+			- 호환 : 다음 중 하나로 설정해야합니다.
+			 OMAP44xx 디바이스는 OMAP3xxx 디바이스와 100 % 레지스터 호환이 가능한 타이머 인스턴스와 100 % 레지스터와 호환되지 않는 최신 타이머를 가지고 있습니다.
+			따라서 OMAP44xx 디바이스의 경우 타이머 인스턴스가 서로 다른 호환 가능한 문자열을 사용할 수 있습니다.
+
+			ti,omap2420-timer (applicable to OMAP24xx devices)
+			ti,omap3430-timer (applicable to OMAP3xxx/44xx devices)
+			ti,omap4430-timer (applicable to OMAP44xx devices)
+			ti,omap5430-timer (applicable to OMAP543x devices)
+			ti,am335x-timer	(applicable to AM335x devices)
+			ti,am335x-timer-1ms (applicable to AM335x devices)
+
+- reg:			Contains timer register address range (base address and
+			length).
+- interrupts: 		Contains the interrupt information for the timer. The
+			format is being dependent on which interrupt controller
+			the OMAP device uses.
+- ti,hwmods:		Name of the hwmod associated to the timer, "timer<X>",
+			where <X> is the instance number of the timer from the
+			HW spec.
+//- reg : 타이머 레지스터 주소 범위 (기본 주소 및 길이)를 포함합니다.
+- interrupts : 타이머에 대한 인터럽트 정보를 포함합니다. 형식은 OMAP 장치가 사용하는 인터럽트 컨트롤러에 따라 다릅니다.
+- ti, hwmods : 타이머에 연결된 hwmod의 이름 인 "timer <X>"입니다. 여기서 <X>는 HW 사양의 타이머 인스턴스 번호입니다.
+
+Optional properties:
+- ti,timer-alwon:	Indicates the timer is in an alway-on power domain.
+- ti,timer-dsp:		Indicates the timer can interrupt the on-chip DSP in
+			addition to the ARM CPU.
+- ti,timer-pwm: 	Indicates the timer can generate a PWM output.
+- ti,timer-secure: 	Indicates the timer is reserved on a secure OMAP device
+			and therefore cannot be used by the kernel.
+//선택적 속성 :
+- ti, timer-alwon : 타이머가 alway-on power 도메인에 있음을 나타냅니다.
+- ti, timer-dsp : 타이머가 ARM CPU 외에도 온칩 DSP를 인터럽트 할 수 있음을 나타냅니다.
+- ti, timer-pwm : 타이머가 PWM 출력을 생성 할 수 있음을 나타냅니다.
+- ti, timer-secure : 타이머가 보안 OMAP 장치에 예약되어있어 커널에서 사용할 수 없음을 나타냅니다.
+
+Example:
+
+timer12: timer@48304000 {
+	compatible = "ti,omap3430-timer";
+	reg = <0x48304000 0x400>;
+	interrupts = <95>;
+	ti,hwmods = "timer12"
+	ti,timer-alwon;
+	ti,timer-secure;
+};

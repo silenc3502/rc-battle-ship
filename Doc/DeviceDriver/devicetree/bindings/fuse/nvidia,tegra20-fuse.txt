@@ -1,0 +1,66 @@
+NVIDIA Tegra20/Tegra30/Tegr114/Tegra124 fuse block.
+
+Required properties:
+- compatible : For Tegra20, must contain "nvidia,tegra20-efuse".  For Tegra30,
+  must contain "nvidia,tegra30-efuse".  For Tegra114, must contain
+  "nvidia,tegra114-efuse".  For Tegra124, must contain "nvidia,tegra124-efuse".
+  Otherwise, must contain "nvidia,<chip>-efuse", plus one of the above, where
+  <chip> is tegra132.
+  Details:
+  nvidia,tegra20-efuse: Tegra20 requires using APB DMA to read the fuse data
+	due to a hardware bug. Tegra20 also lacks certain information which is
+	available in later generations such as fab code, lot code, wafer id,..
+  nvidia,tegra30-efuse, nvidia,tegra114-efuse and nvidia,tegra124-efuse:
+	The differences between these SoCs are the size of the efuse array,
+	the location of the spare (OEM programmable) bits and the location of
+	the speedo data.
+- reg: Should contain 1 entry: the entry gives the physical address and length
+       of the fuse registers.
+- clocks: Must contain an entry for each entry in clock-names.
+  See ../clocks/clock-bindings.txt for details.
+- clock-names: Must include the following entries:
+  - fuse
+- resets: Must contain an entry for each entry in reset-names.
+  See ../reset/reset.txt for details.
+- reset-names: Must include the following entries:
+ - fuse
+
+VIDIA Tegra20 / Tegra30 / Tegr114 / Tegra124 퓨즈 블록.
+
+필수 속성 :
+- compatible : Tegra20의 경우 "nvidia, tegra20-efuse"를 포함해야합니다. Tegra30의 경우 "nvidia, tegra30-efuse"를 포함해야합니다. Tegra114의 경우 "nvidia, tegra114-efuse"를 포함해야합니다. Tegra124의 경우 "nvidia, tegra124-efuse"를 포함해야합니다.
+   그렇지 않으면 위의 "nvidia, <chip> -efuse"와 <chip>이 tegra132 인 곳에 있어야합니다.
+
+Details:
+
+   nvidia, tegra20-efuse : Tegra20은 하드웨어 버그로 인해 APB DMA를 사용하여 퓨즈 데이터를 읽어야합니다. Tegra20에는 또한 팹 코드, 로트 코드, 웨이퍼 ID 등과 같은 이후 세대에서 사용할 수있는 특정 정보가 없습니다.
+
+   nvidia, tegra30-efuse, nvidia, tegra114-efuse 및 nvidia, tegra124-efuse :
+이러한 SoC의 차이점은 efuse 어레이의 크기, 스페어 (OEM 프로그래밍 가능) 비트의 위치 및 speedo data의 위치입니다.
+
+- reg : 1 개의 엔트리를 포함해야한다 : 엔트리는 물리적 주소와 퓨즈 레지스터의 길이를 제공한다.
+
+- clocks : clock-name의 각 항목에 대한 항목을 포함해야합니다. 자세한 내용은 ../clocks/clock-bindings.txt를 참조하십시오.
+
+- clock-names : 다음 항목을 포함해야합니다.
+
+   - 퓨즈
+- reset : reset-names의 각 항목에 대한 항목을 포함해야합니다.
+   자세한 내용은 ../reset/reset.txt를 참조하십시오.
+
+- reset-names : 다음 항목을 포함해야합니다.
+  - 퓨즈
+
+
+
+Example:
+
+	fuse@7000f800 {
+		compatible = "nvidia,tegra20-efuse";
+		reg = <0x7000f800 0x400>,
+		      <0x70000000 0x400>;
+		clocks = <&tegra_car TEGRA20_CLK_FUSE>;
+		clock-names = "fuse";
+		resets = <&tegra_car 39>;
+		reset-names = "fuse";
+	};

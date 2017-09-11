@@ -1,0 +1,124 @@
+OMAP SSI controller bindings
+
+OMAP Synchronous Serial Interface (SSI) controller implements a legacy
+variant of MIPI's High Speed Synchronous Serial Interface (HSI).
+
+Required properties:
+- compatible:		Should include "ti,omap3-ssi".
+- reg-names:		Contains the values "sys" and "gdd" (in this order).
+- reg:			Contains a matching register specifier for each entry
+			in reg-names.
+- interrupt-names:	Contains the value "gdd_mpu".
+- interrupts: 		Contains matching interrupt information for each entry
+			in interrupt-names.
+- ranges:		Represents the bus address mapping between the main
+			controller node and the child nodes below.
+- clock-names:		Must include the following entries:
+  "ssi_ssr_fck": The OMAP clock of that name
+  "ssi_sst_fck": The OMAP clock of that name
+  "ssi_ick": The OMAP clock of that name
+- clocks:		Contains a matching clock specifier for each entry in
+			clock-names.
+- #address-cells:	Should be set to <1>
+- #size-cells:		Should be set to <1>
+
+Each port is represented as a sub-node of the ti,omap3-ssi device.
+
+Required Port sub-node properties:
+- compatible:		Should be set to the following value
+			ti,omap3-ssi-port (applicable to OMAP34xx devices)
+- reg-names:		Contains the values "tx" and "rx" (in this order).
+- reg:			Contains a matching register specifier for each entry
+			in reg-names.
+- interrupt-parent	Should be a phandle for the interrupt controller
+- interrupts:		Should contain interrupt specifiers for mpu interrupts
+			0 and 1 (in this order).
+- ti,ssi-cawake-gpio:	Defines which GPIO pin is used to signify CAWAKE
+			events for the port. This is an optional board-specific
+			property. If it's missing the port will not be
+			enabled.
+
+OMAP SSI 컨트롤러 바인딩
+
+OMAP 동기식 직렬 인터페이스 (SSI) 컨트롤러는 MIPI의 고속 동기식 직렬 인터페이스 (HSI)의 기존 변형을 구현합니다.
+
+필수 속성 :
+- 호환 : "ti, omap3-ssi"를 포함해야합니다.
+- reg-names : "sys"및 "gdd"값을이 순서로 포함합니다.
+- reg : reg-name의 각 항목에 대해 일치하는 레지스터 specifier를 포함합니다.
+- interrupt-names : "gdd_mpu"값을 포함합니다.
+- 인터럽트 : 인터럽트 이름의 각 항목에 대해 일치하는 인터럽트 정보를 포함합니다.
+- 범위 : 주 컨트롤러 노드와 하위 노드 사이의 버스 주소 매핑을 나타냅니다.
+- clock-names : 다음 항목을 포함해야합니다.
+   "ssi_ssr_fck": 해당 이름의 OMAP clock
+   "ssi_sst_fck": 해당 이름의 OMAP clock
+   "ssi_ick": 그 이름의 OMAP clock
+- clocks : clock-name의 각 항목에 대해 일치하는 클럭 specifier를 포함합니다.
+- # address-cells : <1> (으)로 설정해야합니다.
+- # size-cells : <1> (으)로 설정해야합니다.
+
+
+
+
+
+
+Example for Nokia N900:
+
+ssi-controller@48058000 {
+	compatible = "ti,omap3-ssi";
+
+	/* needed until hwmod is updated to use the compatible string */
+	/ * hwmod가 호환되는 문자열을 사용하도록 업데이트 될 때까지 필요 * /
+
+	ti,hwmods = "ssi";
+
+	reg = <0x48058000 0x1000>,
+	      <0x48059000 0x1000>;
+	reg-names = "sys",
+		    "gdd";
+
+	interrupts = <55>;
+	interrupt-names = "gdd_mpu";
+
+	clocks = <&ssi_ssr_fck>,
+		 <&ssi_sst_fck>,
+		 <&ssi_ick>;
+	clock-names = "ssi_ssr_fck",
+		      "ssi_sst_fck",
+		      "ssi_ick";
+
+	#address-cells = <1>;
+	#size-cells = <1>;
+	ranges;
+
+	ssi-port@4805a000 {
+		compatible = "ti,omap3-ssi-port";
+
+		reg = <0x4805a000 0x800>,
+		      <0x4805a800 0x800>;
+		reg-names = "tx",
+			    "rx";
+
+		interrupt-parent = <&intc>;
+		interrupts = <67>,
+			     <68>;
+
+		ti,ssi-cawake-gpio = <&gpio5 23 GPIO_ACTIVE_HIGH>; /* 151 */
+	}
+
+	ssi-port@4805a000 {
+		compatible = "ti,omap3-ssi-port";
+
+		reg = <0x4805b000 0x800>,
+		      <0x4805b800 0x800>;
+		reg-names = "tx",
+			    "rx";
+
+		interrupt-parent = <&intc>;
+		interrupts = <69>,
+			     <70>;
+
+		status = "disabled"; /* second port is not used on N900 */
+							 / * 두 번째 포트는 N900에서 사용되지 않습니다 * /	
+	}
+}

@@ -1,0 +1,23 @@
+Freescale SAHARA Cryptographic Accelerator included in some i.MX chips.
+Currently only i.MX27 and i.MX53 are supported.
+
+Required properties:
+- compatible : Should be "fsl,<soc>-sahara"
+- reg : Should contain SAHARA registers location and length
+- interrupts : Should contain SAHARA interrupt number
+
+Freescale SAHARA Cryptographic Accelerator 는 일부 i.MX 칩에 포함되어 있습니다.
+현재 i.MX27 및 i.MX53 만 지원됩니다.
+
+필수 속성 :
+- 호환 가능 : "fsl, <soc> -sahara"여야합니다.
+- reg : SAHARA 레지스터 위치와 길이를 포함해야 함
+- 인터럽트 : SAHARA 인터럽트 번호를 포함해야 함
+
+Example:
+
+sah@10025000 {
+	compatible = "fsl,imx27-sahara";
+	reg = <	0x10025000 0x800>;
+	interrupts = <75>;
+};

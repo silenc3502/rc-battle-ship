@@ -1,0 +1,204 @@
+Netdev features mess and how to get out from it alive
+=====================================================
+
+Author:
+	Michał Mirosław <mirq-linux@rere.qmqm.pl>
+
+
+
+ Part I: Feature sets
+======================
+
+Long gone are the days when a network card would just take and give packets
+verbatim.  Today's devices add multiple features and bugs (read: offloads)
+that relieve an OS of various tasks like generating and checking checksums,
+splitting packets, classifying them.  Those capabilities and their state
+are commonly referred to as netdev features in Linux kernel world.
+오래 전부터 네트워크 카드가 패킷을 그대로 가져 와서주는 날이있었습니다. 오늘날의 장치는 체크섬 생성 및 확인, 패킷 분할, 분류 등과 같은 다양한 작업의 OS를 완화하는 여러 가지 기능과 버그 (읽기 : 오프로드)를 추가합니다. 이러한 기능과 상태는 일반적으로 Linux 커널 환경에서 netdev 기능이라고합니다.
+
+There are currently three sets of features relevant to the driver, and
+one used internally by network core:
+현재 드라이버와 관련된 세 가지 기능 세트와 네트워크 코어에서 내부적으로 사용하는 기능 세트가 있습니다.
+
+ 1. netdev->hw_features set contains features whose state may possibly
+    be changed (enabled or disabled) for a particular device by user's
+    request.  This set should be initialized in ndo_init callback and not
+    changed later.
+1. netdev-> hw_features 세트에는 사용자의 요청에 따라 특정 장치에 대해 상태가 변경 (활성화 또는 비활성화) 될 수있는 기능이 포함되어 있습니다. 이 세트는 ndo_init 콜백에서 초기화되어야하며 나중에 변경되지 않습니다.
+
+ 2. netdev->features set contains features which are currently enabled
+    for a device.  This should be changed only by network core or in
+    error paths of ndo_set_features callback.
+2. netdev-> features 세트에는 현재 장치에 사용할 수있는 기능이 포함되어 있습니다. 네트워크 코어 나 ndo_set_features 콜백의 오류 경로에서만 변경해야합니다.
+
+
+ 3. netdev->vlan_features set contains features whose state is inherited
+    by child VLAN devices (limits netdev->features set).  This is currently
+    used for all VLAN devices whether tags are stripped or inserted in
+    hardware or software.
+3. netdev-> vlan_features 세트에는 상태가 하위 VLAN 장치에 상속 된 기능이 있습니다 (netdev-> 기능 세트 제한). 이것은 현재 태그가 제거되었거나 하드웨어 또는 소프트웨어에 삽입되었는지 여부에 관계없이 모든 VLAN 장치에 사용됩니다.
+
+ 4. netdev->wanted_features set contains feature set requested by user.
+    This set is filtered by ndo_fix_features callback whenever it or
+    some device-specific conditions change. This set is internal to
+    networking core and should not be referenced in drivers.
+4. netdev-> wanted_features 세트는 사용자가 요청한 기능 세트를 포함합니다.
+     이 세트는 ndo_fix_features 콜백에 의해 필터링되거나 장치 특정 조건이 변경 될 때마다 필터링됩니다. 이 세트는 네트워킹 코어 내부에 있으므로 드라이버에서 참조하면 안됩니다.
+
+
+
+ Part II: Controlling enabled features
+=======================================
+
+When current feature set (netdev->features) is to be changed, new set
+is calculated and filtered by calling ndo_fix_features callback
+and netdev_fix_features(). If the resulting set differs from current
+set, it is passed to ndo_set_features callback and (if the callback
+returns success) replaces value stored in netdev->features.
+NETDEV_FEAT_CHANGE notification is issued after that whenever current
+set might have changed.
+현재 기능 집합 (netdev-> features)이 변경 될 때 ndo_fix_features 콜백 및 netdev_fix_features ()를 호출하여 새 집합을 계산하고 필터링합니다. 결과 세트가 현재 세트와 다른 경우 ndo_set_features 콜백으로 전달되고 netdev-> features에 저장된 값을 콜백으로 반환합니다 (콜백이 성공한 경우).
+현재 설정이 변경 될 때마다 NETDEV_FEAT_CHANGE 알림이 발행됩니다.
+
+The following events trigger recalculation:
+ 1. device's registration, after ndo_init returned success
+ 2. user requested changes in features state
+ 3. netdev_update_features() is called
+다음 이벤트는 다시 계산을 트리거합니다.
+  1. ndo_init가 성공을 거둔 후 장치 등록
+  2. 사용자가 기능 상태의 변경을 요청했습니다.
+  3. netdev_update_features ()가 호출되었습니다.
+
+ndo_*_features callbacks are called with rtnl_lock held. Missing callbacks
+are treated as always returning success.
+ndo _ * _ features 기능 콜백은 rtnl_lock을 유지하면서 호출됩니다. 누락 된 콜백은 항상 성공을 반환합니다.
+
+A driver that wants to trigger recalculation must do so by calling
+netdev_update_features() while holding rtnl_lock. This should not be done
+from ndo_*_features callbacks. netdev->features should not be modified by
+driver except by means of ndo_fix_features callback.
+계산을 트리거하려는 드라이버는 rtnl_lock을 유지하면서 netdev_update_features ()를 호출하여 재 계산을 트리거해야합니다. 이것은 ndo _ * _ 기능 콜백으로해서는 안됩니다. nde_fix_features 콜백을 제외하고는 netdev-> 기능을 드라이버가 수정해서는 안됩니다.
+
+ Part III: Implementation hints
+================================
+
+ * ndo_fix_features:
+
+All dependencies between features should be resolved here. The resulting
+set can be reduced further by networking core imposed limitations (as coded
+in netdev_fix_features()). For this reason it is safer to disable a feature
+when its dependencies are not met instead of forcing the dependency on.
+피처 간의 모든 종속성을 여기서 해결해야합니다. 결과 세트는 netdev_fix_features ()에 코딩 된대로 핵심적인 부과 된 제한 사항을 네트워킹하여 더 줄일 수 있습니다. 이러한 이유로 종속성을 강요하는 대신 종속성이 충족되지 않으면 기능을 사용하지 않는 것이 안전합니다.
+
+
+This callback should not modify hardware nor driver state (should be
+stateless).  It can be called multiple times between successive
+ndo_set_features calls.
+이 콜백은 하드웨어 나 드라이버 상태를 변경해서는 안됩니다 (상태 는 저장이어야 함). 연속적인 ndo_set_features 호출 사이에서 여러 번 호출 될 수 있습니다.
+
+Callback must not alter features contained in NETIF_F_SOFT_FEATURES or
+NETIF_F_NEVER_CHANGE sets. The exception is NETIF_F_VLAN_CHALLENGED but
+care must be taken as the change won't affect already configured VLANs.
+콜백은 NETIF_F_SOFT_FEATURES 또는 NETIF_F_NEVER_CHANGE 세트에 포함 된 기능을 변경해서는 안됩니다. 예외는 NETIF_F_VLAN_CHALLENGED이지만 변경 사항은 이미 구성된 VLAN에는 영향을 미치지 않으므로주의해야합니다.
+
+ * ndo_set_features:
+
+Hardware should be reconfigured to match passed feature set. The set
+should not be altered unless some error condition happens that can't
+be reliably detected in ndo_fix_features. In this case, the callback
+should update netdev->features to match resulting hardware state.
+Errors returned are not (and cannot be) propagated anywhere except dmesg.
+(Note: successful return is zero, >0 means silent error.)
+하드웨어는 전달 된 기능 세트와 일치하도록 재구성해야합니다. ndo_fix_features에서 안정적으로 감지 할 수없는 오류 상황이 발생하지 않는 한 세트를 변경하면 안됩니다. 이 경우 콜백은 netdev-> 기능을 업데이트하여 결과 하드웨어 상태를 일치시켜야합니다. 반환 된 오류는 dmesg를 제외한 모든 곳에서 전파되지 않습니다. (참고 : 성공적인 반환은 0이며,> 0은 자동 오류를 의미합니다.)
+
+
+ Part IV: Features
+===================
+
+For current list of features, see include/linux/netdev_features.h.
+This section describes semantics of some of them.
+현재 기능 목록을 보려면 include / linux / netdev_features.h를 참조하십시오.
+이 절에서는 이들 중 일부의 의미를 설명합니다.
+
+ * Transmit checksumming
+
+For complete description, see comments near the top of include/linux/skbuff.h.
+자세한 설명은 include / linux / skbuff.h 맨 위의 주석을 참조하십시오.
+
+Note: NETIF_F_HW_CSUM is a superset of NETIF_F_IP_CSUM + NETIF_F_IPV6_CSUM.
+It means that device can fill TCP/UDP-like checksum anywhere in the packets
+whatever headers there might be.
+참고 : NETIF_F_HW_CSUM은 NETIF_F_IP_CSUM + NETIF_F_IPV6_CSUM의 상위 집합입니다.
+즉, 장치가 헤더에있는 모든 패킷의 TCP / UDP 유사 체크섬을 채울 수 있습니다.
+
+ * Transmit TCP segmentation offload
+
+NETIF_F_TSO_ECN means that hardware can properly split packets with CWR bit
+set, be it TCPv4 (when NETIF_F_TSO is enabled) or TCPv6 (NETIF_F_TSO6).
+NETIF_F_TSO_ECN은 하드웨어가 TCPv4 (NETIF_F_TSO가 활성화 된 경우) 또는 TCPv6 (NETIF_F_TSO6) 인 CWR 비트 세트로 패킷을 올바르게 분할 할 수 있음을 의미합니다.
+
+ * Transmit DMA from high memory
+
+On platforms where this is relevant, NETIF_F_HIGHDMA signals that
+ndo_start_xmit can handle skbs with frags in high memory.
+이것이 관련된 플랫폼에서 NETIF_F_HIGHDMA는 ndo_start_xmit이 높은 메모리의 조각으로 skbs를 처리 할 수 있음을 알립니다.
+
+ * Transmit scatter-gather
+
+Those features say that ndo_start_xmit can handle fragmented skbs:
+NETIF_F_SG --- paged skbs (skb_shinfo()->frags), NETIF_F_FRAGLIST ---
+chained skbs (skb->next/prev list).
+이러한 기능은 ndo_start_xmit이 조각난 skbs를 처리 할 수 있다고 말합니다.
+NETIF_F_SG --- 페이징 된 skbs (skb_shinfo () -> frags), NETIF_F_FRAGLIST --- chained skbs (skb->next/prev list).
+
+ * Software features
+
+Features contained in NETIF_F_SOFT_FEATURES are features of networking
+stack. Driver should not change behaviour based on them.
+NETIF_F_SOFT_FEATURES에 포함 된 기능은 네트워킹 스택의 기능입니다. Driver는 Driver에 따라 행동을 변경하면 안됩니다.
+
+ * LLTX driver (deprecated for hardware drivers)
+
+NETIF_F_LLTX should be set in drivers that implement their own locking in
+transmit path or don't need locking at all (e.g. software tunnels).
+In ndo_start_xmit, it is recommended to use a try_lock and return
+NETDEV_TX_LOCKED when the spin lock fails.  The locking should also properly
+protect against other callbacks (the rules you need to find out).
+NETIF_F_LLTX는 전송 경로에서 자체 잠금을 구현하거나 전혀 잠글 필요가없는 드라이버 (예 : e.g. 소프트웨어 터널)에 설정해야합니다. ndo_start_xmit에서, 스핀 잠금이 실패 할 때 try_lock을 사용하고 NETDEV_TX_LOCKED를 반환하는 것이 좋습니다. 잠금은 다른 콜백 (당신이 알아야 할 규칙)을 적절히 보호해야합니다.
+
+Don't use it for new drivers.
+새 드라이버에는 사용하지 마십시오.
+
+ * netns-local device
+
+NETIF_F_NETNS_LOCAL is set for devices that are not allowed to move between
+network namespaces (e.g. loopback).
+NETIF_F_NETNS_LOCAL은 네트워크 네임 스페이스간에 이동할 수없는 기기 (예 : 루프백)에 대해 설정됩니다.
+
+Don't use it in drivers.
+드라이버에서 사용하지 마십시오.
+
+
+ * VLAN challenged
+
+NETIF_F_VLAN_CHALLENGED should be set for devices which can't cope with VLAN
+headers. Some drivers set this because the cards can't handle the bigger MTU.
+[FIXME: Those cases could be fixed in VLAN code by allowing only reduced-MTU
+VLANs. This may be not useful, though.]
+NETIF_F_VLAN_CHALLENGED는 VLAN 헤더를 처리 할 수없는 장치에 대해 설정해야합니다. 카드가 더 큰 MTU를 처리 할 수 없기 때문에 일부 드라이버가이를 설정합니다.
+[FIXME : 이러한 경우는 감소 된 MTU VLAN 만 허용하여 VLAN 코드에서 수정할 수 있습니다. 그러나 이것은 유용하지 않을 수 있습니다.]
+
+*  rx-fcs
+
+This requests that the NIC append the Ethernet Frame Checksum (FCS)
+to the end of the skb data.  This allows sniffers and other tools to
+read the CRC recorded by the NIC on receipt of the packet.
+NIC가 skb 데이터 끝에 이더넷 프레임 체크섬 (FCS)을 추가하도록 요청합니다. 이를 통해 sniffers 및 기타 도구는 패킷 수신시 NIC에서 기록한 CRC를 읽을 수 있습니다.
+
+*  rx-all
+
+This requests that the NIC receive all possible frames, including errored
+frames (such as bad FCS, etc).  This can be helpful when sniffing a link with
+bad packets on it.  Some NICs may receive more packets if also put into normal
+PROMISC mode.
+이것은 NIC가 오류 프레임 (예 : 불량 FCS 등)을 포함하여 가능한 모든 프레임을 수신하도록 요청합니다. 이것은 잘못된 패킷이있는 링크를 스니핑 할 때 유용 할 수 있습니다. 일부 NIC는 일반 PROMISC 모드로 설정하면 더 많은 패킷을 수신 할 수 있습니다.

@@ -1,0 +1,407 @@
+This file documents how to use memory mapped I/O with netlink.
+이 파일은 netlink를 사용하여 메모리 매핑 I / O를 사용하는 방법을 설명합니다.
+
+Author: Patrick McHardy <kaber@trash.net>
+
+Overview
+--------
+
+Memory mapped netlink I/O can be used to increase throughput and decrease
+overhead of unicast receive and transmit operations. Some netlink subsystems
+require high throughput, these are mainly the netfilter subsystems
+nfnetlink_queue and nfnetlink_log, but it can also help speed up large
+dump operations of f.i. the routing database.
+메모리 매핑 된 넷 링크 I / O를 사용하여 유니 캐스트 수신 및 전송 작업의 처리량을 높이고 오버 헤드를 줄일 수 있습니다. 일부 netlink 하위 시스템은 높은 처리량을 필요로하며, 주로 netfilter 하위 시스템 인 nfnetlink_queue 및 nfnetlink_log이지만 f.i.의 대량 덤프 작업 속도를 높이는 데 도움이됩니다.
+
+Memory mapped netlink I/O used two circular ring buffers for RX and TX which
+are mapped into the processes address space.
+메모리 매핑 된 넷 링크 I / O는 프로세스 주소 공간에 매핑되는 RX 및 TX에 대한 두 개의 원형 링 버퍼를 사용했습니다.
+
+The RX ring is used by the kernel to directly construct netlink messages into
+user-space memory without copying them as done with regular socket I/O,
+additionally as long as the ring contains messages no recvmsg() or poll()
+syscalls have to be issued by user-space to get more message.
+RX ring은 일반 소켓 I / O로 복사 된 것처럼 사용자 공간 메모리에 netlink 메시지를 직접 생성하기 위해 커널이 사용합니다. ring에 recvmsg () 또는 poll ()이없는 메시지가 추가로 포함되어 있어야합니다. 사용자 공간에서 발행하여 더 많은 메시지를 얻습니다.
+
+The TX ring is used to process messages directly from user-space memory, the
+kernel processes all messages contained in the ring using a single sendmsg()
+call.
+TX 링은 사용자 공간 메모리에서 직접 메시지를 처리하는 데 사용되며, 커널은 단일 sendmsg () 호출을 사용하여 링에 포함 된 모든 메시지를 처리합니다.
+
+Usage overview
+--------------
+
+In order to use memory mapped netlink I/O, user-space needs three main changes:
+메모리 매핑 된 넷 링크 I / O를 사용하려면 사용자 공간에 세 가지 주요 변경 사항이 필요합니다.
+
+- conversion of the RX path to get messages from the ring instead of recvmsg()
+- conversion of the TX path to construct messages into the ring
+- recvmsg () 대신 링에서 메시지를 얻기 위해 RX 경로를 변환
+- 메시지 경로를 링으로 변환하기위한 TX 경로의 변환
+
+Ring setup is done using setsockopt() to provide the ring parameters to the
+kernel, then a call to mmap() to map the ring into the processes address space:
+링 셋업은 setsockopt ()를 사용하여 링 매개 변수를 커널에 제공 한 다음 mmap ()을 호출하여 링을 프로세스 주소 공간에 매핑합니다.
+
+- setsockopt(fd, SOL_NETLINK, NETLINK_RX_RING, &params, sizeof(params));
+- setsockopt(fd, SOL_NETLINK, NETLINK_TX_RING, &params, sizeof(params));
+- ring = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0)
+
+Usage of either ring is optional, but even if only the RX ring is used the
+mapping still needs to be writable in order to update the frame status after
+processing.
+두 링의 사용은 선택 사항이지만, RX 링만 사용되는 경우에도 처리 후 프레임 상태를 업데이트하기 위해 여전히 매핑을 쓸 수 있어야합니다.
+
+Conversion of the reception path involves calling poll() on the file
+descriptor, once the socket is readable the frames from the ring are
+processed in order until no more messages are available, as indicated by
+a status word in the frame header.
+수신 경로의 변환은 파일 디스크립터에서 poll ()을 호출하는 것을 포함한다. 일단 소켓이 읽을 수있게되면 프레임 헤더의 상태 word에 의해 지시 된대로 더 이상의 메시지가 이용 가능하지 않을 때까지 링으로부터의 프레임이 순서대로 처리된다.
+
+On kernel side, in order to make use of memory mapped I/O on receive, the
+originating netlink subsystem needs to support memory mapped I/O, otherwise
+it will use an allocated socket buffer as usual and the contents will be
+ copied to the ring on transmission, nullifying most of the performance gains.
+Dumps of kernel databases automatically support memory mapped I/O.
+커널 측에서는 수신시 메모리 매핑 I / O를 사용하기 위해
+원래 netlink 서브 시스템은 메모리 맵핑 된 I / O를 지원해야한다. 그렇지 않으면 평소와 같이 할당 된 소켓 버퍼를 사용하고 전송시 링에 컨텐츠가 복사되어 성능 향상의 대부분을 무효로한다.
+커널 데이터베이스의 덤프는 자동으로 메모리 매핑 I / O를 지원합니다.
+
+Conversion of the transmit path involves changing message construction to
+use memory from the TX ring instead of (usually) a buffer declared on the
+stack and setting up the frame header appropriately. Optionally poll() can
+be used to wait for free frames in the TX ring.
+전송 경로의 변환은 메시지 구성을 변경하여 스택에서 선언 된 버퍼 대신 TX 링의 메모리를 사용하고 프레임 헤더를 적절하게 설정하는 작업을 포함합니다. 선택적으로 poll ()을 사용하여 TX 링의 빈 프레임을 기다릴 수 있습니다.
+
+Structured and definitions for using memory mapped I/O are contained in
+<linux/netlink.h>.
+메모리 매핑 I / O를 사용하기위한 구조화 및 정의는 <linux / netlink.h>에 포함되어 있습니다.
+
+RX and TX rings
+----------------
+
+Each ring contains a number of continuous memory blocks, containing frames of
+fixed size dependent on the parameters used for ring setup.
+각 링에는 링 설정에 사용되는 매개 변수에 따라 고정 크기의 프레임을 포함하는 여러 개의 연속 메모리 블록이 포함됩니다.
+
+Ring:	[ block 0 ]
+		[ frame 0 ]
+		[ frame 1 ]
+	[ block 1 ]
+		[ frame 2 ]
+		[ frame 3 ]
+	...
+	[ block n ]
+		[ frame 2 * n ]
+		[ frame 2 * n + 1 ]
+
+The blocks are only visible to the kernel, from the point of view of user-space
+the ring just contains the frames in a continuous memory zone.
+블록은 커널에서만 볼 수 있으며 사용자 공간의 관점에서 링은 연속적인 메모리 영역에 프레임을 포함합니다.
+
+The ring parameters used for setting up the ring are defined as follows:
+ring 설정에 사용되는 ring parameters(매개 변수)는 다음과 같이 정의됩니다.
+
+struct nl_mmap_req {
+	unsigned int	nm_block_size;
+	unsigned int	nm_block_nr;
+	unsigned int	nm_frame_size;
+	unsigned int	nm_frame_nr;
+};
+
+Frames are grouped into blocks, where each block is a continuous region of memory
+and holds nm_block_size / nm_frame_size frames. The total number of frames in
+the ring is nm_frame_nr. The following invariants hold:
+프레임은 블록으로 그룹화되며 각 블록은 연속적인 메모리 영역이며 nm_block_size / nm_frame_size 프레임을 보유합니다. 링의 총 프레임 수는 nm_frame_nr입니다. 다음 invariants 보유 :
+
+- frames_per_block = nm_block_size / nm_frame_size
+
+- nm_frame_nr = frames_per_block * nm_block_nr
+
+Some parameters are constrained, specifically:
+일부 매개 변수는 특히 다음과 같이 제한됩니다.
+
+- nm_block_size must be a multiple of the architectures memory page size.
+  The getpagesize() function can be used to get the page size.
+- nm_block_size는 아키텍처 메모리 페이지 크기의 배수 여야합니다.
+   getpagesize () 함수를 사용하여 페이지 크기를 가져올 수 있습니다.
+
+- nm_frame_size must be equal or larger to NL_MMAP_HDRLEN, IOW a frame must be
+  able to hold at least the frame header
+- nm_frame_size는 NL_MMAP_HDRLEN과 같거나 커야합니다. IOW 프레임은 적어도 프레임 헤더를 보유 할 수 있어야합니다.
+
+- nm_frame_size must be smaller or equal to nm_block_size
+- nm_frame_size must be smaller or equal to nm_block_size
+
+- nm_frame_size must be a multiple of NL_MMAP_MSG_ALIGNMENT
+- nm_frame_size는 NL_MMAP_MSG_ALIGNMENT의 배수 여야합니다.
+
+- nm_frame_nr must equal the actual number of frames as specified above.
+- nm_frame_nr은 위에서 지정한 실제 프레임 수와 같아야합니다.
+
+When the kernel can't allocate physically continuous memory for a ring block,
+it will fall back to use physically discontinuous memory. This might affect
+performance negatively, in order to avoid this the nm_frame_size parameter
+should be chosen to be as small as possible for the required frame size and
+the number of blocks should be increased instead.
+커널이 링 블록에 대해 물리적으로 연속적인 메모리를 할당 할 수 없으면 물리적으로 불연속적인 메모리를 사용하도록 폴백합니다. 이는 성능에 부정적인 영향을 미칠 수 있으므로 nm_frame_size 매개 변수가 필요한 프레임 크기에 대해 가능한 한 작게 선택되어야하며 대신 블록 수를 늘려야합니다.
+
+Ring frames
+------------
+
+Each frames contain a frame header, consisting of a synchronization word and some
+meta-data, and the message itself.
+각 프레임은 동기화 단어와 일부 메타 데이터로 구성된 프레임 헤더와 메시지 자체를 포함합니다.
+
+Frame:	[ header message ]
+
+The frame header is defined as follows:
+프레임 헤더는 다음과 같이 정의됩니다.
+
+struct nl_mmap_hdr {
+	unsigned int	nm_status;
+	unsigned int	nm_len;
+	__u32		nm_group;
+	/* credentials */
+	__u32		nm_pid;
+	__u32		nm_uid;
+	__u32		nm_gid;
+};
+
+- nm_status is used for synchronizing processing between the kernel and user-
+  space and specifies ownership of the frame as well as the operation to perform
+
+- nm_len contains the length of the message contained in the data area
+
+- nm_group specified the destination multicast group of message
+
+- nm_pid, nm_uid and nm_gid contain the netlink pid, UID and GID of the sending
+  process. These values correspond to the data available using SOCK_PASSCRED in
+  the SCM_CREDENTIALS cmsg.
+
+- nm_status는 커널과 사용자 공간 간의 처리를 동기화하는 데 사용되며 프레임의 소유권과 수행 할 작업을 지정합니다
+
+- nm_len은 데이터 영역에 포함 된 메시지의 길이를 포함합니다
+
+- nm_group은 메시지의 대상 멀티 캐스트 그룹을 지정했습니다.
+
+- nm_pid, nm_uid 및 nm_gid는 전송 프로세스의 netlink pid, UID 및 GID를 포함합니다. 이 값은 SCM_CREDENTIALS cmsg에서 SOCK_PASSCRED를 사용하여 사용 가능한 데이터에 해당합니다.
+
+
+The possible values in the status word are:
+status word에 가능한 값은 다음과 같습니다.
+
+- NL_MMAP_STATUS_UNUSED:
+	RX ring:	frame belongs to the kernel and contains no message
+			for user-space. Approriate action is to invoke poll()
+			to wait for new messages.
+	RX ring : 프레임은 커널에 속하며 사용자 공간에 대한 메시지를 포함하지 않습니다. 실행 조치는 poll ()을 호출하여 새 메시지를 기다리는 것입니다.
+
+	TX ring:	frame belongs to user-space and can be used for
+			message construction.
+	TX ring : 프레임은 사용자 공간에 속하며 메시지 구성에 사용될 수 있습니다.		
+
+- NL_MMAP_STATUS_RESERVED:
+	RX ring only:	frame is currently used by the kernel for message
+			construction and contains no valid message yet.
+			Appropriate action is to invoke poll() to wait for
+			new messages.
+	RX ring only : 프레임은 현재 메시지 구성을 위해 커널에 의해 사용되고 아직 유효한 메시지가 없습니다. 적절한 조치는 poll ()을 호출하여 새 메시지를 기다리는 것입니다.
+			
+- NL_MMAP_STATUS_VALID:
+	RX ring:	frame contains a valid message. Approriate action is
+			to process the message and release the frame back to
+			the kernel by setting the status to
+			NL_MMAP_STATUS_UNUSED or queue the frame by setting the
+			status to NL_MMAP_STATUS_SKIP.
+	RX ring : 프레임에 유효한 메시지가 있습니다. 적절한 조치는 메시지를 처리하고 상태를 NL_MMAP_STATUS_UNUSED로 설정하여 프레임을 커널로 다시 릴리스하거나 상태를 NL_MMAP_STATUS_SKIP로 설정하여 프레임을 큐에 넣는 것입니다.
+		
+	TX ring:	the frame contains a valid message from user-space to
+			be processed by the kernel. After completing processing
+			the kernel will release the frame back to user-space by
+			setting the status to NL_MMAP_STATUS_UNUSED.
+	TX ring : 프레임은 사용자 공간에서 커널이 처리 할 수있는 유효한 메시지를 포함합니다. 처리가 완료되면 커널은 상태를 NL_MMAP_STATUS_UNUSED로 설정하여 프레임을 다시 사용자 공간으로 해제합니다.		
+
+- NL_MMAP_STATUS_COPY:
+	RX ring only:	a message is ready to be processed but could not be
+			stored in the ring, either because it exceeded the
+			frame size or because the originating subsystem does
+			not support memory mapped I/O. Appropriate action is
+			to invoke recvmsg() to receive the message and release
+			the frame back to the kernel by setting the status to
+			NL_MMAP_STATUS_UNUSED.
+	RX ring only : 메시지를 처리 할 준비가되었지만 프레임 크기를 초과했거나 원래 서브 시스템이 메모리 매핑 I / O를 지원하지 않았기 때문에 링에 저장할 수 없습니다. 적절한 조치는 메세지를 수신하기 위해 recvmsg ()를 호출하고 상태를 NL_MMAP_STATUS_UNUSED로 설정하여 프레임을 커널로 다시 릴리스하는 것입니다.
+		
+- NL_MMAP_STATUS_SKIP:
+	RX ring only:	user-space queued the message for later processing, but
+			processed some messages following it in the ring. The
+			kernel should skip this frame when looking for unused
+			frames.
+	RX ring only : 사용자 공간은 나중에 처리하기 위해 메시지를 큐에 넣었지만 링에서 다음 메시지를 처리했습니다. 사용하지 않는 프레임을 찾을 때 커널은이 프레임을 건너 뛰어야합니다.
+			
+The data area of a frame begins at a offset of NL_MMAP_HDRLEN relative to the
+frame header.
+프레임의 데이터 영역은 프레임 헤더에 상대적인 NL_MMAP_HDRLEN의 오프셋에서 시작합니다.
+
+TX limitations
+--------------
+
+As of Jan 2015 the message is always copied from the ring frame to an
+allocated buffer due to unresolved security concerns.
+See commit 4682a0358639b29cf ("netlink: Always copy on mmap TX.").
+2015 년 1 월 현재 해결되지 않은 보안 문제로 인해 메시지가 항상 링 프레임에서 할당 된 버퍼로 복사됩니다. 커밋 4682a0358639b29cf ( "netlink : 항상 mmap TX에서 복사"참조)를 참조하십시오.
+
+Example
+-------
+
+Ring setup:
+
+	unsigned int block_size = 16 * getpagesize();
+	struct nl_mmap_req req = {
+		.nm_block_size		= block_size,
+		.nm_block_nr		= 64,
+		.nm_frame_size		= 16384,
+		.nm_frame_nr		= 64 * block_size / 16384,
+	};
+	unsigned int ring_size;
+	void *rx_ring, *tx_ring;
+
+	/* Configure ring parameters */
+	/ * 링 파라미터 설정 * /
+
+	if (setsockopt(fd, SOL_NETLINK, NETLINK_RX_RING, &req, sizeof(req)) < 0)
+		exit(1);
+	if (setsockopt(fd, SOL_NETLINK, NETLINK_TX_RING, &req, sizeof(req)) < 0)
+		exit(1)
+
+	/* Calculate size of each individual ring */
+	/ * 각ring의 크기 계산 * /
+	ring_size = req.nm_block_nr * req.nm_block_size;
+
+	/* Map RX/TX rings. The TX ring is located after the RX ring */
+	/ * RX / TX 링을 맵핑하십시오. TX 링은 RX 링 다음에 위치합니다 * /
+
+	rx_ring = mmap(NULL, 2 * ring_size, PROT_READ | PROT_WRITE,
+		       MAP_SHARED, fd, 0);
+	if ((long)rx_ring == -1L)
+		exit(1);
+	tx_ring = rx_ring + ring_size:
+
+Message reception:
+메시지 수신 :
+
+This example assumes some ring parameters of the ring setup are available.
+이 예에서는 링 설정의 일부 링 매개 변수를 사용할 수 있다고 가정합니다.
+
+	unsigned int frame_offset = 0;
+	struct nl_mmap_hdr *hdr;
+	struct nlmsghdr *nlh;
+	unsigned char buf[16384];
+	ssize_t len;
+
+	while (1) {
+		struct pollfd pfds[1];
+
+		pfds[0].fd	= fd;
+		pfds[0].events	= POLLIN | POLLERR;
+		pfds[0].revents	= 0;
+
+		if (poll(pfds, 1, -1) < 0 && errno != -EINTR)
+			exit(1);
+
+		/* Check for errors. Error handling omitted */
+		/ * 오류를 확인하십시오. 오류 처리 생략 * /
+
+		if (pfds[0].revents & POLLERR)
+			<handle error>
+
+		/* If no new messages, poll again */
+		/ * 새 메시지가 없으면 다시 폴링 * /
+
+		if (!(pfds[0].revents & POLLIN))
+			continue;
+
+		/* Process all frames */
+		/ * 모든 프레임 처리 * /
+		while (1) {
+			/* Get next frame header */
+			/ * 다음 프레임 헤더 가져 오기 * /
+			hdr = rx_ring + frame_offset;
+
+			if (hdr->nm_status == NL_MMAP_STATUS_VALID) {
+				/* Regular memory mapped frame */
+				/ * 정규 메모리 매핑 된 프레임 * /
+				nlh = (void *)hdr + NL_MMAP_HDRLEN;
+				len = hdr->nm_len;
+
+				/* Release empty message immediately. May happen
+				 * on error during message construction.
+				 / * 즉시 빈 메시지를 해제하십시오. 메시지 작성 중 오류가 발생할 수 있습니다.* /
+				 
+				if (len == 0)
+					goto release;
+			} else if (hdr->nm_status == NL_MMAP_STATUS_COPY) {
+				/* Frame queued to socket receive queue */
+				/ * 소켓 대기열에 대기중인 프레임 * /
+
+				len = recv(fd, buf, sizeof(buf), MSG_DONTWAIT);
+				if (len <= 0)
+					break;
+				nlh = buf;
+			} else
+				/* No more messages to process, continue polling */
+				/ * 처리 할 메시지가 더 이상없고 계속 폴링 * /
+
+				break;
+
+			process_msg(nlh);
+release:
+			/* Release frame back to the kernel */
+			/ * 프레임을 커널로 돌려 놓는다. * /
+			hdr->nm_status = NL_MMAP_STATUS_UNUSED;
+
+			/* Advance frame offset to next frame */
+			/ * 다음 프레임까지의 사전 프레임 오프셋 * /
+			frame_offset = (frame_offset + frame_size) % ring_size;
+		}
+	}
+
+Message transmission:
+메시지 전송 :
+
+This example assumes some ring parameters of the ring setup are available.
+A single message is constructed and transmitted, to send multiple messages
+at once they would be constructed in consecutive frames before a final call
+to sendto().
+이 예에서는 링 설정의 일부 링 매개 변수를 사용할 수 있다고 가정합니다.
+단일 메시지가 생성되고 전송되어 sendto ()에 대한 최종 호출 이전에 여러 프레임이 연속 프레임으로 생성되면 즉시 전송됩니다.
+
+	unsigned int frame_offset = 0;
+	struct nl_mmap_hdr *hdr;
+	struct nlmsghdr *nlh;
+	struct sockaddr_nl addr = {
+		.nl_family	= AF_NETLINK,
+	};
+
+	hdr = tx_ring + frame_offset;
+	if (hdr->nm_status != NL_MMAP_STATUS_UNUSED)
+		/* No frame available. Use poll() to avoid. */
+		/ * 프레임을 사용할 수 없습니다. 피하기 위해 poll ()을 사용하십시오. * /
+		exit(1);
+
+	nlh = (void *)hdr + NL_MMAP_HDRLEN;
+
+	/* Build message */
+	build_message(nlh);
+
+	/* Fill frame header: length and status need to be set */
+	/ * 채우기 프레임 헤더 : 길이 및 상태 설정 필요 * /
+	hdr->nm_len	= nlh->nlmsg_len;
+	hdr->nm_status	= NL_MMAP_STATUS_VALID;
+
+	if (sendto(fd, NULL, 0, 0, &addr, sizeof(addr)) < 0)
+		exit(1);
+
+	/* Advance frame offset to next frame */
+	/ * 다음 프레임까지의 사전 프레임 오프셋 * /
+	frame_offset = (frame_offset + frame_size) % ring_size;

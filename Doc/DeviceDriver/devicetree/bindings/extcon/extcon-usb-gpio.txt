@@ -1,0 +1,30 @@
+USB GPIO Extcon device
+
+This is a virtual device used to generate USB cable states from the USB ID pin
+connected to a GPIO pin.
+
+Required properties:
+- compatible: Should be "linux,extcon-usb-gpio"
+
+Either one of id-gpio or vbus-gpio must be present. Both can be present as well.
+- id-gpio: gpio for USB ID pin. See gpio binding.
+- vbus-gpio: gpio for USB VBUS pin.
+
+GPIO 핀에 연결된 USB ID 핀에서 USB 케이블 상태를 생성하는 데 사용되는 가상 장치입니다.
+
+필수 속성 :
+- 호환 : "linux, extcon-usb-gpio"여야합니다.
+
+id-gpio 또는 vbus-gpio 중 하나가 있어야합니다. 둘 다 존재할 수 있습니다.
+- id-gpio : gpio for USB ID 핀. gpio 바인딩을 참조하십시오.
+- vbus-gpio : USB VBUS 핀용 gpio.
+
+Example: Examples of extcon-usb-gpio node in dra7-evm.dts as listed below:
+	extcon_usb1 {
+		compatible = "linux,extcon-usb-gpio";
+		id-gpio = <&gpio6 1 GPIO_ACTIVE_HIGH>;
+	}
+
+	&omap_dwc3_1 {
+		extcon = <&extcon_usb1>;
+	};

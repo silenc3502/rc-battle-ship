@@ -1,0 +1,1262 @@
+#
+# GPIO infrastructure and drivers
+#
+
+config ARCH_HAVE_CUSTOM_GPIO_H
+	bool
+	help
+	  Selecting this config option from the architecture Kconfig allows
+	  the architecture to provide a custom asm/gpio.h implementation
+	  overriding the default implementations.  New uses of this are
+	  strongly discouraged.
+#	아키텍처 Kconfig에서이 옵션을 선택하면 아키텍처는 기본 구현을 재정의하는 사용자 정의 asm / gpio.h 구현을 제공 할 수 있습니다. 이것은 새로운 용도는 권장되지 않습니다.
+
+config ARCH_WANT_OPTIONAL_GPIOLIB
+	bool
+	help
+	  Select this config option from the architecture Kconfig, if
+	  it is possible to use gpiolib on the architecture, but let the
+	  user decide whether to actually build it or not.
+	  Select this instead of ARCH_REQUIRE_GPIOLIB, if your architecture does
+	  not depend on GPIOs being available, but rather let the user
+	  decide whether he needs it or not.
+#	//아키텍처에서 gpiolib를 사용할 수있는 경우는 아키텍처 Kconfig에서이 구성 옵션을 선택하지만 사용자가 실제로 빌드할지 여부를 결정 할 수 있습니다.
+
+config ARCH_REQUIRE_GPIOLIB
+	bool
+	select GPIOLIB
+	help
+	  Platforms select gpiolib if they use this infrastructure
+	  for all their GPIOs, usually starting with ones integrated
+	  into SOC processors.
+	  Selecting this from the architecture code will cause the gpiolib
+	  code to always get built in.
+#	//플랫폼은 일반적으로 SOC 프로세서에 통합 된 것으로부터 시작되는 모든 GPIO이 인프라를 사용하는 경우 gpiolib을 선택합니다. 이 아키텍처 코드에서 선택하면 gpiolib 코드가 항상 포함됩니다.
+
+
+menuconfig GPIOLIB
+	bool "GPIO Support"
+	depends on ARCH_WANT_OPTIONAL_GPIOLIB || ARCH_REQUIRE_GPIOLIB
+	help
+	  This enables GPIO support through the generic GPIO library.
+	  You only need to enable this, if you also want to enable
+	  one or more of the GPIO drivers below.
+#	//이는 일반 GPIO 라이브러리를 통해 GPIO 지원이 가능합니다. 아래의 1 개 이상의 GPIO 드라이버를 사용하려면이를 활성화해야합니다.
+
+
+	  If unsure, say N.
+
+if GPIOLIB
+
+config GPIO_DEVRES
+	def_bool y
+	depends on HAS_IOMEM
+
+config OF_GPIO
+	def_bool y
+	depends on OF
+	depends on HAS_IOMEM
+
+config GPIO_ACPI
+	def_bool y
+	depends on ACPI
+
+config GPIOLIB_IRQCHIP
+	select IRQ_DOMAIN
+	bool
+
+config DEBUG_GPIO
+	bool "Debug GPIO calls"
+	depends on DEBUG_KERNEL
+	help
+	  Say Y here to add some extra checks and diagnostics to GPIO calls.
+	  These checks help ensure that GPIOs have been properly initialized
+	  before they are used, and that sleeping calls are not made from
+	  non-sleeping contexts.  They can make bitbanged serial protocols
+	  slower.  The diagnostics help catch the type of setup errors
+	  that are most common when setting up new platforms or boards.
+#	//GPIO 콜 추가 검사와 진단을 추가하는 경우 여기에 Y라고 대답하십시오. 이러한 검사는 GPIO가 사용되기 전에 GPIO가 제대로 초기화되었는지, 그리고 슬리핑 통화가 아닌 절전 모드에서 수행되지 않음을 보증하는 데 도움이됩니다.
+#	비트 밴드 된 시리얼 프로토콜을 늦출 수 있습니다. 진단 프로그램은 새로운 플랫폼과 보드를 설정할 때 가장 일반적인 설치 오류 유형을 감지하는 데 도움이됩니다.
+
+config GPIO_SYSFS
+	bool "/sys/class/gpio/... (sysfs interface)"
+	depends on SYSFS
+	help
+	  Say Y here to add a sysfs interface for GPIOs.
+#	//여기에서는 GPIO에 대한 sysfs 인터페이스를 추가하기 위해 Y라고 대답하십시오.
+
+	  This is mostly useful to work around omissions in a system's
+	  kernel support.  Those are common in custom and semicustom
+	  hardware assembled using standard kernels with a minimum of
+	  custom patches.  In those cases, userspace code may import
+	  a given GPIO from the kernel, if no kernel driver requested it.
+#	//이것은 시스템의 커널 지원 옵션을 피하기 위해 대부분의 경우 유용합니다. 이들은 최소한의 사용자 지정 패치에서 표준 커널을 사용하여 어셈블 된 사용자 및 세미 커스텀 하드웨어에서는 일반적입니다.
+#	그런 경우 커널 드라이버가 요청하지 않으면 사용자 공간 코드는 커널에서 특정 GPIO를 가져올 수 있습니다.
+
+	  Kernel drivers may also request that a particular GPIO be
+	  exported to userspace; this can be useful when debugging.
+#	//커널 드라이버는 특정 GPIO를 사용자 공간에 내보내도록 요청할 수도 있습니다. 이것은 디버깅시 유용합니다.
+
+config GPIO_GENERIC
+	tristate
+
+# put drivers in the right section, in alphabetical order
+#//드라이버를 알파벳 순서로 올바른 섹션에 배치
+
+# This symbol is selected by both I2C and SPI expanders
+config GPIO_MAX730X
+	tristate
+
+menu "Memory mapped GPIO drivers"
+
+config GPIO_74XX_MMIO
+	tristate "GPIO driver for 74xx-ICs with MMIO access"
+	depends on OF_GPIO
+	select GPIO_GENERIC
+	help
+	  Say yes here to support GPIO functionality for 74xx-compatible ICs
+	  with MMIO access. Compatible models include:
+#	//여기서, MMIO 액세스를 제공하는 74xx 호환 IC의 GPIO 기능을 지원합니다. 대응 기종 :
+	    1 bit:	741G125 (Input), 741G74 (Output)
+	    2 bits:	742G125 (Input), 7474 (Output)
+	    4 bits:	74125 (Input), 74175 (Output)
+	    6 bits:	74365 (Input), 74174 (Output)
+	    8 bits:	74244 (Input), 74273 (Output)
+	    16 bits:	741624 (Input), 7416374 (Output)
+
+config GPIO_ALTERA
+	tristate "Altera GPIO"
+	depends on OF_GPIO
+	select GPIOLIB_IRQCHIP
+	help
+	  Say Y or M here to build support for the Altera PIO device.
+
+	  If driver is built as a module it will be called gpio-altera.
+#	//알테라의 PIO 장치의 지원을 구축하려면 여기에서 Y 또는 M라고 대답하십시오. 드라이버가 모듈로 빌드되어있는 경우 gpio-altera이라고합니다.
+
+config GPIO_AMDPT
+	tristate "AMD Promontory GPIO support"
+	depends on ACPI
+	help
+	  driver for GPIO functionality on Promontory IOHub
+	  Require ACPI ASL code to enumerate as a platform device.
+#	//Promontory IOHub의 GPIO 기능 드라이버 ACPI ASL 코드를 플랫폼 장치로 나열해야합니다.
+
+config GPIO_BCM_KONA
+	bool "Broadcom Kona GPIO"
+	depends on OF_GPIO && (ARCH_BCM_MOBILE || COMPILE_TEST)
+	help
+	  Turn on GPIO support for Broadcom "Kona" chips.
+#	//Broadcom "Kona"칩의 GPIO 지원을 선택합니다.
+
+config GPIO_BRCMSTB
+	tristate "BRCMSTB GPIO support"
+	default y if ARCH_BRCMSTB
+	depends on OF_GPIO && (ARCH_BRCMSTB || COMPILE_TEST)
+	select GPIO_GENERIC
+	select GPIOLIB_IRQCHIP
+	help
+	  Say yes here to enable GPIO support for Broadcom STB (BCM7XXX) SoCs.
+#	//Broadcom STB (BCM7XXX) SoC의 GPIO 지원을 활성화하려면 여기에 yes라고 대답하십시오.
+
+config GPIO_CLPS711X
+	tristate "CLPS711X GPIO support"
+	depends on ARCH_CLPS711X || COMPILE_TEST
+	select GPIO_GENERIC
+	help
+	  Say yes here to support GPIO on CLPS711X SoCs.
+	//CLPS711X SoC의 GPIO를 지원하기 위해 여기에 대답하십시오.
+
+
+
+config GPIO_DAVINCI
+	bool "TI Davinci/Keystone GPIO support"
+	default y if ARCH_DAVINCI
+	depends on ARM && (ARCH_DAVINCI || ARCH_KEYSTONE)
+	help
+	  Say yes here to enable GPIO support for TI Davinci/Keystone SoCs.
+#	//TI Davinci / Keystone SoC의 GPIO 지원을 활성화하려면 여기에 yes라고 대답하십시오.
+
+config GPIO_DWAPB
+	tristate "Synopsys DesignWare APB GPIO driver"
+	select GPIO_GENERIC
+	select GENERIC_IRQ_CHIP
+	help
+	  Say Y or M here to build support for the Synopsys DesignWare APB
+	  GPIO block.
+#	//Synopsys DesignWare APB GPIO 블록 지원을 구축하려면 여기에서 Y 또는 M라고 대답하십시오.
+
+config GPIO_EM
+	tristate "Emma Mobile GPIO"
+	depends on ARM && OF_GPIO
+	help
+	  Say yes here to support GPIO on Renesas Emma Mobile SoCs.
+#	//르네사스 Emma Mobile SoC의 GPIO를 지원하기 위해 여기에 대답하십시오.
+
+config GPIO_EP93XX
+	def_bool y
+	depends on ARCH_EP93XX
+	select GPIO_GENERIC
+
+config GPIO_ETRAXFS
+	bool "Axis ETRAX FS General I/O"
+	depends on CRIS || COMPILE_TEST
+	depends on OF
+	select GPIO_GENERIC
+	select GPIOLIB_IRQCHIP
+	help
+	  Say yes here to support the GPIO controller on Axis ETRAX FS SoCs.
+#	//Axis ETRAX FS SoC의 GPIO 컨트롤러를 지원하기 위해 여기에 대답하십시오.
+
+config GPIO_GE_FPGA
+	bool "GE FPGA based GPIO"
+	depends on GE_FPGA
+	select GPIO_GENERIC
+	help
+	  Support for common GPIO functionality provided on some GE Single Board
+	  Computers.
+#	//일부 GE 싱글 보드 컴퓨터에서 제공되는 일반 GPIO 기능을 지원합니다.
+
+
+	  This driver provides basic support (configure as input or output, read
+	  and write pin state) for GPIO implemented in a number of GE single
+	  board computers.
+#	//이 드라이버는 많은 GE 싱글 보드 컴퓨터에 구현되는 GPIO의 기본 지원 (입력 또는 출력으로 핀 상태의 읽기 및 쓰기)을 제공합니다.
+
+config GPIO_GENERIC_PLATFORM
+	tristate "Generic memory-mapped GPIO controller support (MMIO platform device)"
+	//트라이 - 스테이트 "일반 메모리 매핑 된 GPIO 컨트롤러 지원 (MMIO 플랫폼 장치)"
+	select GPIO_GENERIC
+	help
+	  Say yes here to support basic platform_device memory-mapped GPIO controllers.
+#	//여기에 yes로 대답하고 기본적인 platform_device 메모리 매핑 된 GPIO 컨트롤러를 지원합니다.
+
+config GPIO_GRGPIO
+	tristate "Aeroflex Gaisler GRGPIO support"
+	depends on OF
+	select GPIO_GENERIC
+	select IRQ_DOMAIN
+	help
+	  Select this to support Aeroflex Gaisler GRGPIO cores from the GRLIB
+	  VHDL IP core library.
+#	//GRLIB VHDL IP 코어 라이브러리에서 Aeroflex Gaisler GRGPIO 코어를 지원하려면이 옵션을 선택합니다.
+
+config GPIO_ICH
+	tristate "Intel ICH GPIO"
+	depends on PCI && X86
+	select MFD_CORE
+	select LPC_ICH
+	help
+	  Say yes here to support the GPIO functionality of a number of Intel
+	  ICH-based chipsets.  Currently supported devices: ICH6, ICH7, ICH8
+	  ICH9, ICH10, Series 5/3400 (eg Ibex Peak), Series 6/C200 (eg
+	  Cougar Point), NM10 (Tiger Point), and 3100 (Whitmore Lake).
+#	//많은 Intel ICH 기반 칩셋의 GPIO 기능을 지원하기 위해 여기에 yes라고 대답하십시오. 현재 지원되는 장치 :
+
+	  If unsure, say N.
+
+config GPIO_IOP
+	tristate "Intel IOP GPIO"
+	depends on ARM && (ARCH_IOP32X || ARCH_IOP33X)
+	help
+	  Say yes here to support the GPIO functionality of a number of Intel
+	  IOP32X or IOP33X.
+#	//많은 인텔 ®IOP32X 또는 IOP33X의 GPIO 기능을 지원하기 위해 여기에 yes라고 대답하십시오.
+
+	  If unsure, say N.
+
+config GPIO_LOONGSON
+	bool "Loongson-2/3 GPIO support"
+	depends on CPU_LOONGSON2 || CPU_LOONGSON3
+	help
+	  driver for GPIO functionality on Loongson-2F/3A/3B processors.
+#	//Loongson-2F / 3A / 3B 프로세서의 GPIO 기능 용 드라이버.
+
+
+
+config GPIO_LPC18XX
+	bool "NXP LPC18XX/43XX GPIO support"
+	default y if ARCH_LPC18XX
+	depends on OF_GPIO && (ARCH_LPC18XX || COMPILE_TEST)
+	help
+	  Select this option to enable GPIO driver for
+	  NXP LPC18XX/43XX devices.	
+#	//NXP LPC18XX / 43XX 장치의 GPIO 드라이버를 사용하려면이 옵션을 선택합니다.
+
+config GPIO_LYNXPOINT
+	tristate "Intel Lynxpoint GPIO support"
+	depends on ACPI && X86
+	select GPIOLIB_IRQCHIP
+	help
+	  driver for GPIO functionality on Intel Lynxpoint PCH chipset
+	  Requires ACPI device enumeration code to set up a platform device.
+#	//Intel Lynxpoint PCH 칩셋의 GPIO 기능 용 드라이버 플랫폼 장치를 설정하려면 ACPI 장치 열거 코드가 필요합니다.
+
+config GPIO_MB86S7X
+	bool "GPIO support for Fujitsu MB86S7x Platforms"
+	depends on ARCH_MB86S7X
+	help
+	  Say yes here to support the GPIO controller in Fujitsu MB86S70 SoCs.
+#	//후지쯔의 MB86S70 SoC의 GPIO 컨트롤러를 지원하기 위해 여기에 대답하십시오.
+
+config GPIO_MM_LANTIQ
+	bool "Lantiq Memory mapped GPIOs"
+	depends on LANTIQ && SOC_XWAY
+	help
+	  This enables support for memory mapped GPIOs on the External Bus Unit
+	  (EBU) found on Lantiq SoCs. The gpios are output only as they are
+	  created by attaching a 16bit latch to the bus.
+#	//그러면 Lantiq SoC에있는 외부 버스 유닛 (EBU)의 메모리 매핑 된 GPIO를 지원 할 수 있습니다. gpios는 버스에 16 비트 래치를 연결하여 생성되는 경우에만 출력됩니다.
+
+config GPIO_MOXART
+	bool "MOXART GPIO support"
+	depends on ARCH_MOXART
+	select GPIO_GENERIC
+	help
+	  Select this option to enable GPIO driver for
+	  MOXA ART SoC devices.
+#	//MOXA ART SoC 디바이스의 GPIO 드라이버를 사용하려면이 옵션을 선택합니다.
+
+config GPIO_MPC5200
+	def_bool y
+	depends on PPC_MPC52xx
+
+config GPIO_MPC8XXX
+	bool "MPC512x/MPC8xxx GPIO support"
+	depends on PPC_MPC512x || PPC_MPC831x || PPC_MPC834x || PPC_MPC837x || \
+		   FSL_SOC_BOOKE || PPC_86xx
+	help
+	  Say Y here if you're going to use hardware that connects to the
+	  MPC512x/831x/834x/837x/8572/8610 GPIOs.
+#	//MPC512x / 831x / 834x / 837x / 8572/8610 GPIO에 연결하는 하드웨어를 사용하는 경우는 여기에 Y라고 대답하십시오.
+
+config GPIO_MVEBU
+	def_bool y
+	depends on PLAT_ORION
+	depends on OF
+	select GENERIC_IRQ_CHIP
+
+config GPIO_MXC
+	def_bool y
+	depends on ARCH_MXC
+	select GPIO_GENERIC
+	select GENERIC_IRQ_CHIP
+
+config GPIO_MXS
+	def_bool y
+	depends on ARCH_MXS
+	select GPIO_GENERIC
+	select GENERIC_IRQ_CHIP
+
+config GPIO_OCTEON
+	tristate "Cavium OCTEON GPIO"
+	depends on GPIOLIB && CAVIUM_OCTEON_SOC
+	default y
+	help
+	  Say yes here to support the on-chip GPIO lines on the OCTEON
+	  family of SOCs.
+#	//SOTE의 OCTEON 제품군의 온칩 GPIO 라인을 지원하기 위해 여기에 yes라고 대답하십시오.
+
+config GPIO_OMAP
+	tristate "TI OMAP GPIO support" if ARCH_OMAP2PLUS || COMPILE_TEST
+	default y if ARCH_OMAP
+	depends on ARM
+	select GENERIC_IRQ_CHIP
+	select GPIOLIB_IRQCHIP
+	help
+	  Say yes here to enable GPIO support for TI OMAP SoCs.
+#	//TI OMAP SoC의 GPIO 지원을 활성화하려면 여기에 yes라고 대답하십시오.
+
+config GPIO_PL061
+	bool "PrimeCell PL061 GPIO support"
+	depends on ARM_AMBA
+	select IRQ_DOMAIN
+	select GPIOLIB_IRQCHIP
+	help
+	  Say yes here to support the PrimeCell PL061 GPIO device
+#	//PrimeCell PL061 GPIO 디바이스를 지원하기 위해 여기에 yes라고 답하라
+
+
+
+config GPIO_PXA
+	bool "PXA GPIO support"
+	depends on ARCH_PXA || ARCH_MMP
+	help
+	  Say yes here to support the PXA GPIO device
+
+config GPIO_RCAR
+	tristate "Renesas R-Car GPIO"
+	depends on ARCH_SHMOBILE || COMPILE_TEST
+	select GPIOLIB_IRQCHIP
+	help
+	  Say yes here to support GPIO on Renesas R-Car SoCs.
+
+config GPIO_SAMSUNG
+	bool
+	depends on PLAT_SAMSUNG
+	help
+	  Legacy GPIO support. Use only for platforms without support for
+	  pinctrl.
+#	//기존 GPIO 지원. pinctrl를 지원하지 않는 플랫폼에서만 사용하십시오.
+
+config GPIO_SPEAR_SPICS
+	bool "ST SPEAr13xx SPI Chip Select as GPIO support"
+	depends on PLAT_SPEAR
+	select GENERIC_IRQ_CHIP
+	help
+	  Say yes here to support ST SPEAr SPI Chip Select as GPIO device
+#	//ST SPEAr SPI Chip Select를 GPIO 장치로 지원하기 위해 여기에 yes라고 답하라
+
+config GPIO_STA2X11
+	bool "STA2x11/ConneXt GPIO support"
+	depends on MFD_STA2X11
+	select GENERIC_IRQ_CHIP
+	help
+	  Say yes here to support the STA2x11/ConneXt GPIO device.
+	  The GPIO module has 128 GPIO pins with alternate functions.
+#	//STA2x11 / ConneXt GPIO 디바이스를 지원하기 위해 여기에 yes라고 대답하십시오. GPIO 모듈은 128 GPIO 핀은 대체 기능이 있습니다.
+
+config GPIO_STP_XWAY
+	bool "XWAY STP GPIOs"
+	depends on SOC_XWAY
+	help
+	  This enables support for the Serial To Parallel (STP) unit found on
+	  XWAY SoC. The STP allows the SoC to drive a shift registers cascade,
+	  that can be up to 24 bit. This peripheral is aimed at driving leds.
+	  Some of the gpios/leds can be auto updated by the soc with dsl and
+	  phy status.
+#	//그러면 XWAY SoC에있는 Serial To Parallel (STP) 단위의 지원이 가능합니다. STP하여 SoC는 24 비트까지의 시프트 레지스터 폭포를 구동 할 수 있습니다. 이 주변기기는 LED를 구동하는 것을 목적으로하고 있습니다.
+#	일부 gpios / leds는 dsl과 phy 상태 soc에 의해 자동으로 업데이트됩니다.
+
+
+
+
+
+config GPIO_SYSCON
+	tristate "GPIO based on SYSCON"
+	depends on MFD_SYSCON && OF
+	help
+	  Say yes here to support GPIO functionality though SYSCON driver.
+#	//SYSCON 드라이버를 사용하여 GPIO 기능을 지원하기 위해 여기에 yes라고 대답하십시오.
+
+config GPIO_TB10X
+	bool
+	select GENERIC_IRQ_CHIP
+	select OF_GPIO
+
+config GPIO_TZ1090
+	bool "Toumaz Xenif TZ1090 GPIO support"
+	depends on SOC_TZ1090
+	select GENERIC_IRQ_CHIP
+	default y
+	help
+	  Say yes here to support Toumaz Xenif TZ1090 GPIOs.
+#	//Toumaz Xenif TZ1090 GPIO를 지원하기 위해 여기에 yes라고 대답하십시오.
+
+config GPIO_TZ1090_PDC
+	bool "Toumaz Xenif TZ1090 PDC GPIO support"
+	depends on SOC_TZ1090
+	default y
+	help
+	  Say yes here to support Toumaz Xenif TZ1090 PDC GPIOs.
+#	//Toumaz Xenif TZ1090 PDC GPIO를 지원하기 위해 여기에 yes라고 대답하십시오.
+
+config GPIO_VF610
+	def_bool y
+	depends on ARCH_MXC && SOC_VF610
+	select GPIOLIB_IRQCHIP
+	help
+	  Say yes here to support Vybrid vf610 GPIOs.
+#	//Vybrid vf610 GPIO를 지원하기 위해 여기에 yes라고 대답하십시오.
+#
+
+
+config GPIO_VR41XX
+	tristate "NEC VR4100 series General-purpose I/O Uint support"
+	depends on CPU_VR41XX
+	help
+	  Say yes here to support the NEC VR4100 series General-purpose I/O Uint
+#	//NEC VR4100 시리즈의 범용 I / O Uint을 지원하기 위해 여기에 'yes'라고 답하라
+
+config GPIO_VX855
+	tristate "VIA VX855/VX875 GPIO"
+	depends on PCI
+	select MFD_CORE
+	select MFD_VX855
+	help
+		  Support access to the VX855/VX875 GPIO lines through the gpio library.
+#	//gpio 라이브러리를 통해 VX855 / VX875 GPIO 라인에 대한 액세스를 지원합니다.
+
+	  This driver provides common support for accessing the device,
+	  additional drivers must be enabled in order to use the
+	  functionality of the device.
+#	//이 드라이버는 장치에 액세스하기위한 일반적인 지원을 제공합니다. 장치의 기능을 사용하려면 추가 드라이버를 활성화해야합니다.
+
+
+
+config GPIO_XGENE
+	bool "APM X-Gene GPIO controller support"
+	depends on ARM64 && OF_GPIO
+	help
+	  This driver is to support the GPIO block within the APM X-Gene SoC
+	  platform's generic flash controller. The GPIO pins are muxed with
+	  the generic flash controller's address and data pins. Say yes
+	  here to enable the GFC GPIO functionality.
+#	//이 드라이버는 APM X-Gene SoC 플랫폼의 범용 플래시 컨트롤러의 GPIO 블록을 지원합니다.
+#	GPIO 핀은 범용 플래시 컨트롤러의 어드레스 핀과 데이터 핀과 다중화되어 있습니다. GFC GPIO 기능을 활성화하려면 여기에 yes라고 대답하십시오.
+
+
+
+config GPIO_XGENE_SB
+	tristate "APM X-Gene GPIO standby controller support"
+	depends on ARCH_XGENE && OF_GPIO
+	select GPIO_GENERIC
+	help
+	  This driver supports the GPIO block within the APM X-Gene
+	  Standby Domain. Say yes here to enable the GPIO functionality.
+#	//이 드라이버는 APM X-Gene Standby Domain의 GPIO 블록을 지원하고 있습니다. GPIO 기능을 활성화하려면 여기에 yes라고 대답하십시오.
+
+config GPIO_XILINX
+	tristate "Xilinx GPIO support"
+	depends on OF_GPIO
+	help
+	  Say yes here to support the Xilinx FPGA GPIO device
+#	//자일링스의 FPGA GPIO 디바이스를 지원하기 위해 여기에 대답하십시오
+
+
+
+config GPIO_XLP
+	tristate "Netlogic XLP GPIO support"
+	depends on CPU_XLP && OF_GPIO
+	select GPIOLIB_IRQCHIP
+	help
+	  This driver provides support for GPIO interface on Netlogic XLP MIPS64
+	  SoCs. Currently supported XLP variants are XLP8XX, XLP3XX, XLP2XX,
+	  XLP9XX and XLP5XX.
+#	//이 드라이버는 Netlogic XLP MIPS64 SoC의 GPIO 인터페이스를 지원합니다. 현재 지원되는 XLP의 종류는 XLP8XX, XLP3XX, XLP2XX, XLP9XX, XLP5XX입니다.
+
+	  If unsure, say N.
+
+config GPIO_XTENSA
+	bool "Xtensa GPIO32 support"
+	depends on XTENSA
+	depends on HAVE_XTENSA_GPIO32
+	depends on !SMP
+	help
+	  Say yes here to support the Xtensa internal GPIO32 IMPWIRE (input)
+	  and EXPSTATE (output) ports
+#	//Xtensa 내부 GPIO32 IMPWIRE (입력) 포트와 EXPSTATE (출력) 포트를 지원하기 위해 여기에 yes라고 답하라
+
+config GPIO_ZEVIO
+	bool "LSI ZEVIO SoC memory mapped GPIOs"
+	depends on ARM && OF_GPIO
+	help
+	  Say yes here to support the GPIO controller in LSI ZEVIO SoCs.
+#	//LSI ZEVIO SoC의 GPIO 컨트롤러를 지원하기 위해 여기에 들어 있습니다.
+
+
+
+config GPIO_ZYNQ
+	tristate "Xilinx Zynq GPIO support"
+	depends on ARCH_ZYNQ || ARCH_ZYNQMP
+	select GPIOLIB_IRQCHIP
+	help
+	  Say yes here to support Xilinx Zynq GPIO controller.
+#	//자일링스의 Zynq GPIO 컨트롤러를 지원하기 위해 여기에 대답하십시오.
+
+
+
+config GPIO_ZX
+	bool "ZTE ZX GPIO support"
+	select GPIOLIB_IRQCHIP
+	help
+	  Say yes here to support the GPIO device on ZTE ZX SoCs.
+#	//ZTE ZX SoC의 GPIO 디바이스를 지원하기 위해 여기에 yes라고 대답하십시오.
+
+endmenu
+
+menu "Port-mapped I/O GPIO drivers"
+	depends on X86 # Unconditional I/O space access
+
+config GPIO_104_IDIO_16
+	tristate "ACCES 104-IDIO-16 GPIO support"
+	help
+	  Enables GPIO support for the ACCES 104-IDIO-16 family.
+#	//ACCES 104-IDIO-16 제품군의 GPIO 지원을 활성화합니다.
+
+config GPIO_F7188X
+	tristate "F71869, F71869A, F71882FG and F71889F GPIO support"
+	help
+	  This option enables support for GPIOs found on Fintek Super-I/O
+	  chips F71869, F71869A, F71882FG and F71889F.
+#	//이 옵션은 Fintek Super-I / O 칩 F71869, F71869A, F71882FG 및 F71889F의 GPIO를 지원합니다.
+
+	  To compile this driver as a module, choose M here: the module will
+	  be called f7188x-gpio.
+#	//이 드라이버를 모듈로 컴파일하려면 여기서 M을 선택합니다. 모듈은 f7188x-gpio이라고합니다.
+
+config GPIO_IT87
+	tristate "IT87xx GPIO support"
+	help
+	  Say yes here to support GPIO functionality of IT87xx Super I/O chips.
+#	//IT87xx Super I / O 칩의 GPIO 기능을 지원하기 위해 여기에 yes라고 대답하십시오.
+
+	  This driver is tested with ITE IT8728 and IT8732 Super I/O chips, and
+	  supports the IT8761E Super I/O chip as well.
+#	//이 드라이버는 ITE IT8728과 IT8732 Super I / O 칩에서 테스트되고 IT8761E Super I / O 칩도 지원하고 있습니다.
+
+	  To compile this driver as a module, choose M here: the module will
+	  be called gpio_it87
+#	//이 드라이버를 모듈로 컴파일하려면 여기서 M을 선택하십시오 : 모듈 gpio_it87라고합니다
+
+config GPIO_SCH
+	tristate "Intel SCH/TunnelCreek/Centerton/Quark X1000 GPIO"
+	depends on PCI
+	select MFD_CORE
+	select LPC_SCH
+	help
+	  Say yes here to support GPIO interface on Intel Poulsbo SCH,
+	  Intel Tunnel Creek processor, Intel Centerton processor or
+	  Intel Quark X1000 SoC.
+#	//Intel Poulsbo SCH, Intel Tunnel Creek 프로세서, Intel Centton 프로세서 또는 Intel Quark X1000 SoC의 GPIO 인터페이스를 지원하기 위해 여기에 yes라고 대답하십시오.
+
+	  The Intel SCH contains a total of 14 GPIO pins. Ten GPIOs are
+	  powered by the core power rail and are turned off during sleep
+	  modes (S3 and higher). The remaining four GPIOs are powered by
+	  the Intel SCH suspend power supply. These GPIOs remain
+	  active during S3. The suspend powered GPIOs can be used to wake the
+	  system from the Suspend-to-RAM state.
+#	//Intel SCH에는 총 14 개의 GPIO 핀이 포함되어 있습니다. 10 개의 GPIO는 코어 전원 레일에서 전원이 절전 모드 (S3 이상) 중에는 꺼집니다. 나머지 4 개 GPIO는 인텔 SCH 중단 전원이 공급됩니다.
+#	이러한 GPIO는 S3 동안 활성 상태입니다. 일시 중단 된 GPIO를 사용하여 시스템을 Suspend-to-RAM 모드에서 해제 할 수 있습니다.
+
+
+	  The Intel Tunnel Creek processor has 5 GPIOs powered by the
+	  core power rail and 9 from suspend power supply.
+#	//Intel Tunnel Creek 프로세서는 코어 전원 레일에 공급되는 5 개의 GPIO 및 중지 전원에서 9 개의 GPIO가 있습니다.
+
+	  The Intel Centerton processor has a total of 30 GPIO pins.
+	  Twenty-one are powered by the core power rail and 9 from the
+	  suspend power supply.
+#	//Intel Centton 프로세서에는 총 30 개의 GPIO 핀이 있습니다. 21 개 코어 전원 레일에서 공급 된 9 개는 중단 전원이 공급됩니다.
+
+	  The Intel Quark X1000 SoC has 2 GPIOs powered by the core
+	  power well and 6 from the suspend power well.
+#	//Intel Quark X1000 SoC는 코어 전원 우물에서 공급되는 2 개의 GPIO 및 중단 전원 우물에서 6 개의 GPIO가 있습니다.
+
+config GPIO_SCH311X
+	tristate "SMSC SCH311x SuperI/O GPIO"
+	help
+	  Driver to enable the GPIOs found on SMSC SMSC SCH3112, SCH3114 and
+	  SCH3116 "Super I/O" chipsets.
+#	//드라이버를 사용하여 SMSC SMSC SCH3112, SCH3114, SCH3116 "Super I / O"칩셋의 GPIO를 사용합니다.
+
+	  To compile this driver as a module, choose M here: the module will
+	  be called gpio-sch311x.
+#	//이 드라이버를 모듈로 컴파일하려면 여기서 M을 선택합니다. 모듈은 gpio-sch311x이라고합니다.
+
+config GPIO_TS5500
+	tristate "TS-5500 DIO blocks and compatibles"
+	depends on TS5500 || COMPILE_TEST
+	help
+	  This driver supports Digital I/O exposed by pin blocks found on some
+	  Technologic Systems platforms. It includes, but is not limited to, 3
+	  blocks of the TS-5500: DIO1, DIO2 and the LCD port, and the TS-5600
+	  LCD port.
+#	//이 드라이버는 일부 Technologic Systems 플랫폼의 핀 블록에 의해 공개되는 디지털 I / O를 지원하고 있습니다. 여기에는 TS-5500의 3 블록, DIO1, DIO2, LCD 포트 및 TS-5600 LCD 포트가 포함되지만 이에 국한되지 않습니다.
+
+endmenu
+
+menu "I2C GPIO expanders"
+	depends on I2C
+
+config GPIO_ADP5588
+	tristate "ADP5588 I2C GPIO expander"
+	help
+	  This option enables support for 18 GPIOs found
+	  on Analog Devices ADP5588 GPIO Expanders.
+#	//이 옵션은 아나 로그 디바이스의 ADP5588 GPIO 확장기에있는 18 개의 GPIO를 지원합니다.
+
+config GPIO_ADP5588_IRQ
+	bool "Interrupt controller support for ADP5588"
+	depends on GPIO_ADP5588=y
+	help
+	  Say yes here to enable the adp5588 to be used as an interrupt
+	  controller. It requires the driver to be built in the kernel.
+#	//adp5588를 인터럽트 컨트롤러로 사용할 수 있도록하려면 여기에 yes라고 대답하십시오. 드라이버를 커널에 포함해야합니다.
+
+config GPIO_ADNP
+	tristate "Avionic Design N-bit GPIO expander"
+	depends on OF_GPIO
+	select GPIOLIB_IRQCHIP
+	help
+	  This option enables support for N GPIOs found on Avionic Design
+	  I2C GPIO expanders. The register space will be extended by powers
+	  of two, so the controller will need to accommodate for that. For
+	  example: if a controller provides 48 pins, 6 registers will be
+	  enough to represent all pins, but the driver will assume a
+	  register layout for 64 pins (8 registers).
+#	//이 옵션은 Avionic Design I2C GPIO 확장기에서 검출되는 N 개의 GPIO를 지원합니다. 레지스터 공간은 2의 거듭 제곱으로 확장되므로 컨트롤러는 해당해야합니다.
+#	예를 들어, 컨트롤러가 48 핀을 제공하는 경우 6 핀의 레지스터에서 모든 핀을 표현할 수 있지만, 드라이버는 64 핀 (8 레지스터)의 레지스터 레이아웃을 가정합니다.
+
+config GPIO_MAX7300
+	tristate "Maxim MAX7300 GPIO expander"
+	select GPIO_MAX730X
+	help
+	  GPIO driver for Maxim MAX7300 I2C-based GPIO expander.
+#	//Maxim MAX7300 I2C 기반 GPIO 확장기의 GPIO 드라이버.
+
+
+
+config GPIO_MAX732X
+	tristate "MAX7319, MAX7320-7327 I2C Port Expanders"
+	help
+	  Say yes here to support the MAX7319, MAX7320-7327 series of I2C
+	  Port Expanders. Each IO port on these chips has a fixed role of
+	  Input (designated by 'I'), Push-Pull Output ('O'), or Open-Drain
+	  Input and Output (designed by 'P'). The combinations are listed
+#	//여기서, MAX7319, MAX7320-7327 시리즈의 I2C 포트 확장기를 지원합니다. 이 칩의 각 IO 포트는 Input ( 'I'로 지정) Push-Pull Output ( 'O') 또는 Open-Drain Input and Output ( 'P'로 설계)의 고정 역할이 있습니다. #조합이 나열되어 있습니다
+	  below:
+
+	  8 bits:	max7319 (8I), max7320 (8O), max7321 (8P),
+		  	max7322 (4I4O), max7323 (4P4O)
+
+	  16 bits:	max7324 (8I8O), max7325 (8P8O),
+		  	max7326 (4I12O), max7327 (4P12O)
+
+	  Board setup code must specify the model to use, and the start
+	  number for these GPIOs.
+#	//보드 설치 코드에서 사용하는 모델이 GPIO의 시작 번호를 지정해야합니다.
+
+
+
+config GPIO_MAX732X_IRQ
+	bool "Interrupt controller support for MAX732x"
+	depends on GPIO_MAX732X=y
+	select GPIOLIB_IRQCHIP
+	help
+	  Say yes here to enable the max732x to be used as an interrupt
+	  controller. It requires the driver to be built in the kernel.
+#	//max732x를 인터럽트 컨트롤러로 사용할 수 있도록하려면 여기에 yes라고 대답하십시오. 드라이버를 커널에 포함해야합니다.
+
+
+
+config GPIO_MC9S08DZ60
+	bool "MX35 3DS BOARD MC9S08DZ60 GPIO functions"
+	depends on I2C=y && MACH_MX35_3DS
+	help
+	  Select this to enable the MC9S08DZ60 GPIO driver
+#	//이것을 선택하고 MC9S08DZ60 GPIO 드라이버를 사용합니다
+
+
+
+config GPIO_PCA953X
+	tristate "PCA95[357]x, PCA9698, TCA64xx, and MAX7310 I/O ports"
+	help
+	  Say yes here to provide access to several register-oriented
+	  SMBus I/O expanders, made mostly by NXP or TI.  Compatible
+	  models include:
+#	//주로 NXP 또는 TI에 의해 만들어진 여러 레지스터 지향 SMBus I / O 확장기에 대한 액세스를 제공하기 위해 여기에 yes라고 대답하십시오. 대응 기종 :
+
+	  4 bits:	pca9536, pca9537
+
+	  8 bits:	max7310, max7315, pca6107, pca9534, pca9538, pca9554,
+			pca9556, pca9557, pca9574, tca6408, xra1202
+
+	  16 bits:	max7312, max7313, pca9535, pca9539, pca9555, pca9575,
+			tca6416
+
+	  24 bits:	tca6424
+
+	  40 bits:	pca9505, pca9698
+
+config GPIO_PCA953X_IRQ
+	bool "Interrupt controller support for PCA953x"
+	depends on GPIO_PCA953X=y
+	select GPIOLIB_IRQCHIP
+	help
+	  Say yes here to enable the pca953x to be used as an interrupt
+	  controller. It requires the driver to be built in the kernel.
+#	//pca953x를 인터럽트 컨트롤러로 사용할 수 있도록하려면 여기에 yes라고 대답하십시오. 드라이버를 커널에 포함해야합니다.
+
+config GPIO_PCF857X
+	tristate "PCF857x, PCA{85,96}7x, and MAX732[89] I2C GPIO expanders"
+	select GPIOLIB_IRQCHIP
+	select IRQ_DOMAIN
+	help
+	  Say yes here to provide access to most "quasi-bidirectional" I2C
+	  GPIO expanders used for additional digital outputs or inputs.
+	  Most of these parts are from NXP, though TI is a second source for
+	  some of them.  Compatible models include:
+#	//추가 디지털 출력 또는 입력에 사용되는 대부분의 "준 양방향"I2C GPIO 확장기에 대한 액세스를 제공하기 위해 여기에 yes라고 대답하십시오. 이러한 부품의 대부분은 NXP 제품이지만, TI에서 TI의 두 번째 소스입니다. 대응 기종 :
+
+	  8 bits:   pcf8574, pcf8574a, pca8574, pca8574a,
+	            pca9670, pca9672, pca9674, pca9674a,
+	  	    max7328, max7329
+
+	  16 bits:  pcf8575, pcf8575c, pca8575,
+	            pca9671, pca9673, pca9675
+
+	  Your board setup code will need to declare the expanders in
+	  use, and assign numbers to the GPIOs they expose.  Those GPIOs
+	  can then be used from drivers and other kernel code, just like
+	  other GPIOs, but only accessible from task contexts.
+#	//보드 설치 코드는 사용중인 확장기를 선언하고 내보내기를 공개하는 GPIO에 번호를 할당해야합니다.
+#	이러한 GPIO는 다른 GPIO와 마찬가지로 드라이버 및 기타 커널 코드에서 사용할 수있는 작업 컨텍스트에서만 액세스 할 수 있습니다.
+
+
+
+	  This driver provides an in-kernel interface to those GPIOs using
+	  platform-neutral GPIO calls.
+#	//이러한 GPIO는 다른 GPIO와 마찬가지로 드라이버 및 기타 커널 코드에서 사용할 수있는 작업 컨텍스트에서만 액세스 할 수 있습니다.
+
+config GPIO_SX150X
+	bool "Semtech SX150x I2C GPIO expander"
+	depends on I2C=y
+	select GPIOLIB_IRQCHIP
+	default n
+	help
+	  Say yes here to provide support for Semtech SX150-series I2C
+	  GPIO expanders. Compatible models include:
+#	//Semtech SX150 시리즈 I2C GPIO 확장기 지원을 제공하기 위해 여기에 yes라고 대답하십시오. 대응 기종 :
+
+	  8 bits:  sx1508q
+	  16 bits: sx1509q
+
+config GPIO_TPIC2810
+	tristate "TPIC2810 8-Bit I2C GPO expander"
+	help
+	  Say yes here to enable the GPO driver for the TI TPIC2810 chip.
+
+	  To compile this driver as a module, choose M here: the module will
+	  be called gpio-tpic2810.
+#	//TI의 TPIC2810 칩 GPO 드라이버를 사용하려면 여기에 yes라고 대답하십시오. 이 드라이버를 모듈로 컴파일하려면 여기서 M을 선택합니다. 모듈은 gpio-tpic2810이라고합니다.
+
+endmenu
+
+menu "MFD GPIO expanders"
+
+config GPIO_ADP5520
+	tristate "GPIO Support for ADP5520 PMIC"
+	depends on PMIC_ADP5520
+	help
+	  This option enables support for on-chip GPIO found
+	  on Analog Devices ADP5520 PMICs.
+#	//이 옵션은 아나 로그 디바이스의 ADP5520 PMIC의 온칩 GPIO를 지원합니다.
+
+config GPIO_ARIZONA
+	tristate "Wolfson Microelectronics Arizona class devices"
+	depends on MFD_ARIZONA
+	help
+	  Support for GPIOs on Wolfson Arizona class devices.
+#	//Wolfson Arizona 클래스 장치의 GPIO 지원
+
+config GPIO_CRYSTAL_COVE
+	tristate "GPIO support for Crystal Cove PMIC"
+	depends on INTEL_SOC_PMIC
+	select GPIOLIB_IRQCHIP
+	help
+	  Support for GPIO pins on Crystal Cove PMIC.
+
+	  Say Yes if you have a Intel SoC based tablet with Crystal Cove PMIC
+	  inside.
+
+	  This driver can also be built as a module. If so, the module will be
+	  called gpio-crystalcove.
+#	//Crystal Cove PMIC의 GPIO 핀 지원 Crystal Cove PMIC를 내장 한 Intel SoC 기반의 태블릿을 사용하는 경우 "예"라고 대답했다. 이 드라이버는 모듈로 구축 할 수 있습니다. 그렇다면 모듈은 gpio-crystalcove이라고합니다.
+
+config GPIO_CS5535
+	tristate "AMD CS5535/CS5536 GPIO support"
+	depends on MFD_CS5535
+	help
+	  The AMD CS5535 and CS5536 southbridges support 28 GPIO pins that
+	  can be used for quite a number of things.  The CS5535/6 is found on
+	  AMD Geode and Lemote Yeeloong devices.
+#	//AMD CS5535 및 CS5536 사우스 브릿지는 28 개의 GPIO 핀을 지원하고 있으며, 상당히 많은 수에 사용할 수 있습니다. CS5535 / 6는 AMD Geode 및 Lemote Yeeloong 장치에 탑재되어 있습니다.
+
+	  If unsure, say N.
+
+config GPIO_DA9052
+	tristate "Dialog DA9052 GPIO"
+	depends on PMIC_DA9052
+	help
+	  Say yes here to enable the GPIO driver for the DA9052 chip.
+#	//DA9052 칩의 GPIO 드라이버를 사용하려면 여기에 yes라고 대답하십시오.
+
+
+
+config GPIO_DA9055
+	tristate "Dialog Semiconductor DA9055 GPIO"
+	depends on MFD_DA9055
+	help
+	  Say yes here to enable the GPIO driver for the DA9055 chip.
+
+	  The Dialog DA9055 PMIC chip has 3 GPIO pins that can be
+	  be controller by this driver.
+
+	  If driver is built as a module it will be called gpio-da9055.
+#	//DA9055 칩의 GPIO 드라이버를 사용하려면 여기에 yes라고 대답하십시오. Dialog DA9055 PMIC 칩이 드라이버에서 제어 가능한 3 개의 GPIO 핀이 있습니다. 드라이버가 모듈로 빌드되어있는 경우 gpio-da9055이라고합니다.
+
+config GPIO_DLN2
+	tristate "Diolan DLN2 GPIO support"
+	depends on MFD_DLN2
+	select GPIOLIB_IRQCHIP
+
+	help
+	  Select this option to enable GPIO driver for the Diolan DLN2
+	  board.
+
+	  This driver can also be built as a module. If so, the module
+	  will be called gpio-dln2.
+#	//Diolan DLN2 보드의 GPIO 드라이버를 사용하려면이 옵션을 선택합니다. 이 드라이버는 모듈로 구축 할 수 있습니다. 그렇다면 모듈은 gpio-dln2이라고합니다.
+
+config GPIO_JANZ_TTL
+	tristate "Janz VMOD-TTL Digital IO Module"
+	depends on MFD_JANZ_CMODIO
+	help
+	  This enables support for the Janz VMOD-TTL Digital IO module.
+	  This driver provides support for driving the pins in output
+	  mode only. Input mode is not supported.
+#	//그러면 Janz VMOD-TTL 디지털 IO 모듈이 지원됩니다. 이 드라이버는 출력 모드에서만 핀을 구동하기위한 지원을 제공합니다. 입력 모드는 지원되지 않습니다.
+
+config GPIO_KEMPLD
+	tristate "Kontron ETX / COMexpress GPIO"
+	depends on MFD_KEMPLD
+	help
+	  This enables support for the PLD GPIO interface on some Kontron ETX
+	  and COMexpress (ETXexpress) modules.
+
+	  This driver can also be built as a module. If so, the module will be
+	  called gpio-kempld.
+#	//이로 인해 일부 Kontron ETX 및 COMexpress (ETXexpress) 모듈에서 PLD GPIO 인터페이스를 지원 할 수 있습니다. 이 드라이버는 모듈로 구축 할 수 있습니다. 그렇다면 모듈은 gpio-kempld이라고합니다.
+
+config GPIO_LP3943
+	tristate "TI/National Semiconductor LP3943 GPIO expander"
+	depends on MFD_LP3943
+	help
+	  GPIO driver for LP3943 MFD.
+	  LP3943 can be used as a GPIO expander which provides up to 16 GPIOs.
+	  Open drain outputs are required for this usage.
+#	//LP3943 MFD의 GPIO 드라이버. LP3943은 최대 16 개의 GPIO를 제공하는 GPIO 확장기로 사용할 수 있습니다. 이 용도로는 오픈 드레인 출력이 필요합니다.
+
+config GPIO_MSIC
+	bool "Intel MSIC mixed signal gpio support"
+	depends on MFD_INTEL_MSIC
+	help
+	  Enable support for GPIO on intel MSIC controllers found in
+	  intel MID devices
+#	//Intel MID 장치의 Intel MSIC 컨트롤러의 GPIO의 지원을 활성화하려면
+
+
+
+config GPIO_PALMAS
+	bool "TI PALMAS series PMICs GPIO"
+	depends on MFD_PALMAS
+	help
+	  Select this option to enable GPIO driver for the TI PALMAS
+	  series chip family.
+#	//TI PALMAS 시리즈 칩 제품군의 GPIO 드라이버를 사용하려면이 옵션을 선택합니다.
+
+config GPIO_RC5T583
+	bool "RICOH RC5T583 GPIO"
+	depends on MFD_RC5T583
+	help
+	  Select this option to enable GPIO driver for the Ricoh RC5T583
+	  chip family.
+	  This driver provides the support for driving/reading the gpio pins
+	  of RC5T583 device through standard gpio library.
+#	//Ricoh RC5T583 칩 제품군의 GPIO 드라이버를 사용하려면이 옵션을 선택합니다. 이 드라이버는 표준 gpio 라이브러리를 통해 RC5T583 장치의 gpio 핀 구동 / 읽기를 지원합니다.
+
+config GPIO_STMPE
+	bool "STMPE GPIOs"
+	depends on MFD_STMPE
+	depends on OF_GPIO
+	select GPIOLIB_IRQCHIP
+	help
+	  This enables support for the GPIOs found on the STMPE I/O
+	  Expanders.
+#	//그러면 STMPE I / O 익스팬더에서 검출되는 GPIO가 지원됩니다.
+
+
+
+config GPIO_TC3589X
+	bool "TC3589X GPIOs"
+	depends on MFD_TC3589X
+	depends on OF_GPIO
+	select GPIOLIB_IRQCHIP
+	help
+	  This enables support for the GPIOs found on the TC3589X
+	  I/O Expander.
+#	//그러면 TC3589X I / O 확장기에있는 GPIO를 지원 할 수 있습니다.
+
+
+
+config GPIO_TIMBERDALE
+	bool "Support for timberdale GPIO IP"
+	depends on MFD_TIMBERDALE
+	---help---
+	Add support for the GPIO IP in the timberdale FPGA.
+#	//timberdale FPGA에 GPIO IP 지원을 추가합니다.
+
+config GPIO_TPS65086
+	tristate "TI TPS65086 GPO"
+	depends on MFD_TPS65086
+	help
+	  This driver supports the GPO on TI TPS65086x PMICs.
+#	//이 드라이버는 TI TPS65086x PMIC에 GPO를 지원하고 있습니다.
+
+
+
+config GPIO_TPS6586X
+	bool "TPS6586X GPIO"
+	depends on MFD_TPS6586X
+	help
+	  Select this option to enable GPIO driver for the TPS6586X
+	  chip family.
+#	//TPS6586X 칩 제품군의 GPIO 드라이버를 사용하려면이 옵션을 선택합니다.
+
+config GPIO_TPS65910
+	bool "TPS65910 GPIO"
+	depends on MFD_TPS65910
+	help
+	  Select this option to enable GPIO driver for the TPS65910
+	  chip family.
+#	//TPS65910 칩 제품군의 GPIO 드라이버를 사용하려면이 옵션을 선택합니다.
+
+config GPIO_TPS65912
+	tristate "TI TPS65912 GPIO"
+	depends on MFD_TPS65912
+	help
+	  This driver supports TPS65912 gpio chip
+#	//이 드라이버는 TPS65912 gpio 칩을 지원합니다
+
+
+
+config GPIO_TWL4030
+	tristate "TWL4030, TWL5030, and TPS659x0 GPIOs"
+	depends on TWL4030_CORE
+	help
+	  Say yes here to access the GPIO signals of various multi-function
+	  power management chips from Texas Instruments.
+#	//다양한 다기능 GPIO 신호에 액세스하려면 여기에 yes라고 말하십시오.
+#	Texas Instruments의 전원 관리 칩
+
+config GPIO_TWL6040
+	tristate "TWL6040 GPO"
+	depends on TWL6040_CORE
+	help
+	  Say yes here to access the GPO signals of twl6040
+	  audio chip from Texas Instruments.
+#	//twl6040의 GPO 신호에 액세스하려면 여기에 yes라고 말하십시오.
+#	Texas Instruments의 전원 관리 칩
+
+config GPIO_UCB1400
+	tristate "Philips UCB1400 GPIO"
+	depends on UCB1400_CORE
+	help
+	  This enables support for the Philips UCB1400 GPIO pins.
+	  The UCB1400 is an AC97 audio codec.
+#	//이를 통해 Philips UCB1400 GPIO 핀을 지원할 수 있습니다.
+#	UCB1400은 AC97 오디오 코덱입니다.
+
+config GPIO_WM831X
+	tristate "WM831x GPIOs"
+	depends on MFD_WM831X
+	help
+	  Say yes here to access the GPIO signals of WM831x power management
+	  chips from Wolfson Microelectronics.
+#	//WM831x 전력 관리의 GPIO 신호에 액세스하려면 여기에 yes라고 말하십시오.
+#	울프슨 마이크로 일렉트로닉스 칩.
+
+config GPIO_WM8350
+	tristate "WM8350 GPIOs"
+	depends on MFD_WM8350
+	help
+	  Say yes here to access the GPIO signals of WM8350 power management
+	  chips from Wolfson Microelectronics.
+#	//WM8350 전원 관리의 GPIO 신호에 액세스하려면 여기에 yes라고 말하십시오.
+#	울프슨 마이크로 일렉트로닉스 칩.
+
+config GPIO_WM8994
+	tristate "WM8994 GPIOs"
+	depends on MFD_WM8994
+	help
+	  Say yes here to access the GPIO signals of WM8994 audio hub
+	  CODECs from Wolfson Microelectronics.
+#	//WM8994 오디오 허브의 GPIO 신호에 액세스하려면 여기에 yes라고 말하십시오.
+#	울프슨 마이크로 일렉트로닉스 코덱.
+
+endmenu
+
+menu "PCI GPIO expanders"
+	depends on PCI
+
+config GPIO_AMD8111
+	tristate "AMD 8111 GPIO driver"
+	depends on PCI
+	help
+	  The AMD 8111 south bridge contains 32 GPIO pins which can be used.
+
+	  Note, that usually system firmware/ACPI handles GPIO pins on their
+	  own and users might easily break their systems with uncarefull usage
+	  of this driver!
+
+	  If unsure, say N
+
+config GPIO_BT8XX
+	tristate "BT8XX GPIO abuser"
+	depends on PCI && VIDEO_BT848=n
+	help
+	  The BT8xx frame grabber chip has 24 GPIO pins that can be abused
+	  as a cheap PCI GPIO card.
+
+	  This chip can be found on Miro, Hauppauge and STB TV-cards.
+
+	  The card needs to be physically altered for using it as a
+	  GPIO card. For more information on how to build a GPIO card
+	  from a BT8xx TV card, see the documentation file at
+	  Documentation/bt8xxgpio.txt
+
+	  If unsure, say N.
+#	//AMD 8111 사우스 브리지에는 사용할 수있는 32 개의 GPIO 핀이 있습니다.
+
+#일반적으로 시스템 펌웨어 / ACPI는 GPIO 핀을 자체적으로 처리하므로 사용자는이 드라이버를 사용하기가 쉽지 않은 시스템을 쉽게 망칠 수 있습니다!
+
+#확실하지 않으면 N이라고 말하십시오.
+
+config GPIO_INTEL_MID
+	bool "Intel Mid GPIO support"
+	depends on PCI && X86
+	select GPIOLIB_IRQCHIP
+	help
+	  Say Y here to support Intel Mid GPIO.
+#	//인텔 중급 GPIO를 지원하려면 여기에 Y라고 말하십시오.
+
+config GPIO_ML_IOH
+	tristate "OKI SEMICONDUCTOR ML7213 IOH GPIO support"
+	depends on PCI
+	select GENERIC_IRQ_CHIP
+	help
+	  ML7213 is companion chip for Intel Atom E6xx series.
+	  This driver can be used for OKI SEMICONDUCTOR ML7213 IOH(Input/Output
+	  Hub) which is for IVI(In-Vehicle Infotainment) use.
+	  This driver can access the IOH's GPIO device.
+#	//ML7213은 Intel Atom E6xx 시리즈 용 보조 칩입니다.
+#이 드라이버는 IVI (In-Vehicle Infotainment) 용 OKI SEMICONDUCTOR ML7213 IOH (Input / Output Hub)에 사용할 수 있습니다. 이 드라이버는 IOH의 GPIO 장치에 액세스 할 수 있습니다.
+
+config GPIO_PCH
+	tristate "Intel EG20T PCH/LAPIS Semiconductor IOH(ML7223/ML7831) GPIO"
+	depends on PCI && (X86_32 || COMPILE_TEST)
+	select GENERIC_IRQ_CHIP
+	help
+	  This driver is for PCH(Platform controller Hub) GPIO of Intel Topcliff
+	  which is an IOH(Input/Output Hub) for x86 embedded processor.
+	  This driver can access PCH GPIO device.
+#	//이 드라이버는 x86 임베디드 프로세서 용 IOH (Input / Output Hub) 인 Intel Topcliff의 PCH (Platform controller Hub) GPIO 용입니다. 이 드라이버는 PCH GPIO 장치에 액세스 할 수 있습니다.
+
+	  This driver also can be used for LAPIS Semiconductor IOH(Input/
+	  Output Hub), ML7223 and ML7831.
+	  ML7223 IOH is for MP(Media Phone) use.
+	  ML7831 IOH is for general purpose use.
+	  ML7223/ML7831 is companion chip for Intel Atom E6xx series.
+	  ML7223/ML7831 is completely compatible for Intel EG20T PCH.
+#	//
+#이 드라이버는 LAPIS Semiconductor IOH (Input /
+#출력 허브), ML7223 및 ML7831.
+#ML7223 IOH는 MP (Media Phone) 용입니다.
+#ML7831 IOH는 범용으로 사용됩니다.
+#ML7223 / ML7831은 Intel Atom E6xx 시리즈 용 보조 칩입니다.
+#ML7223 / ML7831은 Intel EG20T PCH와 완벽하게 호환됩니다.
+
+config GPIO_RDC321X
+	tristate "RDC R-321x GPIO support"
+	depends on PCI
+	select MFD_CORE
+	select MFD_RDC321X
+	help
+	  Support for the RDC R321x SoC GPIOs over southbridge
+	  PCI configuration space.
+#	//southbridge PCI 구성 공간을 통한 RDC R321x SoC GPIO 지원.
+
+config GPIO_SODAVILLE
+	bool "Intel Sodaville GPIO support"
+	depends on X86 && PCI && OF
+	select GPIO_GENERIC
+	select GENERIC_IRQ_CHIP
+	help
+	  Say Y here to support Intel Sodaville GPIO.
+#	//인텔 Sodaville GPIO를 지원하기 위해 여기에 Y라고 말하십시오.
+
+endmenu
+
+menu "SPI GPIO expanders"
+	depends on SPI_MASTER
+
+config GPIO_74X164
+	tristate "74x164 serial-in/parallel-out 8-bits shift register"
+	depends on OF
+	help
+	  Driver for 74x164 compatible serial-in/parallel-out 8-outputs
+	  shift registers. This driver can be used to provide access
+	  to more gpio outputs.
+#	//74x164 호환 직렬 / 병렬 출력 8 출력 시프트 레지스터 용 드라이버. 이 드라이버는 더 많은 gpio 출력에 대한 액세스를 제공하는 데 사용할 수 있습니다.
+
+config GPIO_MAX7301
+	tristate "Maxim MAX7301 GPIO expander"
+	select GPIO_MAX730X
+	help
+	  GPIO driver for Maxim MAX7301 SPI-based GPIO expander.
+#	//Maxim MAX7301 SPI 기반 GPIO 확장기 용 GPIO 드라이버
+
+config GPIO_MC33880
+	tristate "Freescale MC33880 high-side/low-side switch"
+	help
+	  SPI driver for Freescale MC33880 high-side/low-side switch.
+	  This provides GPIO interface supporting inputs and outputs.
+#	//프리 스케일 MC33880 하이 사이드 / 로우 사이드 스위치 용 SPI 드라이버.
+#	이것은 입 / 출력을 지원하는 GPIO 인터페이스를 제공합니다.
+
+config GPIO_PISOSR
+	tristate "Generic parallel-in/serial-out shift register"
+	help
+	  GPIO driver for SPI compatible parallel-in/serial-out shift
+	  registers. These are input only devices.
+#	//SPI 호환 병렬 입력 / 직렬 출력 시프트 레지스터 용 GPIO 드라이버. 이들은 입력 전용 장치입니다.
+
+endmenu
+
+menu "SPI or I2C GPIO expanders"
+	depends on (SPI_MASTER && !I2C) || I2C
+
+config GPIO_MCP23S08
+	tristate "Microchip MCP23xxx I/O expander"
+	help
+	  SPI/I2C driver for Microchip MCP23S08/MCP23S17/MCP23008/MCP23017
+	  I/O expanders.
+	  This provides a GPIO interface supporting inputs and outputs.
+	  The I2C versions of the chips can be used as interrupt-controller.
+#	//마이크로 칩 MCP23S08 / MCP23S17 / MCP23008 / MCP23017 I / O 익스팬더 용 SPI / I2C 드라이버.
+#	이것은 입 / 출력을 지원하는 GPIO 인터페이스를 제공합니다.
+#	I2C 버전의 칩은 인터럽트 컨트롤러로 사용할 수 있습니다.
+
+
+endmenu
+
+menu "USB GPIO expanders"
+	depends on USB
+
+config GPIO_VIPERBOARD
+	tristate "Viperboard GPIO a & b support"
+	depends on MFD_VIPERBOARD && USB
+	help
+	  Say yes here to access the GPIO signals of Nano River
+	  Technologies Viperboard. There are two GPIO chips on the
+	  board: gpioa and gpiob.
+          See viperboard API specification and Nano
+          River Tech's viperboard.h for detailed meaning
+          of the module parameters.
+#	//Nano River Technologies Viperboard의 GPIO 신호에 액세스하려면 여기에 yes라고 말하십시오. gpioa와 gpiob라는 두 개의 GPIO 칩이 보드에 있습니다.
+#           모듈 매개 변수에 대한 자세한 내용은 viperboard API 사양 및 Nano River Tech의 viperboard.h를 참조하십시오.
+
+endmenu
+
+endif

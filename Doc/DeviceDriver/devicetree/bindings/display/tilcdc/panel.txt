@@ -1,0 +1,134 @@
+﻿Device-Tree bindings for tilcdc DRM generic panel output driver
+
+Required properties:
+ - compatible: value should be "ti,tilcdc,panel".
+ - panel-info: configuration info to configure LCDC correctly for the panel
+   - ac-bias: AC Bias Pin Frequency
+   - ac-bias-intrpt: AC Bias Pin Transitions per Interrupt
+   - dma-burst-sz: DMA burst size
+   - bpp: Bits per pixel
+   - fdd: FIFO DMA Request Delay
+   - sync-edge: Horizontal and Vertical Sync Edge: 0=rising 1=falling
+   - sync-ctrl: Horizontal and Vertical Sync: Control: 0=ignore
+   - raster-order: Raster Data Order Select: 1=Most-to-least 0=Least-to-most
+   - fifo-th: DMA FIFO threshold
+ - display-timings: typical videomode of lcd panel.  Multiple video modes
+   can be listed if the panel supports multiple timings, but the 'native-mode'
+   should be the preferred/default resolution.  Refer to
+   Documentation/devicetree/bindings/display/display-timing.txt for display
+   timing binding details.
+
+Optional properties:
+- backlight: phandle of the backlight device attached to the panel
+- enable-gpios: GPIO pin to enable or disable the panel
+
+Recommended properties:
+ - pinctrl-names, pinctrl-0: the pincontrol settings to configure
+   muxing properly for pins that connect to TFP410 device
+
+Example:
+
+	/* Settings for CDTech_S035Q01 / LCD3 cape: */
+	lcd3 {
+		compatible = "ti,tilcdc,panel";
+		pinctrl-names = "default";
+		pinctrl-0 = <&bone_lcd3_cape_lcd_pins>;
+		backlight = <&backlight>;
+		enable-gpios = <&gpio3 19 0>;
+
+		panel-info {
+			ac-bias           = <255>;
+			ac-bias-intrpt    = <0>;
+			dma-burst-sz      = <16>;
+			bpp               = <16>;
+			fdd               = <0x80>;
+			sync-edge         = <0>;
+			sync-ctrl         = <1>;
+			raster-order      = <0>;
+			fifo-th           = <0>;
+		};
+		display-timings {
+			native-mode = <&timing0>;
+			timing0: 320x240 {
+				hactive         = <320>;
+				vactive         = <240>;
+				hback-porch     = <21>;
+				hfront-porch    = <58>;
+				hsync-len       = <47>;
+				vback-porch     = <11>;
+				vfront-porch    = <23>;
+				vsync-len       = <2>;
+				clock-frequency = <8000000>;
+				hsync-active    = <0>;
+				vsync-active    = <0>;
+			};
+		};
+	};
+
+/*
+Device-Tree bindings for tilcdc DRM generic panel output driver
+
+필수 속성 :
+ - 호환 가능 : 값은 "ti, tilcdc, panel"이어야합니다.
+ - panel-info : 패널에 대해 LCDC를 올바르게 구성하는 구성 정보
+ - ac 바이어스 : AC 바이어스 핀 주파수
+ - ac-bias-intrpt : 인터럽트 당 AC 바이어스 핀 전환
+ - dma-burst-sz : DMA 버스트 크기
+ - bpp : 픽셀 당 비트
+ - fdd : FIFO DMA 요청 지연
+ - 동기 에지 : 수평 및 수직 동기 에지 : 0 = 상승 1 = 하강
+ - sync-ctrl : 수평 및 수직 동기화 : 제어 : 0 = 무시
+ - 래스터 순서 : 래스터 데이터 순서 선택 : 1 = 가장 - 최소 0 = 최소 - 최대
+ - fifo-th : DMA FIFO 임계 값
+ - 디스플레이 타이밍 : LCD 패널의 일반적인 비디오 모드. 패널이 여러 타이밍을 지원하는 경우 여러 비디오 모드를 나열 할 수 있지만 
+
+'기본 모드'를 기본 / 기본 해상도로 사용해야합니다. 표시 타이밍 바인딩 세부 사항은 Documentation / devicetree / bindings / display / display-timing.txt를 참조하십시오.
+
+선택적 속성 :
+- 백라이트 : 패널에 부착 된 백라이트 장치의 phandle
+- enable-gpios : 패널을 활성화 또는 비활성화하는 GPIO 핀
+
+권장 속성 :
+ - pinctrl-names, pinctrl-0 : 구성 할 핀 제어 설정
+   TFP410 장치에 연결되는 핀에 대해 적절하게 멀티플렉싱
+
+Example:
+
+	/* Settings for CDTech_S035Q01 / LCD3 cape: */
+	lcd3 {
+		compatible = "ti,tilcdc,panel";
+		pinctrl-names = "default";
+		pinctrl-0 = <&bone_lcd3_cape_lcd_pins>;
+		backlight = <&backlight>;
+		enable-gpios = <&gpio3 19 0>;
+
+		panel-info {
+			ac-bias           = <255>;
+			ac-bias-intrpt    = <0>;
+			dma-burst-sz      = <16>;
+			bpp               = <16>;
+			fdd               = <0x80>;
+			sync-edge         = <0>;
+			sync-ctrl         = <1>;
+			raster-order      = <0>;
+			fifo-th           = <0>;
+		};
+		display-timings {
+			native-mode = <&timing0>;
+			timing0: 320x240 {
+				hactive         = <320>;
+				vactive         = <240>;
+				hback-porch     = <21>;
+				hfront-porch    = <58>;
+				hsync-len       = <47>;
+				vback-porch     = <11>;
+				vfront-porch    = <23>;
+				vsync-len       = <2>;
+				clock-frequency = <8000000>;
+				hsync-active    = <0>;
+				vsync-active    = <0>;
+			};
+		};
+	};
+
+*/

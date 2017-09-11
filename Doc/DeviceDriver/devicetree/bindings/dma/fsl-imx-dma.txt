@@ -1,0 +1,101 @@
+* Freescale Direct Memory Access (DMA) Controller for i.MX
+
+This document will only describe differences to the generic DMA Controller and
+DMA request bindings as described in dma/dma.txt .
+
+* DMA controller
+
+Required properties:
+- compatible : Should be "fsl,<chip>-dma". chip can be imx1, imx21 or imx27
+- reg : Should contain DMA registers location and length
+- interrupts : First item should be DMA interrupt, second one is optional and
+    should contain DMA Error interrupt
+- #dma-cells : Has to be 1. imx-dma does not support anything else.
+
+Optional properties:
+- #dma-channels : Number of DMA channels supported. Should be 16.
+- #dma-requests : Number of DMA requests supported.
+
+Example:
+
+	dma: dma@10001000 {
+		compatible = "fsl,imx27-dma";
+		reg = <0x10001000 0x1000>;
+		interrupts = <32 33>;
+		#dma-cells = <1>;
+		#dma-channels = <16>;
+	};
+
+
+* DMA client
+
+Clients have to specify the DMA requests with phandles in a list.
+
+Required properties:
+- dmas: List of one or more DMA request specifiers. One DMA request specifier
+    consists of a phandle to the DMA controller followed by the integer
+    specifying the request line.
+- dma-names: List of string identifiers for the DMA requests. For the correct
+    names, have a look at the specific client driver.
+
+Example:
+
+	sdhci1: sdhci@10013000 {
+		...
+		dmas = <&dma 7>;
+		dma-names = "rx-tx";
+		...
+	};
+
+/*
+=====================================================================================
+
+* i.MX 용 프리 스케일 직접 메모리 액세스 (DMA) 컨트롤러
+
+이 문서에서는 dma / dma.txt에 설명 된대로 일반 DMA 컨트롤러와 DMA 요청 바인딩의 차이점 만 설명합니다.
+
+* DMA 컨트롤러
+
+필수 속성 :
+- compatible : "fsl, <chip> -dma"여야합니다. 칩은 imx1, imx21 또는 imx27 일 수 있습니다.
+- reg : DMA 레지스터 위치와 길이를 포함해야합니다.
+- 인터럽트 : 첫 번째 항목은 DMA 인터럽트 여야하며 두 번째 항목은 선택 사항이며 DMA 오류 인터럽트를 포함해야합니다
+- # dma-cells : 1이어야합니다. imx-dma는 다른 것을 지원하지 않습니다.
+
+선택적 속성 :
+- # dma-channels : 지원되는 DMA 채널의 수. 16이어야합니다.
+- # dma-requests : 지원되는 DMA 요청 수.
+
+예:
+
+Example:
+
+	dma: dma@10001000 {
+		compatible = "fsl,imx27-dma";
+		reg = <0x10001000 0x1000>;
+		interrupts = <32 33>;
+		#dma-cells = <1>;
+		#dma-channels = <16>;
+	};
+
+* DMA 클라이언트
+
+클라이언트는 목록에있는 phandles로 DMA 요청을 지정해야합니다.
+
+필수 속성 :
+- dmas : 하나 이상의 DMA 요청 지정자 목록입니다. 하나의 DMA 요청 지정자는 요청 라인을 지정하는 정수 다음에 DMA 컨트롤러에 대한 phandle로 구성됩니다.
+- dma-names : DMA 요청에 대한 문자열 식별자 목록입니다. 올바른 이름을 보려면 특정 클라이언트 드라이버를 살펴보십시오.
+
+Example:
+
+	sdhci1: sdhci@10013000 {
+		...
+		dmas = <&dma 7>;
+		dma-names = "rx-tx";
+		...
+	};
+
+
+===========================================================================================
+*/
+

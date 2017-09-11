@@ -1,0 +1,162 @@
+
+Authorizing (or not) your USB devices to connect to the system
+USB 장치를 인증 (또는 인증 안 함)하여 시스템에 연결
+
+(C) 2007 Inaky Perez-Gonzalez <inaky@linux.intel.com> Intel Corporation
+
+This feature allows you to control if a USB device can be used (or
+not) in a system. This feature will allow you to implement a lock-down
+of USB devices, fully controlled by user space.
+이 기능을 사용하면 시스템에서 USB 장치를 사용할 수 있는지 여부를 제어할 수 있습니다.
+이 기능을 사용하면 사용자 공간에 의해 완벽하게 제어되는 USB 장치의 잠금 기능을 구현할 수 있습니다.
+
+As of now, when a USB device is connected it is configured and
+its interfaces are immediately made available to the users.  With this
+modification, only if root authorizes the device to be configured will
+then it be possible to use it.
+현재 USB 장치가 연결될 때 USB 장치가 구성되고 해당 인터페이스가 즉시 사용자에게 제공됩니다.
+이 수정으로 root가 장치를 구성하도록 권한을 부여한 경우에만 사용할 수 있습니다.
+
+Usage:
+
+Authorize a device to connect:
+장치에 연결 권한 부여:
+
+$ echo 1 > /sys/bus/usb/devices/DEVICE/authorized
+
+Deauthorize a device:
+기기 승인 취소 :
+
+$ echo 0 > /sys/bus/usb/devices/DEVICE/authorized
+
+Set new devices connected to hostX to be deauthorized by default (ie:
+lock down):
+hostX에 연결된 새 장치를 기본적으로 인증 해제되도록 설정 (예 : 잠금):
+
+$ echo 0 > /sys/bus/usb/devices/usbX/authorized_default
+
+Remove the lock down:
+잠금 장치를 제거:
+
+$ echo 1 > /sys/bus/usb/devices/usbX/authorized_default
+
+By default, Wired USB devices are authorized by default to
+connect. Wireless USB hosts deauthorize by default all new connected
+devices (this is so because we need to do an authentication phase
+before authorizing).
+기본적으로 유선 USB 장치는 연결하도록 인증되어 있습니다.
+무선 USB 호스트는 기본적으로 새로운 모든 연결된 장치의 인증을 해제합니다. 
+(승인하기 전에 인증 단계를 수행해야하기 때문입니다).
+
+
+Example system lockdown (lame)
+시스템 잠금 예제 (lame)
+-----------------------
+
+Imagine you want to implement a lockdown so only devices of type XYZ
+can be connected (for example, it is a kiosk machine with a visible
+USB port):
+XYZ 유형의 장치만 연결할 수 있도록 잠금을 구현한다고 가정해보십시오.
+(예 : 보이는 USB 포트가있는 kiosk 시스템):
+
+boot up
+부팅
+rc.local ->
+
+ for host in /sys/bus/usb/devices/usb*
+ do
+    echo 0 > $host/authorized_default
+ done
+
+Hookup an script to udev, for new USB devices
+새로운 USB 장치를위한 udev 스크립트 연결
+
+ if device_is_my_type $DEV
+ then
+   echo 1 > $device_path/authorized
+ done
+
+
+Now, device_is_my_type() is where the juice for a lockdown is. Just
+checking if the class, type and protocol match something is the worse
+security verification you can make (or the best, for someone willing
+to break it). If you need something secure, use crypto and Certificate
+Authentication or stuff like that. Something simple for an storage key
+could be:
+이제 device_is_my_type()은 잠금을 위한 곳입니다. 
+클래스, 유형 및 프로토콜이 무언가와 일치하는지 확인하는 것은 보안 검증을 악화시킬 수 있습니다.
+(또는 누군가 이를 위반할 가능성이있는 경우).
+안전한 것이 필요하면 암호와 인증서 인증을 사용하십시오.
+storage key에 대한 간단한 내용은 다음과 같습니다:
+
+function device_is_my_type()
+{
+   echo 1 > authorized		# temporarily authorize it
+                                # FIXME: make sure none can mount it
+   mount DEVICENODE /mntpoint
+   sum=$(md5sum /mntpoint/.signature)
+   if [ $sum = $(cat /etc/lockdown/keysum) ]
+   then
+        echo "We are good, connected"
+        umount /mntpoint
+        # Other stuff so others can use it
+   else
+        echo 0 > authorized
+   fi
+}
+
+
+Of course, this is lame, you'd want to do a real certificate
+verification stuff with PKI, so you don't depend on a shared secret,
+etc, but you get the idea. Anybody with access to a device gadget kit
+can fake descriptors and device info. Don't trust that. You are
+welcome.
+물론, 이것은 lame입니다.
+PKI로 실제 인증서 확인 작업을 하고 싶다면 공유된 비밀 등에 의존하지 말고 아이디어를 얻으십시오. 
+장치 gadget kit에 액세스할 수 있는 사람은 누구나 descriptor 및 장치 정보를 가짜로 만들 수 있습니다.
+
+
+Interface authorization
+인터페이스 인증
+-----------------------
+There is a similar approach to allow or deny specific USB interfaces.
+That allows to block only a subset of an USB device.
+특정 USB 인터페이스를 허용하거나 거부하는 비슷한 접근 방식이 있습니다.
+따라서 USB 장치의 하위 집합만 차단할 수 있습니다.
+
+Authorize an interface:
+인터페이스 권한 부여:
+$ echo 1 > /sys/bus/usb/devices/INTERFACE/authorized
+
+Deauthorize an interface:
+인터페이스 승인 취소:
+$ echo 0 > /sys/bus/usb/devices/INTERFACE/authorized
+
+The default value for new interfaces
+on a particular USB bus can be changed, too.
+특정 USB 버스의 새 인터페이스에 대한 기본값도 변경할 수 있습니다.
+
+Allow interfaces per default:
+기본 인터페이스 허용:
+$ echo 1 > /sys/bus/usb/devices/usbX/interface_authorized_default
+
+Deny interfaces per default:
+기본값 당 인터페이스 거부:
+$ echo 0 > /sys/bus/usb/devices/usbX/interface_authorized_default
+
+Per default the interface_authorized_default bit is 1.
+So all interfaces would authorized per default.
+기본적으로 interface_authorized_default 비트는 1입니다.
+따라서 모든 인터페이스는 기본값별로 승인됩니다.
+
+Note:
+If a deauthorized interface will be authorized so the driver probing must
+be triggered manually by writing INTERFACE to /sys/bus/usb/drivers_probe
+인증되지 않은 인터페이스가 인증될 수 있도록 /sys/bus/usb/drivers_probe에 
+INTERFACE를 작성하여 수동으로 드라이버 검사를 트리거 해야합니다.
+
+For drivers that need multiple interfaces all needed interfaces should be
+authroized first. After that the drivers should be probed.
+This avoids side effects.
+여러 인터페이스가 필요한 드라이버의 경우 필요한 모든 인터페이스가 먼저 승인되어야합니다.
+그 후 드라이버를 조사해야 합니다. 이렇게 하면 부작용을 피할 수 있습니다.

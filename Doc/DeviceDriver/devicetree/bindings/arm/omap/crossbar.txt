@@ -1,0 +1,78 @@
+Some socs have a large number of interrupts requests to service
+the needs of its many peripherals and subsystems. All of the
+interrupt lines from the subsystems are not needed at the same
+time, so they have to be muxed to the irq-controller appropriately.
+In such places a interrupt controllers are preceded by an CROSSBAR
+that provides flexibility in muxing the device requests to the controller
+inputs.
+	//일부 socs는 많은 수의 주변 장치 및 하위 시스템의 요구 사항을 처리하기 위해 많은 수의 인터럽트 요청을 처리합니다. 
+	하위 시스템의 모든 인터럽트 라인은 동시에 필요하지 않으므로 IRQ 컨트롤러에 적절하게 다중화되어야합니다.
+	그러한 장소에서 인터럽트 컨트롤러 앞에는 컨트롤러 요청에 장치 요청을 다중화하는 융통성을 제공하는 CROSSBAR가 선행됩니다.
+
+Required properties:
+- compatible : Should be "ti,irq-crossbar"
+- reg: Base address and the size of the crossbar registers.
+- interrupt-controller: indicates that this block is an interrupt controller.
+- interrupt-parent: the interrupt controller this block is connected to.
+- ti,max-irqs: Total number of irqs available at the parent interrupt controller.
+- ti,max-crossbar-sources: Maximum number of crossbar sources that can be routed.
+- ti,reg-size: Size of a individual register in bytes. Every individual
+	    register is assumed to be of same size. Valid sizes are 1, 2, 4.
+- ti,irqs-reserved: List of the reserved irq lines that are not muxed using
+		 crossbar. These interrupt lines are reserved in the soc,
+		 so crossbar bar driver should not consider them as free
+		 lines.
+
+필수 속성 :
+- 호환 : "ti, irq-crossbar"여야합니다.
+- reg :베이스 주소와 크로스바 레지스터의 크기.
+- interrupt-controller :이 블록이 인터럽트 컨트롤러임을 나타냅니다.
+- interrupt-parent :이 블록이 연결된 인터럽트 컨트롤러입니다.
+- ti, max-irqs : 상위 인터럽트 컨트롤러에서 사용할 수있는 총 irq 수입니다.
+- ti, max-crossbar-sources : 라우트 할 수있는 크로스바 소스의 최대 수.
+- ti, reg-size : 개별 레지스터의 크기 (바이트). 모든 개별 레지스터는 동일한 크기로 간주됩니다. 유효한 크기는 1, 2, 4입니다.
+- ti, irqs-reserved : 크로스바를 사용하여 다중화되지 않은 예약 된 irq 라인 목록. 이러한 인터럽트 라인은 soc에 예약되어 있으며,
+그래서 크로스바 바 드라이버는 그들을 자유 선으로 간주해서는 안됩니다.
+
+Optional properties:
+- ti,irqs-skip: This is similar to "ti,irqs-reserved", but these are for
+  SOC-specific hard-wiring of those irqs which unexpectedly bypasses the
+  crossbar. These irqs have a crossbar register, but still cannot be used.
+
+- ti,irqs-safe-map: integer which maps to a safe configuration to use
+  when the interrupt controller irq is unused (when not provided, default is 0)
+
+//- ti, irqs-skip : 이것은 "ti, irqs-reserved"와 유사하지만 예기치 않게 크로스바를 우회하는 irq의 SOC 특정 하드 와이어 링용입니다.
+ 이 irq에는 크로스바 레지스터가 있지만 여전히 사용할 수 없습니다.
+
+- ti, irqs-safe-map : 인터럽트 컨트롤러 irq가 사용되지 않을 때 사용할 안전 구성에 매핑되는 정수 (제공되지 않을 경우 기본값은 0 임)
+
+Examples:
+		crossbar_mpu: crossbar@4a002a48 {
+			compatible = "ti,irq-crossbar";
+			reg = <0x4a002a48 0x130>;
+			ti,max-irqs = <160>;
+			ti,max-crossbar-sources = <400>;
+			ti,reg-size = <2>;
+			ti,irqs-reserved = <0 1 2 3 5 6 131 132>;
+			ti,irqs-skip = <10 133 139 140>;
+		};
+
+Consumer:
+========
+See Documentation/devicetree/bindings/interrupt-controller/interrupts.txt and
+Documentation/devicetree/bindings/arm/gic.txt for further details.
+
+An interrupt consumer on an SoC using crossbar will use:
+	interrupts = <GIC_SPI request_number interrupt_level>
+	//자세한 내용은 Documentation / devicetree / bindings / interrupt-controller / interrupts.txt 및 Documentation / devicetree / bindings / arm / gic.txt를 참조하십시오.
+
+	크로스바를 사용하는 SoC의 인터럽트 소비자는 다음을 사용합니다.
+	인터럽트 = <GIC_SPI request_number interrupt_level>
+
+Example:
+	device_x@0x4a023000 {
+		/* Crossbar 8 used */
+		interrupts = <GIC_SPI 8 IRQ_TYPE_LEVEL_HIGH>;
+		...
+	};

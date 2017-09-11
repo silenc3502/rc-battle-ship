@@ -1,0 +1,23 @@
+Altera SOCFPGA FPGA Manager
+
+Required properties:
+- compatible : should contain "altr,socfpga-fpga-mgr"
+- reg        : base address and size for memory mapped io.
+               - The first index is for FPGA manager register access.
+               - The second index is for writing FPGA configuration data.
+- interrupts : interrupt for the FPGA Manager device.
+
+필수 속성 :
+- 호환 가능 : "altr, socfpga-fpga-mgr"을 포함해야합니다.
+- reg : 메모리 매핑 된 기본 주소와 크기.
+                - 첫 번째 인덱스는 FPGA 매니저 레지스터 액세스를위한 것입니다.
+                - 두 번째 인덱스는 FPGA 구성 데이터를 쓰는 데 사용됩니다.
+- interrupts : FPGA Manager 디바이스에 대한 인터럽트입니다.
+Example:
+
+	hps_0_fpgamgr: fpgamgr@ff706000 {
+		compatible = "altr,socfpga-fpga-mgr";
+		reg = <0xFF706000 0x1000
+		       0xFFB90000 0x1000>;
+		interrupts = <0 175 4>;
+	};

@@ -1,0 +1,209 @@
+* Generic DMA Controller and DMA request bindings
+
+Generic binding to provide a way for a driver using DMA Engine to retrieve the
+DMA request or channel information that goes from a hardware device to a DMA
+controller.
+
+
+* DMA controller
+
+Required property:
+- #dma-cells: 		Must be at least 1. Used to provide DMA controller
+			specific information. See DMA client binding below for
+			more details.
+
+Optional properties:
+- dma-channels: 	Number of DMA channels supported by the controller.
+- dma-requests: 	Number of DMA request signals supported by the
+			controller.
+
+Example:
+
+	dma: dma@48000000 {
+		compatible = "ti,omap-sdma";
+		reg = <0x48000000 0x1000>;
+		interrupts = <0 12 0x4
+			      0 13 0x4
+			      0 14 0x4
+			      0 15 0x4>;
+		#dma-cells = <1>;
+		dma-channels = <32>;
+		dma-requests = <127>;
+	};
+
+* DMA router
+
+DMA routers are transparent IP blocks used to route DMA request lines from
+devices to the DMA controller. Some SoCs (like TI DRA7x) have more peripherals
+integrated with DMA requests than what the DMA controller can handle directly.
+
+Required property:
+- dma-masters:		phandle of the DMA controller or list of phandles for
+			the DMA controllers the router can direct the signal to.
+- #dma-cells: 		Must be at least 1. Used to provide DMA router specific
+			information. See DMA client binding below for more
+			details.
+
+Optional properties:
+- dma-requests: 	Number of incoming request lines the router can handle.
+- In the node pointed by the dma-masters:
+	- dma-requests:	The router driver might need to look for this in order
+			to configure the routing.
+
+Example:
+	sdma_xbar: dma-router@4a002b78 {
+		compatible = "ti,dra7-dma-crossbar";
+		reg = <0x4a002b78 0xfc>;
+		#dma-cells = <1>;
+		dma-requests = <205>;
+		ti,dma-safe-map = <0>;
+		dma-masters = <&sdma>;
+	};
+
+* DMA client
+
+Client drivers should specify the DMA property using a phandle to the controller
+followed by DMA controller specific data.
+
+Required property:
+- dmas:			List of one or more DMA specifiers, each consisting of
+			- A phandle pointing to DMA controller node
+			- A number of integer cells, as determined by the
+			  #dma-cells property in the node referenced by phandle
+			  containing DMA controller specific information. This
+			  typically contains a DMA request line number or a
+			  channel number, but can contain any data that is
+			  required for configuring a channel.
+- dma-names: 		Contains one identifier string for each DMA specifier in
+			the dmas property. The specific strings that can be used
+			are defined in the binding of the DMA client device.
+			Multiple DMA specifiers can be used to represent
+			alternatives and in this case the dma-names for those
+			DMA specifiers must be identical (see examples).
+
+Examples:
+
+1. A device with one DMA read channel, one DMA write channel:
+
+	i2c1: i2c@1 {
+		...
+		dmas = <&dma 2		/* read channel */
+			&dma 3>;	/* write channel */
+		dma-names = "rx", "tx";
+		...
+	};
+
+2. A single read-write channel with three alternative DMA controllers:
+
+	dmas = <&dma1 5
+		&dma2 7
+		&dma3 2>;
+	dma-names = "rx-tx", "rx-tx", "rx-tx";
+
+3. A device with three channels, one of which has two alternatives:
+
+	dmas = <&dma1 2			/* read channel */
+		&dma1 3			/* write channel */
+		&dma2 0			/* error read */
+		&dma3 0>;		/* alternative error read */
+	dma-names = "rx", "tx", "error", "error";
+
+
+
+/*
+* 일반적인 DMA 컨트롤러 및 DMA 요청 바인딩
+
+DMA 엔진을 사용하는 드라이버가 하드웨어 장치에서 DMA 컨트롤러로 이동하는 DMA 요청 또는 채널 정보를 검색하는 방법을 제공하는 일반 바인딩.
+
+
+* DMA 컨트롤러
+
+필수 속성 :
+- # dma-cells : 적어도 1이어야합니다. DMA 컨트롤러 관련 정보를 제공하는 데 사용됩니다.
+자세한 내용은 아래의 DMA 클라이언트 바인딩을 참조하십시오.
+
+선택적 속성 :
+- dma-channels : 컨트롤러가 지원하는 DMA 채널 수입니다.
+- dma-requests : 컨트롤러가 지원하는 DMA 요청 신호 수.
+
+
+Example:
+
+	dma: dma@48000000 {
+		compatible = "ti,omap-sdma";
+		reg = <0x48000000 0x1000>;
+		interrupts = <0 12 0x4
+			      0 13 0x4
+			      0 14 0x4
+			      0 15 0x4>;
+		#dma-cells = <1>;
+		dma-channels = <32>;
+		dma-requests = <127>;
+	};
+
+
+* DMA 라우터
+
+DMA 라우터는 장치에서 DMA 컨트롤러로 DMA 요청 라인을 라우팅하는 데 사용되는 투명한 IP 블록입니다. TI DRA7x와 같은 일부 SoC는 DMA 컨트롤러가 직접 처리 할 수있는 것보다 많은 수의 주변 장치를 DMA 요청과 통합합니다.
+
+필수 속성 :
+- dma-masters : DMA 컨트롤러의 phandle 또는 라우터가 신호를 보낼 수있는 DMA 컨트롤러의 phandles 목록.
+- # dma-cells : 적어도 1이어야합니다. DMA 라우터 관련 정보를 제공하는 데 사용됩니다.
+자세한 내용은 아래의 DMA 클라이언트 바인딩을 참조하십시오.
+
+선택적 속성 :
+- dma-requests : 라우터가 처리 할 수있는 들어오는 요청 줄 수입니다.
+- dma-masters가 지적한 노드에서 :
+- dma-requests : 라우터 드라이버가 라우팅을 구성하기 위해이를 찾아야 할 수도 있습니다.
+
+Example:
+	sdma_xbar: dma-router@4a002b78 {
+		compatible = "ti,dra7-dma-crossbar";
+		reg = <0x4a002b78 0xfc>;
+		#dma-cells = <1>;
+		dma-requests = <205>;
+		ti,dma-safe-map = <0>;
+		dma-masters = <&sdma>;
+	};
+
+
+* DMA 클라이언트
+
+클라이언트 드라이버는 컨트롤러에 대한 phandle과 DMA 컨트롤러 특정 데이터를 사용하여 DMA 속성을 지정해야합니다.
+
+필수 속성 :
+- dmas : 각각 하나 이상의 DMA 지정자 목록
+- DMA 컨트롤러 노드를 가리키는 phandle
+- phandle이 참조하는 노드의 # dma-cells 속성에 의해 결정되는 여러 정수 셀 (DMA 컨트롤러 관련 정보 포함). 이것은 일반적으로 DMA 요청 행 번호 또는 채널 번호를 포함하지만 채널 구성에 필요한 모든 데이터를 포함 할 수 있습니다.
+- dma-names : dmas 속성의 각 DMA 지정자에 대한 하나의 식별자 문자열을 포함합니다. 사용할 수있는 특정 문자열은 DMA 클라이언트 장치의 바인딩에 정의됩니다.
+여러 DMA 지정자를 사용하여 대안을 나타낼 수 있으며이 경우 해당 DMA 지정자의 dma-name은 동일해야합니다 (예 참조).
+
+Examples:
+
+1. 하나의 DMA 읽기 채널, 하나의 DMA 쓰기 채널이있는 장치 :
+
+	i2c1: i2c@1 {
+		...
+		dmas = <&dma 2		/* read channel */
+			&dma 3>;	/* write channel */
+		dma-names = "rx", "tx";
+		...
+	};
+
+2. 3 개의 대체 DMA 컨트롤러가있는 단일 읽기 - 쓰기 채널 :
+
+	dmas = <&dma1 5
+		&dma2 7
+		&dma3 2>;
+	dma-names = "rx-tx", "rx-tx", "rx-tx";
+
+3. 세 개의 채널을 가진 장치 중 하나에는 두 가지 대안이 있습니다.
+
+	dmas = <&dma1 2			/* read channel */
+		&dma1 3			/* write channel */
+		&dma2 0			/* error read */
+		&dma3 0>;		/* alternative error read */
+	dma-names = "rx", "tx", "error", "error";
+
+
+*/

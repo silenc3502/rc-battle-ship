@@ -1,0 +1,278 @@
+Device-Tree bindings for LVDS Display Bridge (ldb)
+
+LVDS Display Bridge
+===================
+
+The LVDS Display Bridge device tree node contains up to two lvds-channel
+nodes describing each of the two LVDS encoder channels of the bridge.
+
+Required properties:
+ - #address-cells : should be <1>
+ - #size-cells : should be <0>
+ - compatible : should be "fsl,imx53-ldb" or "fsl,imx6q-ldb".
+                Both LDB versions are similar, but i.MX6 has an additional
+                multiplexer in the front to select any of the four IPU display
+                interfaces as input for each LVDS channel.
+ - gpr : should be <&gpr> on i.MX53 and i.MX6q.
+         The phandle points to the iomuxc-gpr region containing the LVDS
+         control register.
+- clocks, clock-names : phandles to the LDB divider and selector clocks and to
+                        the display interface selector clocks, as described in
+                        Documentation/devicetree/bindings/clock/clock-bindings.txt
+        The following clocks are expected on i.MX53:
+                "di0_pll" - LDB LVDS channel 0 mux
+                "di1_pll" - LDB LVDS channel 1 mux
+                "di0" - LDB LVDS channel 0 gate
+                "di1" - LDB LVDS channel 1 gate
+                "di0_sel" - IPU1 DI0 mux
+                "di1_sel" - IPU1 DI1 mux
+        On i.MX6q the following additional clocks are needed:
+                "di2_sel" - IPU2 DI0 mux
+                "di3_sel" - IPU2 DI1 mux
+        The needed clock numbers for each are documented in
+        Documentation/devicetree/bindings/clock/imx5-clock.txt, and in
+        Documentation/devicetree/bindings/clock/imx6q-clock.txt.
+
+Optional properties:
+ - pinctrl-names : should be "default" on i.MX53, not used on i.MX6q
+ - pinctrl-0 : a phandle pointing to LVDS pin settings on i.MX53,
+               not used on i.MX6q
+ - fsl,dual-channel : boolean. if it exists, only LVDS channel 0 should
+   be configured - one input will be distributed on both outputs in dual
+   channel mode
+
+LVDS Channel
+============
+
+Each LVDS Channel has to contain either an of graph link to a panel device node
+or a display-timings node that describes the video timings for the connected
+LVDS display as well as the fsl,data-mapping and fsl,data-width properties.
+
+Required properties:
+ - reg : should be <0> or <1>
+ - port: Input and output port nodes with endpoint definitions as defined in
+   Documentation/devicetree/bindings/graph.txt.
+   On i.MX5, the internal two-input-multiplexer is used. Due to hardware
+   limitations, only one input port (port@[0,1]) can be used for each channel
+   (lvds-channel@[0,1], respectively).
+   On i.MX6, there should be four input ports (port@[0-3]) that correspond
+   to the four LVDS multiplexer inputs.
+   A single output port (port@2 on i.MX5, port@4 on i.MX6) must be connected
+   to a panel input port. Optionally, the output port can be left out if
+   display-timings are used instead.
+
+Optional properties (required if display-timings are used):
+ - display-timings : A node that describes the display timings as defined in
+   Documentation/devicetree/bindings/display/display-timing.txt.
+ - fsl,data-mapping : should be "spwg" or "jeida"
+                      This describes how the color bits are laid out in the
+                      serialized LVDS signal.
+ - fsl,data-width : should be <18> or <24>
+
+example:
+
+gpr: iomuxc-gpr@53fa8000 {
+	/* ... */
+};
+
+ldb: ldb@53fa8008 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	compatible = "fsl,imx53-ldb";
+	gpr = <&gpr>;
+	clocks = <&clks IMX5_CLK_LDB_DI0_SEL>,
+		 <&clks IMX5_CLK_LDB_DI1_SEL>,
+		 <&clks IMX5_CLK_IPU_DI0_SEL>,
+		 <&clks IMX5_CLK_IPU_DI1_SEL>,
+		 <&clks IMX5_CLK_LDB_DI0_GATE>,
+		 <&clks IMX5_CLK_LDB_DI1_GATE>;
+	clock-names = "di0_pll", "di1_pll",
+		      "di0_sel", "di1_sel",
+		      "di0", "di1";
+
+	/* Using an of-graph endpoint link to connect the panel */
+	lvds-channel@0 {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		reg = <0>;
+
+		port@0 {
+			reg = <0>;
+
+			lvds0_in: endpoint {
+				remote-endpoint = <&ipu_di0_lvds0>;
+			};
+		};
+
+		port@2 {
+			reg = <2>;
+
+			lvds0_out: endpoint {
+				remote-endpoint = <&panel_in>;
+			};
+		};
+	};
+
+	/* Using display-timings and fsl,data-mapping/width instead */
+	lvds-channel@1 {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		reg = <1>;
+		fsl,data-mapping = "spwg";
+		fsl,data-width = <24>;
+
+		display-timings {
+			/* ... */
+		};
+
+		port@1 {
+			reg = <1>;
+
+			lvds1_in: endpoint {
+				remote-endpoint = <&ipu_di1_lvds1>;
+			};
+		};
+	};
+};
+
+panel: lvds-panel {
+	/* ... */
+
+	port {
+		panel_in: endpoint {
+			remote-endpoint = <&lvds0_out>;
+		};
+	};
+};
+
+
+/*
+
+LVDS 디스플레이 브리지 (ldb)에 대한 장치 트리 바인딩
+
+LVDS 디스플레이 브리지
+===========
+
+LVDS 디스플레이 브리지 장치 트리 노드에는 브리지의 두 LVDS 인코더 채널을 각각 설명하는 최대 두 개의 LVD 채널 노드가 있습니다.
+
+필수 속성 :
+- # address-cells : <1>이어야합니다.
+- # size-cells : <0>이어야합니다.
+- compatible : "fsl, imx53-ldb"또는 "fsl, imx6q-ldb"여야합니다.
+두 LDB 버전은 비슷하지만, i.MX6은 4 개의 IPU 디스플레이 인터페이스 중 하나를 각 LVDS 채널의 입력으로 선택하기 위해 전면에 멀티플렉서가 추가로 있습니다.
+- gpr : i.MX53 및 i.MX6q에서 <& gpr>이어야합니다.
+이 phandle은 LVDS 제어 레지스터를 포함하는 iomuxc-gpr 영역을 가리 킵니다.
+- clocks, clock-names : Documentation / devicetree / bindings / clock / clock-bindings.txt에 설명 된대로 LDB 분배기 및 선택기 클록 및 디스플레이 인터페이스 선택기 클럭에 대한 지침
+i.MX53에는 다음과 같은 클럭이 필요합니다.
+"di0_pll"- LDB LVDS 채널 0 멀티 플렉스
+"di1_pll"- LDB LVDS 채널 1 멀티 플렉스
+"di0"- LDB LVDS 채널 0 게이트
+"di1"- LDB LVDS 채널 1 게이트
+"di0_sel"- IPU1 DI0 mux
+"di1_sel"- IPU1 DI1 mux
+i.MX6q에는 다음과 같은 추가 클럭이 필요합니다.
+"di2_sel"- IPU2 DI0 멀티플렉서
+"di3_sel"- IPU2 DI1 mux
+각각의 필요한 클럭 번호는 Documentation / devicetree / bindings / clock / imx5-clock.txt와 Documentation / devicetree / bindings / clock / imx6q-clock.txt에 문서화되어 있습니다.
+
+선택적 속성 :
+- pinctrl-names : i.MX53에서는 "default"이고 i.MX6q에서는 사용되지 않습니다.
+- pinctrl-0 : i.MX53의 LVDS 핀 설정을 가리키는 phandle, i.MX6q에서는 사용되지 않음
+- fsl, 이중 채널 : boolean이 만약 존재한다면, LVDS 채널 0만이 구성되어야합니다 - 하나의 입력은 듀얼 채널 모드에서 두 출력에 분배 될 것입니다
+
+LVDS 채널
+============
+
+각 LVDS 채널에는 패널 장치 노드에 대한 그래프 링크 또는 연결된 LVDS 디스플레이 및 fsl, data-mapping 및 fsl, data-width 속성에 대한 비디오 타이밍을 설명하는 디스플레이 타이밍 노드 중 하나가 있어야합니다.
+
+필수 속성 :
+- reg : <0> 또는 <1>이어야합니다.
+- port : Documentation / devicetree / bindings / graph.txt에 정의 된 엔드 포인트 정의가있는 입력 및 출력 포트 노드.
+i.MX5에서는 내부 2 입력 멀티플렉서가 사용됩니다. 하드웨어 제한 사항으로 인해 하나의 입력 포트 (포트 @ [0,1]) 만 각 채널에 사용할 수 있습니다 (각각 lvds-channel @ [0,1]).
+i.MX6에는 4 개의 LVDS 멀티플렉서 입력에 해당하는 4 개의 입력 포트 (포트 @ [0-3])가 있어야합니다.
+단일 출력 포트 (i.MX5의 포트 @ 2, i.MX6의 포트 @ 4)는 패널 입력 포트에 연결해야합니다. 선택적으로 디스플레이 타이밍이 대신 사용되면 출력 포트를 생략 할 수 있습니다.
+
+선택적 속성 (표시 타이밍을 사용할 경우 필요) :
+- display-timings : Documentation / devicetree / bindings / display / display-timing.txt에 정의 된대로 표시 타이밍을 설명하는 노드입니다.
+- fsl, data-mapping : "spwg"또는 "jeida"여야합니다.
+직렬화 된 LVDS 신호에 색상 비트가 배치되는 방법을 설명합니다.
+- fsl, data-width :는 <18> 또는 <24> 여야합니다.
+
+
+example:
+
+gpr: iomuxc-gpr@53fa8000 {
+	/* ... */
+};
+
+ldb: ldb@53fa8008 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	compatible = "fsl,imx53-ldb";
+	gpr = <&gpr>;
+	clocks = <&clks IMX5_CLK_LDB_DI0_SEL>,
+		 <&clks IMX5_CLK_LDB_DI1_SEL>,
+		 <&clks IMX5_CLK_IPU_DI0_SEL>,
+		 <&clks IMX5_CLK_IPU_DI1_SEL>,
+		 <&clks IMX5_CLK_LDB_DI0_GATE>,
+		 <&clks IMX5_CLK_LDB_DI1_GATE>;
+	clock-names = "di0_pll", "di1_pll",
+		      "di0_sel", "di1_sel",
+		      "di0", "di1";
+
+	/ * 그래프 엔드 포인트 링크를 사용하여 패널 연결 * /
+	lvds-channel@0 {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		reg = <0>;
+
+		port@0 {
+			reg = <0>;
+
+			lvds0_in: endpoint {
+				remote-endpoint = <&ipu_di0_lvds0>;
+			};
+		};
+
+		port@2 {
+			reg = <2>;
+
+			lvds0_out: endpoint {
+				remote-endpoint = <&panel_in>;
+			};
+		};
+	};
+
+	/ * 대신에 디스플레이 타이밍과 fsl, 데이터 매핑 / 너비 사용 * /
+	lvds-channel@1 {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		reg = <1>;
+		fsl,data-mapping = "spwg";
+		fsl,data-width = <24>;
+
+		display-timings {
+			/* ... */
+		};
+
+		port@1 {
+			reg = <1>;
+
+			lvds1_in: endpoint {
+				remote-endpoint = <&ipu_di1_lvds1>;
+			};
+		};
+	};
+};
+
+panel: lvds-panel {
+	/* ... */
+
+	port {
+		panel_in: endpoint {
+			remote-endpoint = <&lvds0_out>;
+		};
+	};
+};
+
+*/

@@ -1,0 +1,29 @@
+TI Keystone USB PHY
+
+Required properties:
+ - compatible: should be "ti,keystone-usbphy".
+ - #address-cells, #size-cells : should be '1' if the device has sub-nodes
+   with 'reg' property.
+ - reg : Address and length of the usb phy control register set.
+
+The main purpose of this PHY driver is to enable the USB PHY reference clock
+gate on the Keystone SOC for both the USB2 and USB3 PHY. Otherwise it is just
+an NOP PHY driver.  Hence this node is referenced as both the usb2 and usb3
+phy node in the USB Glue layer driver node.
+
+
+필수 속성 :
+  - compatible : "ti, keystone-usbphy"여야합니다.
+  - # address-cells, # size-cells : 장치에 'reg'속성이있는 하위 노드가있는 경우 '1'이어야합니다.
+  - reg : usb phy 제어 레지스터 세트의 주소와 길이.
+
+이 PHY 드라이버의 주된 목적은 Keystone SOC에서 USB2 및 USB3 PHY 모두에 대해 USB PHY 기준 클록 게이트를 활성화하는 것입니다. 그렇지 않으면 단지 NOP PHY 드라이버입니다. 따라서 이 노드는 USB Glue layer 드라이버 노드에서 usb2 및 usb3 phy 노드로 참조됩니다.
+
+
+usb_phy: usb_phy@2620738 {
+	compatible = "ti,keystone-usbphy";
+	#address-cells = <1>;
+	#size-cells = <1>;
+	reg = <0x2620738 32>;
+	status = "disabled";
+};

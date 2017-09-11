@@ -1,0 +1,159 @@
+* MARVELL MMP DMA controller
+
+Marvell Peripheral DMA Controller
+Used platforms: pxa688, pxa910, pxa3xx, etc
+
+Required properties:
+- compatible: Should be "marvell,pdma-1.0"
+- reg: Should contain DMA registers location and length.
+- interrupts: Either contain all of the per-channel DMA interrupts
+		or one irq for pdma device
+
+Optional properties:
+- #dma-channels: Number of DMA channels supported by the controller (defaults
+  to 32 when not specified)
+
+"marvell,pdma-1.0"
+Used platforms: pxa25x, pxa27x, pxa3xx, pxa93x, pxa168, pxa910, pxa688.
+
+Examples:
+
+/*
+ * Each channel has specific irq
+ * ICU parse out irq channel from ICU register,
+ * while DMA controller may not able to distinguish the irq channel
+ * Using this method, interrupt-parent is required as demuxer
+ * For example, pxa688 icu register 0x128, bit 0~15 is PDMA channel irq,
+ * 18~21 is ADMA irq
+ */
+pdma: dma-controller@d4000000 {
+	      compatible = "marvell,pdma-1.0";
+	      reg = <0xd4000000 0x10000>;
+	      interrupts = <0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15>;
+	      interrupt-parent = <&intcmux32>;
+	      #dma-channels = <16>;
+      };
+
+/*
+ * One irq for all channels
+ * Dmaengine driver (DMA controller) distinguish irq channel via
+ * parsing internal register
+ */
+pdma: dma-controller@d4000000 {
+	      compatible = "marvell,pdma-1.0";
+	      reg = <0xd4000000 0x10000>;
+	      interrupts = <47>;
+	      #dma-channels = <16>;
+      };
+
+
+Marvell Two Channel DMA Controller used specifically for audio
+Used platforms: pxa688, pxa910
+
+Required properties:
+- compatible: Should be "marvell,adma-1.0" or "marvell,pxa910-squ"
+- reg: Should contain DMA registers location and length.
+- interrupts: Either contain all of the per-channel DMA interrupts
+		or one irq for dma device
+
+"marvell,adma-1.0" used on pxa688
+"marvell,pxa910-squ" used on pxa910
+
+Examples:
+
+/* each channel has specific irq */
+adma0: dma-controller@d42a0800 {
+	      compatible = "marvell,adma-1.0";
+	      reg = <0xd42a0800 0x100>;
+	      interrupts = <18 19>;
+	      interrupt-parent = <&intcmux32>;
+      };
+
+/* One irq for all channels */
+squ: dma-controller@d42a0800 {
+	      compatible = "marvell,pxa910-squ";
+	      reg = <0xd42a0800 0x100>;
+	      interrupts = <46>;
+      };
+
+
+/*
+
+* MARVELL MMP DMA 컨트롤러
+
+Marvell 주변기기 DMA 컨트롤러
+사용 된 플랫폼 : pxa688, pxa910, pxa3xx 등
+
+필수 속성 :
+- 호환 : "marvell, pdma-1.0"이어야 함
+- reg : DMA 레지스터 위치와 길이를 포함해야합니다.
+- 인터럽트 : 모든 채널 당 DMA 인터럽트 또는 pdma 장치에 대한 하나의 irq 포함
+
+선택적 속성 :
+- # dma-channels : 컨트롤러가 지원하는 DMA 채널 수 (지정되지 않은 경우 기본값은 32입니다)
+
+"marvell, pdma-1.0"
+사용 된 플랫폼 : pxa25x, pxa27x, pxa3xx, pxa93x, pxa168, pxa910, pxa688.
+
+예 :
+
+/ *
+ * 각 채널에는 특정 irq가 있습니다.
+ * ICU는 ICU 레지스터에서 irq 채널을 분석하고,
+ * DMA 컨트롤러가 irq 채널을 구분하지 못할 수 있음
+ *이 방법을 사용하면 interrupt-parent가 demuxer로 필요합니다.
+ * 예를 들어 pxa688 icu 레지스터 0x128, 비트 0 ~ 15는 PDMA 채널 irq,
+ * 18 ~ 21은 ADMA irq입니다.
+ * /
+
+pdma: dma-controller@d4000000 {
+	      compatible = "marvell,pdma-1.0";
+	      reg = <0xd4000000 0x10000>;
+	      interrupts = <0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15>;
+	      interrupt-parent = <&intcmux32>;
+	      #dma-channels = <16>;
+      };
+
+/* 
+ * 모든 채널에 대해 하나의 irq
+ * Dmaengine 드라이버 (DMA 컨트롤러)를 통해 irq 채널을 구별합니다.
+ * 내부 레지스터 분석
+ * /
+pdma : dma-controller @ d4000000 {
+compatible = "marvell, pdma-1.0";
+reg = <0xd4000000 0x10000>;
+인터럽트 = <47>;
+# dma-channels = <16>;
+      };
+
+
+Marvell Two Channel DMA 컨트롤러는 오디오 전용으로 사용됩니다.
+사용 플랫폼 : pxa688, pxa910
+
+필수 속성 :
+- 호환 : "marvell, adma-1.0"또는 "marvell, pxa910-squ"이어야합니다.
+- reg : DMA 레지스터 위치와 길이를 포함해야합니다.
+- 인터럽트 : 모든 채널 당 DMA 인터럽트 또는 dma 장치에 대해 하나의 irq 포함
+
+"marvell, adma-1.0"pxa688에 사용됨
+"marvell, pxa910-squ"는 pxa910에서 사용되었습니다.
+
+
+Examples:
+
+/* each channel has specific irq */
+adma0: dma-controller@d42a0800 {
+	      compatible = "marvell,adma-1.0";
+	      reg = <0xd42a0800 0x100>;
+	      interrupts = <18 19>;
+	      interrupt-parent = <&intcmux32>;
+      };
+
+/* One irq for all channels */
+squ: dma-controller@d42a0800 {
+	      compatible = "marvell,pxa910-squ";
+	      reg = <0xd42a0800 0x100>;
+	      interrupts = <46>;
+      };
+
+*/

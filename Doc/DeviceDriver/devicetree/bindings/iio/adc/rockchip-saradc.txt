@@ -1,0 +1,66 @@
+Rockchip Successive Approximation Register (SAR) A/D Converter bindings
+
+Required properties:
+- compatible: Should be "rockchip,saradc" or "rockchip,rk3066-tsadc"
+- reg: physical base address of the controller and length of memory mapped
+       region.
+- interrupts: The interrupt number to the cpu. The interrupt specifier format
+              depends on the interrupt controller.
+- clocks: Must contain an entry for each entry in clock-names.
+- clock-names: Shall be "saradc" for the converter-clock, and "apb_pclk" for
+               the peripheral clock.
+- vref-supply: The regulator supply ADC reference voltage.
+- #io-channel-cells: Should be 1, see ../iio-bindings.txt
+
+Optional properties:
+- resets: Must contain an entry for each entry in reset-names if need support
+	  this option. See ../reset/reset.txt for details.
+- reset-names: Must include the name "saradc-apb".
+
+Example:
+	saradc: saradc@2006c000 {
+		compatible = "rockchip,saradc";
+		reg = <0x2006c000 0x100>;
+		interrupts = <GIC_SPI 26 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&cru SCLK_SARADC>, <&cru PCLK_SARADC>;
+		clock-names = "saradc", "apb_pclk";
+		resets = <&cru SRST_SARADC>;
+		reset-names = "saradc-apb";
+		#io-channel-cells = <1>;
+		vref-supply = <&vcc18>;
+	};
+
+
+/*
+
+Rockchip SAR (successive approximation register) A / D 변환기 바인딩
+
+필수 속성 :
+- compatible : "rockchip, saradc"또는 "rockchip, rk3066-tsadc"이어야합니다.
+- reg : 컨트롤러의 물리적 인 기본 주소와 메모리 매핑 된 영역의 길이.
+- interrupts : CPU에 대한 인터럽트 번호. 인터럽트 지정자 형식은 인터럽트 컨트롤러에 따라 다릅니다.
+- clocks : clock-name의 각 항목에 대한 항목을 포함해야합니다.
+- clock-names : 컨버터 클럭의 경우 "saradc"이고 주변 장치 클럭의 경우 "apb_pclk"여야합니다.
+- vref-supply : 레귤레이터는 ADC 기준 전압을 공급한다.
+- # io-channel-cells : 1이어야하며 ../iio-bindings.txt를 참조하십시오.
+
+선택 속성 :
+- reset :이 옵션을 지원해야하는 경우 reset-names에 각 항목에 대한 항목을 포함해야합니다. 자세한 내용은 ../reset/reset.txt를 참조하십시오.
+- reset-names : "saradc-apb"라는 이름을 포함해야합니다.
+
+Example:
+	saradc: saradc@2006c000 {
+		compatible = "rockchip,saradc";
+		reg = <0x2006c000 0x100>;
+		interrupts = <GIC_SPI 26 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&cru SCLK_SARADC>, <&cru PCLK_SARADC>;
+		clock-names = "saradc", "apb_pclk";
+		resets = <&cru SRST_SARADC>;
+		reset-names = "saradc-apb";
+		#io-channel-cells = <1>;
+		vref-supply = <&vcc18>;
+	};
+
+
+
+*/

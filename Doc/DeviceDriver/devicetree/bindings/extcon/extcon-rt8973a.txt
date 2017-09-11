@@ -1,0 +1,42 @@
+* Richtek RT8973A - Micro USB Switch device
+
+The Richtek RT8973A is Micro USB Switch with OVP and I2C interface. The RT8973A
+is a USB port accessory detector and switch that is optimized to protect low
+voltage system from abnormal high input voltage (up to 28V) and supports high
+speed USB operation. Also, RT8973A support 'auto-configuration' mode.
+If auto-configuration mode is enabled, RT8973A would control internal h/w patch
+for USB D-/D+ switching.
+
+Required properties:
+- compatible: Should be "richtek,rt8973a-muic"
+- reg: Specifies the I2C slave address of the MUIC block. It should be 0x14
+- interrupt-parent: Specifies the phandle of the interrupt controller to which
+  the interrupts from rt8973a are delivered to.
+- interrupts: Interrupt specifiers for detection interrupt sources.
+
+* Richtek RT8973A - 마이크로 USB 스위치 장치
+
+Richtek RT8973A는 OVP 및 I2C 인터페이스가있는 마이크로 USB 스위치입니다.
+
+RT8973A는 비정상적인 높은 입력 전압 (최대 28V)으로부터 저전압 시스템을 보호하고 고속 USB 작동을 지원하도록 최적화 된 USB 포트 액세서리 검출기 및 스위치입니다. 또한 RT8973A는 '자동 구성'모드를 지원합니다.
+
+자동 구성 모드가 활성화되면 RT8973A는 USB D- / D + 스위칭을위한 내부 h / w 패치를 제어합니다.
+
+필수 속성 :
+- 호환 가능 : "richtek, rt8973a-muic"이어야합니다.
+- reg : MUIC 블록의 I2C 슬레이브 주소를 지정합니다. 0x14 여야합니다.
+- interrupt-parent : rt8973a로부터의 인터럽트가 전달되는 인터럽트 컨트롤러의 phandle을 지정합니다.
+- interrupts : 탐지 인터럽트 소스에 대한 인터럽트 지정자입니다.
+
+
+
+
+
+Example:
+
+	rt8973a@14 {
+		compatible = "richtek,rt8973a-muic";
+		interrupt-parent = <&gpx1>;
+		interrupts = <5 0>;
+		reg = <0x14>;
+	};

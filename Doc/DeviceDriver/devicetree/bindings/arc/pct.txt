@@ -1,0 +1,28 @@
+* ARC Performance Counters
+
+The ARC700 can be configured with a pipeline performance monitor for counting
+CPU and cache events like cache misses and hits. Like conventional PCT there
+are 100+ hardware conditions dynamically mapped to upto 32 counters
+
+Note that:
+ * The ARC 700 PCT does not support interrupts; although HW events may be
+   counted, the HW events themselves cannot serve as a trigger for a sample.
+
+Required properties:
+
+- compatible : should contain
+	"snps,arc700-pct"
+
+Example:
+
+pmu {
+        compatible = "snps,arc700-pct";
+};
+
+
+/*
+ARC700는 CPU와 캐시 미스와 충돌 등의 캐시 이벤트를 카운트하는 파이프 라인 성능 모니터로 구성 할 수 있습니다. 기존의 PCT뿐만 아니라 100 개 이상의 하드웨어 조건이 최대 32 개의 카운터에 동적으로 매핑됩니다
+
+* ARC 700 PCT는 인터럽트를 지원하지 않습니다. HW 이벤트는 계산 될지도 모르지만, 
+HW 이벤트 자체는 샘플의 트리거 역할을 할 수 없습니다
+*/

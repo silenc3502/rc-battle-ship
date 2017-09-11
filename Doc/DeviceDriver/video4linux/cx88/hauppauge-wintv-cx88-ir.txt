@@ -1,0 +1,89 @@
+The controls for the mux are GPIO [0,1] for source, and GPIO 2 for muting.
+ 
+GPIO0  GPIO1
+  0        0    TV Audio
+  1        0    FM radio
+  0        1    Line-In
+  1        1    Mono tuner bypass or CD passthru (tuner specific)
+ 
+GPIO 16(i believe) is tied to the IR port (if present).
+ 
+------------------------------------------------------------------------------------
+ 
+>From the data sheet:
+ Register 24'h20004 PCI Interrupt Status
+ bit [18] IR_SMP_INT Set when 32 input samples have been collected over 
+ gpio[16] pin into GP_SAMPLE register.
+ 
+What's missing from the data sheet:
+ 
+Setup 4KHz sampling rate (roughly 2x oversampled; good enough for our RC5 compat remote) 
+set register 0x35C050 to  0xa80a80
+ 
+enable sampling 
+set register 0x35C054 to 0x5
+ 
+Of course, enable the IRQ bit 18 in the interrupt mask register .(and provide for a handler)
+ 
+GP_SAMPLE register is at 0x35C058
+ 
+Bits are then right shifted into the GP_SAMPLE register at the specified rate; you get an interrupt when a full DWORD is received.
+You need to recover the actual RC5 bits out of the (oversampled) IR sensor bits. (Hint: look for the 0/1and 1/0 crossings of the RC5 bi-phase data)  An actual raw RC5 code will span 2-3 DWORDS, depending on the actual alignment.
+ 
+I'm pretty sure when no IR signal is present the receiver is always in a marking state(1); but stray light, etc can cause intermittent noise values as well.  Remember, this is a free running sample of the IR receiver state over time, so don't assume any sample starts at any particular place.
+ 
+http://www.atmel.com/dyn/resources/prod_documents/doc2817.pdf This data sheet (google search) seems to have a lovely description of the RC5 basics
+ 
+http://www.nenya.be/beor/electronics/rc5.htm  and more data
+ 
+http://www.ee.washington.edu/circuit_archive/text/ir_decode.txt and even a reference to how to decode a bi-phase data stream.
+ 
+http://www.xs4all.nl/~sbp/knowledge/ir/rc5.htm still more info
+ 
+===============================================
+ 
+멀티플렉서의 컨트롤은 소스의 경우 GPIO [0,1]이고, 뮤팅의 경우 GPIO 2입니다.
+ 
+GPIO0 GPIO1
+??0 0 TV 오디오
+??1 0 FM 라디오
+??0 1 라인 인
+??1 1 모노 튜너 바이 패스 또는 CD 패스 스루 (튜너 특정)
+ 
+GPIO 16 (저는 믿습니다)은 IR 포트 (만약 있다면)에 묶여 있습니다.
+ 
+-------------------------------------------------- ----------------------------------
+ 
+> 데이터 시트에서 :
+?24'h20004 PCI 인터럽트 상태 등록
+?bit [18] IR_SMP_INT 32 개의 입력 샘플이 수집되었을 때 설정
+?gpio [16] 핀을 GP_SAMPLE 레지스터에 삽입하십시오.
+ 
+데이터 시트에 누락 된 항목 :
+ 
+4KHz 샘플링 속도 설정 (약 2 배 오버 샘플링, RC5 호환 리모컨에 충분)
+레지스터 0x35C050 ~ 0xa80a80 설정
+ 
+샘플링 사용 가능
+레지스터 0x35C054를 0x5로 설정
+ 
+물론 인터럽트 마스크 레지스터에서 IRQ 비트 18을 활성화하십시오 (핸들러를 제공하십시오)
+ 
+GP_SAMPLE 레지스터가 0x35C058에 있습니다.
+ 
+그러면 비트는 GP_SAMPLE 레지스터로 지정된 속도로 오른쪽으로 시프트됩니다. 전체 DWORD가 수신되면 인터럽트가 발생합니다.
+(오버 샘플링 된) IR 센서 비트에서 실제 RC5 비트를 복구해야합니다. (힌트 : RC5 바이 - 페이스 데이터의 0 / 1과 1/0 교차점을 찾는다.) 실제의 RC5 코드는 실제 정렬에 따라 2-3 DWORDS에 걸쳐있다.
+ 
+나는 IR 신호가 없을 때 수신기가 항상 마킹 상태 (1)에 있다는 것을 확신한다; 그러나 길잃은 빛, 등등은 또한 간헐적 인 소음 가치를 또한 일으키는 원인이 될 수있다. 시간이 지남에 따라 IR 수신기 상태가 무료로 실행되는 샘플이므로 특정 장소에서 샘플이 시작된다고 가정하지 마십시오.
+ 
+http://www.atmel.com/dyn/resources/prod_documents/doc2817.pdf이 데이터 시트 (Google 검색)에는 RC5 기본에 대한 멋진 설명이있는 것 같습니다.
+ 
+http://www.nenya.be/beor/electronics/rc5.htm 및 기타 데이터
+ 
+http://www.ee.washington.edu/circuit_archive/text/ir_decode.txt 및 심지어 바이 - 페이즈 데이터 스트림을 디코딩하는 방법에 대한 참고 자료.
+ 
+http://www.xs4all.nl/~sbp/knowledge/ir/rc5.htm 여전히 자세한 정보
+ 
+ 
+ 
+

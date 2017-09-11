@@ -1,0 +1,41 @@
+IMG Pistachio USB PHY
+=====================
+
+Required properties:
+--------------------
+ - compatible: Must be "img,pistachio-usb-phy".
+ - #phy-cells: Must be 0.  See ./phy-bindings.txt for details.
+ - clocks: Must contain an entry for each entry in clock-names.
+   See ../clock/clock-bindings.txt for details.
+ - clock-names: Must include "usb_phy".
+ - img,cr-top: Must constain a phandle to the CR_TOP syscon node.
+ - img,refclk: Indicates the reference clock source for the USB PHY.
+   See <dt-bindings/phy/phy-pistachio-usb.h> for a list of valid values.
+필수 속성 :
+--------------------
+  - compatible : "img, pistachio-usb-phy"여야합니다.
+  - # phy-cells : 0이어야합니다. 자세한 내용은 ./phy-bindings.txt를 참조하십시오.
+  - clocks : clock-name의 각 항목에 대한 항목을 포함해야합니다.
+    자세한 내용은 ../clock/clock-bindings.txt를 참조하십시오.
+  - clock-names : "usb_phy"를 포함해야합니다.
+  - img, cr-top : CR_TOP syscon 노드에 phandle을 지정해야합니다.
+  - img, refclk : USB PHY의 기준 클럭 소스를 나타냅니다.
+    유효한 값 목록은 <dt-bindings / phy / phy-pistachio-usb.h>를 참조하십시오.
+
+
+Optional properties:
+선택적 속성 :
+--------------------
+ - phy-supply: USB VBUS supply.  Must supply 5.0V.
+ - phy-supply : USB VBUS 공급 장치. 5.0V를 공급해야합니다.
+Example:
+--------
+usb_phy: usb-phy {
+	compatible = "img,pistachio-usb-phy";
+	clocks = <&clk_core CLK_USB_PHY>;
+	clock-names = "usb_phy";
+	phy-supply = <&usb_vbus>;
+	img,refclk = <REFCLK_CLK_CORE>;
+	img,cr-top = <&cr_top>;
+	#phy-cells = <0>;
+};

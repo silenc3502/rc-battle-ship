@@ -1,0 +1,241 @@
+ AM33xx MUSB
+~~~~~~~~~~~~~~~
+- compatible: ti,am33xx-usb
+- reg: offset and length of the usbss register sets
+- ti,hwmods : must be "usb_otg_hs"
+
+The glue layer contains multiple child nodes. It is required the have
+at least a control module node, USB node and a PHY node. The second USB
+node and its PHY node is optional. The DMA node is also optional.
+
+- compatible: : ti, am33xx-usb
+- reg : usbss 레지스터 세트의 오프셋과 길이
+- ti,hwmods : "usb_otg_hs"여야합니다.
+
+접착제 레이어는 여러 자식 노드를 포함합니다. 최소한 제어 모듈 노드, USB 노드 및 PHY 노드가 있어야합니다. 두 번째 USB 노드와 PHY 노드는 선택 사항입니다. DMA 노드는 선택 사항입니다.
+
+
+
+Reset module
+모듈 재설정
+~~~~~~~~~~~~
+- compatible: ti,am335x-usb-ctrl-module
+- reg: offset and length of the "USB control registers" in the "Control
+  Module" block. A second offset and length for the USB wake up control
+  in the same memory block.
+- reg-names: "phy_ctrl" for the "USB control registers" and "wakeup" for
+  the USB wake up control register.
+
+- compatible : ti, am335x-usb-ctrl-module
+- reg : "Control Module"블록에있는 "USB control registers"의 오프셋과 길이. 동일한 메모리 블록에서  USB wake up control 의 두 번째 오프셋 및 길이.
+- reg-names : "USB 제어 레지스터"의 경우 "phy_ctrl"이고 USB 웨이크 업 제어 레지스터의 경우 "wakeup"입니다.
+
+
+USB PHY
+~~~~~~~
+compatible: ti,am335x-usb-phy
+reg: offset and length of the "USB PHY" register space
+ti,ctrl_mod: reference to the "reset module" node
+reg-names: phy
+The PHY should have a "phy" alias numbered properly in the alias
+node.
+
+compatible : ti, am335x-usb-phy
+reg : "USB PHY"레지스터 공간의 오프셋 및 길이
+ti, ctrl_mod : "reset module"노드에 대한 참조
+reg-names : PHY는 별칭 노드에서 "phy"별칭을 올바르게 지정해야합니다.
+
+
+USB
+~~~
+- compatible: ti,musb-am33xx
+- reg: offset and length of "USB Controller Registers", and offset and
+  length of "USB Core" register space.
+- reg-names: control for the ""USB Controller Registers" and "mc" for
+  "USB Core" register space
+- interrupts: USB interrupt number
+- interrupt-names: mc
+- dr_mode: Should be one of "host", "peripheral" or "otg".
+- mentor,multipoint: Should be "1" indicating the musb controller supports
+  multipoint. This is a MUSB configuration-specific setting.
+- mentor,num-eps: Specifies the number of endpoints. This is also a
+  MUSB configuration-specific setting. Should be set to "16"
+- mentor,ram-bits: Specifies the ram address size. Should be set to "12"
+- mentor,power: Should be "500". This signifies the controller can supply up to
+  500mA when operating in host mode.
+- phys: reference to the USB phy
+- dmas: specifies the dma channels
+- dma-names: specifies the names of the channels. Use "rxN" for receive
+  and "txN" for transmit endpoints. N specifies the endpoint number.
+
+The controller should have an "usb" alias numbered properly in the alias
+node.
+
+- compatible : ti, musb-am33xx
+- reg : "USB Controller Register"의 오프셋 및 길이, "USB Core"레지스터 공간의 오프셋 및 길이.
+- reg-names : "USB Controller 레지스터"에 대한 제어 및 "USB Core"에 대한 "mc"레지스터 공간
+- interrupts : USB 인터럽트 번호
+- interrupt-names : mc
+- dr_mode : "호스트", "주변 장치"또는 "otg"중 하나 여야합니다.
+- mentor,multipoint : musb 컨트롤러가 멀티 포인트를 지원한다는 것을 나타내는 "1"이어야합니다. 이는 MUSB 구성 별 설정입니다.
+- mentor, num-eps : 끝점의 수를 지정합니다. 이는 MUSB 구성 별 설정이기도합니다. "16"으로 설정해야합니다.
+- mentor, ram-bits : 램 주소 크기를 지정합니다. "12"로 설정해야합니다.
+- 멘토, 파워 : "500"이어야합니다. 이는 호스트 모드에서 작동 할 때 컨트롤러가 최대 500mA를 공급할 수 있음을 의미합니다.
+- phys : USB phy에 대한 참조
+- dmas : dma 채널을 지정합니다.
+- dma-names : 채널 이름을 지정합니다. 수신에는 "rxN"을, 송신 엔드 포인트에는 "txN"을 사용하십시오. N은 엔드 포인트 번호를 지정합니다.
+
+
+DMA
+~~~
+- compatible: ti,am3359-cppi41
+- reg: offset and length of the following register spaces: USBSS, USB
+  CPPI DMA Controller, USB CPPI DMA Scheduler, USB Queue Manager
+- reg-names: glue, controller, scheduler, queuemgr
+- #dma-cells: should be set to 2. The first number represents the
+  endpoint number (0 … 14 for endpoints 1 … 15 on instance 0 and 15 … 29
+  for endpoints 1 … 15 on instance 1). The second number is 0 for RX and
+  1 for TX transfers.
+- #dma-channels: should be set to 30 representing the 15 endpoints for
+  each USB instance.
+
+- compatible : ti, am3359-cppi41
+- reg : 다음 레지스터 공간의 오프셋 및 길이 : USBSS, USB CPPI DMA 컨트롤러, USB CPPI DMA 스케줄러, USB 대기열 관리자
+- reg-names : glue, 컨트롤러, 스케줄러, queuemgr
+- # dma-cells : 2로 설정해야합니다. 첫 번째 숫자는 엔드 포인트 번호 (인스턴스 0의 엔드 포인트 1 ... 15는 0 ~ 14, 인스턴스 1의 엔드 포인트 1 ~ 15는 15 ~ 29)를 나타냅니다. 두 번째 숫자는 RX의 경우 0이고 TX 전송의 경우 1입니다.
+- # dma-channels : 각 USB 인스턴스의 15 종점을 나타내는 30으로 설정해야합니다.
+
+
+Example:
+~~~~~~~~
+The following example contains all the nodes as used on am335x-evm:
+다음 예제는 am335x-evm에서 사용 된 모든 노드를 포함합니다.
+
+
+aliases {
+	usb0 = &usb0;
+	usb1 = &usb1;
+	phy0 = &usb0_phy;
+	phy1 = &usb1_phy;
+};
+
+usb: usb@47400000 {
+	compatible = "ti,am33xx-usb";
+	reg = <0x47400000 0x1000>;
+	ranges;
+	#address-cells = <1>;
+	#size-cells = <1>;
+	ti,hwmods = "usb_otg_hs";
+
+	ctrl_mod: control@44e10000 {
+		compatible = "ti,am335x-usb-ctrl-module";
+		reg = <0x44e10620 0x10
+			0x44e10648 0x4>;
+		reg-names = "phy_ctrl", "wakeup";
+	};
+
+	usb0_phy: usb-phy@47401300 {
+		compatible = "ti,am335x-usb-phy";
+		reg = <0x47401300 0x100>;
+		reg-names = "phy";
+		ti,ctrl_mod = <&ctrl_mod>;
+	};
+
+	usb0: usb@47401000 {
+		compatible = "ti,musb-am33xx";
+		reg = <0x47401400 0x400
+			0x47401000 0x200>;
+		reg-names = "mc", "control";
+
+		interrupts = <18>;
+		interrupt-names = "mc";
+		dr_mode = "otg"
+		mentor,multipoint = <1>;
+		mentor,num-eps = <16>;
+		mentor,ram-bits = <12>;
+		mentor,power = <500>;
+		phys = <&usb0_phy>;
+
+		dmas = <&cppi41dma  0 0 &cppi41dma  1 0
+			&cppi41dma  2 0 &cppi41dma  3 0
+			&cppi41dma  4 0 &cppi41dma  5 0
+			&cppi41dma  6 0 &cppi41dma  7 0
+			&cppi41dma  8 0 &cppi41dma  9 0
+			&cppi41dma 10 0 &cppi41dma 11 0
+			&cppi41dma 12 0 &cppi41dma 13 0
+			&cppi41dma 14 0 &cppi41dma  0 1
+			&cppi41dma  1 1 &cppi41dma  2 1
+			&cppi41dma  3 1 &cppi41dma  4 1
+			&cppi41dma  5 1 &cppi41dma  6 1
+			&cppi41dma  7 1 &cppi41dma  8 1
+			&cppi41dma  9 1 &cppi41dma 10 1
+			&cppi41dma 11 1 &cppi41dma 12 1
+			&cppi41dma 13 1 &cppi41dma 14 1>;
+		dma-names =
+			"rx1", "rx2", "rx3", "rx4", "rx5", "rx6", "rx7",
+			"rx8", "rx9", "rx10", "rx11", "rx12", "rx13",
+			"rx14", "rx15",
+			"tx1", "tx2", "tx3", "tx4", "tx5", "tx6", "tx7",
+			"tx8", "tx9", "tx10", "tx11", "tx12", "tx13",
+			"tx14", "tx15";
+	};
+
+	usb1_phy: usb-phy@47401b00 {
+		compatible = "ti,am335x-usb-phy";
+		reg = <0x47401b00 0x100>;
+		reg-names = "phy";
+		ti,ctrl_mod = <&ctrl_mod>;
+	};
+
+	usb1: usb@47401800 {
+		compatible = "ti,musb-am33xx";
+		reg = <0x47401c00 0x400
+			0x47401800 0x200>;
+		reg-names = "mc", "control";
+		interrupts = <19>;
+		interrupt-names = "mc";
+		dr_mode = "host"
+		mentor,multipoint = <1>;
+		mentor,num-eps = <16>;
+		mentor,ram-bits = <12>;
+		mentor,power = <500>;
+		phys = <&usb1_phy>;
+
+		dmas = <&cppi41dma 15 0 &cppi41dma 16 0
+			&cppi41dma 17 0 &cppi41dma 18 0
+			&cppi41dma 19 0 &cppi41dma 20 0
+			&cppi41dma 21 0 &cppi41dma 22 0
+			&cppi41dma 23 0 &cppi41dma 24 0
+			&cppi41dma 25 0 &cppi41dma 26 0
+			&cppi41dma 27 0 &cppi41dma 28 0
+			&cppi41dma 29 0 &cppi41dma 15 1
+			&cppi41dma 16 1 &cppi41dma 17 1
+			&cppi41dma 18 1 &cppi41dma 19 1
+			&cppi41dma 20 1 &cppi41dma 21 1
+			&cppi41dma 22 1 &cppi41dma 23 1
+			&cppi41dma 24 1 &cppi41dma 25 1
+			&cppi41dma 26 1 &cppi41dma 27 1
+			&cppi41dma 28 1 &cppi41dma 29 1>;
+		dma-names =
+			"rx1", "rx2", "rx3", "rx4", "rx5", "rx6", "rx7",
+			"rx8", "rx9", "rx10", "rx11", "rx12", "rx13",
+			"rx14", "rx15",
+			"tx1", "tx2", "tx3", "tx4", "tx5", "tx6", "tx7",
+			"tx8", "tx9", "tx10", "tx11", "tx12", "tx13",
+			"tx14", "tx15";
+	};
+
+	cppi41dma: dma-controller@07402000 {
+		compatible = "ti,am3359-cppi41";
+		reg =  <0x47400000 0x1000
+			0x47402000 0x1000
+			0x47403000 0x1000
+			0x47404000 0x4000>;
+		reg-names = "glue", "controller", "scheduler", "queuemgr";
+		interrupts = <17>;
+		interrupt-names = "glue";
+		#dma-cells = <2>;
+		#dma-channels = <30>;
+		#dma-requests = <256>;
+	};
+};

@@ -1,0 +1,35 @@
+Device-Tree bindings for hdmiddc driver
+
+Required properties:
+- compatible: value should be one of the following
+	1) "samsung,exynos5-hdmiddc" <DEPRECATED>
+	2) "samsung,exynos4210-hdmiddc"
+
+- reg: I2C address of the hdmiddc device.
+
+Example:
+
+	hdmiddc {
+		compatible = "samsung,exynos4210-hdmiddc";
+		reg = <0x50>;
+	};
+
+/*
+hdmiddc 드라이버에 대한 장치 트리 바인딩
+
+필수 속성 :
+- compatible : value는 다음 중 하나 여야합니다.
+1) "samsung, exynos5-hdmiddc"<DEPRECATED>
+2) "samsung, exynos4210-hdmiddc"
+
+- reg : hdmiddc 장치의 I2C 주소입니다.
+
+Example:
+
+	hdmiddc {
+		compatible = "samsung,exynos4210-hdmiddc";
+		reg = <0x50>;
+	};
+
+
+*/

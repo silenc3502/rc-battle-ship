@@ -1,0 +1,191 @@
+OMAP4+ Remoteproc Devices
+=========================
+
+The OMAP family of SoCs usually have one or more slave processor sub-systems
+that are used to offload some of the processor-intensive tasks, or to manage
+other hardware accelerators, for achieving various system level goals.
+SoC의 OMAP 제품군에는 대개 프로세서 집약적 인 작업 중 일부를 오프로드하거나 다른 시스템 가속기를 관리하여 다양한 시스템 수준 목표를 달성하는 데 사용되는 하나 이상의 종속 프로세서 하위 시스템이 있습니다.
+
+The processor cores in the sub-system are usually behind an IOMMU, and may
+contain additional sub-modules like Internal RAM and/or ROMs, L1 and/or L2
+caches, an Interrupt Controller, a Cache Controller etc.
+하위 시스템의 프로세서 코어는 대개 IOMMU 뒤에 있으며 내부 RAM 및 / 또는 ROM, L1 및 / 또는 L2 캐시, 인터럽트 컨트롤러, 캐시 컨트롤러 등과 같은 추가 하위 모듈을 포함 할 수 있습니다.
+
+The OMAP SoCs usually have a DSP processor sub-system and/or an IPU processor
+sub-system. The DSP processor sub-system can contain any of the TI's C64x,
+C66x or C67x family of DSP cores as the main execution unit. The IPU processor
+sub-system usually contains either a Dual-Core Cortex-M3 or Dual-Core Cortex-M4
+processors.
+OMAP SoC에는 대개 DSP 프로세서 서브 시스템 및 / 또는 IPU 프로세서 서브 시스템이 있습니다. DSP 프로세서 서브 시스템은 주요 실행 유닛으로서 TI의 C64x, C66x 또는 C67x 계열의 DSP 코어를 포함 할 수 있습니다. IPU 프로세서 하위 시스템에는 일반적으로 이중 코어 Cortex-M3 또는 이중 코어 Cortex-M4 프로세서가 포함됩니다.
+
+Remote Processor Node:
+======================
+Each remote processor sub-system is represented as a single DT node. Each node
+has a number of required or optional properties that enable the OS running on
+the host processor (MPU) to perform the device management of the remote
+processor and to communicate with the remote processor. The various properties
+can be classified as constant or variable. The constant properties are dictated
+by the SoC and does not change from one board to another having the same SoC.
+Examples of constant properties include 'iommus', 'reg'. The variable properties
+are dictated by the system integration aspects such as memory on the board, or
+configuration used within the corresponding firmware image. Examples of variable
+properties include 'mboxes', 'memory-region', 'timers', 'watchdog-timers' etc.
+각 원격 프로세서 하위 시스템은 단일 DT 노드로 표시됩니다. 각 노드에는 호스트 프로세서 (MPU)에서 실행되는 OS가 원격 프로세서의 장치 관리를 수행하고 원격 프로세서와 통신 할 수있게 해주는 여러 필수 또는 선택 속성이 있습니다. 다양한 속성은 상수 또는 변수로 분류 할 수 있습니다. 상수 특성은 SoC에 의해 결정되며 동일한 SoC를 갖는 한 보드에서 다른 보드로 변경되지 않습니다.
+상수 특성의 예로 'iommus', 'reg'가 있습니다. 변수 속성은 보드상의 메모리 또는 해당 펌웨어 이미지 내에서 사용되는 구성과 같은 시스템 통합 측면에 의해 결정됩니다. 변수 속성의 예로는 'mboxes', 'memory-region', 'timer', 'watchdog-timer'등이 있습니다.
+
+Required properties:
+--------------------
+The following are the mandatory properties:
+
+- compatible:	Should be one of the following,
+				다음 중 하나 여야합니다.
+
+		    "ti,omap4-dsp" for DSPs on OMAP4 SoCs
+		    "ti,omap5-dsp" for DSPs on OMAP5 SoCs
+		    "ti,dra7-dsp" for DSPs on DRA7xx SoCs
+		    "ti,omap4-ipu" for IPUs on OMAP4 SoCs
+		    "ti,omap5-ipu" for IPUs on OMAP5 SoCs
+		    "ti,dra7-ipu" for IPUs on DRA7xx SoCs
+
+- ti,hwmods:	Name of the hwmod associated with the remoteproc device
+- ti, hwmods : remoteproc 장치와 연관된 hwmod의 이름입니다.
+
+- iommus:	phandles to OMAP IOMMU nodes, that need to be programmed
+		for this remote processor to access any external RAM memory or
+		other peripheral device address spaces. This property usually
+		has only a single phandle. Multiple phandles are used only in
+		cases where the sub-system has different ports for different
+		sub-modules within the processor sub-system (eg: DRA7 DSPs),
+		and need the same programming in both the MMUs.
+- iommus :이 원격 프로세서가 외부 RAM 메모리 나 다른 주변 장치 주소 공간에 
+액세스하도록 프로그래밍해야하는 OMAP IOMMU 노드에 연결합니다. 이 속성에는 
+대개 단일 phandle 만 있습니다. 다중 서브 시스템이 프로세서 서브 시스템 (예 : DRA7 DSP)
+ 내의 서로 다른 하위 모듈에 대해 다른 포트를 가지고 있고 두 MMU 모두에서 동일한 프로그래밍이 
+ 필요한 경우에만 다중 phandles이 사용됩니다.
+
+- mboxes:	OMAP Mailbox specifier denoting the sub-mailbox, to be used for
+		communication with the remote processor. The specifier format is
+		as per the bindings,
+		Documentation/devicetree/bindings/mailbox/omap-mailbox.txt
+		This property should match with the sub-mailbox node used in
+		the firmware image.
+- mboxes : 원격 프로세서와의 통신에 사용되는 하위 사서함을 나타내는 OMAP Mailbox 지정자입니다. 
+지정자 형식은 바인딩에 따라 다릅니다. Documentation / devicetree / bindings / mailbox / omap-mailbox.txt이
+ 등록 정보는 펌웨어 이미지에 사용되는 하위 사서함 노드와 일치해야합니다.
+
+Optional properties:
+선택적 속성 :
+--------------------
+Some of these properties are mandatory on some SoCs, and some are optional
+depending on the configuration of the firmware image to be executed on the
+remote processor. The conditions are mentioned for each property.
+이러한 속성 중 일부는 일부 SoC에서 필수이며 일부는 원격 프로세서에서 실행될 펌웨어 이미지의 구성에 따라 선택 사항입니다. 조건은 각 속성에 대해 언급됩니다.
+
+The following are the optional properties:
+그는 다음과 같은 선택적 속성을 사용합니다.
+
+- reg:			Address space for any remoteproc memories present on
+			the SoC. Should contain an entry for each value in
+			'reg-names'. These are mandatory for all DSP and IPU
+			processors that have them (OMAP4/OMAP5 DSPs do not have
+			any RAMs)
+- reg : SoC에있는 모든 원격 메모리의 주소 공간. 'reg-names'의 각 값에 대한 항목을 포함해야합니다. 
+이는 이들이있는 모든 DSP 및 IPU 프로세서에 필수적입니다 (OMAP4 / OMAP5 DSP에는 RAM이 없음)
+
+
+- reg-names:		Required names for each of the address spaces defined in
+			the 'reg' property. Should contain a string from among
+			the following names, each representing the corresponding
+			internal RAM memory region,
+			   "l2ram" for L2 RAM,
+			   "l1pram" for L1 Program RAM Memory/Cache,
+			   "l1dram" for L1 Data RAM Memory/Cache,
+
+			All devices may not have all the above memories.
+
+- reg-names : 'reg'속성에 정의 된 각 주소 공간에 대한 필수 이름. 다음 이름들 중에서 문자열을 포함해야하며, 각각은 해당 내부 RAM 메모리 영역을 나타내며,
+L2 RAM의 경우 "l2ram"
+L1 프로그램 RAM 메모리 / 캐시 용 "l1pram"
+L1 데이터 RAM 메모리 / 캐시 용 "l1dram"
+
+모든 장치에는 위의 모든 memories 가 없을 수도 있습니다.
+
+- syscon-bootreg:	Should be a pair of the phandle to the System Control
+			Configuration region that contains the boot address
+			register, and the register offset of the boot address
+			register within the System Control module. This property
+			is required for all the DSP instances on OMAP4, OMAP5
+			and DRA7xx SoCs.
+- syscon-bootreg : 부팅 주소 레지스터와 시스템 제어 모듈 내의 부팅 주소 레지스터의 
+레지스터 오프셋을 포함하는 시스템 제어 구성 영역에 대한 phandle 쌍이어야합니다. 
+이 속성은 OMAP4, OMAP5 및 DRA7xx SoC의 모든 DSP 인스턴스에 필요합니다.
+
+- memory-region:	phandle to the reserved memory node to be associated
+			with the remoteproc device. The reserved memory node
+			should be a CMA memory node, and should be defined as
+			per the bindings,
+			Documentation/devicetree/bindings/reserved-memory/reserved-memory.txt
+- memory-region : remoteproc 장치와 관련된 예약 된 메모리 노드로 향하게합니다. 예약 된 메모리 노드는 CMA 메모리 노드 여야하며 바인딩
+ 인 Documentation / devicetree / bindings / reserved-memory / reserved-memory.txt에 따라 정의해야합니다.
+
+- mbox-names:		Optional names for the OMAP mailbox specifiers mentioned
+			in the 'mboxes' property, one per specifier value
+- mbox-names : 'mboxes'속성에 언급 된 OMAP 메일 박스 지정자의 선택적 이름으로 지정자 값당 하나
+
+- timers:		One or more phandles to OMAP DMTimer nodes, that serve
+			as System/Tick timers for the OS running on the remote
+			processors. This will usually be a single timer if the
+			processor sub-system is running in SMP mode, or one per
+			core in the processor sub-system.
+			This property is mandatory on remote processors requiring
+			external tick wakeup, and to support Power Management
+			features. The timers to be used should match with the
+			timers used in the firmware image.
+- 타이머 : OMAP DMTimer 노드에 대한 하나 이상의 phandles. 원격 프로세서에서 
+실행중인 OS에 대한 System/Tick timers 역할을 수행합니다. 프로세서 하위 시스템이
+ SMP 모드로 실행 중이거나 프로세서 하위 시스템의 코어 당 하나씩 실행중인 경우 이는 일반적으로 단일 타이머가됩니다.
+ 이 속성은 외부 틱 웨이크 업이 필요한 원격 프로세서 및 전원 관리 기능을 지원하는 데 필수입니다. 
+ 사용되는 타이머는 펌웨어 이미지에서 사용 된 타이머와 일치해야합니다.
+
+
+- watchdog-timers:	One or more phandles to OMAP DMTimer nodes, used to
+			serve as Watchdog timers for the processor cores. This
+			will usually be one per executing processor core, even
+			if the processor sub-system is running a SMP OS.
+
+			The timers to be used should match with the watchdog
+			timers used in the firmware image.
+- watchdog-timers : OMAP DMTimer 노드에 대한 하나 이상의 phandles. 프로세서 코어의 워치 독 타이머 역할을 수행합니다. 프로세서 하위 시스템이 SMP OS를 실행중인 경우에도 일반적으로 실행중인 프로세서 코어 당 하나입니다.
+
+사용되는 타이머는 펌웨어 이미지에 사용 된 워치 독 타이머와 일치해야합니다.
+
+- ti,rproc-standby-info: Standby data for the remote processor. This is
+			 mandatory to support Power Management for the OMAP
+			 remoteprocs, and should contain the address containing
+			 the module standby status.
+- ti, rproc-standby-info : 원격 프로세서의 대기 데이터입니다. 이것은 OMAP remoteprocs의 
+전원 관리를 지원하는 데 필수적이며 모듈 대기 상태를 포함하는 주소를 포함해야합니다.
+
+Example:
+--------
+
+/* OMAP4 DSP node in SoC DTS file */
+ocp {
+	dsp: dsp {
+		compatible = "ti,omap4-dsp";
+		ti,hwmods = "dsp";
+		syscon-bootreg = <&scm_conf 0x304>;
+		iommus = <&mmu_dsp>;
+		mboxes = <&mailbox &mbox_dsp>;
+		ti,rproc-standby-info = <0x4a004420>;
+		status = "disabled";
+	};
+};
+
+/* OMAP4 DSP node additional fields in a Board DTS file */
+&dsp {
+	status = "okay";
+	memory-region = <&dsp_cma_pool>;
+	timers = <&timer5>;
+	watchdog-timers = <&timer6>;
+};

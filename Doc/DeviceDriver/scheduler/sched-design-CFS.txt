@@ -1,0 +1,387 @@
+  		      =============
+                      CFS Scheduler
+                      =============
+
+
+1.  OVERVIEW
+
+CFS stands for "Completely Fair Scheduler," and is the new "desktop" process
+scheduler implemented by Ingo Molnar and merged in Linux 2.6.23.  It is the
+replacement for the previous vanilla scheduler's SCHED_OTHER interactivity
+code.
+
+CFS는 "Completely Fair Scheduler"의 약자이며 Ingo Molnar에서 구현되고 
+Linux2.6.23에서 병합 된 새로운 "데스크탑"프로세스 스케줄러입니다. 
+이전 바닐라 스케줄러의 SCHED_OTHER 상호 작용 코드를 대체합니다.
+
+80% of CFS's design can be summed up in a single sentence: CFS basically models
+an "ideal, precise multi-tasking CPU" on real hardware.
+
+CFS의 디자인 중 80 %는 한 문장으로 요약 될 수 있습니다: 
+CFS는 기본적으로 실제 하드웨어에서 "이상적이고 정확한 멀티 태스킹 CPU"를 모델링합니다.
+
+"Ideal multi-tasking CPU" is a (non-existent  :-)) CPU that has 100% physical
+power and which can run each task at precise equal speed, in parallel, each at
+1/nr_running speed.  For example: if there are 2 tasks running, then it runs
+each at 50% physical power --- i.e., actually in parallel.
+
+"이상적인 멀티 태스킹 CPU"는 100 %의 물리적 인 힘을 가지며 각각의 작업을 1 / nr_running 속도로 
+병렬로 동일한 속도로 정확하게 실행할 수있는 비 존재 (:-)) CPU입니다. 
+예를 들어, 두 개의 작업이 실행중인 경우, 각각 50 %의 물리적 성능, 즉 실제로 병렬로 실행됩니다.
+
+On real hardware, we can run only a single task at once, so we have to
+introduce the concept of "virtual runtime."  The virtual runtime of a task
+specifies when its next timeslice would start execution on the ideal
+multi-tasking CPU described above.  In practice, the virtual runtime of a task
+is its actual runtime normalized to the total number of running tasks.
+
+실제 하드웨어에서는 한 번에 하나의 작업 만 실행할 수 있으므로 "가상 런타임"개념을 도입해야합니다. 
+태스크의 가상 런타임은 위에 설명 된 이상적인 멀티 태스킹 CPU에서 다음 타임 슬라이스가 언제 실행될지를 지정합니다. 
+실제로, 작업의 가상 런타임은 실행중인 작업의 총 수로 표준화 된 실제 런타임입니다.
+
+
+
+2.  FEW IMPLEMENTATION DETAILS
+
+2.  몇 가지 구현 세부 사항
+
+In CFS the virtual runtime is expressed and tracked via the per-task
+p->se.vruntime (nanosec-unit) value.  This way, it's possible to accurately
+timestamp and measure the "expected CPU time" a task should have gotten.
+
+CFS에서 가상 런타임은 er-task -> se.vruntime (nanosec-unit) 값을 통해 표현되고 추적됩니다. 
+이렇게하면 작업이 가져야 할 "예상 된 CPU 시간"을 정확하게 타임 스탬프하고 측정 할 수 있습니다.
+
+[ small detail: on "ideal" hardware, at any time all tasks would have the same
+  p->se.vruntime value --- i.e., tasks would execute simultaneously and no task
+  would ever get "out of balance" from the "ideal" share of CPU time.  ]
+
+[작은 세부 사항 : "이상적인"하드웨어에서는 언제나 모든 작업이 동일한 p-> se.vruntime 값을 가질 것입니다. 
+ 즉, 작업이 동시에 실행되고 "이상적인"작업에서 "균형이 맞지 않는"작업은 없습니다. "CPU 시간의 몫. ]
+
+CFS's task picking logic is based on this p->se.vruntime value and it is thus
+very simple: it always tries to run the task with the smallest p->se.vruntime
+value (i.e., the task which executed least so far).  CFS always tries to split
+up CPU time between runnable tasks as close to "ideal multitasking hardware" as
+possible.
+
+CFS의 작업 선택 논리는이 p-> se.vruntime 값을 기반으로하므로 매우 간단합니다. 
+항상 가장 작은 p -> se.vruntime 값 (즉, 지금까지 실행되지 않은 작업)으로 작업을 실행하려고 시도합니다.  
+CFS는 항상 가능한 "이상적인 멀티 태스킹 하드웨어"에 가까운 실행 가능한 작업 사이에서 CPU 시간을 분할하려고 시도합니다.
+
+Most of the rest of CFS's design just falls out of this really simple concept,
+with a few add-on embellishments like nice levels, multiprocessing and various
+algorithm variants to recognize sleepers.
+
+CFS의 나머지 디자인 대부분은 멋진 레벨, 다중 처리 및 침목자를 인식하는 다양한 알고리즘 변형과 
+같은 몇 가지 애드온을 추가하여이 단순한 개념에서 벗어납니다.
+
+
+
+3.  THE RBTREE
+
+CFS's design is quite radical: it does not use the old data structures for the
+runqueues, but it uses a time-ordered rbtree to build a "timeline" of future
+task execution, and thus has no "array switch" artifacts (by which both the
+previous vanilla scheduler and RSDL/SD are affected).
+
+CFS의 디자인은 상당히 과격합니다. 
+즉, 실행 대기열에 이전 데이터 구조를 사용하지 않지만 시간순으로 정렬 된 rbtree를 
+사용하여 향후 작업 실행의 타임 라인을 작성하므로 "어레이 전환"아티팩트가 없습니다 이전 바닐라 스케줄러 및 RSDL / SD가 영향을 받음).
+
+CFS also maintains the rq->cfs.min_vruntime value, which is a monotonic
+increasing value tracking the smallest vruntime among all tasks in the
+runqueue.  The total amount of work done by the system is tracked using
+min_vruntime; that value is used to place newly activated entities on the left
+side of the tree as much as possible.
+
+또한 CFS는 rq-> cfs.min_vruntime 값을 유지합니다.이 값은 실행 대기열의 모든 작업 중에서 가장 작은 vruntime을 추적하는 단조로운 증가 값입니다. 
+시스템이 수행 한 총 작업량은 min_vruntime을 사용하여 추적됩니다. 
+이 값은 트리의 왼쪽에 새롭게 활성화 된 엔티티를 가능한 많이 배치하는 데 사용됩니다.
+
+The total number of running tasks in the runqueue is accounted through the
+rq->cfs.load value, which is the sum of the weights of the tasks queued on the
+runqueue.
+
+runqueue에서 실행중인 작업의 총 개수는 rq-> cfs.load 값을 통해 계산됩니다.이 값은 실행 큐에 대기중인 작업의 가중치의 합계입니다
+
+CFS maintains a time-ordered rbtree, where all runnable tasks are sorted by the
+p->se.vruntime key. CFS picks the "leftmost" task from this tree and sticks to it.
+As the system progresses forwards, the executed tasks are put into the tree
+more and more to the right --- slowly but surely giving a chance for every task
+to become the "leftmost task" and thus get on the CPU within a deterministic
+amount of time.
+
+CFS는 모든 실행 가능한 작업이 p-> se.vruntime 키로 정렬되는 시간 순서화 된 rb 트리를 유지 관리합니다. 
+CFS는이 트리에서 "가장 왼쪽"작업을 선택하여이 작업에 집중합니다.
+시스템이 진행함에 따라, 실행 된 작업은 점점 더 오른쪽으로 트리에 놓이게됩니다. 
+천천히 그러나 확실하게 모든 작업이 "가장 왼쪽 작업"이 될 확률을 주어 결정적으로 CPU에 도달합니다 시각.
+
+Summing up, CFS works like this: it runs a task a bit, and when the task
+schedules (or a scheduler tick happens) the task's CPU usage is "accounted
+for": the (small) time it just spent using the physical CPU is added to
+p->se.vruntime.  Once p->se.vruntime gets high enough so that another task
+becomes the "leftmost task" of the time-ordered rbtree it maintains (plus a
+small amount of "granularity" distance relative to the leftmost task so that we
+do not over-schedule tasks and trash the cache), then the new leftmost task is
+picked and the current task is preempted.
+
+요약하면 CFS는 다음과 같이 작동합니다. 
+작업을 약간 실행하고 작업 스케줄 (또는 스케줄러 틱이 발생할 때) 작업의 CPU 사용이 "차지"됩니다. 
+실제 CPU를 사용하여 소비 한 (작은) 시간은 p-> se.vruntime에 추가됩니다. 
+p-> se.vruntime이 충분히 높아져서 다른 작업이 시간순으로 정렬 된 rbtree의 "가장 왼쪽 작업"이되고 
+(가장 왼쪽 작업과 관련하여 소량의 "세분성"거리를 더하여) 작업을 예약하고 캐시를 휴지통에 버리면 새로운 왼쪽 작업이 선택되고 현재 작업이 선점됩니다.
+
+
+
+4.  SOME FEATURES OF CFS
+
+4.  CFS의 몇 가지 기능
+
+CFS uses nanosecond granularity accounting and does not rely on any jiffies or
+other HZ detail.  Thus the CFS scheduler has no notion of "timeslices" in the
+way the previous scheduler had, and has no heuristics whatsoever.  There is
+only one central tunable (you have to switch on CONFIG_SCHED_DEBUG):
+
+CFS는 나노 초 단위의 회계 처리를 사용하며 어떤 jiffies 나 다른 HZ 세부 정보에 의존하지 않습니다. 
+따라서 CFS 스케줄러에는 이전 스케줄러와 같은 방식으로 "타임 슬라이스"개념이 없으며 경험적 방법이 없습니다. 
+단 하나의 중앙 튜너 블이 있습니다 (CONFIG_SCHED_DEBUG를 켜야합니다) :
+
+   /proc/sys/kernel/sched_min_granularity_ns
+
+which can be used to tune the scheduler from "desktop" (i.e., low latencies) to
+"server" (i.e., good batching) workloads.  It defaults to a setting suitable
+for desktop workloads.  SCHED_BATCH is handled by the CFS scheduler module too.
+
+스케쥴러를 "데스크탑"(즉, 낮은 대기 시간)에서 "서버"(즉, 양호한 일괄 처리) 작업 부하로 튜닝하는 데 사용될 수있다. \
+기본값은 데스크톱 작업 부하에 적합한 설정입니다. SCHED_BATCH도 CFS 스케줄러 모듈에 의해 처리됩니다.
+
+Due to its design, the CFS scheduler is not prone to any of the "attacks" that
+exist today against the heuristics of the stock scheduler: fiftyp.c, thud.c,
+chew.c, ring-test.c, massive_intr.c all work fine and do not impact
+interactivity and produce the expected behavior.
+
+이 설계로 인해 CFS 스케줄러는 주식 스케줄러의 휴리스틱 스에 대해 오늘날 존재하는 "공격"에 취약하지 않습니다 : 
+fiftyp.c, thud.c, chew.c, ring-test.c, massive_intr.c 모두 잘 작동하고 상호 작용에 영향을주지 않으며 예상되는 동작을 생성합니다.
+
+The CFS scheduler has a much stronger handling of nice levels and SCHED_BATCH
+than the previous vanilla scheduler: both types of workloads are isolated much
+more aggressively.
+
+CFS 스케줄러는 이전 레벨의 바닐라 스케줄러보다 우수한 레벨 및 SCHED_BATCH를 훨씬 강력하게 처리합니다. 
+두 유형의 작업 부하가 훨씬 더 적극적으로 격리됩니다.
+
+SMP load-balancing has been reworked/sanitized: the runqueue-walking
+assumptions are gone from the load-balancing code now, and iterators of the
+scheduling modules are used.  The balancing code got quite a bit simpler as a
+result.
+
+SMP로드 밸런싱은 수정되었거나 새 니타 이징되었습니다 : 런큐 - 워킹 (runqueue-walking) 가정은로드 밸런싱 코드에서 사라지고 스케줄링 모듈의 반복자가 사용됩니다. 
+결과적으로 밸런싱 코드가 훨씬 간단 해졌습니다.
+
+
+
+5. Scheduling policies
+
+5. 스케줄링 정책
+
+CFS implements three scheduling policies:
+
+  - SCHED_NORMAL (traditionally called SCHED_OTHER): The scheduling
+    policy that is used for regular tasks.
+
+  - SCHED_BATCH: Does not preempt nearly as often as regular tasks
+    would, thereby allowing tasks to run longer and make better use of
+    caches but at the cost of interactivity. This is well suited for
+    batch jobs.
+
+  - SCHED_IDLE: This is even weaker than nice 19, but its not a true
+    idle timer scheduler in order to avoid to get into priority
+    inversion problems which would deadlock the machine.
+
+CFS는 세 가지 스케줄링 정책을 구현합니다.
+
+   - SCHED_NORMAL (전통적으로 SCHED_OTHER라고 함) : 정기적 인 작업에 사용되는 스케줄링 정책.
+
+   - SCHED_BATCH : 일반 작업만큼 자주 선점하지 않으므로 작업을 더 오래 실행하고 캐시를보다 효율적으로 사용할 수 있지만 대화 형 작업을 수행해야합니다. 
+     이는 배치 작업에 매우 적합합니다.
+
+   - SCHED_IDLE : 19 번보다 좋지 않지만, 기계를 교착 상태로하는 우선 순위 역전 문제를 피하기 위해 유휴 타이머 스케줄러가 아닙니다.
+
+SCHED_FIFO/_RR are implemented in sched/rt.c and are as specified by
+POSIX.
+
+SCHED_FIFO / _RR은 sched / rt.c에 구현되며 POSIX에 지정된대로 있습니다.
+
+The command chrt from util-linux-ng 2.13.1.1 can set all of these except
+SCHED_IDLE.
+
+util-linux-ng 2.13.1.1의 chrt 명령은 SCHED_IDLE을 제외한 모든 것을 설정할 수 있습니다.
+
+
+
+6.  SCHEDULING CLASSES
+
+The new CFS scheduler has been designed in such a way to introduce "Scheduling
+Classes," an extensible hierarchy of scheduler modules.  These modules
+encapsulate scheduling policy details and are handled by the scheduler core
+without the core code assuming too much about them.
+
+새로운 CFS 스케줄러는 스케줄러 모듈의 확장 가능한 계층 구조 인 "Scheduling Classes"를 소개하는 방식으로 설계되었습니다. 
+이 모듈은 스케줄링 정책 세부 사항을 캡슐화하고 코어 코드가 너무 많다고 가정하지 않고 스케줄러 코어에 의해 처리됩니다.
+
+sched/fair.c implements the CFS scheduler described above.
+
+sched / fair.c는 위에서 설명한 CFS 스케줄러를 구현합니다.
+
+sched/rt.c implements SCHED_FIFO and SCHED_RR semantics, in a simpler way than
+the previous vanilla scheduler did.  It uses 100 runqueues (for all 100 RT
+priority levels, instead of 140 in the previous scheduler) and it needs no
+expired array.
+
+sched / rt.c는 이전 바닐라 스케줄러보다 간단한 방법으로 SCHED_FIFO 및 SCHED_RR 의미 체계를 구현합니다. 
+100 개의 실행 대기열 (이전 스케줄러에서 140 개가 아닌 100 개의 모든 우선 순위 레벨에 대해)을 사용하며 만료 된 배열이 필요 없습니다.
+
+Scheduling classes are implemented through the sched_class structure, which
+contains hooks to functions that must be called whenever an interesting event
+occurs.
+
+스케쥴링 클래스는 흥미로운 이벤트가 발생할 때마다 호출되어야하는 함수에 대한 후크를 포함하는 sched_class 구조를 통해 구현됩니다.
+
+This is the (partial) list of the hooks:
+
+ - enqueue_task(...)
+
+   Called when a task enters a runnable state.
+   It puts the scheduling entity (task) into the red-black tree and
+   increments the nr_running variable.
+
+ - dequeue_task(...)
+
+   When a task is no longer runnable, this function is called to keep the
+   corresponding scheduling entity out of the red-black tree.  It decrements
+   the nr_running variable.
+
+ - yield_task(...)
+
+   This function is basically just a dequeue followed by an enqueue, unless the
+   compat_yield sysctl is turned on; in that case, it places the scheduling
+   entity at the right-most end of the red-black tree.
+
+ - check_preempt_curr(...)
+
+   This function checks if a task that entered the runnable state should
+   preempt the currently running task.
+
+ - pick_next_task(...)
+
+   This function chooses the most appropriate task eligible to run next.
+
+ - set_curr_task(...)
+
+   This function is called when a task changes its scheduling class or changes
+   its task group.
+
+ - task_tick(...)
+
+   This function is mostly called from time tick functions; it might lead to
+   process switch.  This drives the running preemption.
+
+후크의 (부분) 목록입니다.
+
+ - enqueue_task (...)
+
+태스크가 실행 가능 상태가되면 호출됩니다.
+스케줄링 엔티티 (태스크)를 red-black 트리에 넣고 nr_running 변수를 증가시킵니다.
+
+ - dequeue_task (...)
+
+작업이 더 이상 실행 가능하지 않으면이 함수는 해당 스케줄링 엔티티를 빨강 - 검정 트리 밖으로 유지하기 위해 호출됩니다. 
+nr_running 변수를 감소시킵니다.
+
+ - yield_task (...)
+
+이 함수는 compat_yield sysctl이 켜져 있지 않은 한 기본적으로 enqueue에 이어 dequeue입니다. 
+이 경우 스케줄링 엔티티를 적 - 검은 색 트리의 가장 오른쪽 끝에 배치합니다.
+
+ - check_preempt_curr (...)
+
+이 함수는 실행 가능 상태에 들어간 작업이 현재 실행중인 작업을 선점해야하는지 확인합니다.
+
+ - pick_next_task (...)
+
+이 기능은 다음에 실행할 수있는 가장 적합한 작업을 선택합니다.
+
+ - set_curr_task (...)
+
+이 함수는 태스크가 스케줄링 클래스를 변경하거나 태스크 그룹을 변경할 때 호출됩니다.
+
+ - task_tick (...)
+
+이 함수는 주로 타임 틱 함수에서 호출됩니다. 프로세스 전환으로 이어질 수 있습니다. 이는 실행중인 선점을 유도합니다.
+
+
+
+
+7.  GROUP SCHEDULER EXTENSIONS TO CFS
+
+7.  CFS에 대한 그룹 스케줄러 확장
+
+Normally, the scheduler operates on individual tasks and strives to provide
+fair CPU time to each task.  Sometimes, it may be desirable to group tasks and
+provide fair CPU time to each such task group.  For example, it may be
+desirable to first provide fair CPU time to each user on the system and then to
+each task belonging to a user.
+
+일반적으로 스케줄러는 개별 태스크를 처리하고 각 태스크에 적절한 CPU 시간을 제공하기 위해 노력합니다. 
+때로는 작업을 그룹화하고 각 작업 그룹에 적절한 CPU 시간을 제공하는 것이 바람직 할 수 있습니다. 
+예를 들어, 먼저 시스템의 각 사용자와 공정한 CPU 시간을 사용자에게 속한 각 작업에 제공하는 것이 바람직 할 수 있습니다.
+
+CONFIG_CGROUP_SCHED strives to achieve exactly that.  It lets tasks to be
+grouped and divides CPU time fairly among such groups
+
+CONFIG_CGROUP_SCHED는 정확히 달성하기 위해 노력합니다. 작업을 그룹화하고 이러한 그룹간에 CPU 시간을 공정하게 나눕니다..
+
+CONFIG_RT_GROUP_SCHED permits to group real-time (i.e., SCHED_FIFO and
+SCHED_RR) tasks.
+
+CONFIG_RT_GROUP_SCHED는 실시간 (즉, SCHED_FIFO 및 SCHED_RR) 작업을 그룹화 할 수 있습니다.
+
+CONFIG_FAIR_GROUP_SCHED permits to group CFS (i.e., SCHED_NORMAL and
+SCHED_BATCH) tasks.
+
+CONFIG_FAIR_GROUP_SCHED는 CFS (즉, SCHED_NORMAL 및 SCHED_BATCH) 작업을 그룹화 할 수 있도록 허용합니다.
+
+   These options need CONFIG_CGROUPS to be defined, and let the administrator
+   create arbitrary groups of tasks, using the "cgroup" pseudo filesystem.  See
+   Documentation/cgroups/cgroups.txt for more information about this filesystem.
+
+   이 옵션을 사용하려면 CONFIG_CGROUPS를 정의해야하며 관리자는 "cgroup"의사 파일 시스템을 사용하여 임의의 작업 그룹을 만들 수 있습니다. 
+   이 파일 시스템에 대한 자세한 내용은 Documentation / cgroups / cgroups.txt를 참조하십시오.
+
+When CONFIG_FAIR_GROUP_SCHED is defined, a "cpu.shares" file is created for each
+group created using the pseudo filesystem.  See example steps below to create
+task groups and modify their CPU share using the "cgroups" pseudo filesystem.
+
+CONFIG_FAIR_GROUP_SCHED가 정의되면, 의사 파일 시스템을 사용하여 작성된 각 그룹에 대해 "cpu.shares"파일이 작성됩니다. 
+"cgroups"가상 파일 시스템을 사용하여 작업 그룹을 만들고 CPU 공유를 수정하려면 아래 예제 단계를 참조하십시오.
+
+	# mount -t tmpfs cgroup_root /sys/fs/cgroup
+	# mkdir /sys/fs/cgroup/cpu
+	# mount -t cgroup -ocpu none /sys/fs/cgroup/cpu
+	# cd /sys/fs/cgroup/cpu
+
+	# mkdir multimedia	# create "multimedia" group of tasks
+	# mkdir browser		# create "browser" group of tasks
+
+	# #Configure the multimedia group to receive twice the CPU bandwidth
+	# #that of browser group
+
+	# echo 2048 > multimedia/cpu.shares
+	# echo 1024 > browser/cpu.shares
+
+	# firefox &	# Launch firefox and move it to "browser" group
+	# echo <firefox_pid> > browser/tasks
+
+	# #Launch gmplayer (or your favourite movie player)
+	# echo <movie_player_pid> > multimedia/tasks

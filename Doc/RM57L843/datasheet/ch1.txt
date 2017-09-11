@@ -1,0 +1,186 @@
+Chapter 1. Introduction
+
+1.1 안정성있는 Application을 위해 설계됨
+
+기능적으로 안전한 System의 개발을 단순화하기 위해
+TMS570LC43x Device 아키텍처는 완전히 새로 설계되었다.
+기본적인 아키텍처적 개념은 "Safe Island" 방법으로 알려져 있다.
+전원, 클록, 리셋, 그리고 기본적인 처리 기능은
+높은 수준의 HW 진단에 의해 보호된다.
+"Safe Island" 영역의 일부 핵심 기능은 아래와 같다:
+
+* Lockstep 안정성 개념이 VIM(Vector Interrupt Module)으로 확장된다.
+  Lockstep의 듀얼 VIMs는 Cycle 단위로 Controller의 경계에서 고장을 감지한다.
+  VIM의 내부 RAM은 Vector 주소를 저장하고 또한 ECC 보호를 수행한다.
+
+* Level 1 Cache 메모리에 Datapath에 대한 ECC 진단뿐만 아니라
+  Level 2 SRAM에 ECC와 R5F Core의 Flash 메모리에 대한 ECC 진단
+  ECC Controller는 각각의 메모리 인터페이스에 대하여 CPU 내부에 위치한다.
+  이 방법은 2가지 주요 장점이 존재한다:
+
+1. CPU와 메모리 사이의 상호 연결을 진단할 수 있다.
+2. ECC Logic 자체를 Cycle 단위로 검사할 수 있다.
+
+* 빠른 실행과 동일한 기능의 SW 기반의 자체 테스트 솔루션보다 적은 메모리를 사용하는
+  HW BIST Controllers는 System의 Lockstep CPUs와 SRAMs에 대한 매우 높은 수준의 진단을 제공한다.
+
+* HW BIST는 또한 모든 N2HET Timer Coprocessors를 진단한다.
+
+* Masters와 Level 2 메모리간에 연결은
+  각 Cycle에서 Traffic의 무결성을 모니터링하는 내장 HW 안정성 진단을 포함한다.
+
+- 상호 연결의 Transactions가 들어가고 나가는 것을 지속적으로 모니터링한다.
+- 모든 Masters와 Slaves간에 제어 경로와 주소에 대한 진단 패리티
+- 상호 연결의 진단을 위한 BIST Mode
+- Bus Masters의 일부를 위한 생성된 데이터 경로에서
+  Transactions를 위한 ECC 생성과 평가
+
+* 전압 및 리셋 모니터링 로직 내장
+
+* 장애시 활용할 수 있는 backup RC 발진기를 포함하는
+  PLL 실패 감지 로직과 Onboard 발진기
+
+TMS570LC43x Device Architecture는
+아래와 같은 로직의 진단을 단순화하기 위한 많은 기능을 포함한다:
+
+* 모든 주변장치 메모리들에 대한 연속적인 패리티와 ECC 진단
+
+* 아날로그 및 디지털 루프백은 I/O 쇼트를 검사한다.
+
+* ADC Core 변환 기능과 아날로그 입력 모두의 무결성을 검사하기 위해
+  ADC 모듈에서 HW 자체 검사를 수행하고 진단한다.
+
+* 데이터 전송 중 CRC 서명의 계산을 background에서 수행하기 위한 DMA 기반의 HW Engine
+
+* 상태 출력 핀을 포함하는 중앙화된 오류 보고 기능은 장치 상태의 외부 모니터링을 가능하게 한다.
+
+
+
+1.2 제품군 명세서
+
+Microcontrollers의 TMS570LC43x 군은
+ARM® Cortex™-R5F Floating Point CPU에 기반을 둔 Cache 기반의 아키텍처다.
+이 아키텍처는 효율적인 1.66 DMIPS/MHz 성능을 제공하며,
+498 DMIPS까지 제공하고 330 MHz 까지 구동할 수 있는 구성을 가진다.
+이 Device는 Big-Endian[BE32] 포맷을 지원한다.
+
+TMS570LC43x는 단일 Bit Error Coreection 과 Dobule Bit Error Detection 이 가능하고
+4MB의 통합된 Flash와 512 KB Data RAM 구성을 가진다.
+이 Device에 있는 Flash Memory는 비휘발성이며
+64 bit wide Data Bus 인터페이스로 구현된 전기적으로 지울 수 있고 프로그래밍 가능한 메모리다.
+Flash는 모든 read, program, erase 동작에 대해 3.3V 전원 입력(I/O 전원과 같은 수준)으로 구동한다.
+SRAM은 150 MHz의 System Clock 주파수로 구동한다.
+SRAM은 byte, halfword, 그리고 word 모드로 read/write 를 지원한다.
+
+TMS570LC43x Device 2개의 차세대 총 64개의 I/O 단자와
+41개의 입력을 제공하는 2개의 12 bit ADC 를 가지며,
+N2HET(High End Timer) Timing Coprocessors 를 포함하는
+Real-Time 제어 기반 Applications를 위한 주변 장치들을 갖추고 있다.
+
+N2HET은 Real-Time Applications를 위한 정교한 Timing 기능을 제공하는 향상된 지능형 Timer다.
+RISC(감소된 Instruction Set) 방식을 사용하는 Timer는 SW에 의해 제어되며,
+전문화된 Timer Micromachine 이고, I/O Port에 연결되었다.
+N2HET은 PWM 출력, 캡쳐, 입력 비교, GPIO로 사용될 수 있다.
+이것은 특별히 다수의 센서 정보와 복잡하고 정확한 Time Pulses가 필요한 액추에이터 구동에 적합하다.
+HET-TU(High End Timer Transfer Unit)는
+Main Memory에서 N2HET Data를 전송하는 DMA Type의 Transactions를 수행할 수 있다.
+MPU(Memory Protection Unit)은 HET-TU에 내장되어 있다.
+
+Device는 총 41개의 Channels를 가진 12 bit 해상도 MibADCs 2개와
+패리티 보호 Buffer RAM 각각이 64 Words를 가진다.
+MibADC Channels는 개별적으로 변환될 수 있고
+순차적으로 변환 절차를 위한 SW 에 의해 그룹화될 수 있다.
+16개의 Channels는 2개의 MibADCs 간에 공유된다.
+여기에는 3개의 그룹이 존재한다.
+Trigger 혹은 연속 변환 모드를 위한 구성인 경우 각각의 Sequence가 한 번에 변환될 수 있다.
+
+이 Device에 3개의 On Die 온도 센서가 있다.
+3개 온도 센서의 온도 측정은 디지탈 값으로 변환을 위한 MibADC로 라우팅된다.
+CPU는 디지털 값을 판독하고 Device의 OTP에 저장된 보정된 온도 값과 비교할 수 있다.
+
+Device는 다수의 통신 인터페이스들을 가지고 있다:
+5개의 MibSPIs, 2개의 LINs, 2개의 SCIs, 4개의 DCANs,
+2개의 I2C, 1개의 Ethernet, 그리고 1개의 FlexRay 제어기
+MibSPI는 Shift Register Type Devices와 유사한것들간의
+고속 통신을 위한 직렬 상호작용의 편리한 방법을 제공한다.
+MibSPI의 Buffer RAM 내에 저장된 Data는 ECC로 보호된다.
+LIN은 Local Interconnect 표준 2.0을 지원하고
+표준 NRZ(Non-Return-to-Zero) 포맷을 사용하여 Full Duplex Mode에서 UART로 사용될 수 있다.
+DCAN은 CAN 2.0B Protocol 표준을 지원하고 효율적인 1 Mbps(1 Megabit Per Second)의
+강력한 통신 속도로 분산된 Real-Time Control을 지원하는 Serial, Multi-Master 통신 Protocol을 사용한다.
+DCAN은 신빙성 있는 Serial 통신 혹은 다중 배선이 필요한
+(예로 자동차 및 산업소음 및 가혹한 환경에서 작동하는 Application에 이상적이다.
+DCAN의 RAM에 저장된 Message는 ECC로 보호된다.
+FlexRay는 Channel 당 10 Mbps(Megabit per Second)의 통신 속도를 갖춘
+Dual Channel Serial, 고정된 Time Base Multi-Master 통신 프로토콜을 사용한다.
+FlexRay의 RAM에 저장된 Messages는 ECC로 보호된다.
+FTU(FlexRay Transfer Unit)은 Main CPU Memory에서 FlexRay Data의 자동 전송을 활성화할 수 있다.
+전송은 전용 내장 MPU(Memory Protection Unit)에 의해 보호된다.
+Ethernet Module은 MII와 MDIO 인터페이스를 지원한다.
+전송은 독립적인 NMPU(Enhanced Memory Protection Unit)에 의해 보호된다.
+
+I2C Module은 Microcontroller와 I2C Serial Bus에 의한 I2C 호환 Device간에
+인터페이스를 제공하는 Multi-Master 통신 모듈이다.
+I2C는 100 Kbps 와 400 Kbps 속도를 모두 지원한다.
+
+주파수 변조 위상 고정 루프(FMPLL) Clock Module은
+더 높은 주파수를 내부에서 사용하기 위해 외부 주파수 기준을 증식시키는데 사용된다.
+FMPLL은 GCM(Global Clock Module)에 7가지 가능한 Clock Source Inputs 중 하나를 제공한다.
+GCM Module은 사용할 수 있는 Clock Sources와 Device Clock Domain간에 Mapping을 관리한다.
+
+Device는 또한 2개의 ECP(External Clock Prescaler) Modules를 가지고 있고
+이것이 활성화되면 ECLK1과 ECLK2 단자에 연속적인 외부 Clock을 출력한다.
+ECLK 주파수는 사용자가 플그래밍할 수 있는 주변장치 인터페이스 클록(VCLK) 주파수의 비율이다.
+저주파 출력은 Device 동작 주파수의 지표로서 외부에서 모니터링할 수 있다.
+
+DMA(Direct Memory Access) Controller는 동시에 Multi-Threaded Transactions를 발행할 수 있다.
+32개의 Channels 중 하나에 Map할 수 있는 DMA 요청을 48개까지 지원할 수 있다.
+Channel 제어 정보를 저장하는 RAM에 구현된 32개의 Control Packets는 ECC로 보호된다.
+첫 번째 수준의 MPU(Memory Protection Unit)는 DMA에 내장되고
+두 번째 수준의 독립적인 NMPU(Enhanced Memory Protection Unit)은 잘못된 전송에 대한 메모리를 보호한다.
+
+ESM(Error Signaling Module)은 모든 Device 오류를 모니터링하고
+고장이 감지될 때, Interrupt 혹은 외부 Error pin/ball이 발생되는지 여부를 판정한다.
+nERROR는 Microcontroller의 고장 상태의 지표로서 외부에서 모니터링할 수 있다.
+
+EMIF(External Memory Interface)는 비동기 및 동기 메모리 혹은 다른 Slave Devices에 메모리 확장을 제공한다.
+
+몇몇 인터페이스는 Application Code의 디버깅 기능을 향상시키기 위해 구현된다.
+추가적으로 ARM Cortex™-R5F CoreSight™ Debug 기능을 내장했다.
+ECT(Embedded Cross Trigger)는 SoC 내에서 여러 트리거 이벤트의 동기화와 상호작용을 지원한다.
+ETM(External Trace Macrocell)은 Program 실행의 Data 추적과 명령어를 제공한다.
+계측 목적을 위해 RTP(RAM Trace Port) Module은 CPU
+혹은 다른 Master에 의해 주변장치 접근과 RAM의 고속 추적을 지원하도록 구현된다.
+Data Modification Module(DMM)은 Device Memory에 외부 Data를 기록할 수 있는 능력을 제공한다.
+RTP와 DMM 모두 Application Code의 Program 실행 시간 관점에서
+최소한의 영향 혹은 아무런 영향을 미치지 않는다.
+Parameter Overlay Module(POM)은 Application Code의 보정 기능을 향상시키기 위해 포함된다.
+POM은 내부 Memory 혹은 EMIF에 Flash 접근을 다시 라우팅할 수 있으므로
+Flash에 Parameter 업데이트에 필요한 Re-programming 단계를 피한다.
+
+통합된 안정성 기능과 주변 장치 제어와 통신의 다양한 선택에 의해
+TMS570LC43x는 고도의 안정성이 요구되는 고성능 Real Time Control Applications를 위한 이상적인 솔루션이다.
+
+
+
+1.3 엔디안 고려 사항
+
+1.3.1 TMS570: Big Endian (BE32)
+
+TMS570LC43x 군은 ARM® Cortex™-R5F core에 기반한다.
+ARM은 Big Endian과 Little Endian System에서 사용되는 이 Core를 설계했다.
+TI TMS570LC43x 군의 경우, Endian은 BE32로 구성되어 있다.
+Big Endian System은 낮은 Memory 주소에서 Multi-Byte Data 필드의 최상위 byte를 저장한다.
+또한, Multi-Byte Data 필드의 주소는 최하위 주소다.
+아래는 개별 Byte의 물리 주소 예다.
+
+이 Register에 32 bit 접근은 0xFFF7F448인 가장 낮은 주소를 사용한다.
+0xFFF7F448 주소에 0x11223344를 작성하는 것이
+8-bit 와 32-bit 모드에서 Memory를 볼 때 아래와 같음을 보여준다.
+
+HALCoGen의 일부로 제공되는 헤더는 Endian을 고려하지 않고 수행되며
+Endian에 구속되지 않는 헤더 구조체를 제공한다.
+이것은 User가 Project에 대해 구성된 Compile 옵션을 사용할 수 있도록
+Compiler를 위한 C 지시문을 사용하여 달성된다.
+(Code Composer Studio Codegen Tools에서 사용되는 __little_endian__)
+이 지시어는 다른 Compiler에 대해 적합해야할 필요가 있다.

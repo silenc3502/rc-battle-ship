@@ -1,0 +1,132 @@
+Samsung S5P/EXYNOS4 FIMC driver              삼성 S5P / EXYNOS4 FIMC 드라이버
+Copyright (C) 2012 - 2013 Samsung Electronics Co., Ltd.
+---------------------------------------------------------------------------
+The FIMC (Fully Interactive Mobile Camera) device available in Samsung SoC Application Processors is an integrated camera host interface, color space converter, image resizer and rotator.  It's also capable of capturing data from LCD controller (FIMD) through the SoC internal writeback data path.  There are multiple FIMC instances in the SoCs (up to 4), having slightly different capabilities, like pixel alignment constraints, rotator availability, LCD writeback support, etc. The driver is located at drivers/media/platform/exynos4-is directory.
+삼성 SoC 애플리케이션 프로세서에서 제공되는 FIMC (Full Interactive Mobile Camera) 장치는 통합 카메라 호스트 인터페이스, color space converter, 이미지 resizer 및 rotator입니다. 또한 SoC internal writeback 데이터 경로 를 통해 LCD 컨트롤러 (FIMD)에서 데이터를 캡처링 할 수 있습니다. 여러 가지 FIMC 인스턴스가 SoC (최대 4 개)에 있는데, 픽셀 정렬 제약 조건, 로테이터 가용성, LCD 쓰기 저장 지원 등과 같이 기능이 약간 다릅니다. 드라이버는 drivers / media / platform / exynos4-is 디렉토리에 있습니다.
+
+1. Supported SoCs    지원되는 SoC들
+=================
+S5PC100 (mem-to-mem only), S5PV210, EXYNOS4210
+
+2. Supported features     지원되는 기능
+=====================
+ - camera parallel interface capture (ITU-R.BT601/565);
+카메라 병렬 인터페이스 캡쳐
+ - camera serial interface capture (MIPI-CSI2);
+ 카메라 직렬 인터페이스 캡처
+ - memory-to-memory processing (color space conversion, scaling, mirror and rotation);
+메모리 - 메모리 프로세싱 (색 공간 변환, 스칼링, 미러 및 로테이션);
+ - dynamic pipeline re-configuration at runtime (re-attachment of any FIMC instance to any parallel video input or any MIPI-CSI front-end);
+런타임시 동적 파이프 라인 재구성 (임의의 FIMC 인스턴스를 병렬 비디오 입력 또는 MIPI-CSI 프론트 엔드에 다시 부착).
+ - runtime PM and system wide suspend/resume
+런타임 PM 및 시스템 전체 일시 중단 / 재개
+
+Not currently supported:    지원안되는 것들:
+ - LCD writeback input
+  LCD writeback 입력 
+ - per frame clock gating (mem-to-mem)
+   프레임당 클록 게이팅 (멤-투-멤)
+
+3. Files partitioning      파일 파티셔닝
+=====================
+- media device driver        미디어 디바이스드라이버
+drivers/media/platform/exynos4-is/media-dev.[ch]
+
+ - camera capture video device driver          카메라 캡쳐 비디오 디바이스드라이버
+  drivers/media/platform/exynos4-is/fimc-capture.c
+
+
+ - MIPI-CSI2 receiver subdev           리시버 하위장치(서브장치)
+  drivers/media/platform/exynos4-is/mipi-csis.[ch]
+
+ - video post-processor (mem-to-mem)        비디오 포스트-프로세서(비디오 후-처리)
+drivers/media/platform/exynos4-is/fimc-core.c
+관련용어 : Deblocking  ,  Resizing  ,  Deinterlacing  ,  Denoising  ,  Deflicking
+(해당 단어를 컨트롤키+클릭 하면, wiki-pedia 용어설명 페이지로 이동합니다)
+
+ - common files (공통파일)
+  drivers/media/platform/exynos4-is/fimc-core.h
+  drivers/media/platform/exynos4-is/fimc-reg.h
+  drivers/media/platform/exynos4-is/regs-fimc.h
+
+4. User space interfaces
+========================
+4.1. Media device interface
+The driver supports Media Controller API as defined at http://linuxtv.org/downloads/v4l-dvb-apis/media_common.html 
+The media device driver name is "SAMSUNG S5P FIMC".
+드라이버는 http://linuxtv.org/downloads/v4l-dvb-apis/media_common.html에 정의 된 Media Controller API를 지원합니다.
+미디어 장치 드라이버 이름은 "SAMSUNG S5P FIMC"입니다.
+
+The purpose of this interface is to allow changing assignment of FIMC instances to the SoC peripheral camera input at runtime and optionally to control internal connections of the MIPI-CSIS device(s) to the FIMC entities.
+이 인터페이스의 목적은 런타임시 SoC 주변 카메라 입력에 FIMC 인스턴스의 할당을 변경하고, 선택적으로 MIPI-CSIS 장치의 내부 연결을 FIMC 엔티티에 제어하도록 허용하는 것입니다.
+
+The media device interface allows to configure the SoC for capturing image data from the sensor through more than one FIMC instance (e.g. for simultaneous viewfinder and still capture setup).
+미디어 장치 인터페이스는 둘 이상의 FIMC 인스턴스 (예 : 동시 뷰파인더 및 스틸 캡쳐 설정)를 통해 센서에서 이미지 데이터를 캡처하도록 SoC를 구성할 수 있게 합니다.
+
+Reconfiguration is done by enabling/disabling media links created by the driver during initialization. The internal device topology can be easily discovered through media entity and links enumeration.
+재구성은 초기화하는 동안 드라이버가 만든 미디어 링크를 활성화 / 비활성화하여 수행됩니다. 내부 장치 토폴로지는 미디어 엔티티 및 링크 열거를 통해 쉽게 발견할 수 있습니다.
+
+4.2. Memory-to-memory video node    멤-투-멤 비디오 노드
+V4L2 memory-to-memory interface at /dev/video? device node.  
+This is standalone video device, it has no media pads. However please note the mem-to-mem and capture video node operation on same FIMC instance is not allowed.  The driver detects such cases but the applications should prevent them to avoid an undefined behaviour.
+이것은 독립형 비디오 장치이며 미디어 패드가 없습니다. 그러나 동일한 FIMC 인스턴스에서 mem-to-mem 및 캡처 비디오 노드 작업은 허용되지 않습니다. 드라이버는 이러한 경우를 감지하지만 응용 프로그램은 정의되지 않은 동작을 방지해야 합니다.
+
+4.3. Capture video node
+The driver supports V4L2 Video Capture Interface as defined at: http://linuxtv.org/downloads/v4l-dvb-apis/devices.html
+드라이버는 http://linuxtv.org/downloads/v4l-dvb-apis/devices.html에 정의된 대로 V4L2 비디오 캡처 인터페이스를 지원합니다.
+
+At the capture and mem-to-mem video nodes only the multi-planar API is supported. For more details see:
+캡처 및 mem-to-mem 비디오 노드 에서는 다중 평면 API 만 지원됩니다. 자세한 내용은 다음을 참조하십시오.
+http://linuxtv.org/downloads/v4l-dvb-apis/planar-apis.html
+
+4.4. Camera capture subdevs    카메라 캡쳐 하위장치들(서브장치들)
+Each FIMC instance exports a sub-device node (/dev/v4l-subdev?), a sub-device node is also created per each available and enabled at the platform level MIPI-CSI receiver device (currently up to two).
+각 FIMC 인스턴스는 하위 장치 노드 (/ dev / v4l-subdev?)를 내 보냅니다. 하위 장치 노드는 플랫폼 수준의 MIPI-CSI 수신기 장치 (현재 최대 2 개)에서 사용 및 사용 가능하게 만들어집니다.
+
+4.5. sysfs
+In order to enable more precise camera pipeline control through the sub-device API the driver creates a sysfs entry associated with "s5p-fimc-md" platform device. The entry path is: /sys/platform/devices/s5p-fimc-md/subdev_conf_mode.
+드라이버는 하위 장치 API를 통해보다 정밀한 카메라 파이프 라인 제어를 가능하게 하기 위해 "s5p-fimc-md"플랫폼 장치와 관련된 sysfs 항목을 만듭니다. 입력 경로는 / sys / platform / devices / s5p-fimc-md / subdev_conf_mode입니다.
+
+In typical use case there could be a following capture pipeline configuration:
+일반적인 사용 예에서는 다음 캡쳐 파이프 라인 구성이 있을 수 있습니다.
+sensor subdev -> mipi-csi subdev -> fimc subdev -> video node
+
+When we configure these devices through sub-device API at user space, the configuration flow must be from left to right, and the video node is configured as last one.
+사용자 공간에서 하위 장치 API를 통해 이러한 장치를 구성 할 때 구성 흐름은 왼쪽에서 오른쪽으로 이루어져야 하며 비디오 노드는 마지막으로 구성됩니다.
+When we don't use sub-device user space API the whole configuration of all devices belonging to the pipeline is done at the video node driver. 
+하위 장치 사용자 공간 API를 사용하지 않으면 파이프 라인에 속한 모든 장치의 전체 구성이 비디오 노드 드라이버에서 수행됩니다.
+The sysfs entry allows to instruct the capture node driver not to configure the sub-devices (format, crop), to avoid resetting the subdevs' configuration when the last configuration steps at the video node is performed.
+sysfs 항목은 비디오 노드에서 마지막 구성 단계가 수행 될 때 하위 노드의 구성을 재설정하지 않도록 하위 노드 (형식, 자르기)를 구성하지 않도록 캡처 노드 드라이버에 지시 할 수 있습니다.
+
+For full sub-device control support (subdevs configured at user space before starting streaming):
+전체 하위 장치 제어 지원 (스트리밍을 시작하기 전에 사용자 공간에서 구성된 하위 구성) :
+# echo "sub-dev" > /sys/platform/devices/s5p-fimc-md/subdev_conf_mode 
+
+For V4L2 video node control only (subdevs configured internally by the host driver):
+V4L2 비디오 노드 제어 전용 (호스트 드라이버에서 내부적으로 구성된 하위) :
+# echo "vid-dev" > /sys/platform/devices/s5p-fimc-md/subdev_conf_mode 
+This is a default option.
+
+5. Device mapping to video and subdev device nodes
+비디오 및 하위장치(서브장치) 노드에 대한 장치 매핑
+There are associated two video device nodes with each device instance in hardware - video capture and mem-to-mem and additionally a subdev node for more precise FIMC capture subsystem control. In addition a separate v4l2 sub-device node is created per each MIPI-CSIS device.
+비디오 캡처 및 mem-to-mem과 더 정확하게 FIMC 캡처 하위 시스템 제어를 위한 하위 노드가 하드웨어에서 각 장치 인스턴스와 연결된 두 개의 비디오 장치 노드가 있습니다. 또한 각 MIPI-CSIS 장치마다 별도의 v4l2 하위 장치 노드가 생성됩니다.
+
+How to find out which /dev/video? or /dev/v4l-subdev? is assigned to which device?
+/ dev / video를 찾는 방법은? 또는 / dev / v4l-subdev? 어떤 장치에 할당되어 있습니까?
+
+You can either grep through the kernel log to find relevant information, i.e.
+커널 로그를 통해 grep을 수행하여 관련 정보, 예를들면,
+# dmesg | grep -i fimc
+(note that udev, if present, might still have rearranged the video nodes),
+(udev가있는 경우 비디오 노드를 재 배열 할 수 있음)
+
+or retrieve the information from /dev/media? with help of the media-ctl tool:
+또는 media-ctl 도구의 도움으로 / dev / media에서 정보를 검색 할 수 있습니까? 
+# media-ctl -p
+
+
+7. Build
+========
+If the driver is built as a loadable kernel module (CONFIG_VIDEO_SAMSUNG_S5P_FIMC=m) two modules are created (in addition to the core v4l2 modules): s5p-fimc.ko and optional s5p-csis.ko (MIPI-CSI receiver subdev).
+드라이버가 로드 가능한 커널 모듈 (CONFIG_VIDEO_SAMSUNG_S5P_FIMC = m)으로 빌드 된 경우 핵심 v4l2 모듈 외에도 s5p-fimc.ko 및 선택적 s5p-csis.ko (MIPI-CSI 수신기 subdev)의 두 모듈이 생성됩니다.

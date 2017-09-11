@@ -1,0 +1,531 @@
+[참고] 아래는 모두, si사 관련 드라이버 임
+ 
+=================================================================
+ 
+[1] 
+Driver for USB radios for the Silicon Labs Si470x FM Radio Receivers
+Silicon Labs Si470x FM 라디오 수신기 용 USB 라디오 드라이버
+ 
+Copyright (c) 2009 Tobias Lorenz <tobias.lorenz@gmx.net>
+ 
+ 
+Information from Silicon Labs
+=============================
+Silicon Laboratories is the manufacturer of the radio ICs, that nowadays are the most often used radio receivers in cell phones. Usually they are connected with I2C. But SiLabs also provides a reference design, which integrates this IC, together with a small microcontroller C8051F321, to form a USB radio.
+Silicon Laboratories는 요즘 휴대 전화에서 가장 자주 사용되는 라디오 수신기 인 무선 IC 제조업체입니다. 일반적으로 I2C와 연결됩니다. 그러나 SiLabs는이 IC와 작은 마이크로 컨트롤러 C8051F321을 통합 한 레퍼런스 디자인을 제공하여 USB 라디오를 구성한다.
+Part of this reference design is also a radio application in binary and source code. The software also contains an automatic firmware upgrade to the most current version. Information on these can be downloaded here:
+이 레퍼런스 디자인의 일부는 바이너리 및 소스 코드의 라디오 애플리케이션이기도 하다. 이 소프트웨어에는 최신 버전으로 자동 펌웨어 업그레이드가 포함되어 있습니다. 이것에 대한 정보는 여기에서 다운로드 할 수 있습니다.
+http://www.silabs.com/usbradio
+ 
+ 
+Supported ICs      	지원되는 IC
+=============
+The following ICs have a very similar register set, so that they are or will be supported somewhen by the driver:
+다음 IC는 레지스터 세트가 매우 유사하여 드라이버에 의해 지원되거나 (이미)지원되고 있습니다.
+- Si4700: FM radio receiver       	FM 라디오 리시버
+- Si4701: FM radio receiver, RDS Support 	FM 라디오 수신기, RDS 지원
+- Si4702: FM radio receiver       	FM 라디오 리시버
+- Si4703: FM radio receiver, RDS Support 	FM 라디오 수신기, RDS 지원
+- Si4704: FM radio receiver, no external antenna required
+           	FM 라디오 수신기, 외부 안테나 필요 없음
+- Si4705: FM radio receiver, no external antenna required, RDS support, Dig I/O
+           	FM 라디오 수신기, 외부 안테나 불필요, RDS 지원, Dig I / O
+- Si4706: Enhanced FM RDS/TMC radio receiver, no external antenna required, RDS Support
+           	향상된 FM RDS / TMC 라디오 수신기, 외부 안테나 필요 없음, RDS 지원
+- Si4707: Dedicated weather band radio receiver with SAME decoder, RDS Support
+           	SAME 디코더가 있는 기상대 라디오 수신기, RDS 지원
+- Si4708: Smallest FM receivers          	초소형 FM 수신기
+- Si4709: Smallest FM receivers, RDS Support
+           	가장 작은 FM 수신기, RDS 지원
+More information on these can be downloaded here:	
+이에 대한 자세한 내용은 여기에서 다운로드 할 수 있습니다.
+http://www.silabs.com/products/mcu/Pages/USBFMRadioRD.aspx
+ 
+ 
+Supported USB devices     	지원되는 USB 장치
+=====================
+Currently the following USB radios (vendor:product) with the Silicon Labs si470x chips are known to work:
+현재 Silicon Labs si470x 칩을 사용하는 다음 USB 라디오 (공급 업체 : 제품)가 작동하는 것으로 알려져 있습니다.
+- 10c4:818a: Silicon Labs USB FM Radio Reference Design
+           	Silicon Labs USB FM 라디오 레퍼런스 디자인
+- 06e1:a155: ADS/Tech FM Radio Receiver (formerly Instant FM Music) (RDX-155-EF)
+           	ADS / Tech FM 라디오 수신기 (이전의 즉시 FM 음악) (RDX-155-EF)
+- 1b80:d700: KWorld USB FM Radio SnapMusic Mobile 700 (FM700)
+- 10c5:819a: Sanei Electric, Inc. FM USB Radio (sold as DealExtreme.com PCear)
+           	Sanei Electric, Inc. FM USB 라디오 (DealExtreme.com PCear로 판매)
+ 
+ 
+Software
+========
+Testing is usually done with most application under Debian/testing:
+테스팅은 대개 데비안 / 테스팅에서 대부분의 어플리케이션으로 수행됩니다 :
+- fmtools - Utility for managing FM tuner cards
+           	FM 튜너 카드 관리 유틸리티
+- gnomeradio - FM-radio tuner for the GNOME desktop
+           	GNOME 데스크탑 용 FM-라디오 튜너
+- gradio - GTK FM radio tuner
+           	GTK FM 라디오 튜너
+- kradio - Comfortable Radio Application for KDE
+           	KDE를 위한 컴포터블 라디오 어플리케이션
+- radio - ncurses-based radio application
+           	ncurses 기반 라디오 응용 프로그램
+- mplayer - The Ultimate Movie Player For Linux
+           	Linux 용 궁극의(-_-ㅋ) 영화 플레이어
+- v4l2-ctl - Collection of command line video4linux utilities
+           	커맨드라인 video4linux 유틸리티 의 모음
+ 
+For example, you can use:         	예를 들어 다음을 사용할 수 있습니다.
+v4l2-ctl -d /dev/radio0 --set-ctrl=volume=10,mute=0 --set-freq=95.21 --all
+ 
+There is also a library libv4l, which can be used. It's going to have a function for frequency seeking, either by using hardware functionality as in radio-si470x or by implementing a function as we currently have in every of the mentioned programs. Somewhen the radio programs should make use of libv4l.
+사용할 수 있는 라이브러리 libv4l도 있습니다. radio-si470x와 같은 하드웨어 기능을 사용하거나 언급 된 모든 프로그램에서 현재 가지고 있는 기능을 구현하여 주파수 탐색 기능을 갖게 될 것입니다. 라디오 프로그램은 libv4l을 사용해야 합니다.
+ 
+For processing RDS information, there is a project ongoing at:
+RDS 정보를 처리하기 위해 진행중인 프로젝트가 있습니다.
+http://rdsd.berlios.de/
+ 
+There is currently no project for making TMC sentences human readable.
+현재 TMC 문장을 사람이 읽을 수 있게 만드는 프로젝트는 없습니다.
+ 
+ 
+Audio Listing
+=============
+USB Audio is provided by the ALSA snd_usb_audio module. It is recommended to also select SND_USB_AUDIO, as this is required to get sound from the radio. For listing you have to redirect the sound, for example using one of the following commands. Please adjust the audio devices to your needs (/dev/dsp* and hw:x,x).
+USB 오디오는 ALSA snd_usb_audio 모듈에 의해 제공됩니다. 라디오에서 소리를 들으려면 SND_USB_AUDIO를 선택하는 것이 좋습니다. 목록을 보려면 예를 들어 다음 명령 중 하나를 사용하여 사운드를 리디렉션 해야 합니다. 필요에 따라 오디오 장치를 조정하십시오 (/ dev / dsp * 및 hw : x, x).
+If you just want to test audio (very poor quality):
+오디오를 테스트하고 싶다면 (매우 좋지 않은 품질) :
+cat /dev/dsp1 > /dev/dsp
+ 
+If you use sox + OSS try:         	sox + OSS try를 사용한다면 :
+sox -2 --endian little -r 96000 -t oss /dev/dsp1 -t oss /dev/dsp
+or using sox + alsa:
+sox --endian little -c 2 -S -r 96000 -t alsa hw:1 -t alsa -r 96000 hw:0
+ 
+If you use arts try:      	art을 사용하는 경우 다음을 시도하십시오.
+arecord -D hw:1,0 -r96000 -c2 -f S16_LE | artsdsp aplay -B -
+ 
+If you use mplayer try:           	mplayer를 사용하는 경우 다음을 시도하십시오.
+mplayer -radio adevice=hw=1.0:arate=96000 \
+    	-rawaudio rate=96000 \
+    	radio://<frequency>/capture
+ 
+Module Parameters
+=================
+After loading the module, you still have access to some of them in the sysfs mount under /sys/module/radio_si470x/parameters. The contents of read-only files (0444) are not updated, even if space, band and de are changed using private video controls. The others are runtime changeable.
+모듈을 로드 한 후에도 sysfs 마운트에서 / sys / module / radio_si470x / parameters에 액세스 할 수 있습니다. 공백, 밴드 및 de가 비공개 비디오 컨트롤을 사용하여 변경된 경우에도 읽기 전용 파일 (0444)의 내용은 업데이트되지 않습니다. 나머지는 런타임 변경이 가능합니다.
+ 
+ 
+Errors
+======
+Increase tune_timeout, if you often get -EIO errors.
+종종 -EIO 오류가 발생하면 tune_timeout을 늘리십시오.
+ 
+When timed out or band limit is reached, hw_freq_seek returns -EAGAIN.
+시간 초과 또는 대역 제한에 도달하면 hw_freq_seek는 -EAGAIN을 반환합니다.
+ 
+If you get any errors from snd_usb_audio, please report them to the ALSA people.
+snd_usb_audio에서 오류가 발생하면 ALSA 사람들에게 보고하십시오.
+ 
+Open Issues
+===========
+V4L minor device allocation and parameter setting is not perfect. A solution is currently under discussion.
+V4L 부 장치 할당 및 매개 변수 설정이 완벽하지 않습니다. 해결책은 현재 논의 중입니다.
+There is an USB interface for downloading/uploading new firmware images. Support for it can be implemented using the request_firmware interface.
+새로운 펌웨어 이미지를 다운로드 / 업로드 하기 위한 USB 인터페이스가 있습니다. request_firmware 인터페이스를 사용하여 이를 지원할 수 있습니다.
+There is a RDS interrupt mode. The driver is already using the same interface for polling RDS information, but is currently not using the interrupt mode.
+RDS 인터럽트 모드가 있습니다. 드라이버는 이미 RDS 정보 polling 에 대해 동일한 인터페이스를 사용하고 있지만 현재 인터럽트 모드를 사용하지 않습니다.
+(참고 : polling(폴링) CPU 가 특정 이벤트를 처리하기 위해 그 이벤트가 발생할 때까지의 모든 연산을 그 이벤트가 일어나는지 감시하는데 쓰임, 유효성 검증(Validation check) 같은 느낌?)
+There is a LED interface, which can be used to override the LED control programmed in the firmware. This can be made available using the LED support functions in the kernel.
+펌웨어에 프로그래밍 된 LED 제어를 무시하는 데 사용할 수 있는 LED 인터페이스가 있습니다. 이것은 커널의 LED 지원 기능을 사용하여 사용할 수 있습니다.
+ 
+Other useful information and links       	기타 유용한 정보 및 링크
+==================================
+http://www.silabs.com/usbradio
+ 
+ 
+
+[2]
+SI476x Driver Readme
+SI476x 드라이버 추가 정보
+------------------------------------------------
+    	Copyright (C) 2013 Andrey Smirnov <andrew.smirnov@gmail.com>
+ 
+TODO for the driver             	
+운전자를 위한 TODO
+------------------------------
+ 
+- According to the SiLabs' datasheet it is possible to update the firmware of the radio chip in the run-time, thus bringing it to the most recent version. Unfortunately I couldn't find any mentioning of the said firmware update for the old chips that I tested the driver against, so for chips like that the driver only exposes the old functionality.
+- SiLabs의 데이터 시트에 따르면 런타임에 무선 칩의 펌웨어를 업데이트하여 최신 버전으로 가져올 수 있습니다. 불행히도 필자는 드라이버를 테스트 한 오래된 칩에 대해 언급한 펌웨어 업데이트를 찾을 수 없습니다. 그래서 드라이버는 오래된 기능만을 드러내는 칩을 위해.
+ 
+Parameters exposed over debugfs
+debugfs를 통해 노출 된 매개 변수
+-------------------------------
+SI476x allow user to get multiple characteristics that can be very useful for EoL testing/RF performance estimation, parameters that have very little to do with V4L2 subsystem. Such parameters are exposed via debugfs and can be accessed via regular file I/O operations.
+SI476x는 사용자가 V4L2 서브 시스템과 관련이 거의없는 EoL 테스트 / RF 성능 추정에 매우 유용한 여러 특성을 얻을 수 있도록합니다. 이러한 매개 변수는 debugfs를 통해 공개되며 일반 파일 I / O 작업을 통해 액세스 할 수 있습니다.
+The drivers exposes following files:
+드라이버는 다음 파일을 노출합니다.
+ 
+* /sys/kernel/debug/<device-name>/acf
+This file contains ACF(Automatically Controlled Features) status information. The contents of the file is binary data of the following layout:
+이 파일에는 ACF (자동 제어 기능) 상태 정보가 들어 있습니다. 파일의 내용은 다음 레이아웃의 바이너리 데이터입니다.
+ 
+  Offset   	| Name     	| Description
+  ====================================================================
+  0x00     	| blend_int	| Flag, set when stereo separation has
+           	|          	| crossed below the blend threshold
+  --------------------------------------------------------------------
+  0x01     	| hblend_int   | Flag, set when HiBlend cutoff
+           	|          	| frequency is lower than threshold
+  --------------------------------------------------------------------
+  0x02     	| hicut_int	| Flag, set when HiCut cutoff
+           	|          	| frequency is lower than threshold
+  --------------------------------------------------------------------
+  0x03     	| chbw_int 	| Flag, set when channel filter
+           	|          	| bandwidth is less than threshold
+  --------------------------------------------------------------------
+  0x04     	| softmute_int | Flag indicating that softmute
+           	|          	| attenuation has increased above
+           	|          	| softmute threshold
+  --------------------------------------------------------------------
+  0x05     	| smute    	| 0 - Audio is not soft muted
+           	|          	| 1 - Audio is soft muted
+  --------------------------------------------------------------------
+  0x06     	| smattn   	| Soft mute attenuation level in dB
+  --------------------------------------------------------------------
+  0x07     	| chbw     	| Channel filter bandwidth in kHz
+  --------------------------------------------------------------------
+  0x08     	| hicut    	| HiCut cutoff frequency in units of
+           	|          	| 100Hz
+  --------------------------------------------------------------------
+  0x09     	| hiblend  	| HiBlend cutoff frequency in units
+           	|          	| of 100 Hz
+  --------------------------------------------------------------------
+  0x10     	| pilot    	| 0 - Stereo pilot is not present
+           	|          	| 1 - Stereo pilot is present
+  --------------------------------------------------------------------
+  0x11     	| stblend  	| Stereo blend in %
+  --------------------------------------------------------------------
+ 
+ 
+* /sys/kernel/debug/<device-name>/rds_blckcnt
+  This file contains statistics about RDS receptions. It's binary data has the following layout:
+이 파일에는 RDS 수신에 대한 통계가 들어 있습니다. 바이너리 데이터의 레이아웃은 다음과 같습니다.
+  Offset   	| Name     	| Description
+  ====================================================================
+  0x00     	| expected 	| Number of expected RDS blocks
+  --------------------------------------------------------------------
+  0x02     	| received 	| Number of received RDS blocks
+  --------------------------------------------------------------------
+  0x04     	| uncorrectable    	| Number of uncorrectable RDS blocks
+  --------------------------------------------------------------------
+ 
+* /sys/kernel/debug/<device-name>/agc
+  This file contains information about parameters pertaining to AGC(Automatic Gain Control)
+이 파일에는 AGC (자동 이득 제어)와 관련된 매개 변수에 대한 정보가 들어 있습니다.
+  The layout is:
+  Offset   	| Name     	| Description
+  ====================================================================
+  0x00     	| mxhi     	| 0 - FM Mixer PD high threshold is
+           	|          	| not tripped
+           	|          	| 1 - FM Mixer PD high threshold is
+           	|          	| tripped
+  --------------------------------------------------------------------
+  0x01     	| mxlo     	| ditto for FM Mixer PD low
+  --------------------------------------------------------------------
+  0x02     	| lnahi    	| ditto for FM LNA PD high
+  --------------------------------------------------------------------
+  0x03     	| lnalo    	| ditto for FM LNA PD low
+  --------------------------------------------------------------------
+  0x04     	| fmagc1   	| FMAGC1 attenuator resistance
+           	|          	| (see datasheet for more detail)
+  --------------------------------------------------------------------
+  0x05     	| fmagc2   	| ditto for FMAGC2
+  --------------------------------------------------------------------
+  0x06     	| pgagain  	| PGA gain in dB
+  --------------------------------------------------------------------
+  0x07     	| fmwblang 	| FM/WB LNA Gain in dB
+  --------------------------------------------------------------------
+ 
+* /sys/kernel/debug/<device-name>/rsq
+  This file contains information about parameters pertaining to RSQ(Received Signal Quality)
+이 파일에는 RSQ (Received Signal Quality)와 관련된 매개 변수에 대한 정보가 들어 있습니다.
+  The layout is:
+  Offset   	| Name     	| Description
+  ====================================================================
+  0x00     	| multhint 	| 0 - multipath value has not crossed
+           	|          	| the Multipath high threshold
+           	|          	| 1 - multipath value has crossed
+           	|          	| the Multipath high threshold
+  --------------------------------------------------------------------
+  0x01     	| multlint 	| ditto for Multipath low threshold
+  --------------------------------------------------------------------
+  0x02     	| snrhint  	| 0 - received signal's SNR has not
+           	|          	| crossed high threshold
+           	|          	| 1 - received signal's SNR has
+           	|          	| crossed high threshold
+  --------------------------------------------------------------------
+  0x03     	| snrlint  	| ditto for low threshold
+  --------------------------------------------------------------------
+  0x04     	| rssihint 	| ditto for RSSI high threshold
+  --------------------------------------------------------------------
+  0x05     	| rssilint 	| ditto for RSSI low threshold
+  --------------------------------------------------------------------
+  0x06     	| bltf     	| Flag indicating if seek command
+           	|          	| reached/wrapped seek band limit
+  --------------------------------------------------------------------
+  0x07     	| snr_ready	| Indicates that SNR metrics is ready
+  --------------------------------------------------------------------
+  0x08     	| rssiready	| ditto for RSSI metrics
+  --------------------------------------------------------------------
+  0x09     	| injside  	| 0 - Low-side injection is being used
+           	|          	| 1 - High-side injection is used
+  --------------------------------------------------------------------
+  0x10     	| afcrl    	| Flag indicating if AFC rails
+  --------------------------------------------------------------------
+  0x11     	| valid    	| Flag indicating if channel is valid
+  --------------------------------------------------------------------
+  0x12     	| readfreq 	| Current tuned frequency
+  --------------------------------------------------------------------
+  0x14     	| freqoff  	| Signed frequency offset in units of
+           	|          	| 2ppm
+  --------------------------------------------------------------------
+  0x15     	| rssi     	| Signed value of RSSI in dBuV
+  --------------------------------------------------------------------
+  0x16     	| snr      	| Signed RF SNR in dB
+  --------------------------------------------------------------------
+  0x17     	| issi     	| Signed Image Strength Signal
+           	|          	| indicator
+  --------------------------------------------------------------------
+  0x18     	| lassi    	| Signed Low side adjacent Channel
+           	|          	| Strength indicator
+  --------------------------------------------------------------------
+  0x19     	| hassi    	| ditto fpr High side
+  --------------------------------------------------------------------
+  0x20     	| mult     	| Multipath indicator
+  --------------------------------------------------------------------
+  0x21     	| dev      	| Frequency deviation
+  --------------------------------------------------------------------
+  0x24     	| assi     	| Adjacent channel SSI
+  --------------------------------------------------------------------
+  0x25      	| usn      	| Ultrasonic noise indicator
+  --------------------------------------------------------------------
+  0x26     	| pilotdev 	| Pilot deviation in units of 100 Hz
+  --------------------------------------------------------------------
+  0x27     	| rdsdev   	| ditto for RDS
+  --------------------------------------------------------------------
+  0x28     	| assidev  	| ditto for ASSI
+  --------------------------------------------------------------------
+  0x29     	| strongdev	| Frequency deviation
+  --------------------------------------------------------------------
+  0x30     	| rdspi    	| RDS PI code
+  --------------------------------------------------------------------
+ 
+* /sys/kernel/debug/<device-name>/rsq_primary
+  This file contains information about parameters pertaining to RSQ(Received Signal Quality) for primary tuner only. Layout is as the one above.
+이 파일에는 주 튜너에 대해서만 RSQ (수신 신호 품질)에 관한 매개 변수에 대한 정보가 들어 있습니다. 레이아웃은 위와 같습니다.
+ 
+ 
+ 
+
+[3]
+Driver for I2C radios for the Silicon Labs Si4713 FM Radio Transmitters
+Silicon Labs Si4713 FM 라디오 송신기 용 I2C 라디오 드라이버
+ 
+Copyright (c) 2009 Nokia Corporation
+Contact: Eduardo Valentin <eduardo.valentin@nokia.com>
+ 
+ 
+Information about the Device      	장치에 대한 정보
+============================
+This chip is a Silicon Labs product. It is a I2C device, currently on 0x63 address.
+Basically, it has transmission and signal noise level measurement features.
+이 칩은 Silicon Labs 제품입니다. 현재 0x63 주소에 있는 I2C 장치입니다.
+기본적으로 전송 및 신호 잡음 레벨 측정 기능이 있습니다.
+The Si4713 integrates transmit functions for FM broadcast stereo transmission.
+The chip also allows integrated receive power scanning to identify low signal power FM channels.
+Si4713은 FM 방송 스테레오 전송을 위한 전송 기능을 통합합니다.
+칩은 또한 통합 된 수신 전력 스캐닝으로 저 신호 전력 FM 채널을 식별 할 수 있다.
+The chip is programmed using commands and responses. There are also several properties which can change the behavior of this chip.
+칩은 명령과 응답을 사용하여 프로그래밍됩니다. 또한 이 칩의 동작을 변경할 수 있는 몇 가지 속성이 있습니다.
+Users must comply with local regulations on radio frequency (RF) transmission.
+사용자는 무선 주파수 (RF) 전송에 관한 현지 규정을 준수해야 합니다.
+ 
+Device driver description         	장치 드라이버 설명
+=========================
+There are two modules to handle this device. One is a I2C device driver and the other is a platform driver.
+이 장치를 처리 할 수 있는 두 개의 모듈이 있습니다. 하나는 I2C 장치 드라이버이고 다른 하나는 플랫폼 드라이버입니다.
+The I2C device driver exports a v4l2-subdev interface to the kernel.
+All properties can also be accessed by v4l2 extended controls interface, by using the v4l2-subdev calls (g_ext_ctrls, s_ext_ctrls).
+I2C 장치 드라이버는 v4l2-subdev 인터페이스를 커널로 내 보냅니다.
+모든 속성은 v4l2-subdev 호출 (g_ext_ctrls, s_ext_ctrls)을 사용하여 v4l2 확장 컨트롤 인터페이스에서 액세스 할 수도 있습니다.
+ 
+The platform device driver exports a v4l2 radio device interface to user land.
+So, it uses the I2C device driver as a sub device in order to send the user commands to the actual device. Basically it is a wrapper to the I2C device driver.
+플랫폼 장치 드라이버는 v4l2 무선 장치 인터페이스를 사용자 영역으로 내 보냅니다.
+따라서 I2C 장치 드라이버를 하위 장치로 사용하여 사용자 명령을 실제 장치로 보냅니다. 기본적으로 I2C 장치 드라이버 wrapper입니다.
+Applications can use v4l2 radio API to specify frequency of operation, mute state, etc. But mostly of its properties will be present in the extended controls.
+응용 프로그램은 v4l2 라디오 API를 사용하여 작동 빈도, 음소거 상태 등을 지정할 수 있지만 대부분 속성이 확장 된 컨트롤에 표시됩니다.
+When the v4l2 mute property is set to 1 (true), the driver will turn the chip off.
+v4l2 뮤트(음소거) 속성이 1(참)로 설정되면 드라이버는 칩을 끕니다.
+ 
+
+Properties description    	속성 설명
+======================
+ 
+The properties can be accessed using v4l2 extended controls. 	
+속성은 v4l2 확장 컨트롤을 사용하여 액세스 할 수 있습니다.
+Here is an output from v4l2-ctl util:
+다음은 v4l2-ctl util의 출력입니다.
+/ # v4l2-ctl -d /dev/radio0 --all -L
+Driver Info:                                             	드라이버 정보
+    	Driver name   : radio-si4713                     	드라이버명
+    	Card type 	: Silicon Labs Si4713 Modulator    	카드 타입
+    	Bus info  	:                                          	버스 정보
+    	Driver version: 0                                	드라이버 버전
+    	Capabilities  : 0x00080800                       	사용가능한 영역
+           	RDS Output                               	RDS 출력
+           	Modulator                                	변조기
+Audio output: 0 (FM Modulator Audio Out)                 	오디오 출력
+Frequency: 1408000 (88.000000 MHz)                       	프리퀀시
+Video Standard = 0x00000000                              	비디오 표준
+Modulator:                                               	변조기 :
+    	Name             	: FM Modulator              	FM 변조기
+    	Capabilities     	: 62.5 Hz stereo rds        	사용가능한 영역
+    	Frequency range  	: 76.0 MHz - 108.0 MHz      	프리퀀시 범위
+    	Subchannel modulation: stereo+rds                	서브채널 변조
+ 
+User Controls             	사용자 정의 컨트롤
+ 
+                   	   mute (bool) : default=1 value=0	
+                   	  뮤트 모드(부울, 이진형식이라는 의미 - 0또는 1)
+ 
+FM Radio Modulator Controls
+FM 라디오 변조 제어
+    	   rds_signal_deviation (int)  : min=0 max=90000 step=10 default=200 value=200 flags=slider
+           	 rds_program_id (int)  : min=0 max=65535 step=1 default=0 value=0
+    	   	rds_program_type (int)  : min=0 max=31 step=1 default=0 value=0
+           		rds_ps_name (str)  : min=0 max=96 step=8 value='si4713  '
+           	 rds_radio_text (str)  : min=0 max=384 step=32 value=''
+  audio_limiter_feature_enabled (bool) : default=1 value=1
+ 	audio_limiter_release_time (int)  : min=250 max=102390 step=50 default=5010 value=5010 flags=slider
+    	audio_limiter_deviation (int)  : min=0 max=90000 step=10 default=66250 value=66250 flags=slider
+audio_compression_feature_enabl (bool) : default=1 value=1
+    	 audio_compression_gain (int)  : min=0 max=20 step=1 default=15 value=15 flags=slider
+	audio_compression_threshold (int)  : min=-40 max=0 step=1 default=-40 value=-40 flags=slider
+  audio_compression_attack_time (int)  : min=0 max=5000 step=500 default=0 value=0 flags=slider
+ audio_compression_release_time (int)  : min=100000 max=1000000 step=100000 default=1000000 value=1000000 flags=slider
+ 	pilot_tone_feature_enabled (bool) : default=1 value=1
+    	   pilot_tone_deviation (int)  : min=0 max=90000 step=10 default=6750 value=6750 flags=slider
+    	   pilot_tone_frequency (int)  : min=0 max=19000 step=1 default=19000 value=19000 flags=slider
+    	  pre_emphasis_settings (menu) : min=0 max=2 default=1 value=1
+    	   	tune_power_level (int)  : min=0 max=120 step=1 default=88 value=88 flags=slider
+    	 tune_antenna_capacitor (int)  : min=0 max=191 step=1 default=0 value=110 flags=slider
+/ #
+ 
+Here is a summary of them:        	다음은 그 요약입니다.
+ 
+* Pilot is an audible tone sent by the device.                     	Pilot 은 디바이스 에서 보낸 소리입니다.
+ 
+pilot_frequency - Configures the frequency of the stereo pilot tone.
+           	스테레오 파일럿 톤의 주파수를 구성합니다.
+pilot_deviation - Configures pilot tone frequency deviation level.
+           	파일럿 톤 주파수 편차 레벨을 구성합니다.
+pilot_enabled - Enables or disables the pilot tone feature.
+           	파일럿 톤 기능을 활성화 또는 비활성화합니다.
+ 
+* The si4713 device is capable of applying audio compression to the transmitted signal.
+* si4713 장치는 전송 된 신호에 오디오 압축을 적용 할 수 있습니다.
+acomp_enabled - Enables or disables the audio dynamic range control feature.
+           	오디오 동적 범위 제어 기능을 활성화 또는 비활성화합니다.
+acomp_gain - Sets the gain for audio dynamic range control.
+           	오디오 동적 범위 제어의 이득을 설정합니다.
+acomp_threshold - Sets the threshold level for audio dynamic range control.
+           	오디오 동적 범위 제어의 임계 값 레벨을 설정합니다.
+acomp_attack_time - Sets the attack time for audio dynamic range control.
+           	오디오 다이내믹 레인지 제어의 어택 시간을 설정합니다.
+acomp_release_time - Sets the release time for audio dynamic range control.
+오디오 다이나믹 레인지 컨트롤의 릴리즈 시간을 설정합니다.
+ 
+* Limiter setups audio deviation limiter feature. Once a over deviation occurs, it is possible to adjust the front-end gain of the audio input and always prevent over deviation.
+리미터 설정은 오디오 편차 제한 기능입니다. 편차가 발생하면 오디오 입력의 the front-end gain 을 조정할 수 있으며 항상 편차를 방지 할 수 있습니다
+limiter_enabled - Enables or disables the limiter feature.
+           	리미터 기능을 활성화 또는 비활성화합니다.
+limiter_deviation - Configures audio frequency deviation level.
+           	오디오 주파수 편차 레벨을 구성합니다.
+limiter_release_time - Sets the limiter release time.          	
+리미터 해제 시간을 설정합니다.
+* Tuning power
+ 
+power_level - Sets the output power level for signal transmission.
+           	신호 전송을 위한 출력 전력 레벨을 설정합니다.
+antenna_capacitor - This selects the value of antenna tuning capacitor manually or automatically if set to zero.
+           	안테나 튜닝 커패시터의 값을 수동 또는 자동으로 선택합니다 (0으로 설정 한 경우).
+ 
+* RDS related
+ 
+rds_ps_name - Sets the RDS ps name field for transmission.
+           	전송할 RDS ps 이름 필드를 설정합니다.
+rds_radio_text - Sets the RDS radio text for transmission.
+           	전송할 RDS 라디오 텍스트를 설정합니다.
+rds_pi - Sets the RDS PI field for transmission.
+           	전송할 RDS PI 필드를 설정합니다.
+rds_pty - Sets the RDS PTY field for transmission.
+           	전송할 RDS PTY 필드를 설정합니다.
+ 
+* Region related   	
+ 
+preemphasis - sets the preemphasis to be applied for transmission.
+전송에 적용 할 preemphasis 를 설정합니다.
+(참고 : emphasis(엠퍼시스) - AM 이나 FM 에서 .. 어떠한 구간을 사용(이용)하기 위해서, 표시를 해두는것 – 표시해둔 구간이 잡음이 심한지.. 등 측정할 때 사용)
+RNL
+===
+ 
+This device also has an interface to measure received noise level. To do that, you should ioctl the device node. Here is an code of example:
+이 장치는 또한 수신된 잡음 레벨을 측정하기 위한 인터페이스를 가지고 있다. 이를 수행하려면 장치 노드를 ioctl해야합니다. 다음은 예제 코드입니다.
+int main (int argc, char *argv[])
+{
+    	struct si4713_rnl rnl;
+    	int fd = open("/dev/radio0", O_RDWR);
+    	int rval;
+ 
+    	if (argc < 2)
+           	return -EINVAL;
+ 
+    	if (fd < 0)
+           	return fd;
+ 
+    	sscanf(argv[1], "%d", &rnl.frequency);
+ 
+    	rval = ioctl(fd, SI4713_IOC_MEASURE_RNL, &rnl);
+    	if (rval < 0)
+           	return rval;
+ 
+    	printf("received noise level: %d\n", rnl.rnl);
+ 
+    	close(fd);
+}
+ 
+The struct si4713_rnl and SI4713_IOC_MEASURE_RNL are defined under
+include/media/si4713.h.
+ 
+Stereo/Mono and RDS subchannels          	스테레오 / 모노 및 RDS 서브 채널
+===============================
+ 
+The device can also be configured using the available sub channels for transmission.
+또한 전송을 위해 사용 가능한 하위 채널을 사용하여 장치를 구성 할 수 있습니다.
+To do that use S/G_MODULATOR ioctl and configure txsubchans properly.
+그렇게하려면,  S/G_MODULATOR ioctl을 사용하고 txsubchans를 적절하게 구성하십시오.
+Refer to the V4L2 API specification for proper use of this ioctl.
+이 ioctl을 올바르게 사용하려면 V4L2 API 스펙을 참조하십시오.
+Testing
+=======
+Testing is usually done with v4l2-ctl utility for managing FM tuner cards.
+The tool can be found in v4l-dvb repository under v4l2-apps/util directory.
+테스트는 일반적으로 FM 튜너 카드를 관리하기위한 v4l2-ctl 유틸리티로 수행됩니다.
+이 도구는 v4l-dvb 저장소에서 v4l2-apps / util 디렉토리 아래에 있습니다.
+Example for setting rds ps name:
+# v4l2-ctl -d /dev/radio0 --set-ctrl=rds_ps_name="Dummy"
+ 
+ 
+ 
+

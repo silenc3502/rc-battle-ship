@@ -1,0 +1,83 @@
+﻿NVIDIA Tegra MIPI pad calibration controller
+
+Required properties:
+- compatible: "nvidia,tegra<chip>-mipi"
+- reg: Physical base address and length of the controller's registers.
+- clocks: Must contain an entry for each entry in clock-names.
+  See ../clocks/clock-bindings.txt for details.
+- clock-names: Must include the following entries:
+  - mipi-cal
+- #nvidia,mipi-calibrate-cells: Should be 1. The cell is a bitmask of the pads
+  that need to be calibrated for a given device.
+
+User nodes need to contain an nvidia,mipi-calibrate property that has a
+phandle to refer to the calibration controller node and a bitmask of the pads
+that need to be calibrated.
+
+Example:
+
+	mipi: mipi@700e3000 {
+		compatible = "nvidia,tegra114-mipi";
+		reg = <0x700e3000 0x100>;
+		clocks = <&tegra_car TEGRA114_CLK_MIPI_CAL>;
+		clock-names = "mipi-cal";
+		#nvidia,mipi-calibrate-cells = <1>;
+	};
+
+	...
+
+	host1x@50000000 {
+		...
+
+		dsi@54300000 {
+			...
+
+			nvidia,mipi-calibrate = <&mipi 0x060>;
+
+			...
+		};
+
+		...
+	};
+
+/*
+NVIDIA Tegra MIPI 패드 교정 컨트롤러
+
+필수 속성 :
+- 호환 : "nvidia, tegra <chip> -mipi"
+- reg : 컨트롤러의 레지스터의 물리적 인 기본 주소와 길이.
+- clocks : clock-name의 각 항목에 대한 항목을 포함해야합니다.
+   자세한 내용은 ../clocks/clock-bindings.txt를 참조하십시오.
+- clock-names : 다음 항목을 포함해야합니다.
+   - mipi-cal
+- #nvidia, mipi-calibrate-cells : 1이어야합니다. 셀은 주어진 장치에 대해 보정해야하는 패드의 비트 마스크입니다.
+
+사용자 노드는 캘리브레이션 컨트롤러 노드를 참조하는 phandle과 캘리브레이션이 필요한 패드의 비트 마스크가있는 nvidia, mipi-calibrate 속성을 포함해야합니다.
+
+Example:
+
+	mipi: mipi@700e3000 {
+		compatible = "nvidia,tegra114-mipi";
+		reg = <0x700e3000 0x100>;
+		clocks = <&tegra_car TEGRA114_CLK_MIPI_CAL>;
+		clock-names = "mipi-cal";
+		#nvidia,mipi-calibrate-cells = <1>;
+	};
+
+	...
+
+	host1x@50000000 {
+		...
+
+		dsi@54300000 {
+			...
+
+			nvidia,mipi-calibrate = <&mipi 0x060>;
+
+			...
+		};
+
+		...
+	};
+
+*/

@@ -1,0 +1,38 @@
+config FIREWIRE_SERIAL
+       tristate "TTY over Firewire"
+       depends on FIREWIRE && TTY
+       help
+          This enables TTY over IEEE 1394, providing high-speed serial
+	  connectivity to cabled peers. This driver implements a
+	  ad-hoc transport protocol and is currently limited to
+	  Linux-to-Linux communication.
+
+	  To compile this driver as a module, say M here:  the module will
+	  be called firewire-serial.
+#	 이는 IEEE 1394를 통한 TTY를 가능하게하여 케이블 연결된 피어에 고속 직렬 연결을 제공합니다.
+#	 이 드라이버는 ad-hoc 전송 프로토콜을 구현하며 현재 Linux-Linux 통신으로 제한되어 있습니다.
+#
+#	이 드라이버를 모듈로 컴파일하려면 여기에서 M이라고 말하면됩니다 : 모듈은 firewire-serial이라고합니다.
+
+if FIREWIRE_SERIAL
+
+config FWTTY_MAX_TOTAL_PORTS
+       int "Maximum number of serial ports supported"
+       default "64"
+       help
+          Set this to the maximum number of serial ports you want the
+	  firewire-serial driver to support.
+#	//firewire-serial 드라이버가 지원할 최대 시리얼 포트 수를 설정하십시오.
+
+config FWTTY_MAX_CARD_PORTS
+       int "Maximum number of serial ports supported per adapter"
+       range 0 FWTTY_MAX_TOTAL_PORTS
+       default "32"
+       help
+          Set this to the maximum number of serial ports each firewire
+	  adapter supports. The actual number of serial ports registered
+	  is set with the module parameter "ttys".
+#	//Firewire 어댑터가 지원하는 직렬 포트의 최대 수로 설정하십시오. 
+#	등록 된 실제 직렬 포트 수는 "ttys"모듈 매개 변수로 설정됩니다.
+
+endif

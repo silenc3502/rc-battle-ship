@@ -1,0 +1,52 @@
+* Cosmic Circuits - Analog to Digital Converter (CC-10001-ADC)
+
+Required properties:
+  - compatible: Should be "cosmic,10001-adc"
+  - reg: Should contain adc registers location and length.
+  - clock-names: Should contain "adc".
+  - clocks: Should contain a clock specifier for each entry in clock-names
+  - vref-supply: The regulator supply ADC reference voltage.
+
+Optional properties:
+  - adc-reserved-channels: Bitmask of reserved channels,
+    i.e. channels that cannot be used by the OS.
+
+Example:
+adc: adc@18101600 {
+	compatible = "cosmic,10001-adc";
+	reg = <0x18101600 0x24>;
+	adc-reserved-channels = <0x2>;
+	clocks = <&adc_clk>;
+	clock-names = "adc";
+	vref-supply = <&reg_1v8>;
+};
+
+
+/*
+
+
+* Cosmic Circuits - Analog to Digital Converter (CC-10001-ADC)
+
+필수 속성 :
+   - 호환 가능 : "cosmic, 10001-adc"여야합니다.
+   - reg : adc 레지스터 위치와 길이를 포함해야합니다.
+   - clock-names : "adc"를 포함해야합니다.
+   - clocks : clock-name의 각 항목에 대한 시계 지정자를 포함해야합니다.
+   - vref-supply : 레귤레이터는 ADC 기준 전압을 공급한다.
+
+선택 속성 :
+   - adc-reserved-channels : 예약 된 채널, 즉 OS에서 사용할 수없는 채널의 비트 마스크입니다.
+
+
+Example:
+adc: adc@18101600 {
+	compatible = "cosmic,10001-adc";
+	reg = <0x18101600 0x24>;
+	adc-reserved-channels = <0x2>;
+	clocks = <&adc_clk>;
+	clock-names = "adc";
+	vref-supply = <&reg_1v8>;
+};
+
+
+*/

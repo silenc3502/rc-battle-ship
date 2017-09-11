@@ -1,0 +1,103 @@
+﻿Qualcomm adreno/snapdragon display controller
+
+Required properties:
+- compatible:
+  * "qcom,mdp" - mdp4
+- reg: Physical base address and length of the controller's registers.
+- interrupts: The interrupt signal from the display controller.
+- connectors: array of phandles for output device(s)
+- clocks: device clocks
+  See ../clocks/clock-bindings.txt for details.
+- clock-names: the following clocks are required:
+  * "core_clk"
+  * "iface_clk"
+  * "src_clk"
+  * "hdmi_clk"
+  * "mpd_clk"
+
+Optional properties:
+- gpus: phandle for gpu device
+- clock-names: the following clocks are optional:
+  * "lut_clk"
+
+Example:
+
+/ {
+	...
+
+	mdp: qcom,mdp@5100000 {
+		compatible = "qcom,mdp";
+		reg = <0x05100000 0xf0000>;
+		interrupts = <GIC_SPI 75 0>;
+		connectors = <&hdmi>;
+		gpus = <&gpu>;
+		clock-names =
+		    "core_clk",
+		    "iface_clk",
+		    "lut_clk",
+		    "src_clk",
+		    "hdmi_clk",
+		    "mdp_clk";
+		clocks =
+		    <&mmcc MDP_SRC>,
+		    <&mmcc MDP_AHB_CLK>,
+		    <&mmcc MDP_LUT_CLK>,
+		    <&mmcc TV_SRC>,
+		    <&mmcc HDMI_TV_CLK>,
+		    <&mmcc MDP_TV_CLK>;
+	};
+};
+
+
+/*
+Qualcomm adreno / snapdragon 디스플레이 컨트롤러
+
+필수 속성 :
+- 호환 가능 :
+  * "qcom, mdp"- mdp4
+- reg : 컨트롤러의 레지스터의 물리적 인 기본 주소와 길이.
+- 인터럽트 : 디스플레이 컨트롤러의 인터럽트 신호입니다.
+- connectors : 출력 장치를위한 phandles의 배열
+- clocks : 장치 클럭
+  자세한 내용은 ../clocks/clock-bindings.txt를 참조하십시오.
+- clock-names : 다음 클럭가 필요합니다.
+  * "core_clk"
+  * "iface_clk"
+  * "src_clk"
+  * "hdmi_clk"
+  * "mpd_clk"
+
+선택적 속성 :
+- gpus : gpu 장치 용 phandle
+- 클럭 이름 : 다음 클럭는 선택 사항입니다.
+  * "lut_clk"
+
+Example:
+
+/ {
+	...
+
+	mdp: qcom,mdp@5100000 {
+		compatible = "qcom,mdp";
+		reg = <0x05100000 0xf0000>;
+		interrupts = <GIC_SPI 75 0>;
+		connectors = <&hdmi>;
+		gpus = <&gpu>;
+		clock-names =
+		    "core_clk",
+		    "iface_clk",
+		    "lut_clk",
+		    "src_clk",
+		    "hdmi_clk",
+		    "mdp_clk";
+		clocks =
+		    <&mmcc MDP_SRC>,
+		    <&mmcc MDP_AHB_CLK>,
+		    <&mmcc MDP_LUT_CLK>,
+		    <&mmcc TV_SRC>,
+		    <&mmcc HDMI_TV_CLK>,
+		    <&mmcc MDP_TV_CLK>;
+	};
+};
+
+*/

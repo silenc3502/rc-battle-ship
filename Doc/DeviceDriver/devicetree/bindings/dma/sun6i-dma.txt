@@ -1,0 +1,104 @@
+Allwinner A31 DMA Controller
+
+This driver follows the generic DMA bindings defined in dma.txt.
+
+Required properties:
+
+- compatible:	Must be one of
+		  "allwinner,sun6i-a31-dma"
+		  "allwinner,sun8i-a23-dma"
+		  "allwinner,sun8i-h3-dma"
+- reg:		Should contain the registers base address and length
+- interrupts:	Should contain a reference to the interrupt used by this device
+- clocks:	Should contain a reference to the parent AHB clock
+- resets:	Should contain a reference to the reset controller asserting
+		this device in reset
+- #dma-cells :	Should be 1, a single cell holding a line request number
+
+Example:
+	dma: dma-controller@01c02000 {
+		compatible = "allwinner,sun6i-a31-dma";
+		reg = <0x01c02000 0x1000>;
+		interrupts = <0 50 4>;
+		clocks = <&ahb1_gates 6>;
+		resets = <&ahb1_rst 6>;
+		#dma-cells = <1>;
+	};
+
+Clients:
+
+DMA clients connected to the A31 DMA controller must use the format
+described in the dma.txt file, using a two-cell specifier for each
+channel: a phandle plus one integer cells.
+The two cells in order are:
+
+1. A phandle pointing to the DMA controller.
+2. The port ID as specified in the datasheet
+
+Example:
+spi2: spi@01c6a000 {
+	compatible = "allwinner,sun6i-a31-spi";
+	reg = <0x01c6a000 0x1000>;
+	interrupts = <0 67 4>;
+	clocks = <&ahb1_gates 22>, <&spi2_clk>;
+	clock-names = "ahb", "mod";
+	dmas = <&dma 25>, <&dma 25>;
+	dma-names = "rx", "tx";
+	resets = <&ahb1_rst 22>;
+};
+
+
+/*
+
+Allwinner A31 DMA 컨트롤러
+
+이 드라이버는 dma.txt에 정의 된 일반 DMA 바인딩을 따릅니다.
+
+필수 속성 :
+
+- 호환 가능 : 다음 중 하나 여야합니다.
+"allwinner, sun6i-a31-dma"
+"allwinner, sun8i-a23-dma"
+"allwinner, sun8i-h3-dma"
+- reg : 레지스터 기본 주소와 길이를 포함해야합니다.
+- interrupts :이 장치에서 사용하는 인터럽트에 대한 참조를 포함해야합니다.
+- clock : 상위 AHB 클럭에 대한 참조를 포함해야합니다.
+- 재설정 : 재설정 제어기에 대한 참조를 포함해야 함
+재설정 된이 기기
+- # dma-cells : 줄 요청 번호를 보유한 단일 셀이어야합니다.
+
+
+Example:
+	dma: dma-controller@01c02000 {
+		compatible = "allwinner,sun6i-a31-dma";
+		reg = <0x01c02000 0x1000>;
+		interrupts = <0 50 4>;
+		clocks = <&ahb1_gates 6>;
+		resets = <&ahb1_rst 6>;
+		#dma-cells = <1>;
+	};
+
+
+클라이언트 :
+
+A31 DMA 컨트롤러에 연결된 DMA 클라이언트는 다음 형식을 사용해야합니다.
+dma.txt 파일에 설명되어 있으며 각각에 대해 2 셀 지정자를 사용합니다
+채널 : 하나의 정수 셀을 더한 팬들.
+두 개의 셀은 순서대로 있습니다.
+
+1. DMA 컨트롤러를 가리키는 phandle.
+2. 데이터 시트에 지정된 포트 ID
+
+Example:
+spi2: spi@01c6a000 {
+	compatible = "allwinner,sun6i-a31-spi";
+	reg = <0x01c6a000 0x1000>;
+	interrupts = <0 67 4>;
+	clocks = <&ahb1_gates 22>, <&spi2_clk>;
+	clock-names = "ahb", "mod";
+	dmas = <&dma 25>, <&dma 25>;
+	dma-names = "rx", "tx";
+	resets = <&ahb1_rst 22>;
+};
+
+*/

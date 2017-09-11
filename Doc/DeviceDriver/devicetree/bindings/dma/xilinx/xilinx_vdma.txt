@@ -1,0 +1,145 @@
+Xilinx AXI VDMA engine, it does transfers between memory and video devices.
+It can be configured to have one channel or two channels. If configured
+as two channels, one is to transmit to the video device and another is
+to receive from the video device.
+
+Required properties:
+- compatible: Should be "xlnx,axi-vdma-1.00.a"
+- #dma-cells: Should be <1>, see "dmas" property below
+- reg: Should contain VDMA registers location and length.
+- xlnx,num-fstores: Should be the number of framebuffers as configured in h/w.
+- dma-channel child node: Should have at least one channel and can have up to
+	two channels per device. This node specifies the properties of each
+	DMA channel (see child node properties below).
+
+Optional properties:
+- xlnx,include-sg: Tells configured for Scatter-mode in
+	the hardware.
+- xlnx,flush-fsync: Tells which channel to Flush on Frame sync.
+	It takes following values:
+	{1}, flush both channels
+	{2}, flush mm2s channel
+	{3}, flush s2mm channel
+
+Required child node properties:
+- compatible: It should be either "xlnx,axi-vdma-mm2s-channel" or
+	"xlnx,axi-vdma-s2mm-channel".
+- interrupts: Should contain per channel VDMA interrupts.
+- xlnx,datawidth: Should contain the stream data width, take values
+	{32,64...1024}.
+
+Optional child node properties:
+- xlnx,include-dre: Tells hardware is configured for Data
+	Realignment Engine.
+- xlnx,genlock-mode: Tells Genlock synchronization is
+	enabled/disabled in hardware.
+
+Example:
+++++++++
+
+axi_vdma_0: axivdma@40030000 {
+	compatible = "xlnx,axi-vdma-1.00.a";
+	#dma_cells = <1>;
+	reg = < 0x40030000 0x10000 >;
+	xlnx,num-fstores = <0x8>;
+	xlnx,flush-fsync = <0x1>;
+	dma-channel@40030000 {
+		compatible = "xlnx,axi-vdma-mm2s-channel";
+		interrupts = < 0 54 4 >;
+		xlnx,datawidth = <0x40>;
+	} ;
+	dma-channel@40030030 {
+		compatible = "xlnx,axi-vdma-s2mm-channel";
+		interrupts = < 0 53 4 >;
+		xlnx,datawidth = <0x40>;
+	} ;
+} ;
+
+
+* DMA client
+
+Required properties:
+- dmas: a list of <[Video DMA device phandle] [Channel ID]> pairs,
+	where Channel ID is '0' for write/tx and '1' for read/rx
+	channel.
+- dma-names: a list of DMA channel names, one per "dmas" entry
+
+Example:
+++++++++
+
+vdmatest_0: vdmatest@0 {
+	compatible ="xlnx,axi-vdma-test-1.00.a";
+	dmas = <&axi_vdma_0 0
+		&axi_vdma_0 1>;
+	dma-names = "vdma0", "vdma1";
+} ;
+
+/*
+Xilinx AXI VDMA 엔진은 메모리와 비디오 장치 간을 전송합니다.
+하나의 채널 또는 두 개의 채널을 갖도록 구성 할 수 있습니다. 두 개의 채널로 구성된 경우 하나는 비디오 장치로 전송하고 다른 하나는 비디오 장치에서 수신합니다.
+
+필수 속성 :
+- 호환 : "xlnx, axi-vdma-1.00.a"여야합니다.
+- # dma-cells : <1>이어야하며 아래의 "dmas"속성 참조
+- reg : VDMA 레지스터 위치와 길이를 포함해야합니다.
+- xlnx, num-fstores : h / w로 구성된 프레임 버퍼 수 여야합니다.
+- dma-channel 자식 노드 : 적어도 하나의 채널이 있어야하며 장치 당 최대 두 개의 채널을 가질 수 있습니다. 
+
+이 노드는 각 DMA 채널의 속성을 지정합니다 (아래의 하위 노드 속성 참조).
+
+선택적 속성 :
+- xlnx, include-sg : 하드웨어에서 스 캐터 모드로 구성됩니다.
+- xlnx, flush-fsync : 프레임 싱크에서 어떤 채널을 플러시 할지를 알려줍니다.
+다음과 같은 값을 취합니다.
+{1}, 두 채널 모두 비우기
+{2}, mm2s 채널 플러시
+{3}, s2mm 채널 플러시
+
+필수 자식 노드 등록 정보 :
+- compatible : "xlnx, axi-vdma-mm2s-channel"또는 "xlnx, axi-vdma-s2mm-channel"중 하나 여야합니다.
+- 인터럽트 : 채널 당 VDMA 인터럽트를 포함해야합니다.
+- xlnx, datawidth : 스트림 데이터 폭을 포함해야하며 값은 {32,64 ... 1024}입니다.
+
+선택적 자식 노드 속성 :
+- xlnx, include-dre : 하드웨어가 데이터 재배치 엔진 용으로 구성되었음을 나타냅니다.
+- xlnx, genlock-mode : Genlock 동기화가 하드웨어에서 활성화 / 비활성화됨을 나타냅니다.
+
+
+Example:
+++++++++
+
+axi_vdma_0: axivdma@40030000 {
+	compatible = "xlnx,axi-vdma-1.00.a";
+	#dma_cells = <1>;
+	reg = < 0x40030000 0x10000 >;
+	xlnx,num-fstores = <0x8>;
+	xlnx,flush-fsync = <0x1>;
+	dma-channel@40030000 {
+		compatible = "xlnx,axi-vdma-mm2s-channel";
+		interrupts = < 0 54 4 >;
+		xlnx,datawidth = <0x40>;
+	} ;
+	dma-channel@40030030 {
+		compatible = "xlnx,axi-vdma-s2mm-channel";
+		interrupts = < 0 53 4 >;
+		xlnx,datawidth = <0x40>;
+	} ;
+} ;
+
+* DMA 클라이언트
+
+필수 속성 :
+- dmas : 채널 ID가 쓰기 / tx의 경우 '0'이고 읽기 / rx 채널의 경우 '1'인 <[Video DMA device phandle] [채널 ID]> 쌍의 목록입니다.
+- dma-names : "dmas"항목 당 하나씩의 DMA 채널 이름 목록
+
+Example:
+++++++++
+
+vdmatest_0: vdmatest@0 {
+	compatible ="xlnx,axi-vdma-test-1.00.a";
+	dmas = <&axi_vdma_0 0
+		&axi_vdma_0 1>;
+	dma-names = "vdma0", "vdma1";
+} ;
+
+*/

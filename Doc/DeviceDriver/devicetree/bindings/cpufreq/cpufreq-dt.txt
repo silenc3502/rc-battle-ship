@@ -1,0 +1,78 @@
+Generic cpufreq driver
+
+It is a generic DT based cpufreq driver for frequency management.  It supports
+both uniprocessor (UP) and symmetric multiprocessor (SMP) systems which share
+clock and voltage across all CPUs.
+
+Both required and optional properties listed below must be defined
+under node /cpus/cpu@0.
+//빈도 관리를위한 범용 DT 기반 cpufreq 드라이버입니다. 모든 CPU에서 클럭 및 전압을 공유하는 단일 프로세서 (UP) 및 대칭 다중 프로세서 (SMP) 시스템을 모두 지원합니다.
+
+아래 나열된 필수 및 선택 속성 둘 다 노드 / cpus / cpu @ 0에 정의해야합니다.
+
+Required properties:
+- None
+
+Optional properties:
+- operating-points: Refer to Documentation/devicetree/bindings/power/opp.txt for
+  details. OPPs *must* be supplied either via DT, i.e. this property, or
+  populated at runtime.
+- clock-latency: Specify the possible maximum transition latency for clock,
+  in unit of nanoseconds.
+- voltage-tolerance: Specify the CPU voltage tolerance in percentage.
+- #cooling-cells:
+- cooling-min-level:
+- cooling-max-level:
+     Please refer to Documentation/devicetree/bindings/thermal/thermal.txt.
+//필수 속성 :
+- 없음
+
+선택적 속성 :
+- 작동 포인트 : 자세한 내용은 Documentation / devicetree / bindings / power / opp.txt를 참조하십시오. OPP *는 DT, 즉이 속성을 통해 제공되거나 런타임에 채워 져야합니다.
+- clock-latency : 시계에 가능한 최대 천이 대기 시간을 나노초 단위로 지정합니다.
+- 전압 허용 오차 : CPU 전압 허용 오차를 백분율로 지정하십시오.
+- 냉각 셀 # 개 :
+- 냉각 min 수준 :
+- 냉각 최대 온도 :
+      Documentation / devicetree / bindings / thermal / thermal.txt를 참조하십시오.
+
+Examples:
+
+cpus {
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	cpu@0 {
+		compatible = "arm,cortex-a9";
+		reg = <0>;
+		next-level-cache = <&L2>;
+		operating-points = <
+			/* kHz    uV */
+			792000  1100000
+			396000  950000
+			198000  850000
+		>;
+		clock-latency = <61036>; /* two CLK32 periods */
+		#cooling-cells = <2>;
+		cooling-min-level = <0>;
+		cooling-max-level = <2>;
+	};
+
+	cpu@1 {
+		compatible = "arm,cortex-a9";
+		reg = <1>;
+		next-level-cache = <&L2>;
+	};
+
+	cpu@2 {
+		compatible = "arm,cortex-a9";
+		reg = <2>;
+		next-level-cache = <&L2>;
+	};
+
+	cpu@3 {
+		compatible = "arm,cortex-a9";
+		reg = <3>;
+		next-level-cache = <&L2>;
+	};
+};

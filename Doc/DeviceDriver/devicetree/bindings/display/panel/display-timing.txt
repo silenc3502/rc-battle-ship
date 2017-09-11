@@ -1,0 +1,221 @@
+﻿display-timing bindings
+=======================
+
+display-timings node
+--------------------
+
+required properties:
+ - none
+
+optional properties:
+ - native-mode: The native mode for the display, in case multiple modes are
+		provided. When omitted, assume the first node is the native.
+
+timing subnode
+--------------
+
+required properties:
+ - hactive, vactive: display resolution
+ - hfront-porch, hback-porch, hsync-len: horizontal display timing parameters
+   in pixels
+   vfront-porch, vback-porch, vsync-len: vertical display timing parameters in
+   lines
+ - clock-frequency: display clock in Hz
+
+optional properties:
+ - hsync-active: hsync pulse is active low/high/ignored
+ - vsync-active: vsync pulse is active low/high/ignored
+ - de-active: data-enable pulse is active low/high/ignored
+ - pixelclk-active: with
+			- active high = drive pixel data on rising edge/
+					sample data on falling edge
+			- active low  = drive pixel data on falling edge/
+					sample data on rising edge
+			- ignored     = ignored
+ - interlaced (bool): boolean to enable interlaced mode
+ - doublescan (bool): boolean to enable doublescan mode
+ - doubleclk (bool): boolean to enable doubleclock mode
+
+All the optional properties that are not bool follow the following logic:
+    <1>: high active
+    <0>: low active
+    omitted: not used on hardware
+
+There are different ways of describing the capabilities of a display. The
+devicetree representation corresponds to the one commonly found in datasheets
+for displays. If a display supports multiple signal timings, the native-mode
+can be specified.
+
+The parameters are defined as:
+
+  +----------+-------------------------------------+----------+-------+
+  |          |        ↑                            |          |       |
+  |          |        |vback_porch                 |          |       |
+  |          |        ↓                            |          |       |
+  +----------#######################################----------+-------+
+  |          #        ↑                            #          |       |
+  |          #        |                            #          |       |
+  |  hback   #        |                            #  hfront  | hsync |
+  |   porch  #        |       hactive              #  porch   |  len  |
+  |<-------->#<-------+--------------------------->#<-------->|<----->|
+  |          #        |                            #          |       |
+  |          #        |vactive                     #          |       |
+  |          #        |                            #          |       |
+  |          #        ↓                            #          |       |
+  +----------#######################################----------+-------+
+  |          |        ↑                            |          |       |
+  |          |        |vfront_porch                |          |       |
+  |          |        ↓                            |          |       |
+  +----------+-------------------------------------+----------+-------+
+  |          |        ↑                            |          |       |
+  |          |        |vsync_len                   |          |       |
+  |          |        ↓                            |          |       |
+  +----------+-------------------------------------+----------+-------+
+
+Example:
+
+	display-timings {
+		native-mode = <&timing0>;
+		timing0: 1080p24 {
+			/* 1920x1080p24 */
+			clock-frequency = <52000000>;
+			hactive = <1920>;
+			vactive = <1080>;
+			hfront-porch = <25>;
+			hback-porch = <25>;
+			hsync-len = <25>;
+			vback-porch = <2>;
+			vfront-porch = <2>;
+			vsync-len = <2>;
+			hsync-active = <1>;
+		};
+	};
+
+Every required property also supports the use of ranges, so the commonly used
+datasheet description with minimum, typical and maximum values can be used.
+
+Example:
+
+	timing1: timing {
+		/* 1920x1080p24 */
+		clock-frequency = <148500000>;
+		hactive = <1920>;
+		vactive = <1080>;
+		hsync-len = <0 44 60>;
+		hfront-porch = <80 88 95>;
+		hback-porch = <100 148 160>;
+		vfront-porch = <0 4 6>;
+		vback-porch = <0 36 50>;
+		vsync-len = <0 5 6>;
+	};
+
+
+/*
+display-timing bindings
+
+===========
+
+표시 타이밍 노드
+--------------------
+
+필수 속성 :
+ - 없음
+
+선택적 속성 :
+ - native-mode : 다중 모드가 제공되는 경우 디스플레이의 기본 모드. 생략되면 첫 x 째 노드가 기본 노드라고 가정합니다.
+
+타이밍 서브 노드
+--------------
+
+필수 속성 :
+ - hactive, vactive : 디스플레이 해상도
+ - hfront-porch, hback-porch, hsync-len : 수평 표시 타이밍 매개 변수 (픽셀 단위)
+   vfront-porch, vback-porch, vsync-len : 행의 수직 표시 타이밍 매개 변수
+ - 클럭 주파수 : Hz 단위의 디스플레이 클럭
+
+선택적 속성 :
+ - hsync-active : hsync 펄스가 활성 낮음 / 높음 / 무시 됨
+ - vsync-active : vsync 펄스가 활성 낮음 / 높음 / 무시 됨
+ - 비활성 : 데이터 활성화 펄스가 활성 낮음 / 높음 / 무시 됨
+ - pixelclk - 활성 : 함께
+- 액티브 하이 = 상승 에지에서 픽셀 데이터 구동 /
+하강 에지에서 샘플 데이터
+- 액티브 로우 = 하강 에지에서 픽셀 데이터 구동 /
+상승 에지에서 샘플 데이터
+- 무시 됨 = 무시 됨
+ - interlaced (bool) : 인터레이스 된 모드를 가능하게하는 boolean
+ - doublescan (bool) : doubleScan 모드를 가능하게하는 boolean
+ doubleclk (bool) : doubleclock 모드를 가능하게하는 boolean
+
+bool이 아닌 모든 선택적 속성은 다음 logic를 따릅니다.
+    <1> : 높은 활성
+    <0> : 낮음 활성
+    생략 : 하드웨어에 사용되지 않음
+
+디스플레이의 기능을 설명하는 다양한 방법이 있습니다. devicetree 표현은 디스플레이 용 데이터 시트에서 흔히 볼 수있는 표현과 일치합니다. 
+
+디스플레이가 다중 신호 타이밍을 지원하면 기본 모드를 지정할 수 있습니다.
+
+매개 변수는 다음과 같이 정의됩니다.
+
+  + ---------- + ------------------------------------- + ---------- + ------- +
+  | | ↑ | | |
+  | | | vback_porch | | |
+  | | ↓ | | |
+  + ---------- ###################### ---------- + ------- +
+  | # ↑ # | |
+  | # | # | |
+  | hback # | # hfront | hsync |
+  | 현관 # | hactive # porch | len |
+  | <--------> # <------- + ---------------------------> # <--------> | <-----> |
+  | # | # | |
+  | # | vactive # | |
+  | # | # | |
+  | # ↓ # | |
+  + ---------- ###################### ---------- + ------- +
+  | | ↑ | | |
+  | | | vfront_porch | | |
+  | | ↓ | | |
+  + ---------- + ------------------------------------- + ---------- + ------- +
+  | | ↑ | | |
+  | | | vsync_len | | |
+  | | ↓ | | |
+  + ---------- + ------------------------------------- + ---------- + ------- +
+
+Example:
+
+	display-timings {
+		native-mode = <&timing0>;
+		timing0: 1080p24 {
+			/* 1920x1080p24 */
+			clock-frequency = <52000000>;
+			hactive = <1920>;
+			vactive = <1080>;
+			hfront-porch = <25>;
+			hback-porch = <25>;
+			hsync-len = <25>;
+			vback-porch = <2>;
+			vfront-porch = <2>;
+			vsync-len = <2>;
+			hsync-active = <1>;
+		};
+	};
+
+모든 필수 속성은 범위 사용도 지원하므로 일반적으로 사용되는 최소, 일반 및 최대 값의 데이터 시트 설명을 사용할 수 있습니다.
+
+Example:
+
+	timing1: timing {
+		/* 1920x1080p24 */
+		clock-frequency = <148500000>;
+		hactive = <1920>;
+		vactive = <1080>;
+		hsync-len = <0 44 60>;
+		hfront-porch = <80 88 95>;
+		hback-porch = <100 148 160>;
+		vfront-porch = <0 4 6>;
+		vback-porch = <0 36 50>;
+		vsync-len = <0 5 6>;
+	};
+
+*/

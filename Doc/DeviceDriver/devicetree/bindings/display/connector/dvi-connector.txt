@@ -1,0 +1,74 @@
+DVI Connector
+==============
+
+Required properties:
+- compatible: "dvi-connector"
+
+Optional properties:
+- label: a symbolic name for the connector
+- ddc-i2c-bus: phandle to the i2c bus that is connected to DVI DDC
+- analog: the connector has DVI analog pins
+- digital: the connector has DVI digital pins
+- dual-link: the connector has pins for DVI dual-link
+
+Required nodes:
+- Video port for DVI input
+
+Note: One (or both) of 'analog' or 'digital' must be set.
+
+Example
+-------
+
+dvi0: connector@0 {
+	compatible = "dvi-connector";
+	label = "dvi";
+
+	digital;
+
+	ddc-i2c-bus = <&i2c3>;
+
+	port {
+		dvi_connector_in: endpoint {
+			remote-endpoint = <&tfp410_out>;
+		};
+	};
+};
+
+/*
+DVI 커넥터
+==============
+
+필수 속성 :
+- 호환 : "dvi-connector"
+
+선택적 속성 :
+- label : 커넥터의 기호 이름
+- ddc-i2c-bus : DVI DDC에 연결된 i2c 버스로 연결합니다.
+- 아날로그 : DVI 아날로그 핀이있는 커넥터
+- 디지털 : 커넥터에 DVI 디지털 핀이 있음
+- 듀얼 링크 : DVI 듀얼 링크 용 핀이 커넥터에 있습니다.
+
+필수 노드 :
+- DVI 입력 용 비디오 포트
+
+참고 : '아날로그'또는 '디지털'중 하나 (또는 둘 다)를 설정해야합니다.
+
+Example
+-------
+
+dvi0: connector@0 {
+	compatible = "dvi-connector";
+	label = "dvi";
+
+	digital;
+
+	ddc-i2c-bus = <&i2c3>;
+
+	port {
+		dvi_connector_in: endpoint {
+			remote-endpoint = <&tfp410_out>;
+		};
+	};
+};
+
+*/

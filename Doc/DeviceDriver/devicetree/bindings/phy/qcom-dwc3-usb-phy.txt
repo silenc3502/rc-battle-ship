@@ -1,0 +1,56 @@
+Qualcomm DWC3 HS AND SS PHY CONTROLLER
+--------------------------------------
+
+DWC3 PHY nodes are defined to describe on-chip Synopsis Physical layer
+controllers.  Each DWC3 PHY controller should have its own node.
+
+Required properties:
+- compatible: should contain one of the following:
+	- "qcom,dwc3-hs-usb-phy" for High Speed Synopsis PHY controller
+	- "qcom,dwc3-ss-usb-phy" for Super Speed Synopsis PHY controller
+- reg: offset and length of the DWC3 PHY controller register set
+- #phy-cells: must be zero
+- clocks: a list of phandles and clock-specifier pairs, one for each entry in
+  clock-names.
+- clock-names: Should contain "ref" for the PHY reference clock
+
+Optional clocks:
+  "xo"		External reference clock
+
+DDWC3 PHY 노드는  on-chip Synopsis Physical layer
+controllers 를 설명하기 위해 정의됩니다. 각 DWC3 PHY 컨트롤러에는 자체 노드가 있어야합니다.
+
+필수 속성 :
+- compatible : 다음 중 하나를 포함해야합니다.
+- High Speed Synopsis PHY 컨트롤러 용 "qcom, dwc3-hs-usb-phy"
+- Super Speed Synopsis PHY 컨트롤러 용 "qcom, dwc3-ss-usb-phy"
+- reg : DWC3 PHY 제어기 레지스터 세트의 오프셋 및 길이
+- # phy-cells : 0이어야합니다.
+- clocks : clock-names 각 항목에 하나 인 phandles 및 clock-specifier 쌍의 목록입니다.
+- clock-names : PHY 기준 클럭에 대해 "ref"를 포함해야합니다.
+
+선택 사양 클럭 :
+   "xo"외부 기준 클럭
+
+
+
+Example:
+		phy@100f8800 {
+			compatible = "qcom,dwc3-hs-usb-phy";
+			reg = <0x100f8800 0x30>;
+			clocks = <&gcc USB30_0_UTMI_CLK>;
+			clock-names = "ref";
+			#phy-cells = <0>;
+
+			status = "ok";
+		};
+
+		phy@100f8830 {
+			compatible = "qcom,dwc3-ss-usb-phy";
+			reg = <0x100f8830 0x30>;
+			clocks = <&gcc USB30_0_MASTER_CLK>;
+			clock-names = "ref";
+			#phy-cells = <0>;
+
+			status = "ok";
+		};

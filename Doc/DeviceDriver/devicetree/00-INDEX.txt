@@ -1,0 +1,17 @@
+Documentation for device trees, a data structure by which bootloaders pass
+hardware layout to Linux in a device-independent manner, simplifying hardware
+probing.
+/*
+장치 트리에 대한 설명서 - 부트 로더가 하드웨어 레이아웃을 장치 독립적 인 방식으로 Linux에 전달하여 하드웨어 검색을 단순화하는 데이터 구조.*/
+
+ This subsystem is maintained by Grant Likely <grant.likely@secretlab.ca> and has a mailing list at https://lists.ozlabs.org/listinfo/devicetree-discuss
+/* 이 하위 시스템은 Grant Likely <grant.likely@secretlab.ca>에 의해 관리되며 https://lists.ozlabs.org/listinfo/devicetree-discuss에 메일 링리스트가 있습니다. */
+
+00-INDEX
+    - this file
+booting-without-of.txt
+    - Booting Linux without Open Firmware, describes history and format of device trees.
+    /*- Open Firmware없이 Linux 부팅, 장치 트리의 기록 및 형식을 설명합니다. */
+usage-model.txt
+    - How Linux uses DT and what DT aims to solve.
+    /*- 리눅스가 DT를 사용하는 방식과 DT가 해결하려고하는 것. */

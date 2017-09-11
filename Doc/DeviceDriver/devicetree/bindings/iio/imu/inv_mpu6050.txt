@@ -1,0 +1,39 @@
+InvenSense MPU-6050 Six-Axis (Gyro + Accelerometer) MEMS MotionTracking Device
+
+http://www.invensense.com/mems/gyro/mpu6050.html
+
+Required properties:
+ - compatible : should be "invensense,mpu6050"
+ - reg : the I2C address of the sensor
+ - interrupt-parent : should be the phandle for the interrupt controller
+ - interrupts : interrupt mapping for GPIO IRQ
+
+Example:
+	mpu6050@68 {
+		compatible = "invensense,mpu6050";
+		reg = <0x68>;
+		interrupt-parent = <&gpio1>;
+		interrupts = <18 1>;
+	};
+
+/*
+InvenSense MPU-6050 6 축 (자이로 + 가속도계) MEMS 모션 트래킹 장치
+
+http://www.invensense.com/mems/gyro/mpu6050.html
+
+필수 속성 :
+  - 호환 가능 : "invensense, mpu6050"이어야합니다.
+  - reg : 센서의 I2C 주소
+  - interrupt-parent : 인터럽트 컨트롤러의 phandle이어야합니다.
+  - 인터럽트 : GPIO IRQ에 대한 인터럽트 매핑
+
+
+Example:
+	mpu6050@68 {
+		compatible = "invensense,mpu6050";
+		reg = <0x68>;
+		interrupt-parent = <&gpio1>;
+		interrupts = <18 1>;
+	};
+
+*/

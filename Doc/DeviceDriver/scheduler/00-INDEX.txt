@@ -1,0 +1,39 @@
+00-INDEX
+	- this file.
+sched-arch.txt
+	- CPU Scheduler implementation hints for architecture specific code.
+sched-bwc.txt
+	- CFS bandwidth control overview.
+sched-design-CFS.txt
+	- goals, design and implementation of the Completely Fair Scheduler.
+sched-domains.txt
+	- information on scheduling domains.
+sched-nice-design.txt
+	- How and why the scheduler's nice levels are implemented.
+sched-rt-group.txt
+	- real-time group scheduling.
+sched-deadline.txt
+	- deadline scheduling.
+sched-stats.txt
+	- information on schedstats (Linux Scheduler Statistics).
+
+
+
+00-INDEX
+-이 파일.
+sched-arch.txt
+- 아키텍처 특정 코드에 대한 CPU 스케줄러 구현 힌트.
+sched-bwc.txt
+- CFS 대역폭 제어 개요.
+sched-design-CFS.txt
+- Complete Fair Scheduler의 목표, 설계 및 구현.
+sched-domains.txt
+- 도메인 예약에 대한 정보.
+sched- nice-design.txt
+- 어떻게 그리고 왜 스케쥴러의 멋진 레벨이 구현되는지.
+sched-rt-group.txt
+- 실시간 그룹 일정 수립.
+sched-deadline.txt
+- 최종 기한 일정.
+sched-stats.txt
+- schedstats에 대한 정보 (Linux 스케줄러 통계).

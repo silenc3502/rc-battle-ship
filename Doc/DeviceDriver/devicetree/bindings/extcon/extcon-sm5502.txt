@@ -1,0 +1,35 @@
+* SM5502 MUIC (Micro-USB Interface Controller) device
+
+The Silicon Mitus SM5502 is a MUIC (Micro-USB Interface Controller) device
+which can detect the state of external accessory when external accessory is
+attached or detached and button is pressed or released. It is interfaced to
+the host controller using an I2C interface.
+
+Required properties:
+- compatible: Should be "siliconmitus,sm5502-muic"
+- reg: Specifies the I2C slave address of the MUIC block. It should be 0x25
+- interrupt-parent: Specifies the phandle of the interrupt controller to which
+  the interrupts from sm5502 are delivered to.
+- interrupts: Interrupt specifiers for detection interrupt sources.
+
+* SM5502 MUIC (마이크로 -USB 인터페이스 컨트롤러) 장치
+
+Silicon Mitus SM5502는 외부 액세서리를 장착하거나 분리하고 버튼을 누르거나 놓을 때 외부 액세서리의 상태를 감지 할 수있는 MUIC (Micro-USB Interface Controller) 장치입니다. I2C 인터페이스를 사용하여 호스트 컨트롤러에 인터페이스됩니다.
+
+필수 속성 :
+- 호환 : "siliconmitus, sm5502-muic"이어야합니다.
+- reg : MUIC 블록의 I2C 슬레이브 주소를 지정합니다. 0x25 여야합니다.
+- interrupt-parent : sm5502의 인터럽트가 전달되는 인터럽트 컨트롤러의 phandle을 지정합니다.
+- interrupts : 탐지 인터럽트 소스에 대한 인터럽트 지정자입니다.
+
+
+
+
+Example:
+
+	sm5502@25 {
+		compatible = "siliconmitus,sm5502-muic";
+		interrupt-parent = <&gpx1>;
+		interrupts = <5 0>;
+		reg = <0x25>;
+	};

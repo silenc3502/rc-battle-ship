@@ -1,0 +1,887 @@
+Chapter 25.
+
+General-Purpose Input/Output(GIO) Module
+
+이 Chapter 는 General-Purpose Input/Output(GIO) Module 을 기술한다.
+GIO Module 은 Input/Output(I/O) 기능을 가진 Device 군을 제공한다.
+I/O 핀은 양 방향이며 프로그래밍 가능한 bit 를 가진다.
+GIO Module 은 또한 외부 Interrupt 기능을 지원한다.
+
+
+
+25.1 Overview
+
+GIO Module 은 General-Purpose Input 과 Output 기능을 제공한다.
+최대 64개의 GIO 단자를 위해 8개의 8 bit 포트를 지원한다.
+64개의 단자는 각각 독립적으로 Input 혹은 Output 으로 구성될 수 있으며
+Application 에 의해 필요에 따라 구성될 수 있다.
+GIO Module 은 또한 상승 에지 혹은 하강 에지 혹은 토글이 감지될 때
+GIO 단자 32개 까지 Interrupt 의 생성을 지원한다.
+지원되는 GIO Port 의 수와 Interrupt 를 생성할 수 있는
+GIO 단자를 식별하기 위해 Device Datasheet 를 참조하라!
+
+Figure 25-1. GIO Block Diagram
+
+다음과 같이 GIO Module 의 주요 기능이 요약되어 있다:
+
+* GIO 단자가 General-Purpose Input 혹은 Output 기능을 구성할 수 있도록 허용한다.
+* 각각의 Input GIO 단자 상에 프로그래밍 가능한 Pull Direction 을 지원한다.
+* GIO Output 에서 Push/Pull 혹은 Open-Drain Modes 를 지원한다.
+* Interrupt 요청을 생성하기 위해 사용된 GIO 단자를 32개까지 허용한다.
+
+
+
+25.2 Quick Start Guide
+
+GIO Module 은 2개의 구성 요소를 포함한다:
+Input/Output(I/O) Block 과 Interrupt 생성 Block 이다.
+Figure 25-2 와 Figure 25-3 는 I/O 혹은 생성된 Interrupt 로서
+GIO Module 을 구성하기 위해 reset 이후에 사용자가 무엇을 해야 하는지보여준다.
+
+Figure 25-2. I/O Function Quick Start Flow Chart
+
+Figure 25-3. Interrupt Generation Function Quick Start Flow Chart
+
+
+
+25.3 Functional Description of GIO Module
+
+Figure 25-1 에서 보여지듯이 GIO Module 은 2개의 구성 요소를 포함한다:
+Input/Output(I/O) Block 과 Interrupt 생성 Block 이다.
+
+
+
+25.3.1 I/O Functions
+
+I/O Block 은 각각의 GIO 단자가 Application 에서
+General-Purpose Input 혹은 Output 으로 사용할 수 있게 해준다.
+GIO Module 은 Input 및 Output 기능의 다양한 작업을 제어할 수 있도록 여러 개의 레지스터를 지원한다.
+아래에 이것들을 설명한다.
+
+* Data Direction(GIODIR)
+
+GIODIRx 레지스터를 통해 Input 혹은 Output 으로 GIO 단자를 구성한다.
+
+* Data Input(GIODIN)
+
+GIODINx 레지스터에서 GIO 단자의 로직 레벨을 반영한다.
+높은 전압(V IH 이상)이 적용된 Pin 은 Data Input Register(GIODIN[7:0])에 High 값(1)을 야기한다.
+낮은 전압(V IL 이하)가 적용된 Pin 은 Data Input Register 가 Low 값(0)을 읽는다.
+V IH 및 V IL 값은 Device 명세와 Device Datasheet 에서 확인할 수 있다.
+
+* Data Output(GIODOUT)
+
+출력으로 구성된 GIO 단자상에 출력 Logic Level 을 설정한다.
+Low 값(0) 이 Data Output Register 에 기록되면 강제로 Pin 을 Low Output Voltage(V OL 이하) 로 만든다.
+Open Drain 기능이 비활성화되었다면(GIOPDRx[7:0])
+High 값(1) 이 Data Output Register(GIODOUTx) 에 기록될 때
+강제로 Pin 을 High Output Voltage(V OH 이상)으로 만든다.
+Open Drain 기능이 활성화 되었다면 High 값(1) 이 Data Output Register 에 기록될 때
+강제로 Pin 을 High Impedance 상태(Z) 로 만든다.
+
+* Data Set(GIODSET)
+
+GIODSETx Register 에 있는 요구 Bit 에 1을 기록함으로써
+Output 으로 설정된 GIO 단자상에서 Output 은 Logic High 이다.
+Open Drain 기능이 활성화 되었다면, High 값(1) 이 Data Output Register 에 기록될 때
+강제로 Pin 을 High Impedance 상태(Z) 로 만든다.
+한 개 이상의 GIO Pin(들) 을 설정할 필요가 있다면
+GIODSETx Register 는 Read-Modify-Write 동작을 수행할 Application 에 대한 필요성을 제거한다.
+
+* Data Clear(GIODCLR)
+
+GIODCLRx Register 에 있는 요구 Bit 에 1을 기록함으로써
+Output 으로 설정된 GIO 단자상에서 Output 은 Logic Low 이다.
+한 개 이상의 GIO Pin(들) 을 clear 할 필요가 있다면
+GIODCLRx Register 는 Read-Modify-Write 동작을 수행할 Application 에 대한 필요성을 제거한다.
+
+* Open Drain(GIOPDR)
+
+Open Drain Register GIOPDR[7:0] Register 를 사용하여 Open Drain 기능을 활성화 하거나 비활성화한다.
+Pin 상에 Open-Drain Mode Output 이 활성화되었다면,
+High 값(1) 이 Data Output Register(GIODOUTx[7:0]) 에 기록될 때
+강제로 Pin 을 High Impedance 상태(Z) 로 만든다.
+
+* Pull Disable(GIOPULDIS)
+
+GIOPULDISx Register 에 기록함으로써 Input 으로 구성된
+GIO 단자상에 Internal Pull 을 비활성화한다.
+
+* Pull Select(GIOSPL)
+
+GIOPULSELx Register 에 기록함으로써 Input 으로 구성된
+GIO 단자상에 Internal Pull Down 혹은 Pull Up 을 선택한다.
+
+지원되는 Input 및 Output 기능뿐만 아니라
+GIO Port 의 갯수를 식별하기 위해 특정 Device 의 Datasheet 를 참조하라!
+일부 Device 는 프로그래밍 가능한 Pull 제어를 지원하지 않을 수 있다.
+이 경우, Pull 비활성화 및 Pull Select Register 제어가 작동하지 않을 것이다.
+
+
+
+25.3.2 Interrupt Function
+
+GIO Module 은 VIM(Vectored Interrupt Manager) 를 통해
+Host Processor 에 Interrupt 생성을 위해 구성된 32개의 단자를 지원한다.
+Interrupt Block 의 주요 기능은 아래와 같다:
+
+* Interrupt 를 생성하는데 사용되는 GIO Pin(s) 를 선택한다.
+  Interrupt Enable Set 및 Clear Registers 에 해당하는 GIOENASET 과 GIOENACLR 을 통해 이루어진다.
+
+* Interrupt 를 생성하는데 사용되는 선택된 GIO Pin(s) 상에 Edge 를 선택한다:
+  Rising / Falling / Rising 혹은 Falling Edge 를 GIOPOL Register(Section 25.5.3) 을 통해 선택할 수 있다.
+  Rising 및 Falling Edges 상에서 Interrupt 생성을 원한다면,
+  GIOINTDET Register(Section 25.5.2) 를 통해 구성될 수 있다.
+
+* Interrupt 우선 순위를 선택한다.
+  Low 혹은 High-Level Interrupt 는
+  GIOLVLSET 및 GIOLVLCLR Register(Section 25.5.5.1 및 Section 25.5.5.2) 를 통해 선택할 수 있다.
+
+* 개별적인 Interrupt Flags 는 GIOFLG Register(Section 25.5.6) 내에 설정한다.
+
+GIO Ports A ~ D 상에 단자는 모두 Interrupt 가 가능하며
+General I/O Functions 혹은 Interrupt Requests 를 다루는데 사용될 수 있다.
+VIM Channel 수에 따라 각 Interrupt Request 는
+2개의 서로 다른 Level(High 및 Low) 중 하나를 VIM 에 연결할 수 있다.
+VIM 은 고유의 우선 순위 방식을 가지므로 낮은 수의 Channel 에 대한 요청은
+높은 수의 Channel 에 대한 요청 보다 높은 우선 순위를 갖는다.
+GIO Level A 및 Level B Interrupt 요청에 대한
+VIM Channel 번호를 식별하기 위해 Device Datasheet 를 참조하라!
+또한 Block 을 다루는 Level A 와 Level B Interrupt 의
+Interrupt 우선 순위는 VIM 에서 다시 프로그래밍할 수 있다.
+
+
+
+25.3.3 GIO Block Diagram
+
+GIO Block Diagram(Figure 25-4 를 보라) 은 Pin 을 통한 정보의 흐름을 보여준다.
+음영 영역은 I/O Block 에 해당한다;
+어둡지 않은 영역은 Interrupt Block 에 해당한다.
+(결국 GIOPSL, GIOPULDIS, GIODIRx, GIOPDRx, GIODOUTx, GIODINx, GIODSETx, GIODCLRx 은 I/O Block 에 해당하며
+ GIOINTDET, GIOPOL, GIOFLG, GIOENASET, GIOENACLR, GIOLVLSET, GIOLVLCLR 은 Interrupt Block 에 해당한다)
+
+Figure 25-4. GIO Block Diagram
+
+(1) 단일 low-level-interrupt-handling 블록과 단일 high-level-interrupt-handling 블록은
+    인터럽트 가능한 외부 핀들 모두를 서비스 하지만,
+    오직 하나의 핀은 한번에 인터럽트 블록에 의해 서비스될 수 있다.
+
+
+
+25.4 Device Modes of Operation
+
+GIO Module 은 동작 Mode 에 따라 다르게 동작한다.
+2 가지 주요 Mode 가 존재한다:
+
+* Emulation Mode
+* Power-Down Mode(Low-Power Mode)
+
+
+
+25.4.1 Emulation Mode
+
+Emulation Mode 는 Register 를 읽기 위해
+breakpoint 에서 CPU 를 멈추기 위한 Debugger Tools 에 의해 사용된다.
+
+Note: Emulation Mode 와 Emulation Registers
+
+Emulation Mode 는 Device 의 동작 Mode 이며
+GIO Emulation Registers(GIOEMU1 과 GIOEMU2) 와는 별도이다.
+이 Emulation Register 의 내용은 GIO Offset Register(GIOOFF1 과 GIOOFF2) 의 내용과 동일하다.
+모든 Emulation Register 와 GIO Offset Register 는 Emulation Mode 에서 read 할 때 clear 되지 않는다.
+GIO Offset Register 는 Normal Mode(Emulation Mode 가 아닌 다른) 에서 read 할 때 clear 된다.
+Emulation Register 는 Normal Mode 에서 read 할 때 clear 되지 않는다.
+Emulation Register 의 의도는 SW 가 flag 를 clear 하지 않고 사용할 수 있음이다.
+
+Emulation Mode 동안:
+
+* VIM 이 Interrupt 를 Service 할 수 없기 때문에 외부 Interrupt 는 캡쳐되지 않는다.
+* 모든 Register 는 System 의 상태에 영향을 주지 않고 read 할 수 있다.
+* Register 에 write 하는 것도 System 의 상태에 영향을 미치지 않는다.
+
+
+
+25.4.2 Power-Down Mode(Low-Power Mode)
+
+Power-Down Mode 에서, GIO Module 의 Clock Signal 이 비활성화된다.
+그러므로 스위칭이 없고, 전류 소모는 오직 전류 손실에서 온다.
+Power-Down Mode 에서, Interrupt Pin 은 Level 민감도 보다 Edge 민감도가 적합하다.
+극성 Bit 는 High-Level-Trigger 하는 Rising-Edge-Trigger 와
+Low-Level-Trigger 하는 Falling-Edge-Trigger 로부터 기능을 변경한다.
+Interrupt Pin 에 해당하는 Level 은 Low-Power Mode 중 Module 에 pull 한다.
+
+
+
+25.4.2.1 Module-Level Power Down
+
+Peripheral Power Down Register 내에 적절한 Bit 를 통해
+GIO Peripheral Module 을 비활성화함으로써 GIO Module 을 Power Down 상태로 만들 수 있다.
+더 자세한 사항을 원한다면 Peripheral Central Resource Register(Section 2.5.3)을 참조하라!
+
+
+
+25.4.2.2 Device-Level Power Down
+
+전체 Device 는 미리 정의된 Low-Power Modes 중 하나가 될 수 있다:
+Clock Source 를 사용하는 Doze, Snooze, 혹은 Sleep 및
+Clock Domain 은 System Module 에 있는 Register 를 비활성화한다.
+
+
+
+25.5. GIO Control Registers
+
+Table 25-1 은 GIO Register 의 요약을 보여준다.
+8, 16, 32 Bit read 혹은 write 로 Register 를 접근할 수 있다.
+GIO Module 의 시작 주소는 0xFFF7 BC00 이다.
+GIO Module 은 8개의 Ports 를 지원한다.
+GIO Ports 의 실제 갯수와 이 Device 상에 구현된 각 GIO Port 의 핀 개수를
+식별하기 위해 Device Datasheet 를 참조하라!
+GIO Module 은 4개의 Interrupt 가능한 Port 를 지원한다.
+Interrupt 가능한 GIO Ports 의 실제 갯수와
+이 Device 상에 구현된 각 GIO Port 의 Pin 갯수를 식별하기 위해 Device Datasheet 를 참조하라!
+
+Table 25-1. GIO Control Registers
+
+25.5.1 GIO Global Control Register(GIOGCR0)
+
+GIOGCR0 Register 는 Module Reset 상태를 제어하는 하나의 Bit 를 포함한다.
+이 Bit 에 zero(0) 을 기록하면, Module 을 Reset 상태로 만든다.
+System Reset 이후, 이 Module 상에서 동작을 시작하기 전에 이 Bit 를 반드시 1 로 설정해야 한다.
+Figure 25-5 와 Table 25-2 는 이 Register 에 대해 설명한다.
+
+Figure 25-5. GIO Global Control Register(GIOGCR0) [offset = 00h]
+
+Table 25-2. GIO Global Control Register(GIOGCR0) Field Descriptions
+
+Reserved	0	읽기는 0을 반환하며 쓰기는 아무 효과가 없다.
+
+RESET			GIO Reset
+		0	GIO 가 Reset 상태에 있다.
+		1	GIO 가 정상적으로 동작한다.
+
+Note: Reset 상태에 놓인 GIO Module 은 Low-Power 상태에 놓인 것과 동일하지 않다.
+
+
+
+25.5.2 GIO Interrupt Detect Register(GIOINTDET)
+
+Rising 및 Falling Edge 가 인식되거나 GIOPOL Register 에 의해 결정되는
+특수한 Rising 혹은 Falling Edge 상에 Interrupt 를 식별하는 경우
+GIOINTDET Register 는 Interrupt 로 인식된는 Edge 의 극성을 무시하는 유연성을 제공한다.
+Edge Signal 의 인식을 보장하기 위해,
+Signal 은 최소한 하나의 VCLK Cycle 에 대한 새로운 Level 을 유지해야 한다.
+Figure 25-6 및 Table 25-3 은 이 Register 를 설명한다.
+
+Figure 25-6 GIO Interrupt Detect Register(GIOINTDET) [offset = 08h]
+
+Table 25-3. GIO Interrupt Detect Register(GIOINTDET) Field Descriptions
+
+GIOINTDET 3		핀 GIOD[7:0] 을 위한 Interrupt Detection Select
+		0	극성 Register(GIOPOL) 에 극성을 설정함에 따라
+			해당하는 Pin 상에 Falling 혹은 Rising Edge 중 하나를 설정한다.
+		1	해당하는 Pin 상에 Rising 혹은 Falling Edge 모두를 설정한다.
+
+GIOINTDET 2		핀 GIOC[7:0] 을 위한 Interrupt Detection Select
+		0	극성 Register(GIOPOL) 에 극성을 설정함에 따라
+			해당하는 Pin 상에 Falling 혹은 Rising Edge 중 하나를 설정한다.
+		1	해당하는 Pin 상에 Rising 혹은 Falling Edge 모두를 설정한다.
+
+GIOINTDET 1		핀 GIOB[7:0] 을 위한 Interrupt Detection Select
+		0	극성 Register(GIOPOL) 에 극성을 설정함에 따라
+			해당하는 Pin 상에 Falling 혹은 Rising Edge 중 하나를 설정한다.
+		1	해당하는 Pin 상에 Rising 혹은 Falling Edge 모두를 설정한다.
+
+GIOINTDET 0		핀 GIOA[7:0] 을 위한 Interrupt Detection Select
+		0	극성 Register(GIOPOL) 에 극성을 설정함에 따라
+			해당하는 Pin 상에 Falling 혹은 Rising Edge 중 하나를 설정한다.
+		1	해당하는 Pin 상에 Rising 혹은 Falling Edge 모두를 설정한다.
+
+
+
+25.5.3 GIO Interrupt Polarity Register(GIOPOL)
+
+GIOPOL Register 는 Flag 설정에 따라
+극성(Rising Edge[낮은데서 높은데로] 혹은 Falling Edge[높은데서 낮은데로])을 제어한다.
+Edge 로 Signal 을 인식하기 위해, Signal 은 최소 하나의 VCLK Cycle 의 새로운 Level 을 유지해야 한다.
+Device 가 Low Power Mode 에 있을 때, Interrupt 는 Level 이 아닌
+Edge 에 의해 더 이상 트리거 되지 않는다.
+그러므로 Low Power Mode 에서 GIOPOL Register 는
+Interrupt 를 트리거할 High 혹은 Low 의 Level 을 제어한다.
+Figure 25-7 및 Table 25-4 는 이 Register 를 설명한다.
+
+Figure 25-7. GIO Interrupt Polarity Register(GIOPOL) [offset = 0Ch]
+
+Table 25-4. GIO Interrupt Polarity Register(GIOPOL) Field Descriptions
+
+GIOPOL 3		Pin GIOD[7:0] 을 위한 Interrupt Polarity 선택
+
+		Normal Operation(User 혹은 Privileged Mode):
+
+		0	Flag 는 해당 핀의 Falling Edge 에서 설정된다.
+		1	Flag 는 해당 핀의 Rising Edge 에서 설정된다.
+
+		Low Power Mode(GIO Module Clocks Off):
+
+		0	Interrupt 가 Low Level 에서 트리거 된다. 
+		1	Interrupt 가 High Level 에서 트리거 된다.
+
+GIOPOL 2		Pin GIOC[7:0] 을 위한 Interrupt Polarity 선택
+
+		Normal Operation(User 혹은 Privileged Mode):
+
+		0	Flag 는 해당 핀의 Falling Edge 에서 설정된다.
+		1	Flag 는 해당 핀의 Rising Edge 에서 설정된다.
+
+		Low Power Mode(GIO Module Clocks Off):
+
+		0	Interrupt 가 Low Level 에서 트리거 된다. 
+		1	Interrupt 가 High Level 에서 트리거 된다.
+
+GIOPOL 1		Pin GIOB[7:0] 을 위한 Interrupt Polarity 선택
+
+		Normal Operation(User 혹은 Privileged Mode):
+
+		0	Flag 는 해당 핀의 Falling Edge 에서 설정된다.
+		1	Flag 는 해당 핀의 Rising Edge 에서 설정된다.
+
+		Low Power Mode(GIO Module Clocks Off):
+
+		0	Interrupt 가 Low Level 에서 트리거 된다. 
+		1	Interrupt 가 High Level 에서 트리거 된다.
+
+GIOPOL 0		Pin GIOA[7:0] 을 위한 Interrupt Polarity 선택
+
+		Normal Operation(User 혹은 Privileged Mode):
+
+		0	Flag 는 해당 핀의 Falling Edge 에서 설정된다.
+		1	Flag 는 해당 핀의 Rising Edge 에서 설정된다.
+
+		Low Power Mode(GIO Module Clocks Off):
+
+		0	Interrupt 가 Low Level 에서 트리거 된다. 
+		1	Interrupt 가 High Level 에서 트리거 된다.
+
+
+
+25.5.4 GIO Interrupt Enable Registers(GIOENASET and GIOENACLR)
+
+GIOENASET 과 GIOENACLR Register 는 실제 Interrupt 로 구성된 Interrupt 가능한 Pin 을 제어한다.
+Interrupt 가 활성화되었다면, 선택된 Pin 상에서 Rising 혹은 Falling 혹은 둘다가 Interrupt 를 Lead 한다.
+
+
+
+25.5.4.1 GIOENASET Register
+
+Figure 25-8 과 Table 25-5 는 이 Register 를 설명한다.
+
+Note: Device Level 에서 Interrupt 활성화하기
+
+GIO 는 Register GIOLVLSET 과 GIOLVLCLR 을 프로그래밍하여
+GIO High-Level(Level A) 와 Low-Level(Level B) Interrupts 와 같은
+2개의 서로 다른 Device Level Interrupts 에 맵핑 할 수 있다.
+맵핑된 Device Level Interrupt 에 대응하는 Bit 는
+적절한 Interrupt 를 활성화하기 위한 Interrupt Mask Register(REQMASK) 에 있는
+VIM(Vectored Interrupt Manager) 내에서 설정해야 한다.
+추가적으로, ARM CPU (CPSR bit 7 혹은 6) 은
+Interrupt Request(IRQ/FIQ) 를 인식하기 위해 반드시 clear 되어야만 한다.
+
+Figure 25-8. GIO Interrupt Enable Set Register(GIOENASET) [offset = 10h]
+
+Table 25-5. GIO Interrupt Enable Set Register(GIOENASET) Field Descriptions
+
+GIOENASET 3		Pin GIOD[7:0] 을 위한 Interrupt 활성화
+		0	Read: Interrupt 비활성화
+			Write: 0을 기록하는 것은 아무런 효과가 없음
+		1	Read: Interrupt 가 활성화됨
+			Write: Interrupt 활성화
+
+GIOENASET 2		Pin GIOC[7:0] 을 위한 Interrupt 활성화
+		0	Read: Interrupt 비활성화
+			Write: 0을 기록하는 것은 아무런 효과가 없음
+		1	Read: Interrupt 가 활성화됨
+			Write: Interrupt 활성화
+
+GIOENASET 1		Pin GIOB[7:0] 을 위한 Interrupt 활성화
+		0	Read: Interrupt 비활성화
+			Write: 0을 기록하는 것은 아무런 효과가 없음
+		1	Read: Interrupt 가 활성화됨
+			Write: Interrupt 활성화
+
+GIOENASET 0		Pin GIOA[7:0] 을 위한 Interrupt 활성화
+		0	Read: Interrupt 비활성화
+			Write: 0을 기록하는 것은 아무런 효과가 없음
+		1	Read: Interrupt 가 활성화됨
+			Write: Interrupt 활성화
+
+
+
+25.5.4.2 GIOENACLR Register
+
+이 Register 는 Interrupt 를 비활성화 한다.
+Figure 25-9 와 Table 25-6 은 이 Register 를 설명한다.
+
+Figure 25-9. GIO Interrupt Enable Clear Register(GIOENACLR) [offset = 14h]
+
+Table 25-6. GIO Interrupt Enable Clear Register(GIOENACLR) Field Descriptions
+
+GIOENACLR 3		Pin GIOD[7:0] 에 대한 Interrupt 비활성화
+		0	Read: Interrupt 가 비활성화됨
+			Write: 0을 기록하는 것은 아무런 효과가 없음
+		1	Read: Interrupt 가 활성화됨
+			Write: Interrupt 비활성화
+
+GIOENACLR 2		Pin GIOC[7:0] 에 대한 Interrupt 비활성화
+		0	Read: Interrupt 가 비활성화됨
+			Write: 0을 기록하는 것은 아무런 효과가 없음
+		1	Read: Interrupt 가 활성화됨
+			Write: Interrupt 비활성화
+
+GIOENACLR 1		Pin GIOB[7:0] 에 대한 Interrupt 비활성화
+		0	Read: Interrupt 가 비활성화됨
+			Write: 0을 기록하는 것은 아무런 효과가 없음
+		1	Read: Interrupt 가 활성화됨
+			Write: Interrupt 비활성화
+
+GIOENACLR 0		Pin GIOA[7:0] 에 대한 Interrupt 비활성화
+		0	Read: Interrupt 가 비활성화됨
+			Write: 0을 기록하는 것은 아무런 효과가 없음
+		1	Read: Interrupt 가 활성화됨
+			Write: Interrupt 비활성화
+
+
+
+25.5.5 GIO Interrupt Priority Register(GIOLVLSET and GIOLVLCLR)
+
+GIOLVLSET 및 GIOLVLCLR Register 는
+VIM 으로 가는 높은 수준(Level 1) 혹은 낮은 수준(Level 2) 으로 Interrupt 를 설정한다.
+각 Interrupt 는 개별적으로 구성된다.
+
+* 높은 수준의 Interrupt 는 GIOOFF1 과 GIOEMU1 에 기록된다.
+* 낮은 수준의 Interrupt 는 GIOOFF2 와 GIOEMU2 에 기록된다.
+
+
+
+25.5.5.1 GIOLVLSET Register
+
+GIOLVLSET Register 는 VIM 으로 가는 높은 수준의 Interrupt 로 Interrupt 를 설정하는데 사용된다.
+GIOLVLSET Register 의 해당 Bit 에 1 을 기록함으로써
+높은 수준의 Interrupt 로 Interrupt 를 설정할 수 있다.
+0 을 기록하는 것은 아무런 영향이 없다.
+Figure 25-10 과 Table 25-7 은 이 Register 를 설명한다.
+
+Figure 25-10. GIO Interrupt Priority Register(GIOLVLSET) [offset = 18h]
+
+Table 25-7. GIO Interrupt Priority Register(GIOLVLSET) Field Descriptions
+
+GIOLVLSET 3		Pin GIOD[7:0] 에 대한 GIO High-Priority Interrupt
+		0	Read: Interrupt 는 낮은 수준 Interrupt 이다.
+			      낮은 수준 Interrupt 는 GIOOFF2 와 GIOEMU2 에 기록된다.
+			Write: 0 을 기록하는 것은 아무런 영향이 없다.
+		1	Read: Interrupt 를 High-Level Interrupt 로 설정했다.
+			      High-Level Interrupt 는 GIOOFF1 과 GIOEMU1 에 기록된다.
+			Write: High-Level Interrupt 로 Interrupt 를 설정한다.
+			       High-Level Interrupt 는 GIOOFF1 과 GIOEMU1 에 기록된다.
+
+GIOLVLSET 2		Pin GIOC[7:0] 에 대한 GIO High-Priority Interrupt
+		0	Read: Interrupt 는 낮은 수준 Interrupt 이다.
+			      낮은 수준 Interrupt 는 GIOOFF2 와 GIOEMU2 에 기록된다.
+			Write: 0 을 기록하는 것은 아무런 영향이 없다.
+		1	Read: Interrupt 를 High-Level Interrupt 로 설정했다.
+			      High-Level Interrupt 는 GIOOFF1 과 GIOEMU1 에 기록된다.
+			Write: High-Level Interrupt 로 Interrupt 를 설정한다.
+			       High-Level Interrupt 는 GIOOFF1 과 GIOEMU1 에 기록된다.
+
+GIOLVLSET 1		Pin GIOB[7:0] 에 대한 GIO High-Priority Interrupt
+		0	Read: Interrupt 는 낮은 수준 Interrupt 이다.
+			      낮은 수준 Interrupt 는 GIOOFF2 와 GIOEMU2 에 기록된다.
+			Write: 0 을 기록하는 것은 아무런 영향이 없다.
+		1	Read: Interrupt 를 High-Level Interrupt 로 설정했다.
+			      High-Level Interrupt 는 GIOOFF1 과 GIOEMU1 에 기록된다.
+			Write: High-Level Interrupt 로 Interrupt 를 설정한다.
+			       High-Level Interrupt 는 GIOOFF1 과 GIOEMU1 에 기록된다.
+
+GIOLVLSET 0		Pin GIOA[7:0] 에 대한 GIO High-Priority Interrupt
+		0	Read: Interrupt 는 낮은 수준 Interrupt 이다.
+			      낮은 수준 Interrupt 는 GIOOFF2 와 GIOEMU2 에 기록된다.
+			Write: 0 을 기록하는 것은 아무런 영향이 없다.
+		1	Read: Interrupt 를 High-Level Interrupt 로 설정했다.
+			      High-Level Interrupt 는 GIOOFF1 과 GIOEMU1 에 기록된다.
+			Write: High-Level Interrupt 로 Interrupt 를 설정한다.
+			       High-Level Interrupt 는 GIOOFF1 과 GIOEMU1 에 기록된다.
+
+
+
+25.5.5.2 GIOLVLCLR Register
+
+GIOLVLCLR Register 는 VIM 으로 가는 Low-Level Interrupt 로 Interrupt 를 설정하는데 사용된다.
+Interrupt 는 GIOLVLCLR Register 의 해당 Bit 에 1을 기록함으로써 Low-Level Interrupt 로 설정된다.
+0 을 기록하는 것은 아무런 영향이 없다.
+Figure 25-11 과 Table 25-8 은 이 Register 를 설명한다.
+
+Figure 25-11. GIO Interrupt Priority Register(GIOLVLCLR) [offset = 1Ch]
+
+Table 25-8. GIO Interrupt Priority Register(GIOLVLCLR) Field Descriptions
+
+GIOLVLCLR 3		Pin GIOD[7:0] 에 대한 GIO Low-Priority Interrupt
+		0	Read: Interrupt 는 Low-Level Interrupt 이다.
+			Write: 0 을 기록하는 것은 아무런 영향이 없다.
+		1	Read: Interrupt 를 High-Level Interrupt 로 설정한다.
+			      High-Level Interrupt 는 GIOOFF1 과 GIOEMU1 에 기록된다.
+			Write: Low-Level Interrupt 로 Interrupt 를 설정한다.
+			       Low-Level Interrupt 는 GIOOFF2 와 GIOEMU2 에 기록된다.
+
+GIOLVLCLR 2		Pin GIOC[7:0] 에 대한 GIO Low-Priority Interrupt
+		0	Read: Interrupt 는 Low-Level Interrupt 이다.
+			Write: 0 을 기록하는 것은 아무런 영향이 없다.
+		1	Read: Interrupt 를 High-Level Interrupt 로 설정한다.
+			      High-Level Interrupt 는 GIOOFF1 과 GIOEMU1 에 기록된다.
+			Write: Low-Level Interrupt 로 Interrupt 를 설정한다.
+			       Low-Level Interrupt 는 GIOOFF2 와 GIOEMU2 에 기록된다.
+
+GIOLVLCLR 1		Pin GIOB[7:0] 에 대한 GIO Low-Priority Interrupt
+		0	Read: Interrupt 는 Low-Level Interrupt 이다.
+			Write: 0 을 기록하는 것은 아무런 영향이 없다.
+		1	Read: Interrupt 를 High-Level Interrupt 로 설정한다.
+			      High-Level Interrupt 는 GIOOFF1 과 GIOEMU1 에 기록된다.
+			Write: Low-Level Interrupt 로 Interrupt 를 설정한다.
+			       Low-Level Interrupt 는 GIOOFF2 와 GIOEMU2 에 기록된다.
+
+GIOLVLCLR 0		Pin GIOA[7:0] 에 대한 GIO Low-Priority Interrupt
+		0	Read: Interrupt 는 Low-Level Interrupt 이다.
+			Write: 0 을 기록하는 것은 아무런 영향이 없다.
+		1	Read: Interrupt 를 High-Level Interrupt 로 설정한다.
+			      High-Level Interrupt 는 GIOOFF1 과 GIOEMU1 에 기록된다.
+			Write: Low-Level Interrupt 로 Interrupt 를 설정한다.
+			       Low-Level Interrupt 는 GIOOFF2 와 GIOEMU2 에 기록된다.
+
+
+
+25.5.6 GIO Interrupt Flag Register(GIOFLG)
+
+GIOFLG Register 는 (GIOINTDET 와 GIOPOL 에서 설정함으로서)
+Transition Edge(전이 에지)가 발생했음을 나타내는 Flag 를 포함한다.
+Flag 는 또한 적절한 Interrupt Offset Register(GIOOFF1 혹은 GIOOFF2) 를 읽음으로써 clear 된다.
+Figure 25-12 와 Table 25-9 는 이 Register 를 설명한다.
+
+Figure 25-12. GIO Interrupt Flag Register(GIOFLG) [offset = 20h]
+
+Table 25-9. GIO Interrupt Flag Register(GIOFLG) Field Descriptions
+
+GIOFLG 3		Pin GIOD[7:0] 에 대한 GIO Flag
+		0	Read: 마지막 clear 이후로 Transition(전이)가 발생하지 않았다.
+			Write: 0 을 기록하는 것은 아무런 영향이 없다.
+		1	Read: 해당 Pin 상에서 선택된 Transition(전이)가 발생했다.
+			Write: 해당 bit 가 0 으로 clear 된다.
+
+			Note: 이 Bit 는 또한 적절한 Offset Register 에 해당하는 Bit 를 읽음으로써 clear 된다.
+
+GIOFLG 2		Pin GIOC[7:0] 에 대한 GIO Flag
+		0	Read: 마지막 clear 이후로 Transition(전이)가 발생하지 않았다.
+			Write: 0 을 기록하는 것은 아무런 영향이 없다.
+		1	Read: 해당 Pin 상에서 선택된 Transition(전이)가 발생했다.
+			Write: 해당 bit 가 0 으로 clear 된다.
+
+			Note: 이 Bit 는 또한 적절한 Offset Register 에 해당하는 Bit 를 읽음으로써 clear 된다.
+
+GIOFLG 1		Pin GIOB[7:0] 에 대한 GIO Flag
+		0	Read: 마지막 clear 이후로 Transition(전이)가 발생하지 않았다.
+			Write: 0 을 기록하는 것은 아무런 영향이 없다.
+		1	Read: 해당 Pin 상에서 선택된 Transition(전이)가 발생했다.
+			Write: 해당 bit 가 0 으로 clear 된다.
+
+			Note: 이 Bit 는 또한 적절한 Offset Register 에 해당하는 Bit 를 읽음으로써 clear 된다.
+
+GIOFLG 0		Pin GIOA[7:0] 에 대한 GIO Flag
+		0	Read: 마지막 clear 이후로 Transition(전이)가 발생하지 않았다.
+			Write: 0 을 기록하는 것은 아무런 영향이 없다.
+		1	Read: 해당 Pin 상에서 선택된 Transition(전이)가 발생했다.
+			Write: 해당 bit 가 0 으로 clear 된다.
+
+			Note: 이 Bit 는 또한 적절한 Offset Register 에 해당하는 Bit 를 읽음으로써 clear 된다.
+
+Note: Interrupt 생성이 활성화 되었든 안되었든간에 관계 없이
+      선택된 Transition(전이)가 해당 GIO Pin 에서 발생한다면, Interrupt Flag 가 설정된다.
+      해당 GIO Pin 상에 Transition(전이) 를 위한
+      Interrupt 생성이 활성화 되기 이전에 Flag 를 clear 하는 것이 좋다.
+
+
+
+25.5.7 GIO Offset Register 1(GIOOFF1)
+
+GIOOFF1 Register 는 높은 우선 순위의 보류중인 외부 Interrupt 를 나타내는 Numerical Offset Value 를 제공한다.
+Offset 값은 Application SW 에서 Vector Table 에 있는 Interrupt Routine 의 위치를 찾는데 사용될 수 있다.
+Figure 25-13 과 Table 25-10 은 이 Register 를 설명한다.
+
+Note: 이 Register 를 읽는 것은 GIOEMU1 과 GIOFLG Register 에 있는 해당 Flag Bit 를 clear 한다.
+      그러나, Emulation Mode 에서, 이 Register 를 읽는 것은 어떠한 Register 혹은 Flag 도 clear 하지 않는다.
+      하나 이상의 GIO Interrupt 가 지연되었다면,
+      다음의 최고 우선 순위를 가진 보류된 Interrupt 에 대한 Offset 값을 표시하기 위해
+      GIOOFF1 Register 를 읽는 것은 GIOOFF1 아 GIOEMU1 의 내용을 변경한다.
+      Application 은 0 을 읽기전까지 GIOOFF1 Register 를 계속 읽음으로써
+      동일한 Service Routine 에서 모든 GIO Interrupt 서비스를 선택할 수 있다.
+
+Figure 25-13. GIO Offset 1 Register(GIOOFF1) [offset = 24h]
+
+Table 25-10. GIO Offset 1 Register(GIOOFF1) Field Descriptions
+
+GIOOFF1			GIO Offset 1 이다.
+			이 Bit 는 현재 지연된 우선 순위가 높은 Interrupt 를 Index(색인) 한다.
+			Emulation Mode 를 제외하고, 이 Register 가 읽힐 때,
+			이 Register 와 Flag Bit(GIOFLG Register 에 있는) 는 또한 clear 된다.
+
+		0	Interrupt 지연이 없다.
+		1h	Interrupt 0(GIOA 에 해당)이 높은 우선 순위로 지연되었다.
+
+		8h	Interrupt 7(GIOA7 에 해당)이 높은 우선 순위로 지연되었다.
+		9h 	Interrupt 8(GIOB0 에 해당)이 높은 우선 순위로 지연되었다.
+
+		10h	Interrupt 16(GIOB7 에 해당)이 높은 우선 순위로 지연되었다.
+
+		20h	Interrupt 32(GIOD7 에 해당)이 높은 우선 순위로 지연되었다.
+
+
+
+25.5.8 GIO Offset B Register(GIOOFF2)
+
+GIOOFF2 Register 는 Low Priority 로 보류중인 외부 Interrupt 를 나타내는 Numerical Offset Value 를 제공한다.
+Offset Value 는 Application SW 에 Vector Table 에 있는 Interrupt Routine 의 위치를 찾는데 사용될 수 있다.
+Figure 25-14 와 Table 25-11 은 이 Register 에 대해 설명한다.
+
+Note: 이 Register 를 읽는 것은 GIOEMU2 와 GIOFLG Register 내에 해당하는 Flag Bit 를 clear 한다.
+      그러나, Emulation Mode 에서, 이 Register 를 읽는 것은 어떠한 Register 혹은 Flag 도 clear 하지 않는다.
+      하나 이상의 GIO Interrupt 가 지연되었다면,
+      다음의 최고 우선 순위를 가진 보류된 Interrupt 에 대한 Offset 값을 표시하기 위해
+      GIOOFF1 Register 를 읽는 것은 GIOOFF2 와 GIOEMU2 의 내용을 변경한다.
+      Application 은 0 을 읽기전까지 GIOOFF1 Register 를 계속 읽음으로써
+      동일한 Servvice Routine 에서 모든 GIO Interrupt 서비스를 선택할 수 있다.
+
+Figure 25-14. GIO Offset 2 Register(GIOOFF2) [offset = 28h]
+
+Table 25-11. GIO Offset 2 Register(GIOOFF2) Field Descriptions
+
+GIOOFF			GIO Offset 2 이다.
+			이 Bit 는 현재 지연된 우선 순위가 낮은 Interrupt 를 Index(색인) 한다.
+			Emulation Mode 를 제외하고, 이 Register 가 읽힐 때,
+			이 Register 와 Flag Bit(GIOFLG Register 에 있는) 는 또한 clear 된다.
+
+		0h	Interrupt 지연이 없다.
+		1h	Interrupt 0(GIOA 에 해당)이 낮은 우선 순위로 지연되었다.
+
+		8h	Interrupt 7(GIOA7 에 해당)이 낮은 우선 순위로 지연되었다.
+		9h 	Interrupt 8(GIOB0 에 해당)이 낮은 우선 순위로 지연되었다.
+
+		10h	Interrupt 16(GIOB7 에 해당)이 낮은 우선 순위로 지연되었다.
+
+		20h	Interrupt 32(GIOD7 에 해당)이 낮은 우선 순위로 지연되었다.
+
+
+
+25.5.9 GIO Emulation A Register(GIOEMU1)
+
+GIOEMU1 Register 는 읽기 전용 Register 이다.
+이 Register 의 내용은 GIOOFF1 의 내용과 동일하다.
+이 Register 의 의도는 SW 가 Flag 를 지우지 않고 사용할 수 있게 하는 것이다.
+Figure 25-15 와 Table 25-12 는 이 Register 를 설명한다.
+
+Note: GIOEMU1 Register 를 read 할 때, GIOFLG Register 에 해당하는 Flag 는 clear 되지 않는다.
+
+Figure 25-15. GIO Emulation 1 Register(GIOEMU1) [offset = 2Ch]
+
+Table 25-12. GIO Emulation 1 Register(GIOEMU1) Field Descriptions
+
+GIOEMU1			GIO Offset Emulation 1 이다.
+			이 Bit 는 현재 대기중인 우선 순위가 높은 Interrupt 를 Index(색인) 한다.
+			어떠한 Reigster 혹은 Flag 도 이 Register 를 읽음으로써 clear 되지 않는다.
+
+		0	어떠한 Interrupt 지연도 없다.
+		1h	Interrupt 0(GIOA0 에 해당)은 높은 우선 순위로 지연된다.
+
+		8h	Interrupt 7(GIOA7 에 해당)은 높은 우선 순위로 지연된다.
+		9h	Interrupt 8(GIOB0 에 해당)은 높은 우선 순위로 지연된다.
+
+		10h	Interrupt 16(GIOB7 에 해당)은 높은 우선 순위로 지연된다.
+
+		20h	Interrupt 32(GIOD7 에 해당)은 높은 우선 순위로 지연된다.
+
+
+
+25.5.10 GIO Emulation B Register(GIOEMU2)
+
+GIOEMU2 Register 는 읽기 전용 Reigster 이다.
+이 Register 의 내용은 GIOOFF2 의 내용과 동일하다.
+이를 사용하는 의도는 SW 가 Flag 를 지우지 않고 사용할 수 있음이다.
+Figure 25-16 과 Table 25-13 은 이 Register 를 설명한다.
+
+Note: GIOEMU2 Register 가 read 될 때 GIOFLG Register 내에 해당하는 Flag 는 clear 되지 않는다.
+
+Figure 25-16. GIO Emulation 2 Register(GIOEMU2) [offset = 30h]
+
+Table 25-13. GIO Emulation 2 Register(GIOEMU2) Field Descriptions
+
+GIOEMU2			GIO Offset Emulation 2 이다.
+			이 Bit 는 현재 대기중인 우선 순위가 낮은 Interrupt 를 Index(색인) 한다.
+			어떠한 Register 혹은 Flag 도 이 Register 를 read 함으로써 clear 되지 않는다.
+
+		0	어떠한 Interrupt 지연도 없다.
+		1h	Interrupt 0(GIOA0 에 해당)은 낮은 우선 순위로 지연된다.
+
+		8h	Interrupt 7(GIOA7 에 해당)은 낮은 우선 순위로 지연된다.
+		9h	Interrupt 8(GIOB0 에 해당)은 낮은 우선 순위로 지연된다.
+
+		10h	Interrupt 16(GIOB7 에 해당)은 낮은 우선 순위로 지연된다.
+
+		20h	Interrupt 32(GIOD7 에 해당)은낮은 우선 순위로 지연된다.
+
+
+
+25.5.11 GIO Data Direction Registers(GIODIR[A-B])
+
+GIODIR Register 는 Port 의 Pin 을 Input 혹은 Output 으로 설정할지 여부를 제어한다.
+Figure 25-17 과 Table 25-14 는 이 Register 를 설명한다.
+
+Figure 25-17. GIO Data Direction Registers(GIODIR[A-B]) [offset = 34h, 54h]
+
+Table 25-14. GIO Data Direction Registers(GIODIR[A-B]) Field Descriptions
+
+GIODIR[n]		Port n, Pin [7:0] 의 GIO Data Direction 이다.
+		0	GIO Pin 은 Input 이다.
+			Note: Pin Direction 을 Input 으로 설정했다면
+			      Output Buffer 는 Tri-State(Logic Low, Logic High, High Impedance) 를 가지게 된다.
+		1	GIO Pin 은 Output 이다.
+
+
+
+25.5.12 GIO Data Input Registers(GIODIN[A-B])
+
+GIODIN Register 에 있는 값은 Port 의 Pin 상에서 현재 상태(High = 1 혹은 Low = 0)을 반영한다.
+Figure 25-18 과 Table 25-15 는 이 Register 를 설명한다.
+
+Figure 25-18. GIO Data Input Registers(GIODIN[A-B]) [offset = 38h, 58h]
+
+Table 25-15. GIO Data Input Registers(GIODIN[A-B]) Field Descriptions
+
+GIODIN[n]		Port n, Pin [7:0] 에 대한 GIO Data Input 이다.
+		0	Pin 이 Logic Low(0) 에 있다.
+		1	Pin 이 Logic High(1) 에 있다.
+
+
+
+25.5.13 GIO Data Output Registers(GIODOUT[A-B])
+
+GIODOUT Register 에 있는 값은 Port 의 Pin 이
+Output 으로 설정될 때의 출력 상태(High = 1 혹은 Low = 0) 을 지정한다.
+Figure 25-19 와 Table 25-16 은 이 Register 를 설명한다.
+
+Note: GIODSET Register 에 있는 값은 GIODOUT 비트에 있는 현재 값에 관계 없이
+      Data Output Control Register Bit 에 1 을 설정한다.
+
+Figure 25-19. GIO Data Output Registers(GIODOUT[A-B]) [offset = 3Ch, 5Ch]
+
+Table 25-16. GIO Data Output Registers(GIODOUT[A-B]) Field Descriptions
+
+GIODOUT[n]		Port n, Pin [7:0] 의 GIO Data Output 이다.
+		0	Pin 이 Logic Low(0) 으로 구동된다.
+		1	Pin 이 Logic High(1) 으로 구동된다.
+			Note: GIOPDRx 비트가 1 이고 GIODOUTx 비트가 1이면, Output 은 High Impedance 상태다.
+			Note: GIO Pin 은 GIODIRx 비트를 1로 설정함으로써 Output Mode 로 배치된다.
+
+
+
+25.5.14 GIO Data Set Registers(GIODSET[A-B])
+
+이 Register 의 값은 GIODOUT 비트의 현재 값에 관계없이 Data Output Control Register 비트에 1 을 설정한다.
+Register 의 내용으로 GIODOUT 의 내용을 반영한다.
+Figure 25-20 과 Table 25-17 은 이 Register 를 설명한다.
+
+Figure 25-20. GIO Data Set Register(GIODSET[A-B]) [offset = 40h, 60h]
+
+Table 25-17. GIO Data Set Registers(GIODSET[A-B]) Field Descriptions
+
+GIODSET[n]		Port n, Pin [7:0] 에 대한 GIO Data Set 이다.
+			이 비트는 GIO Pin High 의 출력을 만든다.
+		0	Write: 0 을 기록하는 것은 아무런 효과가 없다.
+		1	Write: 해당 GIO Pin 이 Logic High(1) 로 구동된다.
+			Note: GIODOUT Bit 의 현재 Logic State 는 이 Bit 에 의해 표시될 것이다.
+			Note: GIO Pin 은 GIODIRx 비트를 1로 설정함으로써 Output Mode 로 배치된다.
+
+
+
+25.5.15 GIO Data Clear Registers(GIODCLR[A-B])
+
+이 Register 에 있는 값은 현재 값에 관계 없이
+Data Output Register(GIO Data Output Register[A-H]) Bit 에 0 을 clear 한다.
+Register 의 내용은 GIODOUT 의 내용을 반영한다.
+Figure 25-21 과 Table 25-18 은 이 Register 를 설명한다.
+
+Figure 25-21. GIO Data Clear Regsiters(GIODCLR[A-B]) [offset = 44h, 64h]
+
+Table 25-18. GIO Data Clear Registers(GIODCLR[A-B]) Field Descriptions
+
+GIODCLR[n]		Port n, Pin [7:0] 에 대한 GIO Data Clear 이다.
+			이 Bit 는 GIO Pin Low 의 출력을 만든다.
+		0	Write: 0 을 기록하는 것은 아무런 효과가 없다.
+		1	Write: 해당 GIO Pin 이 Logic Low(0) 로 구동된다.
+			Note: GIODOUT 비트의 현재 Logic State 는 이 Bit 에 의해 표시될 것이다.
+			Note: GIO Pin 은 GIODIRx 비트에 1 을 설정함으로써 Output Mode 로 배치된다.
+
+
+
+25.5.16 GIO Open Drain Registers(GIOPDR[A-B])
+
+이 Register 에 있는 값은 Data Pin 의 Open Drain 기능을 활성화 하거나 비활성화한다.
+Figure 25-22 와 Table 25-19 는 이 Register 를 설명한다.
+
+Figure 25-22. GIO Open Drain Registers(GIOPDR[A-B]) [offset = 48h, 68h]
+
+Table 25-19. GIO Open Drain Registers(GIOPDR[A-B]) Field Descriptions
+
+GIOPDR[n]		Port n, Pin [7:0] 에 대한 GIO Open Drain 이다.
+		0	GIO Pin 은 Push/Pull(Normal GIO) Mode 로 구성된다.
+			GIODOUT 비트가 0 이라면 Output Voltage 는 V_OL 이하이고
+			GIODOUT 비트가 1 이라면 Output Voltage 는 V_OH 이상이다.
+		1	GIO Pin 은 Open Drain Mode 로 구성된다.
+			GIODOUTx 비트는 GIO Output Buffer 의 상태를 제어한다:
+			GIODOUTx = 0 이면 GIO Output Buffer 는 Low 로 구동된다;
+			GIODOUTx = 1 이면 GIO Output Buffer 는 Tri-State 가 된다.
+
+
+
+25.5.17 GIO Pull Disable Registers(GIOPULDIS[A-B])
+
+이 Register 에 있는 값은 Pin 의 Pull 제어 기능을 활성화하거나 비활성화한다.
+Figure 25-23 과 Table 25-20 은 이 Register 를 설명한다.
+
+Figure 25-23. GIO Pull Disable Registers(GIOPULDIS[A-B]) [offset = 4Ch, 6Ch]
+
+Table 25-20. GIO Pull Disable Registers(GIOPULDIS[A-B]) Field Descriptions
+
+GIOPULDIS[n]		Port n, Pin [7:0] 에 대한 GIO Pull Disable 이다.
+			GIO Pin 을 Input Pin 으로 설정한 경우에만 이 비트에 write 하는 것이 적용된다.
+		0	Pull 기능이 활성화된다.
+		1	Pull 기능이 비활성화된다.
+			Note: GIO Pin 은 GIODIRx 비트에 0 을 clear 함으로써 Input Mode 로 배치된다.
+
+
+
+25.5.18 GIO Pull Select Registers(GIOPSL[A-B])
+
+이 Register 에 있는 값은 Pin 의 Pull-Up 혹은 Pull-Down 기능을 선택한다.
+Figure 25-24 와 Table 25-21 은 이 Register 를 설명한다.
+
+Figure 25-24. GIO Pull Select Registers(GIOPSL[A-B]) [offset = 50h, 70h]
+
+Table 25-21. GIO Pull Select Registers(GIOPSL[A-B]) Field Descriptions
+
+GIOPSL[n]		Port n, Pin [7:0] 에 대한 GIO Pull Select 이다.
+		0	Pull-Up/Pull-Down Logic 이 활성화 된다면 Pull-Down 기능을 선택한다.
+		1	Pull-Up/Pull-Down Logic 이 활성화 된다면 Pull-Up 기능을 선택한다.
+			Note: GIOPULDIS 에 있는 해당 bit 에 0 을 clear 함으로써
+			      Pull-Up/Pull-Down 기능을 사용할 수 있다.
+
+
+
+25.6 I/O Control Summary
+
+Output Buffer 와 Pull 제어의 행동이 Table 25-22 에 요약되었다.
+
+Table 25-22. Output Buffer, and Pull Control Behavior for GIO Pins

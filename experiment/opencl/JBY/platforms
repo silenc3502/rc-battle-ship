@@ -1,0 +1,200 @@
+MAIN.CPP
+
+
+/******************************************************************************
+opyright (c) 2013-2014, Texas Instruments Incorporated - http://www.ti.com/
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ * * Redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer.
+ * * Redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution.
+ * * Neither the name of Texas Instruments Incorporated nor the
+ * names of its contributors may be used to endorse or promote products
+ * derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ *****************************************************************************/
+#define __CL_ENABLE_EXCEPTIONS
+#include <CL/cl.hpp>
+#include <iostream>
+#include <iomanip>
+#include <signal.h>
+#include <cstdlib>
+#include "ocl_util.h"
+
+#ifdef _TI_RTOS
+#include "../rtos_main.c"
+#endif
+
+using namespace cl;
+using namespace std;
+
+/******************************************************************************
+* devtype
+******************************************************************************/
+const char *devtype(cl_device_type x)
+{
+  switch (x)
+  {
+  case CL_DEVICE_TYPE_CPU: return "CPU"; // 호스트 프로세서 인 OpenCL 장치. 호스트 프로세서는 OpenCL 구현을 실행하며 단일 또는 다중 코어 CPU
+  case CL_DEVICE_TYPE_ACCELERATOR: return "ACCELERATOR"; // OpenCL 가속기 (예 : IBM CELL Blade). 이러한 장치는 PCIe와 같은 주변 장치 상호 연결을 사용하여 호스트 프로세서와 통신
+  case CL_DEVICE_TYPE_GPU: return "GPU"; //GPU 인 OpenCL 장치. 이를 통해 OpenGL이나 DirectX와 같은 3D API를 가속화하는 데에도이 장치를 사용할 수 있다.
+  default: return "UNKNOWN";
+  }
+}
+
+/******************************************************************************
+* main
+******************************************************************************/
+char ary[1<<20]; //왼쪽 쉬프트 20
+
+#ifdef _TI_RTOS // _TI_RTOS 로 실행 되면 ocl_main 으로 실행
+void ocl_main(UArg arg0, UArg arg1)
+{
+  int argc = (int) arg0;
+  char **argv = (char **) arg1;
+#else
+#define RETURN(x) return x
+int main(int argc, char *argv[])
+{
+#endif
+  /*-------------------------------------------------------------------------
+  * Catch ctrl-c so we ensure that we call dtors and the dsp is reset properly
+  *------------------------------------------------------------------------*/
+  signal(SIGABRT, exit);
+  signal(SIGTERM, exit);
+
+  /*-------------------------------------------------------------------------
+  * Begin OpenCL Setup code in try block to handle any errors
+  *------------------------------------------------------------------------*/
+  try
+  {
+  std::vector<Platform> platforms; // 가변 동적 배열?? 로 platform 을 선언 ?? 호출 ?? 아니면 공간을 생성
+  Platform::get(&platforms); // platforms 를 가져와서 공간에 넣어줌
+
+  for (int p = 0; p < platforms.size(); p++)
+  {
+  std::string str;
+
+  platforms[p].getInfo(CL_PLATFORM_NAME, &str);
+  cout << "PLATFORM: " << str << endl;
+
+  platforms[p].getInfo(CL_PLATFORM_VERSION, &str);
+  cout << " Version: " << str << endl;
+
+  platforms[p].getInfo(CL_PLATFORM_VENDOR, &str);
+  cout << " Vendor : " << str << endl;
+
+  platforms[p].getInfo(CL_PLATFORM_PROFILE, &str);
+  cout << " Profile: " << str << endl;
+
+  cl_context_properties properties[] = //컨텍스트 특성 이름 및 해당 값 목록을 지정
+
+  Context context(CL_DEVICE_TYPE_ALL, properties); //시스템에서 사용할 수있는 모든 OpenCL 장치 속성
+
+  std::vector<Device> devices= context.getInfo<CL_CONTEXT_DEVICES>(); //device 공간을 생성
+
+  for (int d = 0; d < devices.size(); d++)
+  {
+  devices[d].getInfo(CL_DEVICE_NAME, &str);
+  cout << " DEVICE: " << str << endl;
+
+  bool ti_dsp = (str.find("C66") != std::string::npos); // str에서 c66 이라는 단어를 찾고 있으면
+해당 문자가 위치한 문자배열값 또는 문자열의 시작점이 위치한 배열값을 반환하고 찾지 못하면 string::npos값을 반환한다(0 을반환하는듯)
+
+   cl_device_type type;
+  devices[d].getInfo(CL_DEVICE_TYPE, &type); //
+  cout << " Type : " << devtype(type) << endl;
+
+  int num;
+  devices[d].getInfo(CL_DEVICE_MAX_COMPUTE_UNITS, &num);
+  cout << " CompUnits : " << num << endl;
+
+  cl_uint bignum;
+  devices[d].getInfo(CL_DEVICE_MAX_CLOCK_FREQUENCY, &bignum);
+  cout << " Frequency : " << (double) bignum / 1e3 // 1e3 = 1000
+  << " GHz"<< endl;
+
+  cl_ulong longnum;
+  devices[d].getInfo(CL_DEVICE_GLOBAL_MEM_SIZE, &longnum);
+  cout << " Glb Mem : " << setw(7) << longnum / 1024
+  << " KB" << endl;
+
+  if (ti_dsp)
+  {
+  devices[d].getInfo(CL_DEVICE_GLOBAL_EXT1_MEM_SIZE_TI, &longnum);
+  cout << " GlbExt1 Mem: " << setw(7) << longnum / 1024
+  << " KB" << endl;
+
+  devices[d].getInfo(CL_DEVICE_GLOBAL_EXT2_MEM_SIZE_TI, &longnum);
+  cout << " GlbExt2 Mem: " << setw(7) << longnum / 1024
+  << " KB" << endl;
+
+  devices[d].getInfo(CL_DEVICE_MSMC_MEM_SIZE_TI, &longnum);
+  cout << " Msmc Mem : " << setw(7) << longnum / 1024
+  << " KB" << endl;
+  }
+
+  devices[d].getInfo(CL_DEVICE_LOCAL_MEM_SIZE, &longnum);
+  cout << " Loc Mem : " << setw(7) << longnum / 1024 << " KB" << endl;
+
+  devices[d].getInfo(CL_DEVICE_MAX_MEM_ALLOC_SIZE, &longnum);
+  cout << " Max Alloc : " << setw(7) << longnum / 1024 << " KB" << endl;
+  }
+  }
+  }
+
+  /*-------------------------------------------------------------------------
+  * Let exception handling deal with any OpenCL error cases
+  *------------------------------------------------------------------------*/
+  catch (Error err)
+  {
+  cerr << "ERROR: " << err.what() << "(" << err.err() << ", "
+  << ocl_decode_error(err.err()) << ")" << endl;
+  }
+
+  RETURN(0);
+}
+
+
+
+-----------------------------------------------------------------------------------------------------------------------------------
+Makefile.rtos
+
+EXE  = platform
+srcs = main.cpp
+
+include ../make_rtos.inc
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------
+Makefile
+
+EXE       = platforms
+CPP_FLAGS = -O3
+
+include ../make.inc
+
+$(EXE): main.o 
+	@$(CPP) $(CPP_FLAGS) main.o $(LD_FLAGS) $(LIBS) -o $@
+
+
+
+
+
+
+

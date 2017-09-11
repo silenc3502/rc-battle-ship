@@ -1,0 +1,9 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Name=WiFi
+GenericName=AM5728 Development App
+Icon=/usr/share/matrix-gui-2.0/apps/images/wireless-icon.png
+Type=Application
+Exec=wifi_test.sh
+Categories=project
+ProgramType=console

@@ -1,0 +1,32 @@
+* DHT11 humidity/temperature sensor (and compatibles like DHT22)
+
+Required properties:
+  - compatible: Should be "dht11"
+  - gpios: Should specify the GPIO connected to the sensor's data
+    line, see "gpios property" in
+    Documentation/devicetree/bindings/gpio/gpio.txt.
+
+Example:
+
+humidity_sensor {
+	compatible = "dht11";
+	gpios = <&gpio0 6 0>;
+}
+
+
+/*
+
+* DHT11 습도 / 온도 센서 (DHT22와 같은 호환 제품)
+
+필수 속성 :
+   - 호환 : "dht11"이어야합니다.
+   - gpios : 센서의 데이터 라인에 연결된 GPIO를 지정해야합니다. "gpios 속성"을 참조하십시오.
+
+Example:
+
+humidity_sensor {
+	compatible = "dht11";
+	gpios = <&gpio0 6 0>;
+}
+
+*/

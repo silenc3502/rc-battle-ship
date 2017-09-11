@@ -1,0 +1,43 @@
+* Texas Instruments' ADC128S052 and ADC122S021 ADC chip
+
+Required properties:
+ - compatible: Should be "ti,adc128s052" or "ti,adc122s021"
+ - reg: spi chip select number for the device
+ - vref-supply: The regulator supply for ADC reference voltage
+
+Recommended properties:
+ - spi-max-frequency: Definition as per
+		Documentation/devicetree/bindings/spi/spi-bus.txt
+
+Example:
+adc@0 {
+	compatible = "ti,adc128s052";
+	reg = <0>;
+	vref-supply = <&vdd_supply>;
+	spi-max-frequency = <1000000>;
+};
+
+
+/*
+* Texas Instruments의 ADC128S052 및 ADC122S021 ADC 칩
+
+필수 속성 :
+  - 호환 가능 : "ti, adc128s052"또는 "ti, adc122s021"이어야합니다.
+  - reg : 장치의 SPI 칩 선택 번호
+  - vref-supply : ADC 기준 전압을위한 레귤레이터 전원
+
+권장 속성 :
+  - spi-max-frequency : 정의대로
+		Documentation/devicetree/bindings/spi/spi-bus.txt
+
+Example:
+adc@0 {
+	compatible = "ti,adc128s052";
+	reg = <0>;
+	vref-supply = <&vdd_supply>;
+	spi-max-frequency = <1000000>;
+};
+
+
+*/
+

@@ -1,0 +1,50 @@
+* TWL4030 Monitoring Analog to Digital Converter (MADC)
+
+The MADC subsystem in the TWL4030 consists of a 10-bit ADC
+combined with a 16-input analog multiplexer.
+
+Required properties:
+  - compatible: Should contain "ti,twl4030-madc".
+  - interrupts: IRQ line for the MADC submodule.
+  - #io-channel-cells: Should be set to <1>.
+
+Optional properties:
+  - ti,system-uses-second-madc-irq: boolean, set if the second madc irq register
+				    should be used, which is intended to be used
+				    by Co-Processors (e.g. a modem).
+
+Example:
+
+&twl {
+	madc {
+		compatible = "ti,twl4030-madc";
+		interrupts = <3>;
+		#io-channel-cells = <1>;
+	};
+};
+
+
+/*
+* TWL4030 아날로그 - 디지털 변환기 (MADC) 모니터링
+
+TWL4030의 MADC 서브 시스템은 16 비트 아날로그 멀티플렉서와 결합 된 10 비트 ADC로 구성됩니다.
+
+필수 속성 :
+   - compatible : "ti, twl4030-madc"을 포함해야합니다.
+   - interrupts : MADC 서브 모듈의 IRQ 라인.
+   - # io-channel-cells : <1>로 설정해야합니다.
+
+선택 속성 :
+- ti, system-uses-second-madc-irq : 부울. 코 프로세서 (예 : 모뎀)에서 사용할 두 번째 madc irq 레지스터를 사용해야하는지 설정합니다.
+
+
+Example:
+
+&twl {
+	madc {
+		compatible = "ti,twl4030-madc";
+		interrupts = <3>;
+		#io-channel-cells = <1>;
+	};
+};
+*/

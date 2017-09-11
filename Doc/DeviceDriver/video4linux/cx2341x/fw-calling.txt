@@ -1,0 +1,114 @@
+This page describes how to make calls to the firmware api.
+이 페이지는 펌웨어 API를 호출하는 방법을 설명합니다.
+
+How to call
+===========
+
+The preferred calling convention is known as the firmware mailbox. The mailboxes are basically a fixed length array that serves as the call-stack.
+선호되는 호출 규칙은 펌웨어 mailbox로 알려져 있습니다. Mailbox은 기본적으로 호출 스택 역할을 하는 고정 길이 배열입니다
+
+Firmware mailboxes can be located by searching the encoder and decoder memory for a 16 byte signature. That signature will be located on a 256-byte boundary.
+펌웨어 maildox들은 인코더 및 디코더 메모리에서 16 바이트 서명을 검색하여 찾을 수 있습니다. 이 서명은 256 바이트 경계에 있습니다.
+
+Signature:
+0x78, 0x56, 0x34, 0x12, 0x12, 0x78, 0x56, 0x34,
+0x34, 0x12, 0x78, 0x56, 0x56, 0x34, 0x12, 0x78
+
+The firmware implements 20 mailboxes of 20 32-bit words. The first 10 are reserved for API calls. The second 10 are used by the firmware for event notification.
+펌웨어는 20 개의 32 비트 단어, 20 개의 mailbox들을 구현합니다. 처음 10 개는 API 호출 용으로 예약되어 있습니다. 두 번째 10은 이벤트 알림을 위해 펌웨어에서 사용됩니다.
+
+  Index  Name
+  -----  ----
+  0      Flags
+  1      Command
+  2      Return value
+  3      Timeout
+  4-19   Parameter/Result
+
+
+The flags are defined in the following table. The direction is from the perspective of the firmware.
+플래그는 다음 테이블에 정의됩니다. 펌웨어 관점에서 본것이다.
+
+
+  Bit  Direction  Purpose
+  ---  ---------  -------
+  2    O          Firmware has processed the command.		펌웨어가 명령을 처리했습니다.
+  1    I           Driver has finished setting the parameters.	드라이버가 매개 변수 설정을 완료했습니다.
+  0    I           Driver is using this mailbox.			드라이버가이 편지함을 사용 중입니다.
+
+
+The command is a 32-bit enumerator. The API specifics may be found in the fw-*-api.txt documents.
+이 명령은 32 비트 열거자입니다. API 사양은 fw - * - api.txt 문서에서 찾을 수 있습니다.
+
+The return value is a 32-bit enumerator. Only two values are currently defined: 
+반환 값은 32 비트 열거자입니다. 현재 정의 된 값은 두 개뿐입니다.
+0=success and -1=command undefined.
+
+There are 16 parameters/results 32-bit fields. The driver populates these fields with values for all the parameters required by the call. The driver overwrites these fields with result values returned by the call. The API specifics may be found in the fw-*-api.txt documents.
+16 개의 매개 변수 / 결과 32 비트 필드가 있습니다. 드라이버는이 필드를 호출에 필요한 모든 매개 변수의 값으로 채웁니다. 드라이버는 이 필드를 호출에 의해 반환된 결과 값으로 덮어 씁니다. API 사양은 fw - * - api.txt 문서에서 찾을 수 있습니다.
+
+The timeout value protects the card from a hung driver thread. If the driver doesn't handle the completed call within the timeout specified, the firmware will reset that mailbox.
+시간 제한 값은 끊어진 드라이버 스레드에서 카드를 보호합니다. 드라이버가 지정된 제한 시간 내에 완료된 통화를 처리하지 않으면 펌웨어는 해당 사서함을 재설정합니다.
+
+To make an API call, the driver iterates over each mailbox looking for the first one available (bit 0 has been cleared). The driver sets that bit, fills in the command enumerator, the timeout value and any required parameters. The driver then sets the parameter ready bit (bit 1). The firmware scans the mailboxes for pending commands, processes them, sets the result code, populates the result value array with that call's return values and sets the call complete bit (bit 2). Once bit 2 is set, the driver should retrieve the results and clear all the flags. If the driver does not perform this task within the time set in the timeout register, the firmware will reset that mailbox.
+API 호출을 만들기 위해 드라이버는 각 mailbox에서 사용 가능한 첫 번째 mailbox을 찾고 반복합니다 (비트 0이 지워짐). 드라이버는 비트를 설정하고 명령 열거자, 제한 시간 값 및 필요한 모든 매개 변수를 채웁니다. 그런 다음 드라이버는 매개 변수 준비 비트 (비트 1)를 설정합니다. 펌웨어는 mailbox에서 보류중인 명령을 검색하여 처리하고 결과 코드를 설정하며 결과 값 배열을 해당 호출의 반환 값으로 채우고 호출 완료 비트 (비트 2)를 설정합니다. 비트 2가 설정되면 드라이버는 결과를 검색하고 모든 플래그를 지워야합니다. 드라이버가 제한 시간 레지스터에 설정된 시간 내에 이 작업을 수행하지 않으면 펌웨어는 해당 mailbox을 재설정합니다.
+
+Event notifications are sent from the firmware to the host. The host tells the firmware which events it is interested in via an API call. That call tells the firmware which notification mailbox to use. The firmware signals the host via an interrupt. Only the 16 Results fields are used, the Flags, Command, Return value and Timeout words are not used.
+이벤트 알림은 펌웨어에서 호스트로 전송됩니다. 호스트는 API 호출을 통해 관심있는 이벤트를 펌웨어에 알립니다. 이 호출은 어떤 알림 mailbox을 사용할 지 펌웨어에 알려줍니다. 펌웨어는 인터럽트를 통해 호스트에 신호를 보냅니다. 16 개의 결과 필드 만 사용되며 플래그, 명령, 반환값 및 시간초과word는 사용되지 않습니다.This page describes how to make calls to the firmware api.
+이 페이지는 펌웨어 API를 호출하는 방법을 설명합니다.
+ 
+How to call
+===========
+ 
+The preferred calling convention is known as the firmware mailbox. The mailboxes are basically a fixed length array that serves as the call-stack.
+선호되는 호출 규칙은 펌웨어 mailbox로 알려져 있습니다. Mailbox은 기본적으로 호출 스택 역할을 하는 고정 길이 배열입니다
+ 
+Firmware mailboxes can be located by searching the encoder and decoder memory for a 16 byte signature. That signature will be located on a 256-byte boundary.
+펌웨어 maildox들은 인코더 및 디코더 메모리에서 16 바이트 서명을 검색하여 찾을 수 있습니다. 이 서명은 256 바이트 경계에 있습니다.
+ 
+Signature:
+0x78, 0x56, 0x34, 0x12, 0x12, 0x78, 0x56, 0x34,
+0x34, 0x12, 0x78, 0x56, 0x56, 0x34, 0x12, 0x78
+ 
+The firmware implements 20 mailboxes of 20 32-bit words. The first 10 are reserved for API calls. The second 10 are used by the firmware for event notification.
+펌웨어는 20 개의 32 비트 단어, 20 개의 mailbox들을 구현합니다. 처음 10 개는 API 호출 용으로 예약되어 있습니다. 두 번째 10은 이벤트 알림을 위해 펌웨어에서 사용됩니다.
+ 
+  Index  Name
+  -----  ----
+  0      Flags
+  1      Command
+  2      Return value
+  3      Timeout
+  4-19   Parameter/Result
+ 
+ 
+The flags are defined in the following table. The direction is from the perspective of the firmware.
+플래그는 다음 테이블에 정의됩니다. 펌웨어 관점에서 본것이다.
+ 
+ 
+  Bit  Direction  Purpose
+  ---  ---------  -------
+  2    O          Firmware has processed the command.		펌웨어가 명령을 처리했습니다.
+  1    I           Driver has finished setting the parameters.	드라이버가 매개 변수 설정을 완료했습니다.
+  0    I           Driver is using this mailbox.			드라이버가이 편지함을 사용 중입니다.
+ 
+ 
+The command is a 32-bit enumerator. The API specifics may be found in the fw-*-api.txt documents.
+이 명령은 32 비트 열거자입니다. API 사양은 fw - * - api.txt 문서에서 찾을 수 있습니다.
+ 
+The return value is a 32-bit enumerator. Only two values are currently defined: 
+반환 값은 32 비트 열거자입니다. 현재 정의 된 값은 두 개뿐입니다.
+0=success and -1=command undefined.
+ 
+There are 16 parameters/results 32-bit fields. The driver populates these fields with values for all the parameters required by the call. The driver overwrites these fields with result values returned by the call. The API specifics may be found in the fw-*-api.txt documents.
+16 개의 매개 변수 / 결과 32 비트 필드가 있습니다. 드라이버는이 필드를 호출에 필요한 모든 매개 변수의 값으로 채웁니다. 드라이버는 이 필드를 호출에 의해 반환된 결과 값으로 덮어 씁니다. API 사양은 fw - * - api.txt 문서에서 찾을 수 있습니다.
+ 
+The timeout value protects the card from a hung driver thread. If the driver doesn't handle the completed call within the timeout specified, the firmware will reset that mailbox.
+시간 제한 값은 끊어진 드라이버 스레드에서 카드를 보호합니다. 드라이버가 지정된 제한 시간 내에 완료된 통화를 처리하지 않으면 펌웨어는 해당 사서함을 재설정합니다.
+ 
+To make an API call, the driver iterates over each mailbox looking for the first one available (bit 0 has been cleared). The driver sets that bit, fills in the command enumerator, the timeout value and any required parameters. The driver then sets the parameter ready bit (bit 1). The firmware scans the mailboxes for pending commands, processes them, sets the result code, populates the result value array with that call's return values and sets the call complete bit (bit 2). Once bit 2 is set, the driver should retrieve the results and clear all the flags. If the driver does not perform this task within the time set in the timeout register, the firmware will reset that mailbox.
+API 호출을 만들기 위해 드라이버는 각 mailbox에서 사용 가능한 첫 번째 mailbox을 찾고 반복합니다 (비트 0이 지워짐). 드라이버는 비트를 설정하고 명령 열거자, 제한 시간 값 및 필요한 모든 매개 변수를 채웁니다. 그런 다음 드라이버는 매개 변수 준비 비트 (비트 1)를 설정합니다. 펌웨어는 mailbox에서 보류중인 명령을 검색하여 처리하고 결과 코드를 설정하며 결과 값 배열을 해당 호출의 반환 값으로 채우고 호출 완료 비트 (비트 2)를 설정합니다. 비트 2가 설정되면 드라이버는 결과를 검색하고 모든 플래그를 지워야합니다. 드라이버가 제한 시간 레지스터에 설정된 시간 내에 이 작업을 수행하지 않으면 펌웨어는 해당 mailbox을 재설정합니다.
+ 
+Event notifications are sent from the firmware to the host. The host tells the firmware which events it is interested in via an API call. That call tells the firmware which notification mailbox to use. The firmware signals the host via an interrupt. Only the 16 Results fields are used, the Flags, Command, Return value and Timeout words are not used.
+이벤트 알림은 펌웨어에서 호스트로 전송됩니다. 호스트는 API 호출을 통해 관심있는 이벤트를 펌웨어에 알립니다. 이 호출은 어떤 알림 mailbox을 사용할 지 펌웨어에 알려줍니다. 펌웨어는 인터럽트를 통해 호스트에 신호를 보냅니다. 16 개의 결과 필드 만 사용되며 플래그, 명령, 반환값 및 시간초과word는 사용되지 않습니다.
+

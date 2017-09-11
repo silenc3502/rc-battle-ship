@@ -1,0 +1,35 @@
+Marvell Berlin reset controller
+===============================
+
+Please also refer to reset.txt in this directory for common reset
+controller binding usage.
+
+The reset controller node must be a sub-node of the chip controller
+node on Berlin SoCs.
+
+Required properties:
+- compatible: should be "marvell,berlin2-reset"
+- #reset-cells: must be set to 2
+
+마벨 베를린 리셋 컨트롤러
+=================
+
+common reset controller binding 사용에 대해서는이 디렉토리의 reset.txt를 참조하십시오.
+
+reset controller node 는 베를린 SoC의 칩 컨트롤러 노드의 하위 노드 여야합니다.
+
+필수 속성 :
+- 호환 가능 : "marvell, berlin2-reset"이어야합니다.
+- # reset-cells : 2로 설정해야합니다.
+
+
+Example:
+
+chip_rst: reset {
+	compatible = "marvell,berlin2-reset";
+	#reset-cells = <2>;
+};
+
+&usb_phy0 {
+	resets = <&chip_rst 0x104 12>;
+};

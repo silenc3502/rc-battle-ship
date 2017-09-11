@@ -1,0 +1,8 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+
+%:
+	dh $@ --with dkms
+
+override_dh_auto_clean:
+override_dh_auto_build:

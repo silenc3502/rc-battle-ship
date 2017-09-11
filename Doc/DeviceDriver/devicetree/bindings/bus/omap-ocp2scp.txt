@@ -1,0 +1,44 @@
+	* OMAP OCP2SCP - ocp interface to scp interface
+
+properties:
+- compatible : Should be "ti,am437x-ocp2scp" for AM437x processor
+	       Should be "ti,omap-ocp2scp" for all others
+- reg : Address and length of the register set for the device
+- #address-cells, #size-cells : Must be present if the device has sub-nodes
+- ranges : the child address space are mapped 1:1 onto the parent address space
+- ti,hwmods : must be "ocp2scp_usb_phy"
+
+Sub-nodes:
+All the devices connected to ocp2scp are described using sub-node to ocp2scp
+
+
+
+* OMAP OCP2SCP - scp 인터페이스에 대한 ocp 인터페이스
+
+속성 :
+- 호환 : AM437x 프로세서의 경우 "ti, am437x-ocp2scp"여야합니다. 다른 모든 경우에는 "ti, omap-ocp2scp"여야합니다.
+- reg : 장치에 설정된 레지스터의 주소와 길이
+- # address-cells, # size-cells : 장치에 하위 노드가있는 경우에 있어야합니다.
+- 범위 : 하위 주소 공간이 상위 주소 공간에 1 : 1로 매핑됩니다.
+- ti, hwmods : "ocp2scp_usb_phy"여야합니다.
+
+하위 노드 :
+ocp2scp에 연결된 모든 장치는 ocp2scp에 대한 하위 노드를 사용하여 설명됩니다.
+
+
+ocp2scp@4a0ad000 {
+	compatible = "ti,omap-ocp2scp";
+	reg = <0x4a0ad000 0x1f>;
+	#address-cells = <1>;
+	#size-cells = <1>;
+	ranges;
+	ti,hwmods = "ocp2scp_usb_phy";
+
+	subnode1 {
+	...
+	};
+
+	subnode2 {
+	...
+	};
+};

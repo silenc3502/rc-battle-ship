@@ -1,0 +1,68 @@
+                              OMAP4 ISS Driver
+                              ================
+ 
+Introduction
+------------
+ 
+The OMAP44XX family of chips contains the Imaging SubSystem (a.k.a. ISS), Which contains several components that can be categorized in 3 big groups:
+OMAP44XX 칩 제품군은 이미징 서브 시스템 (a.k.a. ISS)을 포함하고 있으며, 여기에는 3 개의 큰 그룹으로 분류 할 수 있는 여러 구성 요소가 포함되어 있습니다.
+ 
+- Interfaces (2 Interfaces: CSI2-A & CSI2-B/CCP2)
+- ISP (Image Signal Processor) (이미지 신호 처리기)
+- SIMCOP (Still Image Coprocessor) (스틸 이미지 코-프로세서)
+ 
+For more information, please look in [1] for latest version of:
+자세한 내용은 [1]의 최신 버전을 확인하십시오.
+    	"OMAP4430 Multimedia Device Silicon Revision 2.x"
+ 
+As of Revision AB, the ISS is described in detail in section 8.
+개정 AB에서, ISS는 8 절에 자세히 설명되어 있습니다.
+ 
+This driver is supporting _only_ the CSI2-A/B interfaces for now.
+이 드라이버는 현재 CSI2-A / B 인터페이스 만 _only_ 지원합니다.
+                                                             	
+It makes use of the Media Controller framework [2], and inherited most of the code from OMAP3 ISP driver (found under drivers/media/platform/omap3isp/*), except that it doesn't need an IOMMU now for ISS buffers memory mapping.
+Media Controller 프레임 워크 [2]를 사용하고 OMAP3 ISP 드라이버 (drivers / media / platform / omap3isp / * 아래에 있음)에서 대부분의 코드를 상속 받았다. 단, ISS 버퍼 메모리 매핑을 위해 IOMMU가 필요하지 않습니다.
+ 
+Supports usage of MMAP buffers only (for now).
+MMAP 버퍼의 사용만을 지원합니다 (현재).
+ 
+Tested platforms   	테스트 된 플랫폼
+----------------
+ 
+- OMAP4430SDP, w/ ES2.1 GP & SEVM4430-CAM-V1-0
+(Contains IMX060 & OV5640, in which only the last one is supported, outputting YUV422 frames).
+(IMX060 및 OV5640 포함, 마지막 하나만 지원, YUV422 프레임 출력)
+ 
+- TI Blaze MDP, w/ OMAP4430 ES2.2 EMU
+(Contains 1 IMX060 & 2 OV5650 sensors, in  which only the OV5650 are supported, outputting RAW10 frames).
+(OV5650 만 지원되는 IMX060 및 2 OV5650 센서 포함, RAW10 프레임 출력).
+ 
+- PandaBoard, Rev. A2, w/ OMAP4430 ES2.1 GP & OV adapter board, tested with following sensors:
+PandaBoard, Rev. A2, OMAP4430 ES2.1 GP 및 OV 어댑터 보드, 다음 센서로 테스트 :
+  * OV5640
+  * OV5650
+ 
+- Tested on mainline kernel:      	메인 라인 커널 테스트
+ 
+    	http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=summary
+ 
+  Tag: v3.3 (commit c16fa4f2ad19908a47c63d8fa436a1178438c7e7)
+ 
+File list
+---------
+drivers/staging/media/omap4iss/
+include/media/omap4iss.h
+ 
+References
+----------
+ 
+[1] http://focus.ti.com/general/docs/wtbu/wtbudocumentcenter.tsp?navigationId=12037&templateId=6123#62
+[2] http://lwn.net/Articles/420485/
+[3] http://www.spinics.net/lists/linux-media/msg44370.html
+--
+Author: Sergio Aguirre <sergio.a.aguirre@gmail.com>
+Copyright (C) 2012, Texas Instruments
+ 
+ 
+

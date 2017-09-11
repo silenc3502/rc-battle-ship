@@ -1,0 +1,103 @@
+http://codens.info/591
+
+//OpenCV 영상 추적 기본 개념 이론 정리
+* 푸리에 변환(Fourier transform)
+    복잡한 모양의 파동을, 진동수나 진폭이 다른 단순한 파동들의 합으로 나타내는 것
+    활용 : 잡음 제거나 목소리 구별, 영상 노이즈 제거, 영상 자동 인식(각도 변화) 등에 활용
+    http://www.jb21.com/bbs/view.php?id=science&page=22&sn1=&divpage=1&sn=off&ss=on&sc=on&select_arrange=headnum&desc=asc&no=17
+    
+    - 이산 푸리에 변환(DFT, Discrete Fourier transform )
+        - 계산량 과다로 느림
+    - 고속 푸리에 변환(FFT, Fast Fourier transform )
+        - DFT와 그 역변환을 빠르게 처리
+
+
+* 공간 주파수 
+    - 화소값의 변화율
+        - 고주파 = 이웃화소의 변화가 크다, 잡음많고 날카로움, edge
+        - 저주파 = 화소변화가 작다, 부드러움
+    - 주파수 영역 필터링 : 외곽선 추출에 활용
+
+
+* 가우시안 필터(Gaussian Filter)
+    로우패스필터(low pass filter) : 저역만 통과 시킴, 
+        - 잡음(노이즈)가 제거 되고, 이미지가 부드러워 짐(뭉게짐 blur)
+    http://scosco.com.ne.kr/Stereo3DHtml/vr_0003_gaussian.htm
+
+
+* 가우시안 혼합 모델(Gaussian Mixture Model) 
+    http://blog.naver.com/intencelove/20104400922 
+    - 데이터의 분포 특성을 여러개의 가우시안 확률밀도함수로 나타낸것
+
+* 웨이블릿(Wavelets)
+    디지털 신호 처리 사용되는  수학 함수, 푸리에(Fourier) 분석과 비슷
+    용도 : 잡음속의 신호 복원, 이미지 선명하게 만들기, 이미지 압축
+
+
+
+* 카메라 캘리브레이션(camera calibration)
+    - 카메라의 파라미터 구하는 과정
+        3D 공간좌표와 2D 영상좌표 사이의 차이 때문에 생기는 문제 해결
+        http://darkpgmr.tistory.com/32
+    - 내부 파라미터 : 초점거리(focal length), 주점(principal point),  비대칭계수(skew coefficient)
+    - 외부 파라미터 : 카메라 좌표계와 월드 좌표계 사이의 변환 관계
+
+
+* 강건한(robust) 알고리즘이란?
+    http://darkpgmr.tistory.com/61
+    - 데이터 중에 잡것(outlier)이 있어도 영향을 많이 받지 않는 알고리즘
+    - 알고리즘 : RANSAC , MLESAC, M-estimator, LMedS
+        - 최소자승법 (Least Square Method)은 잡음에 약함
+
+
+* homography
+    - 2개의 이미지 사이의 관계
+    - 같은 이미지가 얼마나 변형되었는가를 판단하는데 사용
+
+
+
+* 캐스캐이드(cascade) : 속도 향상 효과
+    - 여러 개의 검출기를 순차적으로 사용, 
+    - 처음에는 간단한 검출기를 적용하고 점점 더 어려운 검출기를 적용
+
+* 히스토그램
+    - 색상분포
+    - 용도 : edge gradient(모서리 방향 찾기), 개체 위치 찾기, 동작인식 등...
+    - OpenCV 함수 : calcHist, compareHist, calcBackProject, CreateHist...
+        http://docs.opencv.org/modules/imgproc/doc/histograms.html
+    - EMD(Earth Mover's Distance) : 조명의 변화는 색상 히스토그램의 모양은 변화시키지 않지만  위치를 변경 시킨다. EMD는 이것을 보정
+    - 역투영(Back Project) : 특정 픽셀들이나 영역(Patch)의 픽셀들이 이미지의 히스토그램과 일치하는지 검사
+
+
+* 라벨링(Labeling), 레이블링
+    연결된모든화소 집단마다 번호를 붙히는 객체 분할 방법
+    Canny, findContours, drawContours
+
+* Image Segmentation
+http://docs.opencv.org/trunk/doc/py_tutorials/py_imgproc/py_watershed/py_watershed.html#code
+
+* Boosting
+    부스팅은 간단한 학습기들이 단계적으로 학습을 수행하여 결합함으로써 그 성능을 향상시키는 것
+http://docs.opencv.org/modules/ml/doc/boosting.html
+
+* 공분산(Covariance) : 2개의 확률변수의 상관정도
+    분산 - 1개의 변수의 이산정도
+    - 2개의 변수가 모두 증가(or 감소) : 공분산은 양수(+)
+    - 2개의 변수가 1개는 증가, 1개는 감소(둘이 다른 변화) : 공분산은 음수(-)
+
+//============
+* 옵티컬 플로우(Optical Flow)
+    - 움직임 추적 방법, 픽셀의 속도 계산
+
+- 밀집 옵티컬 플로우
+    - 혼-셩크(Horn–Schunck ) 방법
+    - 영상에 내부의 모든 픽셀의 속도를 계산 -> 느림
+
+- 희소 옵티컬 플로우
+    - 루카스-카네데(LK, Lucas–Kanade ) 방법
+    - 코너와 같이 특이점을 지정한후 그 점들을 계산 -> 빠름
+    - 단점 : 큰 움직임 발생시 감지 힘듬
+    - 피라미드LK 알고리즘
+        - 원본으로 영상 피라미드를 구성, 상위계층에서 하위계층으로 추적
+        - 큰 움직임도 감지
+

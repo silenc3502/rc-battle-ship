@@ -1,0 +1,24 @@
+Broadcom Kona Family Reset Manager
+----------------------------------
+
+The reset manager is used on the Broadcom BCM21664 SoC.
+
+Required properties:
+  - compatible: brcm,bcm21664-resetmgr
+  - reg: memory address & range
+
+Broadcom Kona 패밀리 리셋 관리자
+----------------------------------
+
+리셋 관리자는 Broadcom BCM21664 SoC에서 사용됩니다.
+
+필수 속성 :
+   - 호환 : brcm, bcm21664-resetmgr
+   - reg : 메모리 주소 & 범위
+
+
+Example:
+	brcm,resetmgr@35001f00 {
+		compatible = "brcm,bcm21664-resetmgr";
+		reg = <0x35001f00 0x24>;
+	};

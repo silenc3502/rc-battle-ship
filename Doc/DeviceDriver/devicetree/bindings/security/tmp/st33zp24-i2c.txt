@@ -1,0 +1,50 @@
+* STMicroelectronics SAS. ST33ZP24 TPM SoC
+
+Required properties:
+- compatible: Should be "st,st33zp24-i2c".
+- clock-frequency: I²C work frequency.
+- reg: address on the bus
+
+필수 속성 :
+- 호환 : "st, st33zp24-i2c"이어야합니다.
+- 클럭 주파수 : I²C 작업 주파수.
+- reg : 버스의 주소
+
+
+Optional ST33ZP24 Properties:
+- interrupt-parent: phandle for the interrupt gpio controller
+- interrupts: GPIO interrupt to which the chip is connected
+- lpcpd-gpios: Output GPIO pin used for ST33ZP24 power management D1/D2 state.
+If set, power must be present when the platform is going into sleep/hibernate mode.
+옵션 ST33ZP24 등록 정보 :
+- interrupt-parent : 인터럽트 GPIO 컨트롤러의 phandle
+- 인터럽트 : 칩이 연결된 GPIO 인터럽트
+- lpcpd-gpios : ST33ZP24 전원 관리 D1 / D2 상태에 사용되는 출력 GPIO 핀. 설정된 경우 플랫폼이 절전 / 최대 절전 모드로 전환 될 때 전원이 있어야합니다.
+
+Optional SoC Specific Properties:
+- pinctrl-names: Contains only one value - "default".
+- pintctrl-0: Specifies the pin control groups used for this controller.
+선택적 SoC 특정 등록 정보 :
+- pinctrl-names : 하나의 값만 포함합니다 - "default".
+- pintctrl-0 :이 컨트롤러에 사용되는 핀 컨트롤 그룹을 지정합니다.
+
+Example (for ARM-based BeagleBoard xM with ST33ZP24 on I2C2):
+예제 (I2C2에 ST33ZP24가있는 ARM 기반 BeagleBoard xM의 경우) :
+
+&i2c2 {
+
+        status = "okay";
+
+        st33zp24: st33zp24@13 {
+
+                compatible = "st,st33zp24-i2c";
+
+                reg = <0x13>;
+                clock-frequency = <400000>;
+
+                interrupt-parent = <&gpio5>;
+                interrupts = <7 IRQ_TYPE_LEVEL_HIGH>;
+
+                lpcpd-gpios = <&gpio5 15 GPIO_ACTIVE_HIGH>;
+        };
+};

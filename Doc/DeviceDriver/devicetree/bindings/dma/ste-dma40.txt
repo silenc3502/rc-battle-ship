@@ -1,0 +1,285 @@
+* DMA40 DMA Controller
+
+Required properties:
+- compatible: "stericsson,dma40"
+- reg: Address range of the DMAC registers
+- reg-names: Names of the above areas to use during resource look-up
+- interrupt: Should contain the DMAC interrupt number
+- #dma-cells: must be <3>
+- memcpy-channels: Channels to be used for memcpy
+
+Optional properties:
+- dma-channels: Number of channels supported by hardware - if not present
+		the driver will attempt to obtain the information from H/W
+- disabled-channels: Channels which can not be used
+
+Example:
+
+	dma: dma-controller@801C0000 {
+		compatible = "stericsson,db8500-dma40", "stericsson,dma40";
+		reg = <0x801C0000 0x1000  0x40010000 0x800>;
+		reg-names = "base", "lcpa";
+		interrupt-parent = <&intc>;
+		interrupts = <0 25 0x4>;
+
+		#dma-cells = <2>;
+		memcpy-channels  = <56 57 58 59 60>;
+		disabled-channels  = <12>;
+		dma-channels = <8>;
+	};
+
+Clients
+Required properties:
+- dmas: Comma separated list of dma channel requests
+- dma-names: Names of the aforementioned requested channels
+
+Each dmas request consists of 4 cells:
+  1. A phandle pointing to the DMA controller
+  2. Device signal number, the signal line for single and burst requests
+     connected from the device to the DMA40 engine
+  3. The DMA request line number (only when 'use fixed channel' is set)
+  4. A 32bit mask specifying; mode, direction and endianness
+     [NB: This list will grow]
+        0x00000001: Mode:
+                Logical channel when unset
+                Physical channel when set
+        0x00000002: Direction:
+                Memory to Device when unset
+                Device to Memory when set
+        0x00000004: Endianness:
+                Little endian when unset
+                Big endian when set
+        0x00000008: Use fixed channel:
+                Use automatic channel selection when unset
+                Use DMA request line number when set
+        0x00000010: Set channel as high priority:
+                Normal priority when unset
+                High priority when set
+
+Existing signal numbers for the DB8500 ASIC. Unless specified, the signals are
+bidirectional, i.e. the same for RX and TX operations:
+
+0:  SPI controller 0
+1:  SD/MMC controller 0 (unused)
+2:  SD/MMC controller 1 (unused)
+3:  SD/MMC controller 2 (unused)
+4:  I2C port 1
+5:  I2C port 3
+6:  I2C port 2
+7:  I2C port 4
+8:  Synchronous Serial Port SSP0
+9:  Synchronous Serial Port SSP1
+10: Multi-Channel Display Engine MCDE RX
+11: UART port 2
+12: UART port 1
+13: UART port 0
+14: Multirate Serial Port MSP2
+15: I2C port 0
+16: USB OTG in/out endpoints 7 & 15
+17: USB OTG in/out endpoints 6 & 14
+18: USB OTG in/out endpoints 5 & 13
+19: USB OTG in/out endpoints 4 & 12
+20: SLIMbus or HSI channel 0
+21: SLIMbus or HSI channel 1
+22: SLIMbus or HSI channel 2
+23: SLIMbus or HSI channel 3
+24: Multimedia DSP SXA0
+25: Multimedia DSP SXA1
+26: Multimedia DSP SXA2
+27: Multimedia DSP SXA3
+28: SD/MM controller 2
+29: SD/MM controller 0
+30: MSP port 1 on DB8500 v1, MSP port 3 on DB8500 v2
+31: MSP port 0 or SLIMbus channel 0
+32: SD/MM controller 1
+33: SPI controller 2
+34: i2c3 RX2 TX2
+35: SPI controller 1
+36: USB OTG in/out endpoints 3 & 11
+37: USB OTG in/out endpoints 2 & 10
+38: USB OTG in/out endpoints 1 & 9
+39: USB OTG in/out endpoints 8
+40: SPI controller 3
+41: SD/MM controller 3
+42: SD/MM controller 4
+43: SD/MM controller 5
+44: Multimedia DSP SXA4
+45: Multimedia DSP SXA5
+46: SLIMbus channel 8 or Multimedia DSP SXA6
+47: SLIMbus channel 9 or Multimedia DSP SXA7
+48: Crypto Accelerator 1
+49: Crypto Accelerator 1 TX or Hash Accelerator 1 TX
+50: Hash Accelerator 1 TX
+51: memcpy TX (to be used by the DMA driver for memcpy operations)
+52: SLIMbus or HSI channel 4
+53: SLIMbus or HSI channel 5
+54: SLIMbus or HSI channel 6
+55: SLIMbus or HSI channel 7
+56: memcpy (to be used by the DMA driver for memcpy operations)
+57: memcpy (to be used by the DMA driver for memcpy operations)
+58: memcpy (to be used by the DMA driver for memcpy operations)
+59: memcpy (to be used by the DMA driver for memcpy operations)
+60: memcpy (to be used by the DMA driver for memcpy operations)
+61: Crypto Accelerator 0
+62: Crypto Accelerator 0 TX or Hash Accelerator 0 TX
+63: Hash Accelerator 0 TX
+
+Example:
+
+	uart@80120000 {
+		compatible = "arm,pl011", "arm,primecell";
+		reg = <0x80120000 0x1000>;
+		interrupts = <0 11 0x4>;
+
+		dmas = <&dma 13 0 0x2>, /* Logical - DevToMem */
+		       <&dma 13 0 0x0>; /* Logical - MemToDev */
+		dma-names = "rx", "rx";
+
+		status = "disabled";
+	};
+
+
+
+
+
+
+/*
+* DMA40 DMA 컨트롤러
+
+필수 속성 :
+- 호환 가능 : "stericsson, dma40"
+- reg : DMAC 레지스터의 주소 범위
+- reg-names : 리소스 검색 중에 사용할 위의 영역 이름
+- interrupt : DMAC 인터럽트 번호를 포함해야합니다.
+- # dma-cells : <3>이어야합니다.
+- memcpy-channels : memcpy에 사용될 채널
+
+선택적 속성 :
+- dma-channels : 하드웨어가 지원하는 채널 수 -없는 경우
+운전자는 H / W로부터 정보를 얻으려고 시도 할 것입니다
+- disabled-channels : 사용할 수없는 채널
+
+Example:
+
+	dma: dma-controller@801C0000 {
+		compatible = "stericsson,db8500-dma40", "stericsson,dma40";
+		reg = <0x801C0000 0x1000  0x40010000 0x800>;
+		reg-names = "base", "lcpa";
+		interrupt-parent = <&intc>;
+		interrupts = <0 25 0x4>;
+
+		#dma-cells = <2>;
+		memcpy-channels  = <56 57 58 59 60>;
+		disabled-channels  = <12>;
+		dma-channels = <8>;
+	};
+
+필수 속성 :
+- dmas : 쉼표로 구분 된 dma 채널 요청 목록
+- dma-names : 위에서 언급 한 요청 된 채널의 이름
+
+각 dmas 요청은 4 개의 셀로 구성됩니다.
+  1. DMA 컨트롤러를 가리키는 phandle
+  2. 장치 신호 번호, 단일 및 버스트 요청에 대한 신호 라인
+     장치에서 DMA40 엔진에 연결된
+  3. DMA 요청 행 번호 ( '고정 채널 사용'이 설정된 경우에만)
+  4. 32 비트 마스크 지정. 모드, 방향 및 엔디안
+     [주의 :이 목록은 성장할 것입니다]
+        0x00000001 : 모드 :
+                설정되지 않은 경우 논리 채널
+                설정시 실제 채널
+        0x00000002 : 방향 :
+                설정되지 않은 경우 메모리 대 장치
+                설정된 경우 장치 대 메모리
+        0x00000004 : 엔디안 :
+                설정되지 않은 경우 little endian
+                설정된 빅 엔디안
+        0x00000008 : 고정 채널 사용 :
+                설정하지 않은 경우 자동 채널 선택 사용
+                설정시 DMA 요청 행 번호 사용
+        0x00000010 : 채널을 높은 우선 순위로 설정 :
+                설정하지 않은 경우의 보통 우선 순위
+                설정시 높은 우선 순위
+
+DB8500 ASIC의 기존 신호 번호. 지정되지 않은 한, 신호는 다음과 같습니다.
+양방향성, 즉 RX 및 TX 동작에 대해 동일 함 :
+
+0 : SPI 컨트롤러 0
+1 : SD / MMC 컨트롤러 0 (사용되지 않음)
+2 : SD / MMC 컨트롤러 1 (사용되지 않음)
+3 : SD / MMC 컨트롤러 2 (사용하지 않음)
+4 : I2C 포트 1
+5 : I2C 포트 3
+6 : I2C 포트 2
+7 : I2C 포트 4
+8 : 동기 직렬 포트 SSP0
+9 : 동기 직렬 포트 SSP1
+10 : 다중 채널 디스플레이 엔진 MCDE RX
+11 : UART 포트 2
+12 : UART 포트 1
+13 : UART 포트 0
+14 : 멀티 레이트 직렬 포트 MSP2
+15 : I2C 포트 0
+16 : USB OTG 입출력 종단점 7 및 15
+17 : USB OTG 입출력 종단점 6 & 14
+18 : USB OTG 입출력 엔드 포인트 5 & 13
+19 : USB OTG 입출력 종단점 4 & 12
+20 : SLIMbus 또는 HSI 채널 0
+21 : SLIMbus 또는 HSI 채널 1
+22 : SLIMbus 또는 HSI 채널 2
+23 : SLIMbus 또는 HSI 채널 3
+24 : 멀티미디어 DSP SXA0
+25 : 멀티미디어 DSP SXA1
+26 : 멀티미디어 DSP SXA2
+27 : 멀티미디어 DSP SXA3
+28 : SD / MM 컨트롤러 2
+29 : SD / MM 컨트롤러 0
+30 : DB8500 v1의 MSP 포트 1, DB8500 v2의 MSP 포트 3
+31 : MSP 포트 0 또는 SLIMbus 채널 0
+32 : SD / MM 컨트롤러 1
+33 : SPI 컨트롤러 2
+34 : i2c3 RX2 TX2
+35 : SPI 컨트롤러 1
+36 : USB OTG 입출력 종단점 3 & 11
+37 : USB OTG in / out 종단점 2 및 10
+38 : USB OTG 입출력 종단점 1 및 9
+39 : USB OTG 입출력 엔드 포인트 8
+40 : SPI 컨트롤러 3
+41 : SD / MM 컨트롤러 3
+42 : SD / MM 컨트롤러 4
+43 : SD / MM 컨트롤러 5
+44 : 멀티미디어 DSP SXA4
+45 : 멀티미디어 DSP SXA5
+46 : SLIMbus 채널 8 또는 멀티미디어 DSP SXA6
+47 : SLIMbus 채널 9 또는 멀티미디어 DSP SXA7
+48 : Crypto Accelerator 1
+49 : Crypto Accelerator 1 TX 또는 해시 가속기 1 TX
+50 : 해시 가속기 1 TX
+51 : memcpy TX (memcpy 연산을 위해 DMA 드라이버에 의해 사용됨)
+52 : SLIMbus 또는 HSI 채널 4
+53 : SLIMbus 또는 HSI 채널 5
+54 : SLIMbus 또는 HSI 채널 6
+55 : SLIMbus 또는 HSI 채널 7
+56 : memcpy (memcpy 작업을 위해 DMA 드라이버에서 사용됨)
+57 : memcpy (memcpy 연산을 위해 DMA 드라이버에서 사용됨)
+58 : memcpy (memcpy 작업을 위해 DMA 드라이버에서 사용)
+59 : memcpy (memcpy 작업을 위해 DMA 드라이버에서 사용됨)
+60 : memcpy (memcpy 작업을 위해 DMA 드라이버에서 사용)
+61 : Crypto Accelerator 0
+62 : Crypto Accelerator 0 TX 또는 해시 가속기 0 TX
+63 : 해시 가속기 0 TX
+
+Example:
+
+	uart@80120000 {
+		compatible = "arm,pl011", "arm,primecell";
+		reg = <0x80120000 0x1000>;
+		interrupts = <0 11 0x4>;
+
+		dmas = <&dma 13 0 0x2>, /* Logical - DevToMem */
+		       <&dma 13 0 0x0>; /* Logical - MemToDev */
+		dma-names = "rx", "rx";
+
+		status = "disabled";
+	};
+*/

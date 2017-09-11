@@ -1,0 +1,73 @@
+Texas Instruments AFE4403 Heart rate and Pulse Oximeter
+
+Required properties:
+ - compatible		: Should be "ti,afe4403".
+ - reg			: SPI chip select address of device.
+ - tx-supply		: Regulator supply to transmitting LEDs.
+ - interrupt-parent	: Phandle to he parent interrupt controller.
+ - interrupts		: The interrupt line the device ADC_RDY pin is
+			  connected to. For details refer to,
+			  ../../interrupt-controller/interrupts.txt.
+
+Optional properties:
+ - reset-gpios		: GPIO used to reset the device.
+			  For details refer to, ../../gpio/gpio.txt.
+
+For other required and optional properties of SPI slave nodes
+please refer to ../../spi/spi-bus.txt.
+
+Example:
+
+&spi0 {
+	heart_mon@0 {
+		compatible = "ti,afe4403";
+		reg = <0>;
+		spi-max-frequency = <10000000>;
+
+		tx-supply = <&vbat>;
+
+		interrupt-parent = <&gpio1>;
+		interrupts = <28 IRQ_TYPE_EDGE_RISING>;
+
+		reset-gpios = <&gpio1 16 GPIO_ACTIVE_LOW>;
+	};
+};
+
+/*
+Texas Instruments AFE4403 심박수 및 맥박 산소 농도계
+
+필수 속성 :
+  - compatible : "ti, afe4403"이어야합니다.
+  - reg : 장치의 SPI 칩 선택 주소.
+  - tx-supply : 전송 LED에 대한 레귤레이터 공급.
+  - interrupt-parent : 부모 컨트롤러에 대한 Phandle을 인터럽트합니다.
+  - interrupts : 디바이스의 ADC_RDY 핀이 인터럽트 라인이다.
+에 연결됨. 자세한 내용은,
+../../interrupt-controller/interrupts.txt.
+
+선택 속성 :
+  - reset-gpios : GPIO는 장치를 재설정하는 데 사용됩니다.
+자세한 내용은 ../../gpio/gpio.txt를 참조하십시오.
+
+SPI 슬레이브 노드의 다른 필수 및 선택적 속성
+../../spi/spi-bus.txt를 참조하십시오.
+
+
+Example:
+
+&spi0 {
+	heart_mon@0 {
+		compatible = "ti,afe4403";
+		reg = <0>;
+		spi-max-frequency = <10000000>;
+
+		tx-supply = <&vbat>;
+
+		interrupt-parent = <&gpio1>;
+		interrupts = <28 IRQ_TYPE_EDGE_RISING>;
+
+		reset-gpios = <&gpio1 16 GPIO_ACTIVE_LOW>;
+	};
+};
+
+*/

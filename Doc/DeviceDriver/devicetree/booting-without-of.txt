@@ -1,0 +1,2239 @@
+           Booting the Linux/ppc kernel without Open Firmware
+		/*Open Firmware없이 Linux / ppc 커널 부팅하기 */        
+	   --------------------------------------------------
+	
+(c) 2005 Benjamin Herrenschmidt <benh at kernel.crashing.org>,
+    IBM Corp.
+(c) 2005 Becky Bruce <becky.bruce at freescale.com>,
+    Freescale Semiconductor, FSL SOC and 32-bit additions
+	/*프리 스케일 세미 컨덕터, FSL SOC 및 32 비트 추가 */
+
+(c) 2006 MontaVista Software, Inc.
+    Flash chip node definition
+	/*  플래시 칩 노드 정의*/
+Table of Contents
+=================
+
+  I - Introduction
+    1) Entry point for arch/arm
+	/*1) arch / arm의 진입 지점 */
+
+    2) Entry point for arch/powerpc
+	/*2) arch / powerpc의 진입 점 */
+
+    3) Entry point for arch/x86
+	/* 3) arch / x86의 진입 점 */
+
+    4) Entry point for arch/mips/bmips
+	/* 4) 아치 / mips / bmips의 엔트리 포인트 */
+
+  II - The DT block format
+    1) Header
+
+    2) Device tree generalities
+	/* 2) 장치 트리 일반성*/
+
+    3) Device tree "structure" block
+	/* 3) 장치 트리 "구조"블록*/
+
+    4) Device tree "strings" block
+	/*  4) 장치 트리 "문자열"블록 */
+
+  III - Required content of the device tree
+	/*III - 장치 트리의 필수 내용*/
+
+    1) Note about cells and address representation
+	/*  1) 셀 및 주소 표현에 대한 참고 사항 */
+
+    2) Note about "compatible" properties
+	/*  2) "호환"속성에 대한 참고 사항 */
+
+    3) Note about "name" properties
+	/* 3) "name"속성에 대한 참고 사항 */
+
+    4) Note about node and property names and character set
+	/*  4) 노드 및 속성 이름 및 문자 집합에 대한 참고 사항 */
+
+    5) Required nodes and properties
+	/* 5) 필수 노드와 속성 */
+
+      a) The root node
+      b) The /cpus node
+      c) The /cpus/* nodes
+      d) the /memory node(s)
+      e) The /chosen node
+	/*   e) / 선택된 노드 */
+
+      f) the /soc<SOCname> node
+
+  IV - "dtc", the device tree compiler
+	/*  IV - "dtc", 장치 트리 컴파일러 */
+
+  V - Recommendations for a bootloader
+	/* V - 부트 로더 권장 사항 */
+
+  VI - System-on-a-chip devices and nodes
+	/*  VI - System-on-a-chip 장치 및 노드 */
+
+    1) Defining child nodes of an SOC
+	/*  1) SOC의 자식 노드 정의 */
+
+    2) Representing devices without a current OF specification
+	/*   2) 현재 OF 사양이없는 장치 표시 */
+
+  VII - Specifying interrupt information for devices
+	/*   VII - 장치에 대한 인터럽트 정보 지정 */
+
+    1) interrupts property
+	/* 1) 인터럽트 속성 */
+
+    2) interrupt-parent property
+	/* 2) interrupt-parent 속성 */
+
+    3) OpenPIC Interrupt Controllers
+	/*   3) OpenPIC 인터럽트 컨트롤러 */
+
+    4) ISA Interrupt Controllers
+	/* 4) ISA 인터럽트 컨트롤러 */
+
+  VIII - Specifying device power management information (sleep property)
+	/*  VIII - 장치 전원 관리 정보 지정 (절전 속성) */
+
+  IX - Specifying dma bus information
+	/*  IX - dma 버스 정보 지정 */
+
+  Appendix A - Sample SOC node for MPC8540
+	/* 부록 A - MPC8540 용 샘플 SOC 노드 */
+
+
+Revision Information
+====================
+
+   May 18, 2005: Rev 0.1 - Initial draft, no chapter III yet.
+	/* 2005 년 5 월 18 일 : Rev 0.1 - 초기 초안, 아직 III 장이 없습니다. */
+
+   May 19, 2005: Rev 0.2 - Add chapter III and bits & pieces here or
+                           clarifies the fact that a lot of things are
+                           optional, the kernel only requires a very
+                           small device tree, though it is encouraged
+                           to provide an as complete one as possible.
+			/* 2005 년 5 월 19 일 : Rev 0.2 - 챕터 III와 비트 & 조각을 여기에 추가했고 많은 것들이 선택 사항이라는 입니다. 
+			커널은 가능한 한 완전한 것을 제공하는 것이 좋습니다. */
+
+
+
+   May 24, 2005: Rev 0.3 - Precise that DT block has to be in RAM
+			 - Misc fixes
+			 - Define version 3 and new format version 16
+			   for the DT block (version 16 needs kernel
+			   patches, will be fwd separately).
+			   String block now has a size, and full path
+			   is replaced by unit name for more
+			   compactness.
+			   linux,phandle is made optional, only nodes
+			   that are referenced by other nodes need it.
+			   "name" property is now automatically
+			   deduced from the unit name
+			/* 2005 년 5 월 24 일 : Rev 0.3 - DT 블록이 RAM에 있어야합니다.
+			- 기타 수정
+			- DT 블록에 대해 버전 3 및 새 형식 버전 16을 정의합니다 (버전 16은 커널 패치 가 필요하며 별도로 식별 할 수 있음).
+
+			문자열 블록의 크기가 이제보다 작아 지도록 전체 경로가 단위 이름으로 바뀝니다.
+
+			linux, phandle은 선택적으로 만들어지며 다른 노드가 참조하는 노드 만 필요합니다.
+	
+			"이름"속성이 이제 단위 이름에서 자동으로 추론됩니다. */
+
+   June 1, 2005: Rev 0.4 - Correct confusion between OF_DT_END and
+                           OF_DT_END_NODE in structure definition.
+                         - Change version 16 format to always align
+                           property data to 4 bytes. Since tokens are
+                           already aligned, that means no specific
+                           required alignment between property size
+                           and property data. The old style variable
+                           alignment would make it impossible to do
+                           "simple" insertion of properties using
+                           memmove (thanks Milton for
+                           noticing). Updated kernel patch as well
+			 - Correct a few more alignment constraints
+			 - Add a chapter about the device-tree
+                           compiler and the textural representation of
+                           the tree that can be "compiled" by dtc.
+			/* 2005 년 6 월 1 일 : Rev 0.4 - 구조 정의에서 OF_DT_END와 OF_DT_END_NODE 사이의 혼동을 수정합니다.
+
+                         - 속성 데이터를 4 바이트로 항상 정렬하도록 버전 16 형식을 변경하십시오.
+
+			토큰은 이미 정렬되어 있으므로 속성 크기와 속성 데이터 사이에 특별한 정렬이 필요하지 않습니다.
+
+  			예전 스타일의 변수 정렬은 memmove를 사용하여 속성을 "간단하게"삽입하는 것을 불가능하게합니다.
+
+			업데이트 된 커널 패치
+  			- 몇 가지 정렬 제약 조건 수정
+			- 장치 트리 컴파일러와 dtc로 "컴파일"할 수있는 트리의 텍스처 표현에 대한 장을 추가하십시오.
+
+
+   November 21, 2005: Rev 0.5
+			 - Additions/generalizations for 32-bit
+			 - Changed to reflect the new arch/powerpc
+			   structure
+			 - Added chapter VI
+
+			/* 2005 년 11 월 21 일 : Rev 0.5
+			- 32 비트를위한 덧셈 / 일반화
+			- 새로운 arch / powerpc 구조를 반영하여 변경되었습니다.
+			- VI 장 추가
+
+ ToDo:
+/*추후 계획 */
+
+	- Add some definitions of interrupt tree (simple/complex)
+	- Add some definitions for PCI host bridges
+	- Add some common address format examples
+	- Add definitions for standard properties and "compatible"
+	  names for cells that are not already defined by the existing
+	  OF spec.
+	- Compare FSL SOC use of PCI to standard and make sure no new
+	  node definition required.
+	- Add more information about node definitions for SOC devices
+  	  that currently have no standard, like the FSL CPM.
+	/* - 인터럽트 트리의 정의를 추가하십시오 (단순 / 복합).
+	- PCI 호스트 브리지에 대한 정의 추가
+	- 일반적인 주소 형식 예제 추가
+	- 기존 OF 스펙으로 아직 정의되지 않은 셀의 표준 등록 정보 W "호환 가능"이름에 대한 정의를 추가하십시오.
+	- 표준과 PCI의 FSL SOC 사용을 비교하고 새로운 노드 정의가 필요하지 않은지 확인하십시오.
+	- FSL CPM과 같이 현재 표준이없는 SOC 장치에 대한 노드 정의에 대한 추가 정보를 추가하십시오.
+	/*
+
+
+I - Introduction
+================
+
+During the development of the Linux/ppc64 kernel, and more
+specifically, the addition of new platform types outside of the old
+IBM pSeries/iSeries pair, it was decided to enforce some strict rules
+regarding the kernel entry and bootloader <-> kernel interfaces, in
+order to avoid the degeneration that had become the ppc32 kernel entry
+point and the way a new platform should be added to the kernel. The
+legacy iSeries platform breaks those rules as it predates this scheme,
+but no new board support will be accepted in the main tree that
+doesn't follow them properly.  In addition, since the advent of the
+arch/powerpc merged architecture for ppc32 and ppc64, new 32-bit
+platforms and 32-bit platforms which move into arch/powerpc will be
+required to use these rules as well.
+
+ Linux / ppc64 커널을 개발하는 할 때, 자세하게 설명하면 기존 IBM pSeries / iSeries 외부에 새로운 플랫폼 유형을 추가 할 때 커널 항목 및 부트 로더 와 커널 인터페이스와 관련된 몇 가지 규칙을 적용하기로 결정했습니다. 
+그이유로는 ppc32 커널 진입 점이 된 degeneration과 새로운 플랫폼을 커널에 추가하는 방식을 피하기 위해서입니다.
+레거시 iSeries 플랫폼은 스킴 이전의 규칙을 깨지 만, 메인 트리에서 그것을 제대로 따르지 않는 새로운 보드 지원은 허용되지 않습니다.
+또한 ppc32 및 ppc64의 arch / powerpc 병합 아키텍처의 출현 이후 arch / powerpc로 이동하는 새로운 32 비트 플랫폼 및 32 비트 플랫폼에서도 이러한 규칙을 사용해야합니다.
+
+The main requirement that will be defined in more detail below is
+the presence of a device-tree whose format is defined after Open
+Firmware specification. However, in order to make life easier
+to embedded board vendors, the kernel doesn't require the device-tree
+to represent every device in the system and only requires some nodes
+and properties to be present. This will be described in detail in
+section III, but, for example, the kernel does not require you to
+create a node for every PCI device in the system. It is a requirement
+to have a node for PCI host bridges in order to provide interrupt
+routing information and memory/IO ranges, among others. It is also
+recommended to define nodes for on chip devices and other buses that
+don't specifically fit in an existing OF specification. This creates a
+great flexibility in the way the kernel can then probe those and match
+drivers to device, without having to hard code all sorts of tables. It
+also makes it more flexible for board vendors to do minor hardware
+upgrades without significantly impacting the kernel code or cluttering
+it with special cases.
+
+아래에서 더 자세히 정의 할 주요 요구 사항은 Open Firmware 사양에 따라 형식이 정의 된 장치 트리가 있다는 것입니다.
+그러나 임베디드 보드 공급 업체의 업무 편의를 위해 커널은 시스템의 모든 장치를 나타내는 장치 트리가 필요하지 않으며 일부 노드와 속성 만 있으면됩니다.
+이것은 III 장에서 자세히 설명 하겠지만, 예를 들어, 커널은 시스템의 모든 PCI 장치에 대한 노드를 생성 할 것을 요구하지 않습니다.
+인터럽트 라우팅 정보와 메모리 / IO 범위를 제공하려면 PCI 호스트 브리지 용 노드가 있어야합니다.
+온 칩 (on chip) 디바이스 용 노드와 기존의 OF 사양에 특별히 맞지 않는 버스를 정의하는 것이 좋습니다.
+이렇게하면 모든 종류의 테이블을 하드 코딩 할 필요없이 커널이 장치를 검색하고 드라이버를 장치에 일치시킬 수있는 방법에 큰 유연성을 제공합니다.
+또한 보드 벤더가 커널 코드에 큰 영향을주지 않거나 특수한 경우에 혼란을주지 않으면 서 사소한 하드웨어 업그레이드를 수행 할 수있는 유연성을 제공합니다.
+
+1) Entry point for arch/arm
+---------------------------
+  1) arch / arm의 진입 점
+
+   There is one single entry point to the kernel, at the start
+   of the kernel image. That entry point supports two calling
+   conventions.  A summary of the interface is described here.  A full
+   description of the boot requirements is documented in
+   Documentation/arm/Booting
+   커널 이미지의 시작 부분에는 커널에 대한 단일 진입 점이 있습니다. 
+   이 진입 점은 두 가지 호출 규칙을 지원합니다. 인터페이스 요약은 여기에 설명되어 있습니다. 
+   부팅 요구 사항에 대한 자세한 설명은 Documentation / arm / Booting에서 확인할 수 있습니다.
+
+        a) ATAGS interface.  Minimal information is passed from firmware
+        to the kernel with a tagged list of predefined parameters.
+          a) ATAGS 인터페이스. 최소 정보가 펌웨어에서 전달됩니다.
+         사전 정의 된 매개 변수의 태그가 붙은 목록으로 커널에 전달합니다.
+
+                r0 : 0
+
+                r1 : Machine type number
+
+                r2 : Physical address of tagged list in system RAM
+
+        b) Entry with a flattened device-tree block.  Firmware loads the
+        physical address of the flattened device tree block (dtb) into r2,
+        r1 is not used, but it is considered good practice to use a valid
+        machine number as described in Documentation/arm/Booting.
+         b) 평평한 장치 트리 블록을 가진 항목. 펌웨어는 병합 된 장치 트리 블록 (dtb)의 물리적 주소를 r2에로드하지만 
+        사용되지 않는 r1은 문서 / arm / Booting에 설명 된대로 올바른 시스템 번호를 사용하는 것이 좋습니다. 
+              
+                r0 : 0
+
+                r1 : Valid machine type number.  When using a device tree,
+                a single machine type number will often be assigned to
+                represent a class or family of SoCs.
+                r1 : 유효한 시스템 유형 번호. 장치 트리를 사용할 때 
+                SoC의 클래스 또는 제품군을 나타 내기 위해 단일 시스템 유형 번호가 할당됩니다.
+
+                r2 : physical pointer to the device-tree block
+                (defined in chapter II) in RAM.  Device tree can be located
+                anywhere in system RAM, but it should be aligned on a 64 bit
+                boundary.
+                 r2 : RAM의 장치 트리 블록에 대한 물리적 포인터 (2 장에서 정의). 
+                 장치 트리는 시스템 RAM의 어느 위치 에나 배치 할 수 있지만 64 비트 경계에 정렬해야합니다.
+
+   The kernel will differentiate between ATAGS and device tree booting by
+   reading the memory pointed to by r2 and looking for either the flattened
+   device tree block magic value (0xd00dfeed) or the ATAG_CORE value at
+   offset 0x4 from r2 (0x54410001).
+   커널은 r2가 가리키는 메모리를 읽고 평평한 장치 트리 블록 마법 값 (0xd00dfeed) 또는 
+   r2 (0x54410001)의 0x4 오프셋에서 ATAG_CORE 값을 찾아 ATAGS와 장치 트리 부팅을 구분합니다.
+
+2) Entry point for arch/powerpc
+-------------------------------
+2) arch / powerpc의 진입 점
+
+   There is one single entry point to the kernel, at the start
+   of the kernel image. That entry point supports two calling
+   conventions:
+   커널 이미지의 시작 부분에는 커널에 대한 단일 진입 점이 있습니다. 이 진입 점은 두 가지 호출 규칙을 지원합니다.
+
+        a) Boot from Open Firmware. If your firmware is compatible
+        with Open Firmware (IEEE 1275) or provides an OF compatible
+        client interface API (support for "interpret" callback of
+        forth words isn't required), you can enter the kernel with:
+        a) Open Firmware에서 부팅하십시오. 펌웨어가 Open Firmware (IEEE 1275)와 호환되거나 OF 호환 클라이언트 인터페이스 API를 제공하는 경우(앞뒤 단어의 "해석"콜백에 대한 지원이 필요하지 않음) 
+        다음과 같이 커널을 입력 할 수 있습니다.
+
+              r5 : OF callback pointer as defined by IEEE 1275
+              bindings to powerpc. Only the 32-bit client interface
+              is currently supported
+              r5 : IEEE 1275 바인딩이 powerpc에 정의한 OF 콜백 포인터입니다. 현재 32 비트 클라이언트 인터페이스 만 지원됩니다.
+
+              r3, r4 : address & length of an initrd if any or 0
+                r3, r4 : initrd가있는 경우 주소와 길이 또는 0
+
+              The MMU is either on or off; the kernel will run the
+              trampoline located in arch/powerpc/kernel/prom_init.c to
+              extract the device-tree and other information from open
+              firmware and build a flattened device-tree as described
+              in b). prom_init() will then re-enter the kernel using
+              the second method. This trampoline code runs in the
+              context of the firmware, which is supposed to handle all
+              exceptions during that time.
+              MMU는 켜기 또는 끄기 중 하나입니다. 커널은 arch / powerpc / kernel / prom_init.c에있는 
+              trampoline을 실행하여 공개 펌웨어에서 장치 트리 및 기타 정보를 추출하고 
+              b)에서 설명한대로 장치 트리를 빌드합니다.
+              prom_init ()는 두 번째 방법을 사용하여 커널에 다시 들어갑니다. 
+              이 trampoline 코드는 해당 시간 동안 모든 예외를 처리하기로되어있는 펌웨어 컨텍스트에서 실행됩니다.
+
+        b) Direct entry with a flattened device-tree block. This entry
+        point is called by a) after the OF trampoline and can also be
+        called directly by a bootloader that does not support the Open
+        Firmware client interface. It is also used by "kexec" to
+        implement "hot" booting of a new kernel from a previous
+        running one. This method is what I will describe in more
+        details in this document, as method a) is simply standard Open
+        Firmware, and thus should be implemented according to the
+        various standard documents defining it and its binding to the
+        PowerPC platform. The entry point definition then becomes:
+        b) 평평한 장치 트리 블록으로 직접 입력. 이 엔트리 포인트는 OF 트램 폴린 다음에 a)에 의해 호출되며 
+        Open Firmware 클라이언트 인터페이스를 지원하지 않는 부트 로더에 의해 직접 호출 될 수도 있습니다.
+        또한 "kexec"이 이전 실행중인 커널에서 새 커널을 "핫"부팅하도록 구현하는 데 사용됩니다. 
+        이 방법은이 문서에서 더 자세히 설명 하겠지만 방법 a)는 단순히 표준 Open Firmware이므로이를 정의하는 다양한 표준 문서와 PowerPC 플랫폼에 
+        대한 바인딩에 따라 구현해야합니다. 진입 점 정의는 다음과 같습니다.
+        
+                r3 : physical pointer to the device-tree block
+                (defined in chapter II) in RAM
+                 r3 : 장치 트리 블록에 대한 물리적 포인터
+                 (제 2 장에서 정의 된) RAM
+
+                r4 : physical pointer to the kernel itself. This is
+                used by the assembly code to properly disable the MMU
+                in case you are entering the kernel with MMU enabled
+                and a non-1:1 mapping.
+                r4 : 커널 자체에 대한 실제 포인터. MMU를 사용할 수 있고 1 : 1이 아닌 매핑을 사용하여 
+                커널을 입력하는 경우 MMU를 제대로 비활성화하는 데 어셈블리 코드가 사용합니다.
+
+                r5 : NULL (as to differentiate with method a)
+                    r5 : NULL (메소드 a와 차별화)
+
+        Note about SMP entry: Either your firmware puts your other
+        CPUs in some sleep loop or spin loop in ROM where you can get
+        them out via a soft reset or some other means, in which case
+        you don't need to care, or you'll have to enter the kernel
+        with all CPUs. The way to do that with method b) will be
+        described in a later revision of this document.
+        SMP 항목에 대한 참고 사항 : 펌웨어는 소프트 리셋이나 
+        다른 방법을 통해 꺼낼 수있는 일부 슬립 루프 또는 스핀 루프에 
+        다른 CPU를 넣습니다.이 경우에는 신경 쓸 필요가 없으며, 모든 CPU가있는 커널에 들어가야합니다. 
+        b) 방법으로이를 수행하는 방법은이 문서의 차후 개정판에서 설명 될 것입니다.
+
+   Board supports (platforms) are not exclusive config options. An
+   arbitrary set of board supports can be built in a single kernel
+   image. The kernel will "know" what set of functions to use for a
+   given platform based on the content of the device-tree. Thus, you
+   should:
+   보드 지지대 (플랫폼)는 배타적 인 구성 옵션이 아닙니다. 
+   하나의 커널 이미지에 임의의 보드 지원 세트를 구축 할 수 있습니다. 
+   커널은 디바이스 트리의 내용을 기반으로 주어진 플랫폼에 어떤 기능 세트를 사용할 것인지를 "KNOW(알)"것이다. 
+   따라서 다음을 수행해야합니다.
+
+        a) add your platform support as a _boolean_ option in
+        arch/powerpc/Kconfig, following the example of PPC_PSERIES,
+        PPC_PMAC and PPC_MAPLE. The later is probably a good
+        example of a board support to start from.
+        a) PPC_PSERIES, PPC_PMAC 및 PPC_MAPLE의 예에 따라 arch / powerpc / Kconfig에서 플랫폼 지원을 _boolean_ 옵션으로 추가하십시오. 
+        나중에 보드를 시작하는 것이 좋은 예입니다.
+        
+        b) create your main platform file as
+        "arch/powerpc/platforms/myplatform/myboard_setup.c" and add it
+        to the Makefile under the condition of your CONFIG_
+        option. This file will define a structure of type "ppc_md"
+        containing the various callbacks that the generic code will
+        use to get to your platform specific code
+        b) 메인 플랫폼 파일을 "arch / powerpc / platforms / myplatform / myboard_setup.c"로 만들고 
+        CONFIG_ 옵션 조건 하에서 Makefile에 추가하십시오. 이 파일은 제네릭 코드가 플랫폼 특정 코드로 이동하기 위해 
+        사용할 다양한 콜백을 포함하는 "ppc_md"유형의 구조를 정의합니다
+
+  A kernel image may support multiple platforms, but only if the
+  platforms feature the same core architecture.  A single kernel build
+  cannot support both configurations with Book E and configurations
+  with classic Powerpc architectures.
+  커널 이미지는 여러 플랫폼을 지원할 수 있지만 플랫폼이 동일한 핵심 아키텍처를 사용하는 경우에만 가능합니다. 
+  단일 커널 빌드는 Book E의 구성과 고전적인 Powerpc 아키텍처의 구성을 모두 지원할 수 없습니다.
+
+3) Entry point for arch/x86
+3) arch / x86의 진입 점
+-------------------------------
+
+  There is one single 32bit entry point to the kernel at code32_start,
+  the decompressor (the real mode entry point goes to the same  32bit
+  entry point once it switched into protected mode). That entry point
+  supports one calling convention which is documented in
+  Documentation/x86/boot.txt
+  The physical pointer to the device-tree block (defined in chapter II)
+  is passed via setup_data which requires at least boot protocol 2.09.
+  The type filed is defined as
+  코드 32_start에서 커널에 대한 단일 32 비트 진입 점이 있습니다. 압축 해제 기 
+  (실제 모드 진입 점은 보호 모드로 전환 한 후 동일한 32 비트 진입 점으로 이동합니다).
+  이 엔트리 포인트는 Documentation / x86 / boot.txt에 문서화되어있는 하나의 호출 규칙을 지원합니다
+  장치 트리 블록 (2 장에서 정의 됨)에 대한 물리적 포인터는 적어도 부트 프로토콜 2.09가 필요한 setup_data를 통해 전달됩니다. 
+  유형 필드는 다음과 같이 정의됩니다.
+
+  #define SETUP_DTB                      2
+
+  This device-tree is used as an extension to the "boot page". As such it
+  does not parse / consider data which is already covered by the boot
+  page. This includes memory size, reserved ranges, command line arguments
+  or initrd address. It simply holds information which can not be retrieved
+  otherwise like interrupt routing or a list of devices behind an I2C bus.
+  이 장치 트리는 "부팅 페이지"의 확장으로 사용됩니다.   따라서 부팅 페이지에서 
+  이미 다루고있는 데이터는 구문 분석 / 고려하지 않습니다. 여기에는 메모리 크기, 
+  예약 된 범위, 명령 줄 인수 또는 initrd 주소가 포함됩니다. 인터럽트 라우팅이나 
+  I2C 버스 뒤의 장치 목록과 달리 검색 할 수없는 정보 만 보유합니다.
+
+4) Entry point for arch/mips/bmips
+4) arch/mips/bmips 진입 포인트
+----------------------------------
+
+  Some bootloaders only support a single entry point, at the start of the
+  kernel image.  Other bootloaders will jump to the ELF start address.
+  Both schemes are supported; CONFIG_BOOT_RAW=y and CONFIG_NO_EXCEPT_FILL=y,
+  so the first instruction immediately jumps to kernel_entry().
+  일부 부트 로더는 커널 이미지의 시작 부분에서 단일 진입 점만 지원합니다. 
+  다른 부트 로더는 ELF 시작 주소로 점프합니다. 두 가지 방법 모두 지원됩니다. 
+  CONFIG_BOOT_RAW = y 및 CONFIG_NO_EXCEPT_FILL = y이므로 첫 번째 명령은 즉시 
+  kernel_entry ()로 점프합니다.
+
+  Similar to the arch/arm case (b), a DT-aware bootloader is expected to
+  set up the following registers:
+  arch / arm case (b)와 마찬가지로 DT 대응 부트 로더는 다음의 레지스터를 설정하는 것이 기대됩니다.
+        
+         a0 : 0
+
+         a1 : 0xffffffff
+
+         a2 : Physical pointer to the device tree block (defined in chapter
+         II) in RAM.  The device tree can be located anywhere in the first
+         512MB of the physical address space (0x00000000 - 0x1fffffff),
+         aligned on a 64 bit boundary.
+         a2 : RAM의 장치 트리 블록 (챕터 II에서 정의)에 대한 실제 포인터.
+        장치 트리는 64 비트 경계에 정렬 된 물리적 주소 공간의 
+        첫 번째 512MB (0x00000000 - 0x1fffffff)의 어느 위치 에나 위치 할 수 있습니다
+
+  Legacy bootloaders do not use this convention, and they do not pass in a
+  DT block.  In this case, Linux will look for a builtin DTB, selected via
+  CONFIG_DT_*.
+  레거시 부트 로더는이 규칙을 사용하지 않으며 DT 블록을 전달하지 않습니다. 
+  이 경우 리눅스는 CONFIG_DT_ *를 통해 선택된 내장 DTB를 찾는다.
+  
+  This convention is defined for 32-bit systems only, as there are not
+  currently any 64-bit BMIPS implementations.
+  이 규칙은 현재 64 비트 BMIPS 구현이 없기 때문에 32 비트 시스템에만 정의됩니다.
+
+II - The DT block format
+II - DT 블록 형식
+========================
+
+
+This chapter defines the actual format of the flattened device-tree
+passed to the kernel. The actual content of it and kernel requirements
+are described later. You can find example of code manipulating that
+format in various places, including arch/powerpc/kernel/prom_init.c
+which will generate a flattened device-tree from the Open Firmware
+representation, or the fs2dt utility which is part of the kexec tools
+which will generate one from a filesystem representation. It is
+expected that a bootloader like uboot provides a bit more support,
+that will be discussed later as well.
+이 장에서는 커널에 전달되는 병합 장치 트리의 실제 형식을 정의합니다. 
+실제 내용과 커널 요구 사항은 나중에 설명합니다. Open Firmware representation 
+에서 lattened device-tree 를 생성하는 arch / powerpc / kernel / prom_init.c 또는 
+filesystem representation에서 하나를 생성 할 kexec 도구의 일부인 fs2dt 유틸리티를 
+비롯하여 다양한 위치에서 해당 형식을 조작하는 코드 예제를 찾을 수 있습니다 . 
+uboot와 같은 부트 로더가 조금 더 많은 지원을 제공 할 것으로 예상되며, 이는 나중에 논의 될 것입니다.
+
+Note: The block has to be in main memory. It has to be accessible in
+both real mode and virtual mode with no mapping other than main
+memory. If you are writing a simple flash bootloader, it should copy
+the block to RAM before passing it to the kernel.
+주 : 블록은 메인 메모리에 있어야합니다. 메인 메모리 이외의 매핑없이 리얼 모드와 
+가상 모드 모두에서 액세스 할 수 있어야합니다. 
+간단한 플래시 부트 로더를 작성하는 경우 블록을 커널에 전달하기 전에 RAM으로 복사해야합니다.
+
+1) Header
+---------
+
+   The kernel is passed the physical address pointing to an area of memory
+   that is roughly described in include/linux/of_fdt.h by the structure
+   boot_param_header:
+   커널은 구조체 boot_param_header에 의해 include / linux / of_fdt.h에 대략적으로 
+   기술 된 메모리 영역을 가리키는 물리적 주소를 전달받습니다 :
+
+struct boot_param_header {
+        u32     magic;                  /* magic word OF_DT_HEADER */
+        u32     totalsize;              /* total size of DT block */
+        u32     off_dt_struct;          /* offset to structure */
+        u32     off_dt_strings;         /* offset to strings */
+        u32     off_mem_rsvmap;         /* offset to memory reserve map */ / * 메모리 예약 맵에 대한 오프셋 */
+                                              
+        u32     version;                /* format version */
+        u32     last_comp_version;      /* last compatible version *// * 마지막으로 호환되는 버전 * /
+
+        /* version 2 fields below */
+        u32     boot_cpuid_phys;        /* Which physical CPU id we're
+                                           booting on */ / * 부팅 할 실제 CPU ID * /
+        /* version 3 fields below */
+        u32     size_dt_strings;        /* size of the strings block */
+
+        /* version 17 fields below */
+        u32	size_dt_struct;		/* size of the DT structure block */
+};
+
+   Along with the constants:
+   상수와 함께 :
+
+/* Definitions used by the flattened device tree */
+/ * 병합 된 장치 트리에서 사용되는 정의 * /
+
+#define OF_DT_HEADER            0xd00dfeed      /* 4: version,
+						   4: total size */
+#define OF_DT_BEGIN_NODE        0x1             /* Start node: full name
+						   */
+#define OF_DT_END_NODE          0x2             /* End node */
+#define OF_DT_PROP              0x3             /* Property: name off,
+                                                   size, content */ property(속성)
+#define OF_DT_END               0x9
+
+   All values in this header are in big endian format, the various
+   fields in this header are defined more precisely below. All
+   "offset" values are in bytes from the start of the header; that is
+   from the physical base address of the device tree block.
+   이 헤더의 모든 값은 빅 엔디안 형식이며이 헤더의 다양한 필드는 아래에서보다 
+   정확하게 정의됩니다. 모든 "offset"값은 헤더 시작부터 바이트 단위입니다. 
+   즉, 장치 트리 블록의 물리적 기본 주소에서 온 것입니다.
+   
+   - magic
+
+     This is a magic value that "marks" the beginning of the
+     device-tree block header. It contains the value 0xd00dfeed and is
+     defined by the constant OF_DT_HEADER
+     이것은 장치 트리 블록 헤더의 시작을 "표시"하는 마법 값입니다. 
+     0xd00dfeed 값을 포함하며 상수 OF_DT_HEADER로 정의됩니다.
+   
+   - totalsize
+
+     This is the total size of the DT block including the header. The
+     "DT" block should enclose all data structures defined in this
+     chapter (who are pointed to by offsets in this header). That is,
+     the device-tree structure, strings, and the memory reserve map.
+     헤더를 포함한 DT 블록의 전체 크기입니다. "DT"블럭은이 장에서 정의 된 
+     모든 데이터 구조 (이 헤더의 오프셋으로 지시 됨)를 둘러싸 야한다. 
+     즉, 장치 트리 구조, 문자열 및 메모리 예약 맵입니다.
+   
+   - off_dt_struct
+
+     This is an offset from the beginning of the header to the start
+     of the "structure" part the device tree. (see 2) device tree)
+     헤더의 시작 부분부터 장치 트리의 "구조"부분 시작 부분까지의 오프셋입니다. (2) 장치 트리 참조)
+
+   - off_dt_strings
+
+     This is an offset from the beginning of the header to the start
+     of the "strings" part of the device-tree
+     이것은 헤더의 시작 부분부터 장치 트리의 "문자열"부분의 시작 부분까지의 오프셋입니다
+
+   - off_mem_rsvmap
+
+     This is an offset from the beginning of the header to the start
+     of the reserved memory map. This map is a list of pairs of 64-
+     bit integers. Each pair is a physical address and a size. The
+     list is terminated by an entry of size 0. This map provides the
+     kernel with a list of physical memory areas that are "reserved"
+     and thus not to be used for memory allocations, especially during
+     early initialization. The kernel needs to allocate memory during
+     boot for things like un-flattening the device-tree, allocating an
+     MMU hash table, etc... Those allocations must be done in such a
+     way to avoid overriding critical things like, on Open Firmware
+     capable machines, the RTAS instance, or on some pSeries, the TCE
+     tables used for the iommu. Typically, the reserve map should
+     contain _at least_ this DT block itself (header,total_size). If
+     you are passing an initrd to the kernel, you should reserve it as
+     well. You do not need to reserve the kernel image itself. The map
+     should be 64-bit aligned.
+     이것은 헤더의 시작에서 예약 된 메모리 맵의 시작까지의 오프셋입니다. 
+     이 맵은 64 비트 정수 쌍의 목록입니다. 각 쌍은 실제 주소와 크기입니다.
+     목록은 크기가 0 인 항목으로 종료됩니다.이 맵은 커널에 "예약"되어 있으므로 
+     특히 초기화 중에 메모리 할당에 사용되지 않는 실제 메모리 영역 목록을 제공합니다.
+     커널은 장치 트리의 un-flattening 않게하고, MMU 해시 테이블을 할당하는 등의 작업을 
+     위해 부팅하는 동안 메모리를 할당해야합니다. 이러한 할당은 Open Firmware가 가능한 컴퓨터에서 
+     중요한 작업을 무시하는 방식으로 수행되어야합니다. 
+     RTAS 인스턴스 또는 일부 pSeries에서 iommu에 사용되는 TCE 테이블는 일반적으로 예약 맵이 최소한 
+     DT 블록 자체 (header, total_size)를 포함해야합니다.
+
+   - version
+
+     This is the version of this structure. Version 1 stops
+     here. Version 2 adds an additional field boot_cpuid_phys.
+     Version 3 adds the size of the strings block, allowing the kernel
+     to reallocate it easily at boot and free up the unused flattened
+     structure after expansion. Version 16 introduces a new more
+     "compact" format for the tree itself that is however not backward
+     compatible. Version 17 adds an additional field, size_dt_struct,
+     allowing it to be reallocated or moved more easily (this is
+     particularly useful for bootloaders which need to make
+     adjustments to a device tree based on probed information). You
+     should always generate a structure of the highest version defined
+     at the time of your implementation. Currently that is version 17,
+     unless you explicitly aim at being backward compatible.
+     이것이이 구조의 버전입니다. 버전 1이 여기서 멈 춥니 다. 
+     버전 2는 boot_cpuid_phys 필드를 추가합니다. 버전 3은 strings 블록의 크기를 
+     추가하여 부팅 할 때 커널이 쉽게 재 할당하고 확장 후에 사용하지 않는 병합 구조를 
+     확보합니다. 버전 16에서는 트리 자체에 새로운 "컴팩트"형식이 도입되었지만 이전 버전과 
+     호환되지는 않습니다. 버전 17에서는 추가 필드 인 size_dt_struct를 추가하여 더 쉽게 재 
+     할당하거나 이동할 수 있습니다 (특히 프로브 된 정보를 기반으로 장치 트리를 조정해야하는 
+     부트 로더에 특히 유용합니다). 구현시 정의 된 최상위 버전의 구조를 항상 생성해야합니다. 
+     이전 버전과의 호환을 명시 적으로 목표로하지 않는 한 현재 버전 17입니다.
+
+
+   - last_comp_version
+
+     Last compatible version. This indicates down to what version of
+     the DT block you are backward compatible. For example, version 2
+     is backward compatible with version 1 (that is, a kernel build
+     for version 1 will be able to boot with a version 2 format). You
+     should put a 1 in this field if you generate a device tree of
+     version 1 to 3, or 16 if you generate a tree of version 16 or 17
+     using the new unit name format.
+     마지막 호환 버전. 이는 이전 버전과 호환되는 DT 블록의 버전을 나타냅니다. 
+     예를 들어, 버전 2는 버전 1과 역 호환됩니다 (즉, 버전 1 용 커널 빌드는 버전 2 
+     형식으로 부팅 할 수 있습니다). 새 장치 이름 형식을 사용하여 버전 16 또는 17의 트리를 
+     생성할 때 버전 1 ~ 3 또는 16의 장치 트리를 생성하는 경우이 필드에 1을 입력해야합니다.
+
+   - boot_cpuid_phys
+
+     This field only exist on version 2 headers. It indicate which
+     physical CPU ID is calling the kernel entry point. This is used,
+     among others, by kexec. If you are on an SMP system, this value
+     should match the content of the "reg" property of the CPU node in
+     the device-tree corresponding to the CPU calling the kernel entry
+     point (see further chapters for more information on the required
+     device-tree contents)
+     이 필드는 버전 2 헤더에만 있습니다. 어떤 물리적 CPU ID가 커널 진입 
+     점을 호출하는지 나타냅니다. 이것은 kexec이 사용합니다. 
+     SMP 시스템을 사용하는 경우이 값은 커널 엔트리 포인트를 호출하는 CPU에 
+     해당하는 장치 트리의 CPU 노드의 "reg"등록 정보 내용과 일치해야합니다. 
+     (필수 device-tree 내용에 대한 자세한 내용은 다음 장을 참조하십시오) )
+   
+   - size_dt_strings
+
+     This field only exists on version 3 and later headers.  It
+     gives the size of the "strings" section of the device tree (which
+     starts at the offset given by off_dt_strings).
+     이 필드는 버전 3 이상의 헤더에만 있습니다. 그것은 장치 트리의 "strings"섹션의 
+     크기를 제공합니다 (off_dt_strings에 의해 주어진 오프셋에서 시작 함).
+   
+   - size_dt_struct
+
+     This field only exists on version 17 and later headers.  It gives
+     the size of the "structure" section of the device tree (which
+     starts at the offset given by off_dt_struct).
+     이 필드는 버전 17 이상의 헤더에만 존재합니다. 그것은 장치 트리의 "구조"섹션의 크기를
+      제공합니다 (off_dt_struct에 의해 주어진 오프셋에서 시작 함).
+
+   So the typical layout of a DT block (though the various parts don't
+   need to be in that order) looks like this (addresses go from top to
+   bottom):
+   따라서 DT 블록의 일반적인 레이아웃 (여러 부분이 순서대로 될 필요는 없지만)은 다음과 같습니다 
+   (주소는 위에서 아래로 이어짐).
+
+             ------------------------------
+     base -> |  struct boot_param_header  |
+             ------------------------------
+             |      (alignment gap) (*)   |
+             ------------------------------
+             |      memory reserve map    |
+             ------------------------------
+             |      (alignment gap)       |
+             ------------------------------
+             |                            |
+             |    device-tree structure   |
+             |                            |
+             ------------------------------
+             |      (alignment gap)       |
+             ------------------------------
+             |                            |
+             |     device-tree strings    |
+             |                            |
+      -----> ------------------------------
+      |
+      |
+      --- (base + totalsize)
+
+      기지 -> | struct boot_param_header |
+              ------------------------------
+              | (정렬 갭) (*) |
+              ------------------------------
+              | 메모리 예약 맵 |
+              ------------------------------
+              | (정렬 갭) |
+              ------------------------------
+              | |
+              | 장치 트리 구조 |
+              | |
+              ------------------------------
+              | (정렬 갭) |
+              ------------------------------
+              | |
+              | 장치 트리 문자열 |
+              | |
+       -----> ------------------------------
+       |
+       |
+       --- (기본 + 합계)
+
+
+  (*) The alignment gaps are not necessarily present; their presence
+      and size are dependent on the various alignment requirements of
+      the individual data blocks.
+  (*) 정렬 간격이 반드시 존재하지는 않습니다. 그들의 존재 및 크기는 
+      개별 데이터 블록의 다양한 정렬 요구 사항에 따라 달라집니다.
+
+2) Device tree generalities
+---------------------------
+
+This device-tree itself is separated in two different blocks, a
+structure block and a strings block. Both need to be aligned to a 4
+byte boundary.
+이 장치 트리 자체는 구조 블록과 문자열 블록이라는 두 개의 다른 블록으로 구분됩니다. 둘 다 4 바이트 경계에 정렬되어야합니다.
+
+First, let's quickly describe the device-tree concept before detailing
+the storage format. This chapter does _not_ describe the detail of the
+required types of nodes & properties for the kernel, this is done
+later in chapter III.
+먼저 저장소 형식을 자세히 설명하기 전에 장치 트리 개념을 빠르게 설명해 보겠습니다. 
+이 장에서는 커널의 필수 노드 유형 및 등록 정보에 대해 자세히 설명하지는 않습니다. 
+자세한 내용은 III 장의 뒷부분에서 설명합니다.  
+
+The device-tree layout is strongly inherited from the definition of
+the Open Firmware IEEE 1275 device-tree. It's basically a tree of
+nodes, each node having two or more named properties. A property can
+have a value or not.
+장치 트리 레이아웃은 Open Firmware IEEE 1275 장치 트리의 정의로부터 강력하게 상속됩니다. 
+기본적으로 노드 트리입니다. 각 노드는 두 개 이상의 명명 된 속성을가집니다. 
+속성은 값을 가질 수도 있고 가지지 않을 수도 있습니다.
+
+It is a tree, so each node has one and only one parent except for the
+root node who has no parent.
+그것은 트리이므로 각 노드에는 부모가없는 루트 노드를 제외하고 단 하나의 부모 만 있습니다.
+
+A node has 2 names. The actual node name is generally contained in a
+property of type "name" in the node property list whose value is a
+zero terminated string and is mandatory for version 1 to 3 of the
+format definition (as it is in Open Firmware). Version 16 makes it
+optional as it can generate it from the unit name defined below.
+노드에는 2 개의 이름이 있습니다. 실제 노드 이름은 일반적으로 노드 등록 정보 목록에 
+"name"유형의 등록 정보에 포함되어 있습니다.이 등록 정보 목록의 값은 0으로 끝나는 문자열이며 
+형식 정의의 버전 1 - 3 (Open Firmware에 있음)에 필수입니다. 버전 16은 아래 정의 된 단위 
+이름에서 생성 할 수 있으므로 선택 사항으로 만듭니다.
+
+There is also a "unit name" that is used to differentiate nodes with
+the same name at the same level, it is usually made of the node
+names, the "@" sign, and a "unit address", which definition is
+specific to the bus type the node sits on.
+같은 레벨에서 같은 이름의 노드를 구별하는 데 사용되는 "단위 이름"도 있습니다. 
+노드 이름, "@"기호 및 "단위 주소"로 구성됩니다.이 정의는 노드가 위치하는 버스 유형.
+
+The unit name doesn't exist as a property per-se but is included in
+the device-tree structure. It is typically used to represent "path" in
+the device-tree. More details about the actual format of these will be
+below.
+유닛 이름은 속성별로 존재하지 않지만 장치 트리 구조에 포함됩니다. 
+일반적으로 장치 트리에서 "경로"를 나타내는 데 사용됩니다. 이들의 실제 형식에 
+대한 자세한 내용은 아래에 있습니다.
+
+The kernel generic code does not make any formal use of the
+unit address (though some board support code may do) so the only real
+requirement here for the unit address is to ensure uniqueness of
+the node unit name at a given level of the tree. Nodes with no notion
+of address and no possible sibling of the same name (like /memory or
+/cpus) may omit the unit address in the context of this specification,
+or use the "@0" default unit address. The unit name is used to define
+a node "full path", which is the concatenation of all parent node
+unit names separated with "/".
+커널 제네릭 코드는 유닛 주소를 공식적으로 사용하지 않지만 (일부 보드 지원 코드가 할 수는 있다.), 
+유닛 주소에 대한 유일한 실제 요구 사항은 트리의 주어진 레벨에서 노드 유닛 이름의 고유성을 보장하는 것입니다. 
+주소의 개념이없고 (/ memory 또는 / cpus와 같은) 동일한 이름의 형제가없는 노드는 이 사양의 컨텍스트에서 장치 주소를 생략하거나 "@ 0"기본 단위 주소를 사용할 수 있습니다. 
+단위 이름은 노드 "전체 경로"를 정의하는 데 사용되며, 이는 "/"로 구분 된 모든 부모 노드 단위 이름의 연결입니다.
+
+The root node doesn't have a defined name, and isn't required to have
+a name property either if you are using version 3 or earlier of the
+format. It also has no unit address (no @ symbol followed by a unit
+address). The root node unit name is thus an empty string. The full
+path to the root node is "/".
+루트 노드에는 정의 된 이름이 없으며 버전 3 또는 이전 버전을 사용하는 경우 name 속성이 필요하지 않습니다. 
+또한 단위 주소도 없습니다 (@ 기호 뒤에 단위 주소가옵니다). 따라서 루트 노드 단위 이름은 빈 문자열입니다. 
+루트 노드의 전체 경로는 "/"입니다.
+
+Every node which actually represents an actual device (that is, a node
+which isn't only a virtual "container" for more nodes, like "/cpus"
+is) is also required to have a "compatible" property indicating the
+specific hardware and an optional list of devices it is fully
+backwards compatible with.
+"/ cpus"와 같이 실제 장치를 나타내는 모든 노드 (즉, "/ cpus"와 같이 더 많은 노드에 대한 가상 "컨테이너"일뿐만 아니라)는 
+특정 하드웨어를 나타내는 "호환 가능한"속성을 가지고 있어야하며 장치의 선택적 목록으로 완전히 하위 호환됩니다.
+
+Finally, every node that can be referenced from a property in another
+node is required to have either a "phandle" or a "linux,phandle"
+property. Real Open Firmware implementations provide a unique
+"phandle" value for every node that the "prom_init()" trampoline code
+turns into "linux,phandle" properties. However, this is made optional
+if the flattened device tree is used directly. An example of a node
+referencing another node via "phandle" is when laying out the
+interrupt tree which will be described in a further version of this
+document.
+마지막으로, 다른 노드의 속성에서 참조 할 수있는 모든 노드에는 "phandle"또는 "land, phandle"속성이 있어야합니다.
+ Real Open Firmware 구현은 "prom_init ()"트램펄린 코드가 "linux, phandle"속성으로 변환되는 모든 노드에 고유 한 "phandle"값을 제공합니다.
+  그러나 평평한 장치 트리를 직접 사용하는 경우에는이 옵션을 선택합니다. "phandle"을 통해 다른 노드를 참조하는 노드의 예제는이 문서의 
+  이후 버전에서 설명 할 인터럽트 트리를 배치 할 때입니다.
+
+The "phandle" property is a 32-bit value that uniquely
+identifies a node. You are free to use whatever values or system of
+values, internal pointers, or whatever to generate these, the only
+requirement is that every node for which you provide that property has
+a unique value for it.
+"phandle"속성은 노드를 고유하게 식별하는 32 비트 값입니다. 어떤 값이나 시스템의 값이나 내부 포인터 등을 자유롭게 사용할 수 있습니다. 
+유일한 요구 사항은 그 속성을 제공하는 모든 노드가 고유 한 값을 갖는다는 것입니다.
+
+Here is an example of a simple device-tree. In this example, an "o"
+designates a node followed by the node unit name. Properties are
+presented with their name followed by their content. "content"
+represents an ASCII string (zero terminated) value, while <content>
+represents a 32-bit value, specified in decimal or hexadecimal (the
+latter prefixed 0x). The various nodes in this example will be
+discussed in a later chapter. At this point, it is only meant to give
+you a idea of what a device-tree looks like. I have purposefully kept
+the "name" and "linux,phandle" properties which aren't necessary in
+order to give you a better idea of what the tree looks like in
+practice.
+다음은 간단한 장치 트리의 예입니다. 이 예제에서 "o"는 노드 단위 이름 뒤에 노드를 지정합니다.
+ 등록 정보는 이름 뒤에 내용이옵니다. "content"는 ASCII 문자열 (영숫자 종료) 값을 나타내며 <content>는 
+ 십진수 또는 16 진수 (0x 접두사가 붙은 0x)로 지정된 32 비트 값을 나타냅니다. 이 예제의 다양한 노드는 이후 장에서 설명합니다. 
+ 이 시점에서, 이는 단지 디바이스 트리가 어떻게 보이는지에 대한 아이디어를 제공하기위한 것입니다. 
+ 나는 실제로 나무가 어떻게 보이는지 더 잘 이해할 수 있도록 "이름"과 "리눅스, phandle"속성을 의도적으로 유지했습니다.
+  
+  / o device-tree
+      |- name = "device-tree"
+      |- model = "MyBoardName"
+      |- compatible = "MyBoardFamilyName"
+      |- #address-cells = <2>
+      |- #size-cells = <2>
+      |- linux,phandle = <0>
+      |
+      o cpus
+      | | - name = "cpus"
+      | | - linux,phandle = <1>
+      | | - #address-cells = <1>
+      | | - #size-cells = <0>
+      | |
+      | o PowerPC,970@0
+      |   |- name = "PowerPC,970"
+      |   |- device_type = "cpu"
+      |   |- reg = <0>
+      |   |- clock-frequency = <0x5f5e1000>
+      |   |- 64-bit
+      |   |- linux,phandle = <2>
+      |
+      o memory@0
+      | |- name = "memory"
+      | |- device_type = "memory"
+      | |- reg = <0x00000000 0x00000000 0x00000000 0x20000000>
+      | |- linux,phandle = <3>
+      |
+      o chosen
+        |- name = "chosen"
+        |- bootargs = "root=/dev/sda2"
+        |- linux,phandle = <4>
+
+This tree is almost a minimal tree. It pretty much contains the
+minimal set of required nodes and properties to boot a linux kernel;
+that is, some basic model information at the root, the CPUs, and the
+physical memory layout.  It also includes misc information passed
+through /chosen, like in this example, the platform type (mandatory)
+and the kernel command line arguments (optional).
+이 tree는 거의 최소 tree입니다. 리눅스 커널을 부팅하는 데 필요한 최소한의 노드와 속성 집합을 포함하고 있습니다.
+ 즉, 루트에서의 기본 모델 정보, CPU 및 실제 메모리 레이아웃입니다. 
+ 또한이 예에서 플랫폼 유형 (필수)과 커널 명령 행 인수 (선택 사항)와 같이 전달 된 / 선택 된 기타 정보를 포함합니다.
+
+The /cpus/PowerPC,970@0/64-bit property is an example of a
+property without a value. All other properties have a value. The
+significance of the #address-cells and #size-cells properties will be
+explained in chapter IV which defines precisely the required nodes and
+properties and their content.
+/ cpus / PowerPC, 970 @ 0 / 64-bit 속성은 값이없는 속성의 예입니다. 
+다른 모든 속성에는 값이 있습니다. # address-cells 및 # size-cells 속성의 중요성은
+ 필수 노드와 속성 및 해당 내용을 정확하게 정의하는 IV 장에서 설명합니다.
+
+3) Device tree "structure" block
+
+The structure of the device tree is a linearized tree structure. The
+"OF_DT_BEGIN_NODE" token starts a new node, and the "OF_DT_END_NODE"
+ends that node definition. Child nodes are simply defined before
+"OF_DT_END_NODE" (that is nodes within the node). A 'token' is a 32
+bit value. The tree has to be "finished" with a OF_DT_END token
+장치 트리의 구조는 선형화 된 트리 구조입니다. "OF_DT_BEGIN_NODE"토큰은 
+새 노드를 시작하고 "OF_DT_END_NODE"는 해당 노드 정의를 끝냅니다. 
+하위 노드는 "OF_DT_END_NODE"(노드 내의 노드)보다 먼저 정의됩니다. 
+'토큰'은 32 비트 값입니다. 트리는 OF_DT_END 토큰으로 "완료"되어야합니다.
+
+Here's the basic structure of a single node:
+단일 노드의 기본 구조는 다음과 같습니다.
+
+     * token OF_DT_BEGIN_NODE (that is 0x00000001)
+      * 토큰 OF_DT_BEGIN_NODE (즉, 0x00000001)
+
+     * for version 1 to 3, this is the node full path as a zero
+       terminated string, starting with "/". For version 16 and later,
+       this is the node unit name only (or an empty string for the
+       root node)
+        * 버전 1에서 3까지는 "/"로 시작하는 노드의 전체 경로를 0으로 끝나는 문자열로 사용합니다. 
+        버전 16 이상에서는 노드 단위 이름 만 (또는 루트 노드의 빈 문자열)
+
+     * [align gap to next 4 bytes boundary]
+     * [다음 4 바이트 경계까지 갭을 정렬하십시오]
+
+     * for each property:
+     * 각 속성에 대해 :
+
+        * token OF_DT_PROP (that is 0x00000003)
+         * 토큰 OF_DT_PROP (즉, 0x00000003)
+
+        * 32-bit value of property value size in bytes (or 0 if no value)
+        * 속성 값 크기의 32 비트 값 (바이트가없는 경우 0)
+
+        * 32-bit value of offset in string block of property name
+          * 속성 이름 문자열 블록의 32 비트 오프셋 값
+
+        * property value data if any
+          * 속성 값 데이터 (있는 경우)
+
+        * [align gap to next 4 bytes boundary]
+        * [다음 4 바이트 경계까지 갭을 정렬하십시오]
+
+     * [child nodes if any]
+        * [자식 노드가있는 경우 자식 노드]
+
+     * token OF_DT_END_NODE (that is 0x00000002)
+     * 토큰 OF_DT_END_NODE (0x00000002)
+
+So the node content can be summarized as a start token, a full path,
+a list of properties, a list of child nodes, and an end token. Every
+child node is a full node structure itself as defined above.
+따라서 노드 내용은 시작 토큰, 전체 경로, 특성 목록, 하위 노드 목록 및 끝 토큰으로 요약 될 수 있습니다. 
+모든 자식 노드는 위에 정의 된 전체 노드 구조입니다.
+
+
+NOTE: The above definition requires that all property definitions for
+a particular node MUST precede any subnode definitions for that node.
+Although the structure would not be ambiguous if properties and
+subnodes were intermingled, the kernel parser requires that the
+properties come first (up until at least 2.6.22).  Any tools
+manipulating a flattened tree must take care to preserve this
+constraint.
+참고 : 위의 정의는 특정 노드에 대한 모든 속성 정의가 해당 노드에 대한 모든 하위 노드 정의 앞에 와야합니다.
+ 속성과 하위 노드가 혼합되어있는 경우 구조가 모호하지는 않지만 커널 구문 분석기에서는 속성이 먼저 필요합니다 (최소 2.6.22까지). 
+ 평평한 트리를 조작하는 모든 도구는이 제약 조건을 유지 관리해야합니다.
+
+4) Device tree "strings" block
+
+In order to save space, property names, which are generally redundant,
+are stored separately in the "strings" block. This block is simply the
+whole bunch of zero terminated strings for all property names
+concatenated together. The device-tree property definitions in the
+structure block will contain offset values from the beginning of the
+strings block.
+공간을 절약하기 위해 일반적으로 중복되는 속성 이름은 "문자열"블록에 별도로 저장됩니다. 
+이 블록은 함께 연결된 모든 속성 이름에 대해 0으로 끝나는 문자열의 전체 묶음 일뿐입니다. 
+구조 블록의 장치 트리 속성 정의에는 strings 블록의 시작 부분에서 오프셋 값이 포함됩니다.
+
+III - Required content of the device tree
+III - 장치 트리의 필수 내용
+=========================================
+
+WARNING: All "linux,*" properties defined in this document apply only
+to a flattened device-tree. If your platform uses a real
+implementation of Open Firmware or an implementation compatible with
+the Open Firmware client interface, those properties will be created
+by the trampoline code in the kernel's prom_init() file. For example,
+that's where you'll have to add code to detect your board model and
+set the platform number. However, when using the flattened device-tree
+entry point, there is no prom_init() pass, and thus you have to
+provide those properties yourself.
+경고 :이 문서에 정의 된 "linux, *"속성은 모두 병합 된 장치 트리에만 적용됩니다.
+ 사용중인 플랫폼이 Open Firmware의 실제 구현 또는 Open Firmware 클라이언트 인터페이스와 
+ 호환되는 구현을 사용하는 경우 해당 등록 정보는 커널의 prom_init () 파일에있는 trampoline 코드에 의해 생성됩니다. 
+ 예를 들어, 보드 모델을 감지하고 플랫폼 번호를 설정하는 코드를 추가해야합니다. 
+ 그러나 병합 된 장치 트리 엔트리 포인트를 사용할 때 prom_init () 패스가 없으므로 이러한 속성을 직접 제공해야합니다.
+
+1) Note about cells and address representation
+1) 셀 및 주소 표현에 대한 참고 사항
+----------------------------------------------
+
+The general rule is documented in the various Open Firmware
+documentations. If you choose to describe a bus with the device-tree
+and there exist an OF bus binding, then you should follow the
+specification. However, the kernel does not require every single
+device or bus to be described by the device tree.
+일반적인 규칙은 다양한 Open Firmware 문서에 설명되어 있습니다. 
+장치 트리가있는 버스를 설명하고 OF 버스 바인딩이있는 경우, 스펙을 따라야합니다.
+ 그러나 커널은 모든 단일 장치 또는 버스를 장치 트리로 설명 할 것을 요구하지 않습니다.
+
+In general, the format of an address for a device is defined by the
+parent bus type, based on the #address-cells and #size-cells
+properties.  Note that the parent's parent definitions of #address-cells
+and #size-cells are not inherited so every node with children must specify
+them.  The kernel requires the root node to have those properties defining
+addresses format for devices directly mapped on the processor bus.
+일반적으로 장치의 주소 형식은 # address-cells 및 # size-cells 속성을 기반으로 부모 버스 유형에 의해 정의됩니다.
+ 부모의 #parent-cell과 # size-cells의 부모 정의는 상속되지 않으므로 자식이있는 모든 노드가 상속을 지정해야합니다. 
+ 커널은 루트 노드가 프로세서 버스에 직접 매핑 된 장치의 주소 형식을 정의하는 속성을 갖도록 요구합니다.
+
+Those 2 properties define 'cells' for representing an address and a
+size. A "cell" is a 32-bit number. For example, if both contain 2
+like the example tree given above, then an address and a size are both
+composed of 2 cells, and each is a 64-bit number (cells are
+concatenated and expected to be in big endian format). Another example
+is the way Apple firmware defines them, with 2 cells for an address
+and one cell for a size.  Most 32-bit implementations should define
+#address-cells and #size-cells to 1, which represents a 32-bit value.
+Some 32-bit processors allow for physical addresses greater than 32
+bits; these processors should define #address-cells as 2.
+이 두 속성은 주소와 크기를 나타내는 '셀'을 정의합니다. "셀"은 32 비트 숫자입니다. 
+예를 들어, 둘 다 위에 주어진 예제 트리와 같이 2를 포함하면 주소와 크기가 모두 2 개의 셀로 구성되며
+각 셀은 64 비트 숫자입니다 (셀은 연결되고 빅 엔디안 형식이어야합니다). 또 다른 예로는 Apple 펌웨어가 주소를
+정의하는 셀 2 개와 크기를 나타내는 셀 1 개를 정의하는 방식이 있습니다. 
+대부분의 32 비트 구현에서는 32 비트 값을 나타내는 # addres-cells 및 # size-cells을 1로 정의해야합니다.
+일부 32 비트 프로세서는 32 비트보다 큰 실제 주소를 허용합니다. 이 processors는 # 주소 세포를 2로 정의해야한다.
+
+
+"reg" properties are always a tuple of the type "address size" where
+the number of cells of address and size is specified by the bus
+#address-cells and #size-cells. When a bus supports various address
+spaces and other flags relative to a given address allocation (like
+prefetchable, etc...) those flags are usually added to the top level
+bits of the physical address. For example, a PCI physical address is
+made of 3 cells, the bottom two containing the actual address itself
+while the top cell contains address space indication, flags, and pci
+bus & device numbers.
+"reg"프로퍼티는 항상 주소 타입과 크기의 셀 수가 버스 # address-cells과
+ # size-cells에 의해 지정되는 "address size"타입의 튜플입니다. 
+ 버스가 다양한 주소 공간과 주어진 주소 할당 (예 : 프리 페치 등)에 상대적인 
+ 다른 플래그를 지원할 때 이러한 플래그는 대개 실제 주소의 최상위 비트에 추가됩니다. 
+ 예를 들어 PCI 물리적 주소는 3 개의 셀로 구성되며, 아래쪽 두 개는 실제 주소 자체를 
+ 포함하고 맨 위 셀은 주소 공간 표시, 플래그 및 pci 버스 및 장치 번호를 포함합니다.
+
+For buses that support dynamic allocation, it's the accepted practice
+to then not provide the address in "reg" (keep it 0) though while
+providing a flag indicating the address is dynamically allocated, and
+then, to provide a separate "assigned-addresses" property that
+contains the fully allocated addresses. See the PCI OF bindings for
+details.
+동적 할당을 지원하는 버스의 경우 주소가 동적으로 할당되었음을 나타내는 플래그를 제공하면서 
+"reg"(0으로 유지)에 주소를 제공하지 않은 다음 별도의 "할당 된 주소" 완전히 할당 된 주소를 포함하는 속성.
+ 자세한 내용은 PCI OF 바인딩을 참조하십시오.
+
+In general, a simple bus with no address space bits and no dynamic
+allocation is preferred if it reflects your hardware, as the existing
+kernel address parsing functions will work out of the box. If you
+define a bus type with a more complex address format, including things
+like address space bits, you'll have to add a bus translator to the
+prom_parse.c file of the recent kernels for your bus type.
+일반적으로 주소 공간 비트가없고 동적 할당이없는 간단한 버스가 기존 커널 주소 구문 분석 기능이
+ 그대로 작동하기 때문에 하드웨어를 반영하는 것이 좋습니다. 
+ 주소 공간 비트와 같은 더 복잡한 주소 형식의 버스 유형을 정의하는 경우 
+ 버스 유형에 맞는 최근 커널의 prom_parse.c 파일에 버스 변환기를 추가해야합니다.
+
+The "reg" property only defines addresses and sizes (if #size-cells is
+non-0) within a given bus. In order to translate addresses upward
+(that is into parent bus addresses, and possibly into CPU physical
+addresses), all buses must contain a "ranges" property. If the
+"ranges" property is missing at a given level, it's assumed that
+translation isn't possible, i.e., the registers are not visible on the
+parent bus.  The format of the "ranges" property for a bus is a list
+of:
+"reg"속성은 주어진 버스 내에서 주소와 크기 (# size-cells가 0이 아닌 경우) 만 정의합니다. 
+주소를 상위 버스 주소 (가능하면 CPU 실제 주소)로 변환하려면 모든 버스에 
+"범위"특성이 있어야합니다. 주어진 범위에서 "범위"속성이 누락 된 경우 변환이 불가능하다고
+ 가정합니다. 즉, 레지스터가 상위 버스에 표시되지 않습니다.
+  버스에 대한 "범위"속성의 형식은 다음과 같은 목록입니다.
+
+	bus address, parent bus address, size
+
+"bus address" is in the format of the bus this bus node is defining,
+that is, for a PCI bridge, it would be a PCI address. Thus, (bus
+address, size) defines a range of addresses for child devices. "parent
+bus address" is in the format of the parent bus of this bus. For
+example, for a PCI host controller, that would be a CPU address. For a
+PCI<->ISA bridge, that would be a PCI address. It defines the base
+address in the parent bus where the beginning of that range is mapped.
+"버스 주소"는이 버스 노드가 정의하는 버스의 형식으로, 즉 PCI 브리지의 경우 PCI 주소가됩니다. 
+따라서 (버스 주소, 크기)는 하위 장치에 대한 주소 범위를 정의합니다. 
+"상위 버스 주소"는이 버스의 상위 버스 형식입니다. 
+예를 들어, PCI 호스트 컨트롤러의 경우 CPU 주소가됩니다. 
+PCI <-> ISA 브리지의 경우 PCI 주소가됩니다. 해당 범위의 시작 부분이 
+매핑되는 상위 버스의 기본 주소를 정의합니다.
+
+For new 64-bit board support, I recommend either the 2/2 format or
+Apple's 2/1 format which is slightly more compact since sizes usually
+fit in a single 32-bit word.   New 32-bit board support should use a
+1/1 format, unless the processor supports physical addresses greater
+than 32-bits, in which case a 2/1 format is recommended.
+새로운 64 비트 보드 지원의 경우 2/2 형식 또는 Apple의 2/1 형식을 권장합니다.
+이 형식은 대개 단일 32 비트 단어로 크기가 맞기 때문에 약간 더 컴팩트합니다.
+ 새로운 32 비트 보드 지원은 프로세서가 32 비트보다 큰 물리적 주소를 지원하지 않는
+  한 1/1 형식을 사용해야하며,이 경우 2/1 형식을 권장합니다.
+
+Alternatively, the "ranges" property may be empty, indicating that the
+registers are visible on the parent bus using an identity mapping
+translation.  In other words, the parent bus address space is the same
+as the child bus address space.
+또는 "ranges"속성이 비어있어 레지스터가 ID 매핑 변환을 사용하여 상위 버스에서 
+볼 수 있음을 나타낼 수 있습니다. 즉, 상위 버스 주소 공간은 하위 버스 주소 공간과 동일합니다.
+
+2) Note about "compatible" properties
+2) "호환"속성에 대한 참고 사항
+-------------------------------------
+
+These properties are optional, but recommended in devices and the root
+node. The format of a "compatible" property is a list of concatenated
+zero terminated strings. They allow a device to express its
+compatibility with a family of similar devices, in some cases,
+allowing a single driver to match against several devices regardless
+of their actual names.
+이러한 속성은 선택 사항이지만 장치와 루트 노드에서 권장됩니다. 
+"compatible"속성의 형식은 연결된 0으로 끝나는 문자열의 목록입니다. 
+이 기능을 사용하면 장치가 유사한 장치 제품군과의 호환성을 표현할 수 있으며 경우에 
+따라 단일 드라이버가 실제 이름과 상관없이 여러 장치와 일치 할 수 있습니다.
+
+3) Note about "name" properties
+-------------------------------
+
+While earlier users of Open Firmware like OldWorld macintoshes tended
+to use the actual device name for the "name" property, it's nowadays
+considered a good practice to use a name that is closer to the device
+class (often equal to device_type). For example, nowadays, Ethernet
+controllers are named "ethernet", an additional "model" property
+defining precisely the chip type/model, and "compatible" property
+defining the family in case a single driver can driver more than one
+of these chips. However, the kernel doesn't generally put any
+restriction on the "name" property; it is simply considered good
+practice to follow the standard and its evolutions as closely as
+possible.
+OldWorld와 같은 Open Firmware의 초기 사용자는 "name"속성에 실제 장치 
+이름을 사용하는 경향이 있었지만 요즘에는 장치 클래스에 더 가까운 이름 
+(종종 device_type과 동일한 이름)을 사용하는 것이 좋습니다. 예를 들어, 
+요즘 이더넷 컨트롤러는 칩 유형 / 모델을 정확하게 정의하는 추가 "모델"속성 인 
+"이더넷"으로 이름이 지정되며, 단일 드라이버가 이들 칩 중 둘 이상을 구동 할 수있는 
+경우 가족을 정의하는 "호환 가능한"속성으로 지정됩니다. 그러나 커널은 일반적으로 "name"속성에 
+제한을 두지 않습니다. 가능한 한 밀접하게 표준 및 그 진화를 따르는 것이 우수 실행으로 간주됩니다.
+
+Note also that the new format version 16 makes the "name" property
+optional. If it's absent for a node, then the node's unit name is then
+used to reconstruct the name. That is, the part of the unit name
+before the "@" sign is used (or the entire unit name if no "@" sign
+is present).
+새 형식 버전 16에서는 "name"속성을 선택적으로 설정합니다. 노드가 없으면 
+노드의 단위 이름을 사용하여 이름을 재구성합니다. 즉, "@"기호 앞에있는 단위 
+이름의 일부 (또는 "@"기호가없는 경우 전체 장치 이름)가 사용됩니다.
+
+4) Note about node and property names and character set
+-------------------------------------------------------
+
+While Open Firmware provides more flexible usage of 8859-1, this
+specification enforces more strict rules. Nodes and properties should
+be comprised only of ASCII characters 'a' to 'z', '0' to
+'9', ',', '.', '_', '+', '#', '?', and '-'. Node names additionally
+allow uppercase characters 'A' to 'Z' (property names should be
+lowercase. The fact that vendors like Apple don't respect this rule is
+irrelevant here). Additionally, node and property names should always
+begin with a character in the range 'a' to 'z' (or 'A' to 'Z' for node
+names).
+Open Firmware는 8859-1의보다 융통성있는 사용법을 제공하지만이 사양은보다 
+엄격한 규칙을 시행합니다. 노드 및 속성은 ASCII 문자 'a'에서 'z', '0'에서 
+'9', ',', '.', '_', '+', '#', '?' 및 '-'. 노드 이름은 추가로 대문자 'A'~ 'Z'를
+ 허용합니다 (속성 이름은 소문자 여야합니다. Apple과 같은 공급 업체가이 규칙을 
+ 존중하지 않는다는 사실은 여기에 상관이 없습니다). 또한 노드 및 특성 이름은 항상
+  'a'에서 'z'(또는 노드 이름의 경우 'A'에서 'Z')까지의 문자로 시작해야합니다.
+
+The maximum number of characters for both nodes and property names
+is 31. In the case of node names, this is only the leftmost part of
+a unit name (the pure "name" property), it doesn't include the unit
+address which can extend beyond that limit.
+노드 이름과 속성 이름의 최대 문자 수는 31입니다. 노드 이름의 경우 
+이것은 단위 이름의 가장 왼쪽 부분 (순수한 "이름"속성) 일 뿐이며 
+제한을 초과 할 수있는 단위 주소는 포함하지 않습니다 .
+
+5) Required nodes and properties
+--------------------------------
+  These are all that are currently required. However, it is strongly
+  recommended that you expose PCI host bridges as documented in the
+  PCI binding to Open Firmware, and your interrupt tree as documented
+  in OF interrupt tree specification.
+  이것들은 현재 필요한 모든 것입니다. 그러나 Open Firmware에 대한 PCI 
+  바인딩에 설명 된대로 PCI 호스트 브리지를 노출하고 OF 인터럽트 트리 
+  사양에 설명 된대로 인터럽트 트리를 노출하는 것이 좋습니다.
+  
+  a) The root node
+
+  The root node requires some properties to be present:
+  루트 노드에는 몇 가지 속성이 있어야합니다.
+
+    - model : this is your board name/model
+    - 모델 : 이것은 보드 이름 / 모델입니다.
+
+    - #address-cells : address representation for "root" devices
+       - # address-cells : "루트"장치의 주소 표현
+
+    - #size-cells: the size representation for "root" devices
+       - # size-cells : "루트"장치의 크기 표현
+
+    - compatible : the board "family" generally finds its way here,
+      for example, if you have 2 board models with a similar layout,
+      that typically get driven by the same platform code in the
+      kernel, you would specify the exact board model in the
+      compatible property followed by an entry that represents the SoC
+      model.
+    - compatible : 보드 "family"가 일반적으로 여기에 있습니다. 예를 들어, 
+      레이아웃이 비슷한 두 개의 보드 모델이 있고 일반적으로 커널의 동일한
+      플랫폼 코드에 의해 구동되는 경우, 정확한 보드 모델을 호환 가능한 속성
+      다음에 SoC 모델을 나타내는 항목이옵니다.
+
+  The root node is also generally where you add additional properties
+  specific to your board like the serial number if any, that sort of
+  thing. It is recommended that if you add any "custom" property whose
+  name may clash with standard defined ones, you prefix them with your
+  vendor name and a comma.
+  루트 노드는 일반적으로 보드에 고유 한 추가 등록 정보 (예 : 일련 번호)를 
+  추가하는 곳이기도합니다. 이름이 표준 정의 된 속성과 충돌 할 수있는 "사용자 지정"속성을 
+  추가하는 경우 공급 업체 이름과 쉼표를 접두사로 추가하는 것이 좋습니다.
+
+  Additional properties for the root node:
+  루트 노드의 추가 등록 정보 :
+
+    - serial-number : a string representing the device's serial number
+    - serial-number : 장치의 일련 번호를 나타내는 문자열
+
+  b) The /cpus node
+
+  This node is the parent of all individual CPU nodes. It doesn't
+  have any specific requirements, though it's generally good practice
+  to have at least:
+  이 노드는 모든 개별 CPU 노드의 부모입니다. 특정 요구 사항은 없지만 일반적으로 최소한 다음을 수행하는 것이 좋습니다.
+
+               #address-cells = <00000001>
+               #size-cells    = <00000000>
+
+  This defines that the "address" for a CPU is a single cell, and has
+  no meaningful size. This is not necessary but the kernel will assume
+  that format when reading the "reg" properties of a CPU node, see
+  below
+  이것은 CPU의 "주소"가 단일 셀이며 의미있는 크기가 없음을 정의합니다. 
+  이것은 필수는 아니지만 커널은 CPU 노드의 "reg"속성을 읽을 때 해당 형식을 취합니다. 
+  아래를 참조하십시오.
+  
+  c) The /cpus/* nodes
+
+  So under /cpus, you are supposed to create a node for every CPU on
+  the machine. There is no specific restriction on the name of the
+  CPU, though it's common to call it <architecture>,<core>. For
+  example, Apple uses PowerPC,G5 while IBM uses PowerPC,970FX.
+  However, the Generic Names convention suggests that it would be
+  better to simply use 'cpu' for each cpu node and use the compatible
+  property to identify the specific cpu core.
+  따라서 / cpus 아래에서, 여러분은 머신의 모든 CPU에 대한 노드를 생성해야합니다.
+   CPU의 이름에는 특별한 제한이 없습니다. 일반적으로 <architecture>, <core>라고
+    부릅니다. 예를 들어, Apple은 PowerPC, G5를 사용하고 IBM은 PowerPC, 970FX를 사용합니다. 
+    그러나 일반 이름 규칙은 각 CPU 노드에 'cpu'를 사용하고 호환되는 속성을 사용하여 특정 CPU 코어를 식별하는 것이 더 낫다고 제안합니다
+  
+  Required properties:
+
+    - device_type : has to be "cpu"
+    - device_type : "cpu"여야합니다.
+
+    - reg : This is the physical CPU number, it's a single 32-bit cell
+      and is also used as-is as the unit number for constructing the
+      unit name in the full path. For example, with 2 CPUs, you would
+      have the full path:
+      - reg : 물리적 인 CPU 번호입니다. 하나의 32 비트 셀이며 전체 경로에서
+       유닛 이름을 구성하기위한 유닛 번호로있는 그대로 사용됩니다. 
+       예를 들어, 2 개의 CPU를 사용하는 경우 전체 경로는 다음과 같습니다.
+
+        /cpus/PowerPC,970FX@0
+        /cpus/PowerPC,970FX@1
+      (unit addresses do not require leading zeroes)
+       (단위 주소에는 선행 0이 필요하지 않음)
+
+    - d-cache-block-size : one cell, L1 data cache block size in bytes (*)
+      - d-cache-block-size : 하나의 셀, L1 데이터 캐시 블록 크기 (바이트)
+
+    - i-cache-block-size : one cell, L1 instruction cache block size in bytes
+     - i-cache-block-size : 하나의 셀, L1 명령어 캐시 블록 크기 (바이트)
+
+    - d-cache-size : one cell, size of L1 data cache in bytes
+      - d-cache-size : 하나의 셀, L1 데이터 캐시의 크기 (바이트)
+
+    - i-cache-size : one cell, size of L1 instruction cache in bytes
+      - i-cache-size : 하나의 셀, L1 명령 캐시의 크기 (바이트)
+
+(*) The cache "block" size is the size on which the cache management
+instructions operate. Historically, this document used the cache
+"line" size here which is incorrect. The kernel will prefer the cache
+block size and will fallback to cache line size for backward
+compatibility.
+(*) 캐시 "블록"크기는 캐시 관리 명령이 작동하는 크기입니다. 
+역사적으로,이 문서는 여기에 잘못된 캐시 "라인"크기를 사용했습니다. 
+커널은 캐시 블록 크기를 선호하며 이전 버전과의 호환성을 위해 캐시 라인 크기를 대체합니다.
+  
+  Recommended properties:
+
+    - timebase-frequency : a cell indicating the frequency of the
+      timebase in Hz. This is not directly used by the generic code,
+      but you are welcome to copy/paste the pSeries code for setting
+      the kernel timebase/decrementer calibration based on this value.
+      - timebase-frequency : 타임베이스의 주파수를 Hz 단위로 나타내는 셀. 
+      이것은 일반적인 코드에서 직접 사용하지는 않지만,이 값을 기반으로 커널 타임베이스 
+      / 데 칸트 보정을 설정하는 pSeries 코드를 복사 / 붙여 넣기하는 것은 환영합니다.
+    
+    - clock-frequency : a cell indicating the CPU core clock frequency
+      in Hz. A new property will be defined for 64-bit values, but if
+      your frequency is < 4Ghz, one cell is enough. Here as well as
+      for the above, the common code doesn't use that property, but
+      you are welcome to re-use the pSeries or Maple one. A future
+      kernel version might provide a common function for this.
+      - clock-frequency : CPU 코어 클럭 주파수를 Hz 단위로 나타내는 셀.
+       새 속성이 64 비트 값으로 정의되지만 빈도가 <4Ghz이면 하나의 셀이면 충분합니다. 
+       여기뿐만 아니라 공통 코드는 해당 속성을 사용하지 않지만 pSeries 또는 Maple을 
+       다시 사용할 수 있습니다. 미래의 커널 버전은 이에 대한 공통 기능을 제공 할 수 있습니다.
+
+    - d-cache-line-size : one cell, L1 data cache line size in bytes
+      if different from the block size
+      - d-cache-line-size : 하나의 셀, 블록 크기와 다른 경우 L1 데이터 캐시 라인 크기 (바이트)
+
+    - i-cache-line-size : one cell, L1 instruction cache line size in
+      bytes if different from the block size
+    - I- 캐시 라인 크기 : 하나의 셀 블록의 크기와 다를 경우 바이트 L1 명령 캐시 라인 크기
+  
+  You are welcome to add any property you find relevant to your board,
+  like some information about the mechanism used to soft-reset the
+  CPUs. For example, Apple puts the GPIO number for CPU soft reset
+  lines in there as a "soft-reset" property since they start secondary
+  CPUs by soft-resetting them.
+  CPU를 소프트 리셋하는 데 사용 된 메커니즘에 대한 정보와 같이 보드와 
+  관련이있는 속성을 추가 할 수 있습니다. 예를 들어, Apple은 소프트 재설정을 통해 
+  보조 CPU를 시작하기 때문에 CPU 소프트 재설정 라인의 GPIO 번호를 "소프트 재설정"속성으로 입력합니다.
+
+  d) the /memory node(s)
+
+  To define the physical memory layout of your board, you should
+  create one or more memory node(s). You can either create a single
+  node with all memory ranges in its reg property, or you can create
+  several nodes, as you wish. The unit address (@ part) used for the
+  full path is the address of the first range of memory defined by a
+  given node. If you use a single memory node, this will typically be
+  @0.
+  보드의 물리적 메모리 레이아웃을 정의하려면 하나 이상의 메모리 노드를 만들어야합니다.
+   reg 속성에 모든 메모리 범위가있는 단일 노드를 만들거나 원하는대로 여러 개의 노드를 만들 수 있습니다.
+    전체 경로에 사용되는 단위 주소 (@ 부분)는 주어진 노드에 의해 정의 된 첫 번째 메모리 범위의 주소입니다.
+     단일 메모리 노드를 사용하는 경우 일반적으로 @ 0이됩니다.
+  
+  Required properties:
+
+    - device_type : has to be "memory"
+    - device_type : "메모리"여야합니다.
+
+    - reg : This property contains all the physical memory ranges of
+      your board. It's a list of addresses/sizes concatenated
+      together, with the number of cells of each defined by the
+      #address-cells and #size-cells of the root node. For example,
+      with both of these properties being 2 like in the example given
+      earlier, a 970 based machine with 6Gb of RAM could typically
+      have a "reg" property here that looks like:
+         - reg :이 속성은 보드의 모든 실제 메모리 범위를 포함합니다. 이것은 주소 / 크기의 목록으로, 루트 노드의 # address-cells 및 # size-cells에 의해 정의 된 각 셀의 수와 함께 연결됩니다. 
+      예를 들어 앞에서 설명한 예제 에서처럼 두 속성이 모두 2 인 경우 6Gb RAM이있는 970 기반 컴퓨터는 일반적으로 다음과 같은 "reg"속성을 가질 수 있습니다.
+
+      00000000 00000000 00000000 80000000
+      00000001 00000000 00000001 00000000
+
+      That is a range starting at 0 of 0x80000000 bytes and a range
+      starting at 0x100000000 and of 0x100000000 bytes. You can see
+      that there is no memory covering the IO hole between 2Gb and
+      4Gb. Some vendors prefer splitting those ranges into smaller
+      segments, but the kernel doesn't care.
+      0x80000000 바이트의 0에서 시작하여 0x100000000 및 0x100000000 바이트부터 
+      시작하는 범위입니다. 2Gb와 4Gb 사이의 IO 홀을 덮는 메모리가 없다는 것을 알 수 있습니다.
+       일부 공급 업체는 이러한 범위를 더 작은 세그먼트로 분할하는 것을 선호하지만 커널은 상관하지 않습니다.
+  
+  e) The /chosen node
+
+  This node is a bit "special". Normally, that's where Open Firmware
+  puts some variable environment information, like the arguments, or
+  the default input/output devices.
+  이 노드는 약간 "특별한"노드입니다. 일반적으로 Open Firmware는 
+  인수 나 기본 입출력 장치와 같은 다양한 환경 정보를 저장합니다.
+
+  This specification makes a few of these mandatory, but also defines
+  some linux-specific properties that would be normally constructed by
+  the prom_init() trampoline when booting with an OF client interface,
+  but that you have to provide yourself when using the flattened format.
+  이 사양은 몇 가지 필수 항목이지만, OF 클라이언트 인터페이스로 부팅 할 때 prom_init () trampoline에
+   의해 일반적으로 구성되는 일부 Linux 관련 속성을 정의하지만 병합 된 형식을 사용할 때는 직접 제공해야합니다.
+  
+  Recommended properties:
+
+    - bootargs : This zero-terminated string is passed as the kernel
+      command line
+      - bootargs :이 제로 종료 문자열은 커널 명령 행으로 전달됩니다
+
+    - linux,stdout-path : This is the full path to your standard
+      console device if any. Typically, if you have serial devices on
+      your board, you may want to put the full path to the one set as
+      the default console in the firmware here, for the kernel to pick
+      it up as its own default console.
+    - linux, stdout-path : 표준 콘솔 장치에 대한 전체 경로입니다. 
+      일반적으로 보드에 직렬 장치가있는 경우 여기에 펌웨어의 기본 콘솔로 
+      설정된 전체 경로를 넣고 커널이 기본 콘솔로 사용하도록 할 수 있습니다.
+
+  Note that u-boot creates and fills in the chosen node for platforms
+  that use it.
+  u-boot는이를 사용하는 플랫폼에 대해 선택한 노드를 만들고 채 웁니다.
+
+  (Note: a practice that is now obsolete was to include a property
+  under /chosen called interrupt-controller which had a phandle value
+  that pointed to the main interrupt controller)
+  (참고 : 현재 사용되지 않는 실습은 주 인터럽트 컨트롤러를 가리키는 phandle 값을 
+  가진 인터럽트 컨트롤러라는 / 아래에 속성을 포함시키는 것입니다)
+
+  f) the /soc<SOCname> node
+
+  This node is used to represent a system-on-a-chip (SoC) and must be
+  present if the processor is a SoC. The top-level soc node contains
+  information that is global to all devices on the SoC. The node name
+  should contain a unit address for the SoC, which is the base address
+  of the memory-mapped register set for the SoC. The name of an SoC
+  node should start with "soc", and the remainder of the name should
+  represent the part number for the soc.  For example, the MPC8540's
+  soc node would be called "soc8540".
+  이 노드는 SoC (system-on-a-chip)를 나타내는 데 사용되며 프로세서가 
+  SoC 인 경우에 있어야합니다. 최상위 soc 노드에는 SoC의 모든 장치에 대한
+   전역 정보가 들어 있습니다. 노드 이름에는 SoC의 단위 주소가 포함되어야합니다.
+   이 주소는 SoC에 설정된 메모리 매핑 레지스터의 기본 주소입니다. SoC 노드의 이름은 "soc"로 
+   시작해야하며 나머지 이름은 soc의 부품 번호를 나타내야합니다. 예를 들어, MPC8540의 soc 노드는 "soc8540"이라고합니다.
+
+  Required properties:
+
+    - ranges : Should be defined as specified in 1) to describe the
+      translation of SoC addresses for memory mapped SoC registers.
+      - 범위 : 메모리 매핑 된 SoC 레지스터의 SoC 주소 변환을 설명하기 위해 1)에서 정의 된대로 정의되어야한다.
+
+    - bus-frequency: Contains the bus frequency for the SoC node.
+      Typically, the value of this field is filled in by the boot
+      loader.
+    - 버스 주파수 : SoC 노드의 버스 주파수를 포함합니다. 일반적으로이 필드의 값은 부트 로더에 의해 채워집니다.
+
+    - compatible : Exact model of the SoC
+      - 호환 가능 : SoC의 정확한 모델
+
+  Recommended properties:
+
+    - reg : This property defines the address and size of the
+      memory-mapped registers that are used for the SOC node itself.
+      It does not include the child device registers - these will be
+      defined inside each child node.  The address specified in the
+      "reg" property should match the unit address of the SOC node.
+      - reg :이 속성은 SOC 노드 자체에 사용되는 메모리 매핑 레지스터의 주소와 크기를 정의합니다. 
+      하위 장치 레지스터는 포함되지 않으며 각 하위 노드 내에 정의됩니다. "reg"속성에 지정된 주소는
+       SOC 노드의 단위 주소와 일치해야합니다
+    
+    - #address-cells : Address representation for "soc" devices.  The
+      format of this field may vary depending on whether or not the
+      device registers are memory mapped.  For memory mapped
+      registers, this field represents the number of cells needed to
+      represent the address of the registers.  For SOCs that do not
+      use MMIO, a special address format should be defined that
+      contains enough cells to represent the required information.
+      See 1) above for more details on defining #address-cells.
+    - # address-cells : "soc"장치에 대한 주소 표현. 이 필드의 형식은 장치 
+      레지스터가 메모리 맵핑되었는지 여부에 따라 다를 수 있습니다. 메모리 매핑
+      된 레지스터의 경우이 필드는 레지스터의 주소를 나타내는 데 필요한 셀 수를 
+      나타냅니다. MMIO를 사용하지 않는 SOC의 경우 필요한 정보를 나타 내기에 충분한 
+      셀을 포함하는 특수한 주소 형식을 정의해야합니다. 주소 셀 정의에 대한 자세한 내용은 
+      위의 1)을 참조하십시오.
+
+    - #size-cells : Size representation for "soc" devices
+    - # size-cells : "soc"장치의 크기 표현
+
+    - #interrupt-cells : Defines the width of cells used to represent
+       interrupts.  Typically this value is <2>, which includes a
+       32-bit number that represents the interrupt number, and a
+       32-bit number that represents the interrupt sense and level.
+       This field is only needed if the SOC contains an interrupt
+       controller.
+     - # interrupt-cells : 인터럽트를 나타내는 데 사용되는 셀의 너비를 정의합니다.
+      일반적으로이 값은 <2>이며 인터럽트 번호를 나타내는 32 비트 숫자와 인터럽트 감지 
+      및 레벨을 나타내는 32 비트 숫자가 포함됩니다. 이 필드는 SOC에 인터럽트 컨트롤러가있는
+      경우에만 필요합니다.
+
+  The SOC node may contain child nodes for each SOC device that the
+  platform uses.  Nodes should not be created for devices which exist
+  on the SOC but are not used by a particular platform. See chapter VI
+  for more information on how to specify devices that are part of a SOC.
+  SOC 노드는 플랫폼이 사용하는 각 SOC 장치에 대한 자식 노드를 포함 할 수 있습니다. 
+  SOC에 존재하지만 특정 플랫폼에서 사용되지 않는 장치에 대해서는 노드를 생성해서는 안됩니다. 
+  SOC의 일부인 장치를 지정하는 방법에 대한 자세한 내용은 VI 장을 참조하십시오.
+
+  Example SOC node for the MPC8540:
+
+	soc8540@e0000000 {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		#interrupt-cells = <2>;
+		device_type = "soc";
+		ranges = <0x00000000 0xe0000000 0x00100000>
+		reg = <0xe0000000 0x00003000>;
+		bus-frequency = <0>;
+	}
+
+
+
+IV - "dtc", the device tree compiler
+====================================
+
+
+dtc source code can be found at
+<http://git.jdl.com/gitweb/?p=dtc.git>
+
+WARNING: This version is still in early development stage; the
+resulting device-tree "blobs" have not yet been validated with the
+kernel. The current generated block lacks a useful reserve map (it will
+be fixed to generate an empty one, it's up to the bootloader to fill
+it up) among others. The error handling needs work, bugs are lurking,
+etc...
+dtc 소스 코드는에서 찾을 수 있습니다.
+<http://git.jdl.com/gitweb/?p=dtc.git>
+
+경고 :이 버전은 아직 초기 개발 단계입니다. 생성 된 장치 트리 "blob"은 아직 커널에서 
+검증되지 않았습니다. 현재 생성 된 블록에는 유용한 예비 맵이 없습니다 (빈 테이블을 생성하도록 수정되며, 
+부트 로더가이를 채울 수 있습니다). 오류 처리에는 작업이 필요하고 버그는 숨어 있습니다.
+
+dtc basically takes a device-tree in a given format and outputs a
+device-tree in another format. The currently supported formats are:
+dtc는 기본적으로 지정된 형식의 장치 트리를 가져 와서 다른 형식의 장치 트리를 출력합니다. 
+현재 지원되는 형식은 다음과 같습니다.
+
+  Input formats:
+  입력 형식 :
+ -------------
+     - "dtb": "blob" format, that is a flattened device-tree block
+       with header all in a binary blob.
+     - "dtb": "blob"형식, 즉 이진 BLOB에 헤더가있는 병합 된 장치 트리 블록입니다. 
+     
+     - "dts": "source" format. This is a text file containing a
+       "source" for a device-tree. The format is defined later in this
+        chapter.
+     - "dts": "소스"형식. 이것은 장치 트리에 대한 "원본"을 포함하는 텍스트 파일입니다.
+         형식은이 장의 뒷부분에서 정의됩니다.
+     
+     - "fs" format. This is a representation equivalent to the
+        output of /proc/device-tree, that is nodes are directories and
+	      properties are files
+    - "fs"형식. 이것은 / proc / device-tree의 출력과 같은 표현입니다. 
+        즉 노드는 디렉토리이고 속성은 파일입니다.     
+ 
+ Output formats:
+ ---------------
+
+     - "dtb": "blob" format
+     - "dtb": "blob"형식
+   
+     - "dts": "source" format
+     - "dts": "소스"형식 
+   
+     - "asm": assembly language file. This is a file that can be
+       sourced by gas to generate a device-tree "blob". That file can
+       then simply be added to your Makefile. Additionally, the
+       assembly file exports some symbols that can be used.
+     - "asm": 어셈블리 언어 파일. 이것은 장치 트리 "blob"을 생성하기 위해 
+      가스에 의해 공급 될 수있는 파일입니다. 그 파일은 Makefile에 간단하게 추가 할 수 있습니다. 
+      또한 어셈블리 파일은 사용할 수있는 일부 기호를 내 보냅니다.
+
+The syntax of the dtc tool is
+dtc 도구의 구문은 다음과 같습니다.
+
+    dtc [-I <input-format>] [-O <output-format>]
+        [-o output-filename] [-V output_version] input_filename
+
+
+The "output_version" defines what version of the "blob" format will be
+generated. Supported versions are 1,2,3 and 16. The default is
+currently version 3 but that may change in the future to version 16.
+"output_version"은 생성 될 "blob"형식의 버전을 정의합니다. 지원되는 버전은 1,2,3 및 
+16입니다. 기본값은 현재 버전 3이지만 향후 버전 16으로 변경 될 수 있습니다.
+
+Additionally, dtc performs various sanity checks on the tree, like the
+uniqueness of linux, phandle properties, validity of strings, etc...
+또한 dtc는 리눅스의 독창성, phandle 속성, 문자열의 유효성 등과 같은 트리에
+ 대해 다양한 온 전성 검사를 수행합니다.
+
+The format of the .dts "source" file is "C" like, supports C and C++
+style comments.
+dts "source"파일의 형식은 "C"와 같으며 C 및 C ++ 스타일 주석을 지원합니다.
+
+/ {
+}
+
+The above is the "device-tree" definition. It's the only statement
+supported currently at the toplevel.
+위가 "device-tree"정의입니다. 그것은 현재 최상위에서 지원되는 설명서 입니다.
+
+/ {
+  property1 = "string_value";	/* define a property containing a 0
+                                 * terminated string
+				                                */
+                                / * 0을 포함하는 속성을 정의한다.
+                                  * 종료 된 문자열
+                                      * /
+
+  property2 = <0x1234abcd>;	/* define a property containing a
+                                 * numerical 32-bit value (hexadecimal)
+				                                     */
+                            / * a를 포함하는 속성을 정의한다.
+                                * 숫자 32 비트 값 (16 진수)
+                                            * /
+
+  property3 = <0x12345678 0x12345678 0xdeadbeef>;
+                                /* define a property containing 3
+                                 * numerical 32-bit values (cells) in
+                                 * hexadecimal
+	                             			 */
+                                / * 3을 포함하는 속성 정의
+                                  * 숫자 32 비트 값 (셀)
+                                  * 16 진수
+                                     * /
+  property4 = [0x0a 0x0b 0x0c 0x0d 0xde 0xea 0xad 0xbe 0xef];
+                                /* define a property whose content is
+                                 * an arbitrary array of bytes
+                                 */
+                                 / * 내용이있는 속성을 정의한다.
+                                  임의의 바이트 배열
+                                  * /
+  
+  childnode@address {	/* define a child node named "childnode"
+                                 * whose unit name is "childnode at
+				 * address"
+                                 */
+                                  / * "childnode"라는 이름의 자식 노드를 정의한다.
+                                  * 유닛 이름은 "childnode at"입니다.
+          * 주소 "
+                                  * /
+  
+    childprop = "hello\n";      /* define a property "childprop" of
+                                 * childnode (in this case, a string)
+                                 */
+                                 / *의 "childprop"속성을 정의한다.
+                                  * childnode (이 경우, 문자열)
+                                  * /
+
+  };
+};
+
+Nodes can contain other nodes etc... thus defining the hierarchical
+structure of the tree.
+
+Strings support common escape sequences from C: "\n", "\t", "\r",
+"\(octal value)", "\x(hex value)".
+
+It is also suggested that you pipe your source file through cpp (gcc
+preprocessor) so you can use #include's, #define for constants, etc...
+
+Finally, various options are planned but not yet implemented, like
+automatic generation of phandles, labels (exported to the asm file so
+you can point to a property content and change it easily from whatever
+you link the device-tree with), label or path instead of numeric value
+in some cells to "point" to a node (replaced by a phandle at compile
+time), export of reserve map address to the asm file, ability to
+specify reserve map content at compile time, etc...
+
+We may provide a .h include file with common definitions of that
+proves useful for some properties (like building PCI properties or
+interrupt maps) though it may be better to add a notion of struct
+definitions to the compiler...
+
+노드는 다른 노드 등을 포함 할 수 있으므로 트리의 
+계층 구조를 정의합니다.
+
+문자열은 C : "\ n", "\ t", "\ r", "\ (8 진수 값)", "\ x (16 진수 값)"의 
+일반적인 이스케이프 시퀀스를 지원합니다.
+
+#include, #define for constants 등을 사용할 수 있도록 소스 파일을 cpp (gcc 전 처리기)
+를 통해 파이프하는 것이 좋습니다.
+
+마지막으로 다양한 옵션이 계획되었지만 아직 구현되지 않았습니다. 예를 들어 자동 생성, 
+라벨 (asm 파일로 내 보내어 속성 내용을 가리키고 장치 트리를 연결하는 모든 항목에서 쉽게 
+변경할 수 있음), 레이블 또는 경로 일부 셀의 숫자 값 대신 노드 (컴파일 타임에 phandle로 대체), 
+asm 파일에 예약 맵 주소 내보내기, 컴파일 시간에 예약 맵 컨텐츠 지정 기능 등 ...
+
+우리는 컴파일러에 구조체 정의의 개념을 추가하는 것이 더 좋을지라도 (예 : PCI 속성 또는 인터럽트
+맵 구축과 같은) 일부 속성에 유용하다는 것을 증명하는 일반적인 정의가있는 .h include 파일을 제공
+할 수 있습니다.
+
+
+V - Recommendations for a bootloader
+V - 부트 로더 권장 사항
+====================================
+
+
+Here are some various ideas/recommendations that have been proposed
+while all this has been defined and implemented.
+이 모든 것이 정의되고 실행되는 동안 제안 된 여러 가지 아이디어 / 권고 사항이 있습니다.
+
+  - The bootloader may want to be able to use the device-tree itself
+    and may want to manipulate it (to add/edit some properties,
+    like physical memory size or kernel arguments). At this point, 2
+    choices can be made. Either the bootloader works directly on the
+    flattened format, or the bootloader has its own internal tree
+    representation with pointers (similar to the kernel one) and
+    re-flattens the tree when booting the kernel. The former is a bit
+    more difficult to edit/modify, the later requires probably a bit
+    more code to handle the tree structure. Note that the structure
+    format has been designed so it's relatively easy to "insert"
+    properties or nodes or delete them by just memmoving things
+    around. It contains no internal offsets or pointers for this
+    purpose.
+  - 부트 로더는 장치 트리 자체를 사용할 수 있기를 원하며 물리적 메모리 크기 
+    나 커널 인수와 같은 일부 속성을 추가 / 편집하기 위해 장치 트리 자체를 조작하고자
+    할 수 있습니다. 이 시점에서 2 가지 선택을 할 수 있습니다. 부트 로더가 병합 된 형식
+    으로 직접 작동하거나 부트 로더가 포인터 (커널과 유사)를 가진 자체 내부 트리 표현을 
+    가지며 커널을 부팅 할 때 트리를 다시 평평하게합니다. 전자는 편집 / 수정하기가 조금 
+    더 어렵습니다. 나중에는 트리 구조를 처리하는 데 약간 더 많은 코드가 필요할 것입니다.
+    구조 형식은 속성이나 노드를 "삽입"하거나 물건을 고정하는 것만으로 쉽게 삭제할 수 있도록
+    설계되었습니다. 이 목적을 위해 내부 오프셋이나 포인터가 없습니다.
+ 
+  - An example of code for iterating nodes & retrieving properties
+    directly from the flattened tree format can be found in the kernel
+    file drivers/of/fdt.c.  Look at the of_scan_flat_dt() function,
+    its usage in early_init_devtree(), and the corresponding various
+    early_init_dt_scan_*() callbacks. That code can be re-used in a
+    GPL bootloader, and as the author of that code, I would be happy
+    to discuss possible free licensing to any vendor who wishes to
+    integrate all or part of this code into a non-GPL bootloader.
+    (reference needed; who is 'I' here? ---gcl Jan 31, 2011)
+  - 노드를 반복하고 평탄화 된 트리 형식에서 직접 등록 정보를 검색하는 코드
+    예는 / fdt.c의 kernel 파일 drivers /를 참조하십시오. of_scan_flat_dt () 
+    함수, early_init_devtree () 및 해당하는 다양한 early_init_dt_scan _ * () 
+    콜백을 살펴보십시오. 이 코드는 GPL 부트 로더에서 재사용 될 수 있으며 그 코드의
+    작성자로서이 코드의 전부 또는 일부를 비 GPL 부트 로더에 통합하고자하는 모든 공급 
+    업체에게 가능한 무료 라이센스를 논의하게되어 기쁩니다. (참조 필요, 누가 내가 여기에? --- gcl 2011 년 1 월 31 일)
+
+
+VI - System-on-a-chip devices and nodes
+=======================================
+
+Many companies are now starting to develop system-on-a-chip
+processors, where the processor core (CPU) and many peripheral devices
+exist on a single piece of silicon.  For these SOCs, an SOC node
+should be used that defines child nodes for the devices that make
+up the SOC. While platforms are not required to use this model in
+order to boot the kernel, it is highly encouraged that all SOC
+implementations define as complete a flat-device-tree as possible to
+describe the devices on the SOC.  This will allow for the
+genericization of much of the kernel code.
+많은 회사들이 프로세서 코어 (CPU)와 많은 주변 장치가 단일 실리콘에 존재하는 
+시스템 온 칩 (system-on-a-chip) 프로세서를 개발하기 시작했습니다. 이러한 SOC의 
+경우 SOC를 구성하는 장치의 하위 노드를 정의하는 SOC 노드를 사용해야합니다. 플랫폼이 
+커널을 부팅하기 위해이 모델을 사용할 필요는 없지만 모든 SOC 구현은 SOC에있는 장치를 
+설명하기 위해 가능한 한 평평한 장치 트리로 정의하는 것이 좋습니다. 이렇게하면 많은 커널
+ 코드가 일반화 될 수 있습니다.
+
+1) Defining child nodes of an SOC
+1)  SOC의 하위 노드 정의
+---------------------------------
+
+Each device that is part of an SOC may have its own node entry inside
+the SOC node.  For each device that is included in the SOC, the unit
+address property represents the address offset for this device's
+memory-mapped registers in the parent's address space.  The parent's
+address space is defined by the "ranges" property in the top-level soc
+node. The "reg" property for each node that exists directly under the
+SOC node should contain the address mapping from the child address space
+to the parent SOC address space and the size of the device's
+memory-mapped register file.
+SOC의 일부 장치는 SOC 노드 내부에 자체 노드 항목을 가질 수 있습니다. 
+SOC에 포함 된 각 장치의 경우 장치 주소 속성은 부모 장치의 주소 공간에있는 이 장치의 
+메모리 매핑 레지스터에 대한 주소 오프셋을 나타냅니다. 부모의 주소 공간은 최상위 
+레벨 soc 노드의 "ranges"속성에 의해 정의됩니다. SOC 노드 바로 아래에 존재하는
+각 노드의 "reg"속성은 하위 주소 공간에서 상위 SOC 주소 공간으로 매핑되는 주소와 장치의 
+메모리 매핑 된 레지스터 파일의 크기를 포함해야합니다.
+
+For many devices that may exist inside an SOC, there are predefined
+specifications for the format of the device tree node.  All SOC child
+nodes should follow these specifications, except where noted in this
+document.
+SOC 내부에 존재할 수있는 많은 장치의 경우 장치 트리 노드 형식에 대한 사전 
+정의 된 사양이 있습니다. 이 문서에서 언급 된 경우를 제외하고 모든 SOC 자식 
+노드는이 사양을 따라야합니다.
+
+See appendix A for an example partial SOC node definition for the
+MPC8540.
+MPC8540에 대한 부분 SOC 노드 정의 예는 부록 A를 참조하십시오.
+
+2) Representing devices without a current OF specification
+2) 현재 OF 사양이없는 장치 표시
+----------------------------------------------------------
+
+Currently, there are many devices on SoCs that do not have a standard
+representation defined as part of the Open Firmware specifications,
+mainly because the boards that contain these SoCs are not currently
+booted using Open Firmware.  Binding documentation for new devices
+should be added to the Documentation/devicetree/bindings directory.
+That directory will expand as device tree support is added to more and
+more SoCs.
+현재 Open SoC를 포함하는 보드가 현재 Open Firmware를 사용하여 부팅되지 않기
+때문에 Open Firmware 사양의 일부로 정의 된 표준 표현이없는 SoC에는 많은 장치가 있습니다. 
+새로운 장치에 대한 바인딩 문서는 Documentation / devicetree / bindings 디렉토리에 추가되어야합니다. 
+이 디렉토리는 점점 더 많은 SoC에 디바이스 트리 지원이 추가되면서 확장 될 것입니다.
+
+VII - Specifying interrupt information for devices
+VII - 장치에 대한 인터럽트 정보 지정
+===================================================
+
+The device tree represents the buses and devices of a hardware
+system in a form similar to the physical bus topology of the
+hardware.
+
+In addition, a logical 'interrupt tree' exists which represents the
+hierarchy and routing of interrupts in the hardware.
+
+The interrupt tree model is fully described in the
+document "Open Firmware Recommended Practice: Interrupt
+Mapping Version 0.9".  The document is available at:
+<http://www.openfirmware.org/ofwg/practice/>
+장치 트리는 하드웨어의 물리적 버스 토폴로지와 유사한 형태로 하드웨어 
+시스템의 버스와 장치를 나타냅니다.
+
+또한 하드웨어에서 인터럽트의 계층 구조와 라우팅을 나타내는 논리적 '인터럽트 트리'가
+ 존재합니다.
+
+인터럽트 트리 모델은 "Open Firmware Recommended Practice : Interrupt Mapping Version 0.9"문서에 
+자세히 설명되어 있습니다. 이 문서는 <http://www.openfirmware.org/ofwg/practice/>에서 구할 수 있습니다.
+
+1) interrupts property
+----------------------
+
+Devices that generate interrupts to a single interrupt controller
+should use the conventional OF representation described in the
+OF interrupt mapping documentation.
+단일 인터럽트 컨트롤러에 대한 인터럽트를 생성하는 장치는 OF 인터럽트 매핑 
+설명서에 설명 된 일반 OF 표현을 사용해야합니다.
+
+Each device which generates interrupts must have an 'interrupt'
+property.  The interrupt property value is an arbitrary number of
+of 'interrupt specifier' values which describe the interrupt or
+interrupts for the device.
+인터럽트를 생성하는 각 장치에는 '인터럽트'속성이 있어야합니다. 인터럽트 
+속성 값은 장치에 대한 인터럽트 또는 인터럽트를 설명하는 '인터럽트 지정자'값 
+중 임의의 수입니다.
+
+The encoding of an interrupt specifier is determined by the
+interrupt domain in which the device is located in the
+interrupt tree.  The root of an interrupt domain specifies in
+its #interrupt-cells property the number of 32-bit cells
+required to encode an interrupt specifier.  See the OF interrupt
+mapping documentation for a detailed description of domains.
+인터럽트 지정자의 인코딩은 장치가 인터럽트 트리에있는 인터럽트 도메인에 
+의해 결정됩니다. 인터럽트 도메인의 루트는 # interrupt-cells 속성은 인터럽트
+ 지정자를 인코딩하는 데 필요한 32 비트 셀 수입니다. 도메인에 대한 자세한 설명은
+  OF 인터럽트 매핑 설명서를 참조하십시오.
+
+For example, the binding for the OpenPIC interrupt controller
+specifies  an #interrupt-cells value of 2 to encode the interrupt
+number and level/sense information. All interrupt children in an
+OpenPIC interrupt domain use 2 cells per interrupt in their interrupts
+property.
+예를 들어, OpenPIC 인터럽트 컨트롤러의 바인딩은 인터럽트 번호와 레벨 / 감지 정보를 
+인코딩하기 위해 # interrupt-cells 값 2를 지정합니다. OpenPIC 인터럽트 도메인의 모든 
+인터럽트 하위는 인터럽트 속성에서 인터럽트 당 2 개의 셀을 사용합니다.
+
+The PCI bus binding specifies a #interrupt-cell value of 1 to encode
+which interrupt pin (INTA,INTB,INTC,INTD) is used.
+PCI 버스 바인딩은 어떤 인터럽트 핀 (INTA, INTB, INTC, INTD)이 사용되는지를
+ 나타 내기 위해 # 1의 인터럽트 셀 값을 지정합니다.
+
+2) interrupt-parent property
+----------------------------
+
+The interrupt-parent property is specified to define an explicit
+link between a device node and its interrupt parent in
+the interrupt tree.  The value of interrupt-parent is the
+phandle of the parent node.
+interrupt-parent 속성은 인터럽트 트리에서 장치 노드와 해당 인터럽트 
+부모 사이의 명시 적 링크를 정의하도록 지정됩니다. interrupt-parent의 
+값은 부모 노드의 phandle입니다.
+
+If the interrupt-parent property is not defined for a node, its
+interrupt parent is assumed to be an ancestor in the node's
+_device tree_ hierarchy.
+interrupt-parent 특성이 노드에 대해 정의되지 않은 경우, 해당 인터럽트
+상위는 노드의 _device 트리 구조에서 조상이라고 가정됩니다.
+
+3) OpenPIC Interrupt Controllers
+--------------------------------
+
+OpenPIC interrupt controllers require 2 cells to encode
+interrupt information.  The first cell defines the interrupt
+number.  The second cell defines the sense and level
+information.
+OpenPIC 인터럽트 컨트롤러에는 인터럽트 정보를 인코딩하는 데 2 개의
+셀이 필요합니다. 첫 번째 셀은 인터럽트 번호를 정의합니다. 
+두 번째 셀은 감지 및 레벨 정보를 정의합니다.
+
+Sense and level information should be encoded as follows:
+감지 및 레벨 정보는 다음과 같이 인코딩해야합니다.
+
+	0 = low to high edge sensitive type enabled
+  0 = 하이 에지 감지 유형이 활성화 됨
+
+	1 = active low level sensitive type enabled
+  1 = 활성 저수준 감지 유형 사용
+
+	2 = active high level sensitive type enabled
+  2 = 활성 고수준 감지 유형 사용
+
+	3 = high to low edge sensitive type enabled
+  3 = 하이 - 로우 에지 감지 유형 사용
+
+4) ISA Interrupt Controllers
+----------------------------
+
+ISA PIC interrupt controllers require 2 cells to encode
+interrupt information.  The first cell defines the interrupt
+number.  The second cell defines the sense and level
+information.
+ISA PIC 인터럽트 컨트롤러에는 인터럽트 정보를 인코딩하는 데 2 
+개의 셀이 필요합니다. 첫 번째 셀은 인터럽트 번호를 정의합니다. 
+두 번째 셀은 감지 및 레벨 정보를 정의합니다.
+
+ISA PIC interrupt controllers should adhere to the ISA PIC
+encodings listed below:
+ISA PIC 인터럽트 컨트롤러는 아래에 나열된 ISA PIC 인코딩을 준수해야합니다.
+
+	0 =  active low level sensitive type enabled
+  0 = 액티브 로우 레벨 감도 타입 사용 가능
+
+	1 =  active high level sensitive type enabled
+  1 = 활성 고수준 감지 유형 사용
+
+	2 =  high to low edge sensitive type enabled
+  2 = 하이 - 로우 에지 감지 유형 사용
+
+	3 =  low to high edge sensitive type enabled
+  3 = 로우에서 하이 에지에 민감한 유형 활성화
+
+VIII - Specifying Device Power Management Information (sleep property)
+VIII - 장치 전원 관리 정보 지정 (절전 속성)
+===================================================================
+
+Devices on SOCs often have mechanisms for placing devices into low-power
+states that are decoupled from the devices' own register blocks.  Sometimes,
+this information is more complicated than a cell-index property can
+reasonably describe.  Thus, each device controlled in such a manner
+may contain a "sleep" property which describes these connections.
+SOC 장치는 장치의 저전력 상태에 장치를 배치하여 장치의 자체 레지스터 블록에서
+분리하는 메커니즘이있는 경우가 많습니다. 때때로이 정보는 셀 인덱스 속성이 합리적으로 
+설명 할 수있는 것보다 더 복잡합니다. 따라서 이러한 방식으로 제어되는 각 장치는 이러한
+ 연결을 나타내는 "절전"속성을 포함 할 수 있습니다.
+
+The sleep property consists of one or more sleep resources, each of
+which consists of a phandle to a sleep controller, followed by a
+controller-specific sleep specifier of zero or more cells.
+수면 속성은 하나 이상의 수면 리소스로 구성되며, 각 수면 리소스는 수면 
+컨트롤러에 대한 phandle과 0 개 이상의 셀에 대한 컨트롤러 관련 수면 지정자로 구성됩니다.
+
+The semantics of what type of low power modes are possible are defined
+by the sleep controller.  Some examples of the types of low power modes
+that may be supported are:
+가능한 저전력 모드의 유형은 슬립 컨트롤러에 의해 정의된다. 
+지원 될 수있는 저전력 모드 유형의 몇 가지 예는 다음과 같습니다.
+
+ - Dynamic: The device may be disabled or enabled at any time.
+ - 동적 : 장치가 언제든지 비활성화되거나 활성화 될 수 있습니다.
+
+ - System Suspend: The device may request to be disabled or remain
+   awake during system suspend, but will not be disabled until then.
+ - System Suspend (시스템 일시 중단) : 장치는 시스템 일시 중지 중에 
+   비활성화되거나 깨어있는 상태로 유지되도록 요청할 수 있지만 그때까지 
+   비활성화되지는 않습니다.
+
+ - Permanent: The device is disabled permanently (until the next hard
+   reset).
+ - 영구 : 장치가 영구적으로 비활성화됩니다 (다음 하드 재설정까지).
+
+Some devices may share a clock domain with each other, such that they should
+only be suspended when none of the devices are in use.  Where reasonable,
+such nodes should be placed on a virtual bus, where the bus has the sleep
+property.  If the clock domain is shared among devices that cannot be
+reasonably grouped in this manner, then create a virtual sleep controller
+(similar to an interrupt nexus, except that defining a standardized
+sleep-map should wait until its necessity is demonstrated).
+일부 장치는 클럭 도메인을 서로 공유 할 수 있으므로 사용중인 장치가 없을 때만 
+일시 중지해야합니다. 합리적인 곳(where reasonable)에서는 버스가 수면 속성을 갖는 가상 버스에 이러한
+노드를 배치해야합니다. 이 방식으로 합리적으로 그룹화 할 수없는 장치간에 클럭 도메인을 
+공유하는 경우 가상 슬립 컨트롤러를 만듭니다 (인터럽트 넥서스와 유사하지만 표준 슬립 맵을
+정의하는 것이 필요성을 나타낼 때까지 기다려야 함을 제외).
+
+IX - Specifying dma bus information
+IX - dma 버스 정보 지정
+
+Some devices may have DMA memory range shifted relatively to the beginning of
+RAM, or even placed outside of kernel RAM. For example, the Keystone 2 SoC
+worked in LPAE mode with 4G memory has:
+- RAM range: [0x8 0000 0000, 0x8 FFFF FFFF]
+- DMA range: [  0x8000 0000,   0xFFFF FFFF]
+and DMA range is aliased into first 2G of RAM in HW.
+일부 장치는 DMA 메모리 범위를 RAM 시작 부분에 상대적으로 이동 시키거나 커널
+RAM 외부에 배치 할 수 있습니다. 예를 들어 4G 메모리가있는 LPAE 모드에서 작동 
+한 Keystone 2 SoC는 다음과 같습니다.
+- RAM 범위 : [0x8 0000 0000, 0x8 FFFF FFFF]
+- DMA 범위 : [0x8000 0000, 0xFFFF FFFF]
+DMA 범위는 HW의 첫 번째 2G RAM으로 앨리어싱됩니다.
+
+In such cases, DMA addresses translation should be performed between CPU phys
+and DMA addresses. The "dma-ranges" property is intended to be used
+for describing the configuration of such system in DT.
+이러한 경우 DMA 주소 변환은 CPU phys와 DMA 주소간에 수행되어야합니다. 
+"dma-ranges"속성은 DT에서 이러한 시스템의 구성을 설명하는 데 사용됩니다.
+
+In addition, each DMA master device on the DMA bus may or may not support
+coherent DMA operations. The "dma-coherent" property is intended to be used
+for identifying devices supported coherent DMA operations in DT.
+또한 DMA 버스의 각 DMA 마스터 장치는 일관된 DMA 작업을 지원할 수도 있고 
+지원하지 않을 수도 있습니다. "dma-coherent"속성은 DT에서 지원되는 일관된 DMA 작업을 
+식별하는 데 사용하기위한 것입니다.
+
+* DMA Bus master
+* DMA 버스 마스터
+
+Optional property:
+선택적 속성 :
+
+- dma-ranges: <prop-encoded-array> encoded as arbitrary number of triplets of
+	(child-bus-address, parent-bus-address, length). Each triplet specified
+	describes a contiguous DMA address range.
+	The dma-ranges property is used to describe the direct memory access (DMA)
+	structure of a memory-mapped bus whose device tree parent can be accessed
+	from DMA operations originating from the bus. It provides a means of
+	defining a mapping or translation between the physical address space of
+	the bus and the physical address space of the parent of the bus.
+	(for more information see ePAPR specification)
+- dma-ranges : 자식 버스 주소, 부모 버스 주소, 길이의 임의의 수로 인코딩 된 
+<prop-encoded-array>. 지정된 각 트리플은 연속 DMA 주소 범위를 나타냅니다.
+dma-ranges 속성은 버스에서 시작된 DMA 작업에서 장치 트리 상위 요소에 액세스 할 수있는 메모리 매핑
+버스의 직접 메모리 액세스 (DMA) 구조를 설명하는 데 사용됩니다. 이것은 버스의 물리적 주소 공간과 버스의
+부모의 물리적 주소 공간 사이의 매핑 또는 변환을 정의하는 수단을 제공합니다.
+(자세한 내용은 ePAPR 사양을 참조하십시오)
+
+* DMA Bus child
+Optional property:
+- dma-ranges: <empty> value. if present - It means that DMA addresses
+	translation has to be enabled for this device.
+- dma-coherent: Present if dma operations are coherent
+* DMA 버스 child
+선택적 속성 :
+- dma-ranges : <empty> 값. (있는 경우) -이 장치에 대해 DMA 주소 변환을 사용해야 함을 의미합니다.
+- dma-coherent : dma 작업이 일관성이 있다면 제시하십시오.
+
+Example:
+soc {
+		compatible = "ti,keystone","simple-bus";
+		ranges = <0x0 0x0 0x0 0xc0000000>;
+		dma-ranges = <0x80000000 0x8 0x00000000 0x80000000>;
+
+		[...]
+
+		usb: usb@2680000 {
+			compatible = "ti,keystone-dwc3";
+
+			[...]
+			dma-coherent;
+		};
+};
+
+Appendix A - Sample SOC node for MPC8540
+========================================
+
+	soc@e0000000 {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		compatible = "fsl,mpc8540-ccsr", "simple-bus";
+		device_type = "soc";
+		ranges = <0x00000000 0xe0000000 0x00100000>
+		bus-frequency = <0>;
+		interrupt-parent = <&pic>;
+
+		ethernet@24000 {
+			#address-cells = <1>;
+			#size-cells = <1>;
+			device_type = "network";
+			model = "TSEC";
+			compatible = "gianfar", "simple-bus";
+			reg = <0x24000 0x1000>;
+			local-mac-address = [ 0x00 0xE0 0x0C 0x00 0x73 0x00 ];
+			interrupts = <0x29 2 0x30 2 0x34 2>;
+			phy-handle = <&phy0>;
+			sleep = <&pmc 0x00000080>;
+			ranges;
+
+			mdio@24520 {
+				reg = <0x24520 0x20>;
+				compatible = "fsl,gianfar-mdio";
+
+				phy0: ethernet-phy@0 {
+					interrupts = <5 1>;
+					reg = <0>;
+				};
+
+				phy1: ethernet-phy@1 {
+					interrupts = <5 1>;
+					reg = <1>;
+				};
+
+				phy3: ethernet-phy@3 {
+					interrupts = <7 1>;
+					reg = <3>;
+				};
+			};
+		};
+
+		ethernet@25000 {
+			device_type = "network";
+			model = "TSEC";
+			compatible = "gianfar";
+			reg = <0x25000 0x1000>;
+			local-mac-address = [ 0x00 0xE0 0x0C 0x00 0x73 0x01 ];
+			interrupts = <0x13 2 0x14 2 0x18 2>;
+			phy-handle = <&phy1>;
+			sleep = <&pmc 0x00000040>;
+		};
+
+		ethernet@26000 {
+			device_type = "network";
+			model = "FEC";
+			compatible = "gianfar";
+			reg = <0x26000 0x1000>;
+			local-mac-address = [ 0x00 0xE0 0x0C 0x00 0x73 0x02 ];
+			interrupts = <0x41 2>;
+			phy-handle = <&phy3>;
+			sleep = <&pmc 0x00000020>;
+		};
+
+		serial@4500 {
+			#address-cells = <1>;
+			#size-cells = <1>;
+			compatible = "fsl,mpc8540-duart", "simple-bus";
+			sleep = <&pmc 0x00000002>;
+			ranges;
+
+			serial@4500 {
+				device_type = "serial";
+				compatible = "ns16550";
+				reg = <0x4500 0x100>;
+				clock-frequency = <0>;
+				interrupts = <0x42 2>;
+			};
+
+			serial@4600 {
+				device_type = "serial";
+				compatible = "ns16550";
+				reg = <0x4600 0x100>;
+				clock-frequency = <0>;
+				interrupts = <0x42 2>;
+			};
+		};
+
+		pic: pic@40000 {
+			interrupt-controller;
+			#address-cells = <0>;
+			#interrupt-cells = <2>;
+			reg = <0x40000 0x40000>;
+			compatible = "chrp,open-pic";
+			device_type = "open-pic";
+		};
+
+		i2c@3000 {
+			interrupts = <0x43 2>;
+			reg = <0x3000 0x100>;
+			compatible  = "fsl-i2c";
+			dfsrr;
+			sleep = <&pmc 0x00000004>;
+		};
+
+		pmc: power@e0070 {
+			compatible = "fsl,mpc8540-pmc", "fsl,mpc8548-pmc";
+			reg = <0xe0070 0x20>;
+		};
+	};

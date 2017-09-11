@@ -1,0 +1,62 @@
+STMicroelectronics STi family Sysconfig Peripheral Powerdown Reset Controller
+=============================================================================
+
+This binding describes a reset controller device that is used to enable and
+disable on-chip peripheral controllers such as USB and SATA, using
+"powerdown" control bits found in the STi family SoC system configuration
+registers. These have been grouped together into a single reset controller
+device for convenience.
+
+The actual action taken when powerdown is asserted is hardware dependent.
+However, when asserted it may not be possible to access the hardware's
+registers and after an assert/deassert sequence the hardware's previous state
+may no longer be valid.
+
+Please refer to reset.txt in this directory for common reset
+controller binding usage.
+
+Required properties:
+- compatible: Should be "st,<chip>-powerdown"
+	ex: "st,stih415-powerdown", "st,stih416-powerdown"
+- #reset-cells: 1, see below
+
+STMicroelectronics STi 제품군 Sysconfig 주변기기 파워 다운 리셋 컨트롤러
+========================================================================================================================== ===============
+
+이 바인딩은 STi 제품군 SoC 시스템 구성 레지스터에있는 "powerdown"제어 비트를 사용하여 USB 및 SATA와 같은 온칩 주변 장치 컨트롤러를 활성화 및 비활성화하는 데 사용되는 리셋 컨트롤러 장치를 설명합니다. 이들은 편의를 위해 단일 리셋 컨트롤러 장치로 함께 그룹화되었습니다.
+
+파워 다운이 선언 될 때 취해지는 실제 동작은 하드웨어에 따라 다릅니다.
+그러나 asserted 되면 하드웨어 레지스터에 액세스 할 수 없으며 assert / 비활성화 시퀀스 후에 하드웨어의 이전 상태가 더 이상 유효하지 않을 수 있습니다.
+
+일반적인 재설정 제어기 바인딩 사용에 대해서는이 디렉토리의 reset.txt를 참조하십시오.
+
+
+example:
+
+	powerdown: powerdown-controller {
+		#reset-cells = <1>;
+		compatible = "st,stih415-powerdown";
+	};
+
+
+Specifying powerdown control of devices
+=======================================
+
+Device nodes should specify the reset channel required in their "resets"
+property, containing a phandle to the powerdown device node and an
+index specifying which channel to use, as described in reset.txt
+
+장치 노드는 reset.txt에 설명 된대로 전원 차단 장치 노드에 대한 파들을 포함하는 
+"reset"속성에 필요한 재설정 된 채널과 사용할 채널을 지정하는 색인을 지정해야합니다
+
+example:
+
+	usb1: usb@fe200000 {
+		resets	= <&powerdown STIH41X_USB1_POWERDOWN>;
+	};
+
+Macro definitions for the supported reset channels can be found in:
+지원되는 재설정 채널에 대한 매크로 정의는 다음에서 찾을 수 있습니다.
+
+include/dt-bindings/reset/stih415-resets.h
+include/dt-bindings/reset/stih416-resets.h

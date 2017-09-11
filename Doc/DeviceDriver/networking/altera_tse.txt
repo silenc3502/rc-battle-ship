@@ -1,0 +1,349 @@
+       Altera Triple-Speed Ethernet MAC driver
+
+Copyright (C) 2008-2014 Altera Corporation
+
+This is the driver for the Altera Triple-Speed Ethernet (TSE) controllers
+using the SGDMA and MSGDMA soft DMA IP components. The driver uses the
+platform bus to obtain component resources. The designs used to test this
+driver were built for a Cyclone(R) V SOC FPGA board, a Cyclone(R) V FPGA board,
+and tested with ARM and NIOS processor hosts seperately. The anticipated use
+cases are simple communications between an embedded system and an external peer
+for status and simple configuration of the embedded system.
+이것은 SGDMA 및 MSGDMA 소프트 DMA IP 구성 요소를 사용하는 알테라의 TSE (Triple-Speed Ethernet) 컨트롤러 용 드라이버입니다. 드라이버는 플랫폼 버스를 사용하여 구성 요소 자원을 확보합니다. 이 드라이버를 테스트하는 데 사용 된 디자인은 Cyclone (R) V SOC FPGA 보드, Cyclone (R) V FPGA 보드 용으로 제작되었으며 ARM 및 NIOS 프로세서 호스트와 별도로 테스트되었습니다. 예상되는 사용 사례는 임베디드 시스템의 상태 및 간단한 구성을 위해 임베디드 시스템과 외부 peer 간의 간단한 통신입니다.
+
+For more information visit www.altera.com and www.rocketboards.org. Support
+forums for the driver may be found on www.rocketboards.org, and a design used
+to test this driver may be found there as well. Support is also available from
+the maintainer of this driver, found in MAINTAINERS.
+자세한 정보는 www.altera.com 및 www.rocketboards.org에서 확인할 수있다. 드라이버에 대한 지원 포럼은 www.rocketboards.org에서 찾을 수 있으며 이 드라이버를 테스트하는 데 사용할 수있는 디자인도 있습니다. MAINTAINERS에있는이 드라이버의 관리자로부터 지원을받을 수도 있습니다.
+
+The Triple-Speed Ethernet, SGDMA, and MSGDMA components are all soft IP
+components that can be assembled and built into an FPGA using the Altera
+Quartus toolchain. Quartus 13.1 and 14.0 were used to build the design that
+this driver was tested against. The sopc2dts tool is used to create the
+device tree for the driver, and may be found at rocketboards.org.
+Triple-Speed Ethernet, SGDMA 및 MSGDMA 구성 요소는 모두 Altera Quartus 툴 체인을 사용하여 FPGA로 조립 및 구축 할 수있는 소프트 IP 구성 요소입니다. Quartus 13.1과 14.0은이 드라이버가 테스트 된 설계를 구축하는 데 사용되었습니다. sopc2dts 도구는 드라이버의 장치 트리를 만드는 데 사용되며 rocketboards.org에서 찾을 수 있습니다.
+
+The driver probe function examines the device tree and determines if the
+Triple-Speed Ethernet instance is using an SGDMA or MSGDMA component. The
+probe function then installs the appropriate set of DMA routines to
+initialize, setup transmits, receives, and interrupt handling primitives for
+the respective configurations.
+드라이버 probe(검증) 기능은 장치 트리를 검사하여 Triple-Speed Ethernet 인스턴스가 SGDMA 또는 MSGDMA 구성 요소를 사용하는지 확인합니다. probe 기능은 각 구성에 대한 초기화, 설정 전송, 수신 및 interrupt handling primitives 를위한 DMA 루틴의 적절한 세트를 설치합니다.
+
+The SGDMA component is to be deprecated in the near future (over the next 1-2
+years as of this writing in early 2014) in favor of the MSGDMA component.
+SGDMA support is included for existing designs and reference in case a
+developer wishes to support their own soft DMA logic and driver support. Any
+new designs should not use the SGDMA.
+SGDMA 구성 요소는 MSGDMA 구성 요소를 위해 가까운 장래에 (2014 년 초이 작성 시점에서 향후 1-2 년 동안) 더 이상 사용되지 않을 예정입니다. SGDMA 지원은 개발자가 자신의 소프트 DMA 논리 및 드라이버 지원을 지원하려는 경우 기존 설계 및 참조에 포함됩니다. 새로운 디자인은 SGDMA를 사용하지 않아야합니다.
+
+The SGDMA supports only a single transmit or receive operation at a time, and
+therefore will not perform as well compared to the MSGDMA soft IP. Please
+visit www.altera.com for known, documented SGDMA errata.
+SGDMA는 한 번에 하나의 전송 또는 수신 작업 만 지원하므로 MSGDMA 소프트 IP와 비교하여 잘 수행되지 않습니다. 알려진 SGDMA 정오표는 www.altera.com을 방문하십시오.
+
+Scatter-gather DMA is not supported by the SGDMA or MSGDMA at this time.
+Scatter-gather DMA will be added to a future maintenance update to this
+driver.
+현재 분산 형 수집 DMA는 SGDMA 또는 MSGDMA에서 지원되지 않습니다.
+이 드라이버에 대한 향후 유지 관리 업데이트에 분산 형 수집 DMA가 추가됩니다.
+
+Jumbo frames are not supported at this time.
+점보 프레임은 현재 지원되지 않습니다.
+
+The driver limits PHY operations to 10/100Mbps, and has not yet been fully
+tested for 1Gbps. This support will be added in a future maintenance update.
+드라이버는 PHY 동작을 10 / 100Mbps로 제한하며 아직 1Gbps에 대해 완전히 테스트되지 않았습니다. 이 지원은 향후 유지 관리 업데이트에 추가됩니다.
+
+1) Kernel Configuration
+The kernel configuration option is ALTERA_TSE:
+ Device Drivers ---> Network device support ---> Ethernet driver support --->
+ Altera Triple-Speed Ethernet MAC support (ALTERA_TSE)
+1) 커널 설정
+커널 구성 옵션은 ALTERA_TSE입니다 : 장치 드라이버 ---> 네트워크 장치 지원 ---> 이더넷 드라이버 지원 ---> Altera Triple-Speed Ethernet MAC 지원 (ALTERA_TSE)
+
+2) Driver parameters list:
+	debug: message level (0: no output, 16: all);
+	dma_rx_num: Number of descriptors in the RX list (default is 64);
+	dma_tx_num: Number of descriptors in the TX list (default is 64).
+2) 드라이버 매개 변수 목록 :
+	debug : 메시지 레벨 (0 : 출력 없음, 16 : 모두);
+	dma_rx_num : RX 목록의 설명자 수 (기본값은 64).
+	dma_tx_num : TX 목록의 설명자 수 (기본값은 64).
+
+
+3) Command line options
+Driver parameters can be also passed in command line by using:
+	altera_tse=dma_rx_num:128,dma_tx_num:512
+3) 명령 행 옵션
+드라이버 매개 변수는 다음을 사용하여 명령 줄에서 전달할 수도 있습니다.
+altera_tse = dma_rx_num : 128, dma_tx_num : 512
+
+4) Driver information and notes
+
+4.1) Transmit process
+When the driver's transmit routine is called by the kernel, it sets up a
+transmit descriptor by calling the underlying DMA transmit routine (SGDMA or
+MSGDMA), and initites a transmit operation. Once the transmit is complete, an
+interrupt is driven by the transmit DMA logic. The driver handles the transmit
+completion in the context of the interrupt handling chain by recycling
+resource required to send and track the requested transmit operation.
+드라이버의 전송 루틴이 커널에 의해 호출되면 기본 DMA 전송 루틴 (SGDMA 또는 MSGDMA)을 호출하여 전송 설명자를 설정하고 전송 작업을 시작합니다. 전송이 완료되면 인터럽트는 전송 DMA 로직에 의해 구동됩니다. 드라이버는 요청 된 전송 작업을 보내고 추적하는 데 필요한 자원을 재활용함으로써 인터럽트 처리 체인의 context 에서 전송 완료를 처리합니다.
+
+4.2) Receive process
+The driver will post receive buffers to the receive DMA logic during driver
+intialization. Receive buffers may or may not be queued depending upon the
+underlying DMA logic (MSGDMA is able queue receive buffers, SGDMA is not able
+to queue receive buffers to the SGDMA receive logic). When a packet is
+received, the DMA logic generates an interrupt. The driver handles a receive
+interrupt by obtaining the DMA receive logic status, reaping receive
+completions until no more receive completions are available.
+드라이버는 드라이버 초기화 동안 수신 버퍼를 수신 DMA 로직에 게시합니다. 수신 버퍼는 기본 DMA 로직 (MSGDMA는 대기열 수신 버퍼, SGDMA는 수신 버퍼를 SGDMA 수신 로직에 대기열에 대기시킬 수 없음)에 따라 큐에 대기하거나 대기하지 않을 수 있습니다. 패킷이 수신되면 DMA 로직은 인터럽트를 생성합니다. 드라이버는 DMA 수신 논리 상태를 얻음으로써 수신 인터럽트를 처리하고 더 이상의 수신 완료가 없을 때까지 수신 완료를 얻습니다.
+
+4.3) Interrupt Mitigation
+The driver is able to mitigate the number of its DMA interrupts
+using NAPI for receive operations. Interrupt mitigation is not yet supported
+for transmit operations, but will be added in a future maintenance release.
+드라이버는 수신 작업을 위해 NAPI를 사용하여 DMA 인터럽트 수를 줄일 수 있습니다. 인터럽트 완화는 전송 작업에는 아직 지원되지 않지만 향후 유지 관리 release에 추가됩니다.
+
+
+4.4) Ethtool support
+Ethtool is supported. Driver statistics and internal errors can be taken using:
+ethtool -S ethX command. It is possible to dump registers etc.
+Ethtool이 지원됩니다. 드라이버 통계 및 내부 오류는 다음을 사용하여 가져올 수 있습니다.
+ethtool -S ethX 명령. 레지스터 등을 덤프 할 수 있습니다.
+
+4.5) PHY Support
+The driver is compatible with PAL to work with PHY and GPHY devices.
+드라이버는 PAL과 호환되어 PHY 및 GPHY 장치로 작업 할 수 있습니다.
+
+4.7) List of source files:
+ o Kconfig
+ o Makefile
+ o altera_tse_main.c: main network device driver
+ o altera_tse_ethtool.c: ethtool support
+ o altera_tse.h: private driver structure and common definitions
+ o altera_msgdma.h: MSGDMA implementation function definitions
+ o altera_sgdma.h: SGDMA implementation function definitions
+ o altera_msgdma.c: MSGDMA implementation
+ o altera_sgdma.c: SGDMA implementation
+ o altera_sgdmahw.h: SGDMA register and descriptor definitions
+ o altera_msgdmahw.h: MSGDMA register and descriptor definitions
+ o altera_utils.c: Driver utility functions
+ o altera_utils.h: Driver utility function definitions
+o Kconfig
+  o Makefile
+  altera_tse_main.c : 주 네트워크 장치 드라이버
+  altera_tse_ethtool.c : ethtool 지원
+  altera_tse.h : 개인 드라이버 구조와 공통 정의
+  altera_msgdma.h : MSGDMA 구현 함수 정의
+  altera_sgdma.h : SGDMA 구현 함수 정의
+  altera_msgdma.c : MSGDMA 구현
+  altera_sgdma.c : SGDMA 구현
+  altera_sgdmahw.h : SGDMA 레지스터 및 디스크립터 정의
+  altera_msgdmahw.h : MSGDMA 레지스터 및 디스크립터 정의
+  altera_utils.c : 드라이버 유틸리티 함수
+  altera_utils.h : 드라이버 유틸리티 함수 정의
+
+5) Debug Information
+
+The driver exports debug information such as internal statistics,
+debug information, MAC and DMA registers etc.
+드라이버는 internal statistics, debug information, MAC 및 DMA 레지스터 등의 디버그 정보를 내보냅니다.
+
+A user may use the ethtool support to get statistics:
+e.g. using: ethtool -S ethX (that shows the statistics counters)
+or sees the MAC registers: e.g. using: ethtool -d ethX
+사용자는 ethtool 지원을 사용하여 통계를 얻을 수 있습니다.
+예 : ethtool -S ethX (통계 카운터를 보여줍니다) 또는 MAC 레지스터를 봅니다 : e.g. using : ethtool -d ethX
+
+The developer can also use the "debug" module parameter to get
+further debug information.
+개발자는 "debug"모듈 매개 변수를 사용하여 추가 디버그 정보를 얻을 수도 있습니다.
+
+6) Statistics Support
+
+The controller and driver support a mix of IEEE standard defined statistics,
+RFC defined statistics, and driver or Altera defined statistics. The four
+specifications containing the standard definitions for these statistics are
+as follows:
+컨트롤러 및 드라이버는 IEEE 표준 정의 통계, RFC 정의 통계 및 드라이버 또는 Altera defined 통계의 혼합을 지원합니다. 이 통계에 대한 표준 정의가 포함 된 네 가지 사양은 다음과 같습니다.
+
+ o IEEE 802.3-2012 - IEEE Standard for Ethernet.
+ o RFC 2863 found at http://www.rfc-editor.org/rfc/rfc2863.txt.
+ o RFC 2819 found at http://www.rfc-editor.org/rfc/rfc2819.txt.
+ o Altera Triple Speed Ethernet User Guide, found at http://www.altera.com
+
+The statistics supported by the TSE and the device driver are as follows:
+TSE 및 장치 드라이버가 지원하는 통계는 다음과 같습니다.
+
+"tx_packets" is equivalent to aFramesTransmittedOK defined in IEEE 802.3-2012,
+Section 5.2.2.1.2. This statistics is the count of frames that are successfully
+transmitted.
+"tx_packets"는 IEEE 802.3-2012, 섹션 5.2.2.1.2에 정의 된 aFramesTransmittedOK와 동일합니다. 이 통계는 성공적으로 전송 된 프레임 수입니다.
+
+"rx_packets" is equivalent to aFramesReceivedOK defined in IEEE 802.3-2012,
+Section 5.2.2.1.5. This statistic is the count of frames that are successfully
+received. This count does not include any error packets such as CRC errors,
+length errors, or alignment errors.
+"rx_packets"는 IEEE 802.3-2012, 섹션 5.2.2.1.5에 정의 된 aFramesReceivedOK와 동일합니다. 이 통계는 성공적으로 수신 된 프레임 수입니다. 이 수에는 CRC 오류, 길이 오류 또는 정렬 오류와 같은 오류 패킷이 포함되지 않습니다.
+
+"rx_crc_errors" is equivalent to aFrameCheckSequenceErrors defined in IEEE
+802.3-2012, Section 5.2.2.1.6. This statistic is the count of frames that are
+an integral number of bytes in length and do not pass the CRC test as the frame
+is received.
+"rx_crc_errors"는 IEEE 802.3-2012, 섹션 5.2.2.1.6에 정의 된 aFrameCheckSequenceErrors와 동일합니다. 이 통계는 길이가 정수 바이트 인 프레임 수이며 프레임 수신시 CRC 테스트를 통과하지 못합니다.
+
+
+"rx_align_errors" is equivalent to aAlignmentErrors defined in IEEE 802.3-2012,
+Section 5.2.2.1.7. This statistic is the count of frames that are not an
+integral number of bytes in length and do not pass the CRC test as the frame is
+received.
+"rx_align_errors"는 IEEE 802.3-2012, 섹션 5.2.2.1.7에 정의 된 aAlignmentErrors와 동일합니다. 이 통계는 길이가 정수 바이트가 아니고 프레임이 수신 될 때 CRC 테스트를 통과하지 못한 프레임 수입니다.
+
+"tx_bytes" is equivalent to aOctetsTransmittedOK defined in IEEE 802.3-2012,
+Section 5.2.2.1.8. This statistic is the count of data and pad bytes
+successfully transmitted from the interface.
+"tx_bytes"는 IEEE 802.3-2012, 섹션 5.2.2.1.8에 정의 된 aOctetsTransmittedOK와 동일합니다. 이 통계는 인터페이스에서 성공적으로 전송 된 데이터 및 패드 바이트 수입니다.
+
+"rx_bytes" is equivalent to aOctetsReceivedOK defined in IEEE 802.3-2012,
+Section 5.2.2.1.14. This statistic is the count of data and pad bytes
+successfully received by the controller.
+"rx_bytes"는 IEEE 802.3-2012, 섹션 5.2.2.1.14에 정의 된 aOctetsReceivedOK와 동일합니다. 이 통계는 컨트롤러가 성공적으로 수신 한 데이터 및 패드 바이트 수입니다.
+
+"tx_pause" is equivalent to aPAUSEMACCtrlFramesTransmitted defined in IEEE
+802.3-2012, Section 30.3.4.2. This statistic is a count of PAUSE frames
+transmitted from the network controller.
+"tx_pause"는 IEEE 802.3-2012, 섹션 30.3.4.2에 정의 된 aPAUSEMACCtrlFramesTransmitted와 동일합니다. 이 통계는 네트워크 컨트롤러에서 전송 된 PAUSE 프레임 수입니다.
+
+
+"rx_pause" is equivalent to aPAUSEMACCtrlFramesReceived defined in IEEE
+802.3-2012, Section 30.3.4.3. This statistic is a count of PAUSE frames
+received by the network controller.
+"rx_pause"는 IEEE 802.3-2012, 섹션 30.3.4.3에 정의 된 aPAUSEMACCtrlFramesReceived와 동일합니다. 이 통계는 네트워크 컨트롤러가받은 PAUSE 프레임 수입니다.
+
+"rx_errors" is equivalent to ifInErrors defined in RFC 2863. This statistic is
+a count of the number of packets received containing errors that prevented the
+packet from being delivered to a higher level protocol.
+"rx_errors"는 RFC 2863에서 정의 된 ifInErrors과 같습니다. 이 통계는 패킷이 상위 프로토콜에 전달되지 않은 오류가있는 수신 패킷 수입니다.
+
+"tx_errors" is equivalent to ifOutErrors defined in RFC 2863. This statistic
+is a count of the number of packets that could not be transmitted due to errors.
+"tx_errors"는 RFC 2863에 정의 된 ifOutErrors와 같습니다.이 통계는 오류로 인해 전송할 수없는 패킷 수입니다.
+
+"rx_unicast" is equivalent to ifInUcastPkts defined in RFC 2863. This
+statistic is a count of the number of packets received that were not addressed
+to the broadcast address or a multicast group.
+"rx_unicast"는 RFC 2863에 정의 된 ifInUcastPkts와 같습니다.이 통계는 브로드 캐스트 주소 또는 멀티 캐스트 그룹으로 주소 지정되지 않은 수신 된 패킷 수입니다.
+
+"rx_multicast" is equivalent to ifInMulticastPkts defined in RFC 2863. This
+statistic is a count of the number of packets received that were addressed to
+a multicast address group.
+"rx_multicast"는 RFC 2863에 정의 된 ifInMulticastPkts와 동일합니다.이 통계는 멀티 캐스트 주소 그룹으로 주소 지정된 수신 된 패킷 수입니다.
+
+"rx_broadcast" is equivalent to ifInBroadcastPkts defined in RFC 2863. This
+statistic is a count of the number of packets received that were addressed to
+the broadcast address.
+"rx_broadcast"는 RFC 2863에 정의 된 ifInBroadcastPkts와 같습니다.이 통계는 브로드 캐스트 주소로 주소 지정된 수신 된 패킷 수입니다.
+
+"tx_discards" is equivalent to ifOutDiscards defined in RFC 2863. This
+statistic is the number of outbound packets not transmitted even though an
+error was not detected. An example of a reason this might occur is to free up
+internal buffer space.
+"tx_discards"는 RFC 2863에 정의 된 ifOutDiscards와 같습니다.이 통계는 오류가 감지되지 않았더라도 전송되지 않은 아웃 바운드 패킷 수입니다. 이것이 발생할 수있는 이유의 예로는 내부 버퍼 공간을 확보하는 것입니다.
+
+
+"tx_unicast" is equivalent to ifOutUcastPkts defined in RFC 2863. This
+statistic counts the number of packets transmitted that were not addressed to
+a multicast group or broadcast address.
+"tx_unicast"는 RFC 2863에 정의 된 ifOutUcastPkts와 같습니다.이 통계는 멀티 캐스트 그룹 또는 브로드 캐스트 주소로 주소 지정되지 않은 전송 된 패킷 수를 계산합니다.
+
+"tx_multicast" is equivalent to ifOutMulticastPkts defined in RFC 2863. This
+statistic counts the number of packets transmitted that were addressed to a
+multicast group.
+"tx_multicast"는 RFC 2863에 정의 된 ifOutMulticastPkts와 같습니다.이 통계는 멀티 캐스트 그룹으로 주소 지정된 전송 된 패킷의 수를 계산합니다.
+
+"tx_broadcast" is equivalent to ifOutBroadcastPkts defined in RFC 2863. This
+statistic counts the number of packets transmitted that were addressed to a
+broadcast address.
+"tx_broadcast"는 RFC 2863에 정의 된 ifOutBroadcastPkts와 같습니다.이 통계는 브로드 캐스트 주소로 전송 된 패킷 수를 계산합니다.
+
+"ether_drops" is equivalent to etherStatsDropEvents defined in RFC 2819.
+This statistic counts the number of packets dropped due to lack of internal
+controller resources.
+"ether_drops"는 RFC 2819에 정의 된 etherStatsDropEvents와 동일합니다.
+이 통계는 내부 컨트롤러 리소스 부족으로 인해 손실 된 패킷 수를 계산합니다.
+
+"rx_total_bytes" is equivalent to etherStatsOctets defined in RFC 2819.
+This statistic counts the total number of bytes received by the controller,
+including error and discarded packets.
+"rx_total_bytes"는 RFC 2819에 정의 된 etherStatsOctets와 동일합니다.
+이 통계는 오류 및 버려진 패킷을 포함하여 컨트롤러가 수신 한 총 바이트 수를 계산합니다.
+
+"rx_total_packets" is equivalent to etherStatsPkts defined in RFC 2819.
+This statistic counts the total number of packets received by the controller,
+including error, discarded, unicast, multicast, and broadcast packets.
+"rx_total_packets"는 RFC 2819에 정의 된 etherStatsPkts와 동일합니다.
+이 통계는 오류, 폐기, 유니 캐스트, 멀티 캐스트 및 브로드 캐스트 패킷을 포함하여 컨트롤러가 수신 한 총 패킷 수를 계산합니다.
+
+"rx_undersize" is equivalent to etherStatsUndersizePkts defined in RFC 2819.
+This statistic counts the number of correctly formed packets received less
+than 64 bytes long.
+"rx_undersize"는 RFC 2819에 정의 된 etherStatsUndersizePkts와 동일합니다.
+이 통계는 64 바이트 미만으로 수신 된 올바르게 구성된 패킷의 수를 계산합니다.
+
+"rx_oversize" is equivalent to etherStatsOversizePkts defined in RFC 2819.
+This statistic counts the number of correctly formed packets greater than 1518
+bytes long.
+"rx_oversize"는 RFC 2819에 정의 된 etherStatsOversizePkts와 동일합니다.
+이 통계는 올바르게 형성된 패킷의 수를 1518 바이트보다 길게 계산합니다.
+
+"rx_64_bytes" is equivalent to etherStatsPkts64Octets defined in RFC 2819.
+This statistic counts the total number of packets received that were 64 octets
+in length.
+"rx_64_bytes"는 RFC 2819에 정의 된 etherStatsPkts64Octets와 동일합니다.
+이 통계는 길이가 64 octets 인 수신 된 총 패킷 수를 계산합니다.
+
+"rx_65_127_bytes" is equivalent to etherStatsPkts65to127Octets defined in RFC
+2819. This statistic counts the total number of packets received that were
+between 65 and 127 octets in length inclusive.
+"rx_65_127_bytes"는 RFC 2819에 정의 된 etherStatsPkts65to127Octets와 동일합니다.이 통계는 수신 된 총 65- 127 옥텟 길이의 패킷 수를 계산합니다.
+
+"rx_128_255_bytes" is equivalent to etherStatsPkts128to255Octets defined in
+RFC 2819. This statistic is the total number of packets received that were
+between 128 and 255 octets in length inclusive.
+"rx_128_255_bytes"는 RFC 2819에 정의 된 etherStatsPkts128to255Octets와 동일합니다.이 통계는 길이가 128 - 255 옥텟 인 수신 된 총 패킷 수입니다.
+
+"rx_256_511_bytes" is equivalent to etherStatsPkts256to511Octets defined in
+RFC 2819. This statistic is the total number of packets received that were
+between 256 and 511 octets in length inclusive.
+"rx_256_511_bytes"는 RFC 2819에 정의 된 etherStatsPkts256to511Octets와 동일합니다.이 통계는 길이가 256 - 511 옥텟 인 수신 된 총 패킷 수입니다.
+
+"rx_512_1023_bytes" is equivalent to etherStatsPkts512to1023Octets defined in
+RFC 2819. This statistic is the total number of packets received that were
+between 512 and 1023 octets in length inclusive.
+"rx_512_1023_bytes"는 RFC 2819에 정의 된 etherStatsPkts512to1023Octets와 동일합니다.이 통계는 512와 1023 옥텟 길이를 포함하여 수신 된 총 패킷 수입니다.
+
+"rx_1024_1518_bytes" is equivalent to etherStatsPkts1024to1518Octets define
+in RFC 2819. This statistic is the total number of packets received that were
+between 1024 and 1518 octets in length inclusive.
+"rx_1024_1518_bytes"는 RFC 2819에 정의 된 etherStatsPkts1024to1518Octets와 같습니다.이 통계는 길이가 1024와 1518 옥텟 인 수신 된 총 패킷 수입니다.
+
+"rx_gte_1519_bytes" is a statistic defined specific to the behavior of the
+Altera TSE. This statistics counts the number of received good and errored
+frames between the length of 1519 and the maximum frame length configured
+in the frm_length register. See the Altera TSE User Guide for More details.
+"rx_gte_1519_bytes"는 Altera TSE의 동작에 따라 정의 된 통계입니다. 이 통계는 1519 길이와 frm_length 레지스터에 구성된 최대 프레임 길이 사이에 수신 된 양호한 프레임과 오류가 발생한 프레임의 수를 계산합니다. 자세한 내용은 Altera TSE 사용자 가이드를 참조하십시오.
+
+"rx_jabbers" is equivalent to etherStatsJabbers defined in RFC 2819. This
+statistic is the total number of packets received that were longer than 1518
+octets, and had either a bad CRC with an integral number of octets (CRC Error)
+or a bad CRC with a non-integral number of octets (Alignment Error).
+"rx_jabbers"는 RFC 2819에 정의 된 etherStatsJabbers와 동일합니다.이 통계는 1518 옥텟보다 길고 수신 된 총 패킷 수로서 옥텟 수가 정수 인 불량 CRC (CRC 오류) 또는 정수가 아닌 정수 (정렬 오류).
+
+"rx_runts" is equivalent to etherStatsFragments defined in RFC 2819. This
+statistic is the total number of packets received that were less than 64 octets
+in length and had either a bad CRC with an integral number of octets (CRC
+error) or a bad CRC with a non-integral number of octets (Alignment Error).
+"rx_runts"는 RFC 2819에서 정의 된 etherStatsFragments에 해당합니다. 이 통계는 길이가 64 옥텟 이하의 정수 옥텟 (CRC 오류)의 불량 CRC 또는 정수가 아닌 옥텟 (정렬 오류).

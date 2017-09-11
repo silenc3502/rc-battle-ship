@@ -1,0 +1,16 @@
+Innolux Corporation 12.1" WXGA (1280x800) TFT LCD panel
+
+Required properties:
+- compatible: should be "innolux,g121i1-l01"
+
+This binding is compatible with the simple-panel binding, which is specified
+in simple-panel.txt in this directory.
+
+/*
+Innolux Corporation 12.1 "WXGA (1280x800) TFT LCD 패널
+
+필수 속성 :
+- 호환 가능 : "innolux, g121i1-l01"이어야합니다.
+
+이 바인딩은이 디렉토리의 simple-panel.txt에 지정된 단순 패널 바인딩과 호환됩니다.
+*/

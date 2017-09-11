@@ -1,0 +1,34 @@
+Allwinner sunxi Peripheral Reset Controller
+===========================================
+
+Please also refer to reset.txt in this directory for common reset
+controller binding usage.
+
+Required properties:
+- compatible: Should be one of the following:
+  "allwinner,sun6i-a31-ahb1-reset"
+  "allwinner,sun6i-a31-clock-reset"
+- reg: should be register base and length as documented in the
+  datasheet
+- #reset-cells: 1, see below
+
+Allwinner sunxi 주변 장치 리셋 컨트롤러
+===============================
+
+common reset controller binding 사용에 대해서는이 디렉토리의 reset.txt를 참조하십시오.
+
+필수 속성 :
+- compatible : 다음 중 하나 여야합니다.
+   "allwinner, sun6i-a31-ahb1-reset"
+   "allwinner, sun6i-a31-clock-reset"
+- reg : 데이터 시트에 문서화 된대로 레지스터 기본 및 길이 여야합니다.
+- # reset-cells : 1, 아래 참조
+
+
+example:
+
+ahb1_rst: reset@01c202c0 {
+	#reset-cells = <1>;
+	compatible = "allwinner,sun6i-a31-ahb1-reset";
+	reg = <0x01c202c0 0xc>;
+};

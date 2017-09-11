@@ -1,0 +1,105 @@
+THine Electronics THC63LVDM83D LVDS serializer
+----------------------------------------------
+
+The THC63LVDM83D is an LVDS serializer designed to support pixel data
+transmission between a host and a flat panel.
+
+Required properties:
+
+- compatible: Should be "thine,thc63lvdm83d"
+
+Optional properties:
+
+- pwdn-gpios: Power down control GPIO
+
+Required nodes:
+
+The THC63LVDM83D has two video ports. Their connections are modeled using the
+OFgraph bindings specified in Documentation/devicetree/bindings/graph.txt.
+
+- Video port 0 for CMOS/TTL input
+- Video port 1 for LVDS output
+
+
+Example
+-------
+
+	lvds_enc: encoder@0 {
+		compatible = "thine,thc63lvdm83d";
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			port@0 {
+				reg = <0>;
+
+				lvds_enc_in: endpoint@0 {
+					remote-endpoint = <&rgb_out>;
+				};
+			};
+
+			port@1 {
+				reg = <1>;
+
+				lvds_enc_out: endpoint@0 {
+					remote-endpoint = <&panel_in>;
+				};
+			};
+		};
+	};
+
+
+/*
+THine Electronics THC63LVDM83D LVDS 시리얼 라이저
+----------------------------------------------
+
+THC63LVDM83D는 호스트와 평면 패널 간의 픽셀 데이터 전송을 지원하도록 설계된 LVDS 시리얼 라이저입니다.
+
+
+필수 속성 :
+
+- 호환 : "thine, thc63lvdm83d"여야합니다.
+
+선택적 속성 :
+
+- pwdn-gpios : 전원 제어 GPIO
+
+필수 노드 :
+
+THC63LVDM83D에는 2 개의 비디오 포트가 있습니다. 
+그 연결은 Documentation / devicetree / bindings / graph.txt에서 지정된 OFgraph 바인딩을 사용하여 모델링됩니다.
+
+- CMOS / TTL 입력을위한 비디오 포트 0
+- LVDS 출력을위한 비디오 포트 1
+
+
+Example
+-------
+
+	lvds_enc: encoder@0 {
+		compatible = "thine,thc63lvdm83d";
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			port@0 {
+				reg = <0>;
+
+				lvds_enc_in: endpoint@0 {
+					remote-endpoint = <&rgb_out>;
+				};
+			};
+
+			port@1 {
+				reg = <1>;
+
+				lvds_enc_out: endpoint@0 {
+					remote-endpoint = <&panel_in>;
+				};
+			};
+		};
+	};
+
+*/

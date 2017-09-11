@@ -1,0 +1,102 @@
+Texas Instruments System Control Interface (TI-SCI) Reset Controller
+=====================================================================
+
+Some TI SoCs contain a system controller (like the Power Management Micro
+Controller (PMMC) on Keystone K2G SoC) that are responsible for controlling
+the state of the various hardware modules present on the SoC. Communication
+between the host processor running an OS and the system controller happens
+through a protocol called TI System Control Interface (TI-SCI protocol).
+For TI SCI details, please refer to the document,
+Documentation/devicetree/bindings/arm/keystone/ti,sci.txt
+
+Texas Instruments 시스템 제어 인터페이스 (TI-SCI) 리셋 컨트롤러
+=======================================================================
+
+일부 TI SoC에는 SoC에있는 다양한 하드웨어 모듈의 상태를 제어하는 시스템 컨트롤러 (Keystone K2G SoC의 PMMC (Power Management Micro Controller))가 포함되어 있습니다. 운영 체제를 실행하는 호스트 프로세서와 시스템 컨트롤러 간의 통신은 TI 시스템 제어 인터페이스 (TI-SCI 프로토콜)라는 프로토콜을 통해 이루어집니다. TI SCI에 대한 자세한 내용은 Documentation / devicetree / bindings / arm / keystone / ti, sci.txt 문서를 참조하십시오.
+
+
+
+
+TI-SCI Reset Controller Node
+============================
+This reset controller node uses the TI SCI protocol to perform the reset
+management of various hardware modules present on the SoC.
+
+TI-SCI 리셋 컨트롤러 노드
+================
+이 리셋 컨트롤러 노드는 TI SCI 프로토콜을 사용하여 SoC에있는 다양한 하드웨어 모듈의 리셋 관리를 수행합니다.
+
+
+Required properties:
+--------------------
+ - compatible	: Should be "ti,sci-reset"
+ - ti,sci	: phandle to the TI SCI device to use for managing resets
+ - #reset-cells	: Should be 2. Please see the reset consumer node below for
+		  usage details.
+
+필수 속성 :
+--------------------
+  - 호환 : "ti, sci-reset"이어야합니다.
+  - ti, sci : 리셋 관리에 TI SCI 디바이스를 사용하십시오.
+  - # reset-cells : 2 여야합니다. 자세한 내용은 아래의 리셋 소비자 노드를 참조하십시오.
+
+
+
+TI-SCI Reset Consumer Nodes
+TI-SCI 리셋 소비자 노드
+===========================
+Each of the reset consumer nodes should have the following properties,
+in addition to their own properties.
+
+재설정 된 각 소비자 노드는 자신의 속성 외에도 다음과 같은 속성을 가져야합니다.
+
+Required properties:
+--------------------
+ - resets	: A phandle and reset specifier pair, one pair for each reset
+		  signal that affects the device, or that the device manages.
+		  The phandle should point to the TI-SCI reset controller node,
+		  and the reset specifier should have 2 cell-values. The first
+		  cell should contain the device ID, the values of which are
+		  specified in the <dt-bindings/genpd/<soc>.h> include file.
+		  The second cell should contain the reset mask value used by
+		  system controller, the values of which are specified in the
+		  include file <dt-bindings/reset/<soc>.h>, where <soc> is the
+		  name of the SoC involved, for example 'k2g'.
+
+필수 속성 :
+--------------------
+  - 재설정 : 장치에 영향을주는 각 재설정 신호에 대한 한 쌍 또는 장치가 관리하는 phandle 및 재설정 지정자 쌍.
+  phandle은 TI-SCI 리셋 컨트롤러 노드를 가리켜 야하고 리셋 지정자는 2 개의 셀 값을 가져야한다. 첫 번째 셀에는 값이 <dt-bindings / genpd / <soc> .h> 포함 파일에 지정된 장치 ID가 있어야합니다.
+
+  두 번째 셀은 포함 된 파일 <dt-bindings / reset / <soc> .h>에 지정된 값으로 시스템 컨트롤러에서 사용되는 재설정 마스크 값을 포함해야합니다. 여기서 <soc>는 관련된 SoC의 이름입니다.
+ 예 : 'k2g'.
+
+
+Please also refer to Documentation/devicetree/bindings/reset/reset.txt for
+common reset controller usage by consumers.
+또한 소비자가 공통적으로 리셋 컨트롤러를 사용하는 방법에 대해서는 Documentation / devicetree / bindings / reset / reset.txt를 참조하십시오.
+
+Example:
+--------
+The following example demonstrates both a TI-SCI reset controller node and a
+consumer (a DSP device) on the K2G SoC.
+다음 예는 TI-SCI 리셋 컨트롤러 노드와 K2G SoC의 소비자 (DSP 장치)를 보여줍니다.
+
+#include <dt-bindings/genpd/k2g.h>
+#include <dt-bindings/reset/k2g.h>
+
+/ {
+	soc {
+		k2g_reset: k2g_reset {
+			compatible = "ti,sci-reset";
+			ti,sci = <&pmmc>;
+			#reset-cells = <2>;
+		};
+
+		dsp0: dsp0 {
+			...
+			resets = <&k2g_reset K2G_DEV_CGEM0 K2G_DEV_CGEM0_DSP0_RESET>;
+			...
+		};
+	};
+};

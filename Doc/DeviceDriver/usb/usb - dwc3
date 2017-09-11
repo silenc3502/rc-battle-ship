@@ -1,0 +1,86 @@
+
+ TODO
+~~~~~~
+Please pick something while reading :)
+
+- Convert interrupt handler to per-ep-thread-irq
+
+- 인터럽트 처리기를 ep-thread-irq 단위로 변환하십시오.
+
+  As it turns out some DWC3-commands ~1ms to complete. Currently we spin
+  until the command completes which is bad.
+
+  DWC3 명령을 ~1ms 정도 완료하는 것으로 밝혀졌습니다. (DWC3 명령이 무엇인가?)
+  현재 명령이 완료 될 때까지 스핀을 실행합니다.
+
+  Implementation idea:
+  구현 아이디어:
+
+  - dwc core implements a demultiplexing irq chip for interrupts per
+    endpoint. The interrupt numbers are allocated during probe and belong
+    to the device. If MSI provides per-endpoint interrupt this dummy
+    interrupt chip can be replaced with "real" interrupts.
+
+  - dwc 코어는 endpoint 당 인터럽트를 위해 디 멀티플렉싱 IRQ 칩을 구현합니다. (dwc는 인터럽트를 위해 하는 것인가?)
+    인터럽트 번호는 probe 중에 할당되고 장치에 속합니다. (probe는 USB 장치를 인터페이스에 연결시키는 과정, callbacks 파일 참고)
+    MSI가 endpoint마다 인터럽트를 제공하면 이 더미 인터럽트 칩(dwc 코어가 만든)을 "실제" 인터럽트로 대체할 수 있습니다.
+    (dwc는 인터럽트를 위해 더미 인터럽트 칩을 만들어 실제 인터럽트로 대체하기 위해 사용하는 것)
+    
+  - interrupts are requested / allocated on usb_ep_enable() and removed on
+    usb_ep_disable(). Worst case are 32 interrupts, the lower limit is two
+    for ep0/1.
+
+  - 인터럽트는 usb_ep_enable()에서 요청/할당되고 usb_ep_disable()에서는 제거됩니다.
+    최악의 경우는 32개의 인터럽트이고, 제일 적은 한계는 ep0/1의 경우(무슨 경우인가?) 2입니다.
+    (인터럽트는 최소 2개부터 최대 32개까지 가능한 것 같다)
+
+  - dwc3_send_gadget_ep_cmd() will sleep in wait_for_completion_timeout()
+    until the command completes.
+
+  - dwc3_send_gadget_ep_cmd()는 명령이 완료될 때까지 wait_for_completion_timeout()가 sleep 상태가 됩니다.
+    (이 두개는 무슨 함수인건가? dwc3함수는 dwc을 호출을 하는 함수인 거 같고, wait함수는 완료될 때까지 기다리는 함수 같은데?)
+
+  - the interrupt handler is split into the following pieces:
+
+  - 인터럽트 처리기는 다음과 같은 부분으로 나뉩니다:
+
+    - primary handler of the device
+      goes through every event and calls generic_handle_irq() for event
+      it. On return from generic_handle_irq() in acknowledges the event
+      counter so interrupt goes away (eventually).
+
+    - 장치의 기본(primary) 처리기는 모든 이벤트를 처리하고 이벤트의 generic_handle_irq()를 호출합니다.
+      (generic_handle_irq()는 인터럽트를 처리하는 함수?)
+      generic_handle_irq()에서 복귀 할 때 인터럽트가 사라지도록 (결국) 이벤트 카운터를 확인합니다.
+      (generic_handle_irq()에서 복귀한다는 건 인터럽트를 모두 처리했다는 뜻?)
+
+    - threaded handler of the device
+      none
+
+    - 장치의 스레드 처리기 없음
+
+    - primary handler of the EP-interrupt
+      reads the event and tries to process it. Everything that requires
+      sleeping is handed over to the Thread. The event is saved in an
+      per-endpoint data-structure.
+      We probably have to pay attention not to process events once we
+      handed something to thread so we don't process event X prio Y
+      where X > Y.
+
+    - EP 인터럽트의 기본(primary) 처리기는 이벤트를 읽고 이를 처리하려고 합니다.
+      sleep 모드를 요구하는 모든 것이 thread에 전달됩니다. 이 이벤트는 endpoint 별 데이터 구조에 저장됩니다.
+      쓰레드에 어떤 것을 건네면 이벤트를 처리하지 않도록 주의해야 할 것입니다. (sleep모드를 요구받았기 때문에?)
+      그래서 우리는 이벤트 X prio Y?를 처리하지 않습니다. 여기서 X > Y입니다.
+
+    - threaded handler of the EP-interrupt
+      handles the remaining EP work which might sleep such as waiting
+      for command completion.
+
+    - EP 인터럽트의 스레드 처리기는 명령 완료를 기다리는 것과 같이 sleep 상태 일 수 있는 나머지 EP 작업을 처리합니다.
+
+  Latency:
+   There should be no increase in latency since the interrupt-thread has a
+   high priority and will be run before an average task in user land
+   (except the user changed priorities).
+
+   인터럽트 스레드는 높은 우선 순위를 가지며 사용자 토큰의 평균 작업 (사용자가 우선 순위를 변경 한 경우 제외) 전에 실행됩니다.

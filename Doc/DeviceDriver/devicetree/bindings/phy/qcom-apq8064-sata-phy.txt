@@ -1,0 +1,34 @@
+Qualcomm APQ8064 SATA PHY Controller
+------------------------------------
+
+SATA PHY nodes are defined to describe on-chip SATA Physical layer controllers.
+Each SATA PHY controller should have its own node.
+
+Required properties:
+- compatible: compatible list, contains "qcom,apq8064-sata-phy".
+- reg: offset and length of the SATA PHY register set;
+- #phy-cells: must be zero
+- clocks: a list of phandles and clock-specifier pairs, one for each entry in
+  clock-names.
+- clock-names: must be "cfg" for phy config clock.
+
+SATA PHY 노드는 온칩 SATA 물리 계층 컨트롤러를 설명하기 위해 정의됩니다.
+각 SATA PHY 컨트롤러에는 자체 노드가 있어야합니다.
+
+필수 속성 :
+- compatible : 호환 가능한 목록으로 "qcom, apq8064-sata-phy"가 들어 있습니다.
+- reg : SATA PHY 레지스터 세트의 오프셋 및 길이.
+- # phy-cells : 0이어야합니다.
+- clocks : clock-names 각 항목에 하나 인 phandles 및 clock-specifier 쌍의 목록입니다.
+- clock-names : phy config clock의 경우 "cfg"여야합니다.
+
+Example:
+	sata_phy: sata-phy@1b400000 {
+		compatible = "qcom,apq8064-sata-phy";
+		reg = <0x1b400000 0x200>;
+
+		clocks = <&gcc SATA_PHY_CFG_CLK>;
+		clock-names = "cfg";
+
+		#phy-cells = <0>;
+	};

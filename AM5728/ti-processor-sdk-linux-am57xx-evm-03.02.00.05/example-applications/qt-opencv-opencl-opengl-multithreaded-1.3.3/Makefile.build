@@ -1,0 +1,54 @@
+-include ../../Rules.make
+
+ENV_SETUP ?= ../../linux-devkit/environment-setup
+DESTDIR ?=
+
+all: release
+
+.PHONY: qmake
+qmake : qt-opencv-opencl-opengl-multithreaded.pro
+	@. ${ENV_SETUP}; \
+	qmake CONFIG+=release qt-opencv-opencl-opengl-multithreaded.pro
+
+qmake_debug : qt-opencv-opencl-opengl-multithreaded.pro
+	@. ${ENV_SETUP}; \
+	qmake CONFIG+=debug qt-opencv-opencl-opengl-multithreaded.pro
+
+debug : qmake_debug
+	@. ${ENV_SETUP}; \
+	make
+
+release : oclmake qmake
+	@. ${ENV_SETUP}; \
+	make
+
+clean : qmake
+	@. ${ENV_SETUP}; \
+	make distclean
+	@. ${ENV_SETUP}; \
+	make -f oclMakefile clean
+
+install: release
+	@if [ ! -d $(DESTDIR) ] ; then \
+		echo "The extracted target filesystem directory doesn't exist."; \
+		echo "Please run setup.sh in the SDK's root directory and then try again."; \
+		exit 1; \
+	fi
+	@install -d ${DESTDIR}/usr/bin
+	@install qt-opencv-opencl-opengl-multithreaded ${DESTDIR}/usr/bin/qt-opencv-opencl-opengl-multithreaded; \
+	echo "qt-opencv-opencl-opengl-multithreaded release version installed."
+
+install_debug: debug
+	@if [ ! -d $(DESTDIR) ] ; then \
+		echo "The extracted target filesystem directory doesn't exist."; \
+		echo "Please run setup.sh in the SDK's root directory and then try again."; \
+		exit 1; \
+	fi
+	@install -d ${DESTDIR}/usr/bin
+	@install qt-opencv-opencl-opengl-multithreaded ${DESTDIR}/usr/bin/qt-opencv-opencl-opengl-multithreaded; \
+	echo "qt-opencv-opencl-opengl-multithreaded debug version installed."
+
+oclmake:
+	@. $(ENV_SETUP); \
+	make -f oclMakefile TARGET_ROOTDIR=$(SDK_PATH_TARGET) TI_OCL_CGT_INSTALL=$(SDK_PATH_TARGET)/usr/share/ti/cgt-c6x TI_DSPLIB_DIR=${SDK_PATH_TARGET}/usr/share/ti/ti-dsplib-c66x-tree
+

@@ -1,0 +1,79 @@
+* Renesas USB DMA Controller Device Tree bindings
+
+Required Properties:
+- compatible: must contain "renesas,usb-dmac"
+- reg: base address and length of the registers block for the DMAC
+- interrupts: interrupt specifiers for the DMAC, one for each entry in
+  interrupt-names.
+- interrupt-names: one entry per channel, named "ch%u", where %u is the
+  channel number ranging from zero to the number of channels minus one.
+- clocks: a list of phandle + clock-specifier pairs.
+- #dma-cells: must be <1>, the cell specifies the channel number of the DMAC
+  port connected to the DMA client.
+- dma-channels: number of DMA channels
+
+Example: R8A7790 (R-Car H2) USB-DMACs
+
+	usb_dmac0: dma-controller@e65a0000 {
+		compatible = "renesas,usb-dmac";
+		reg = <0 0xe65a0000 0 0x100>;
+		interrupts = <0 109 IRQ_TYPE_LEVEL_HIGH
+			      0 109 IRQ_TYPE_LEVEL_HIGH>;
+		interrupt-names = "ch0", "ch1";
+		clocks = <&mstp3_clks R8A7790_CLK_USBDMAC0>;
+		#dma-cells = <1>;
+		dma-channels = <2>;
+	};
+
+	usb_dmac1: dma-controller@e65b0000 {
+		compatible = "renesas,usb-dmac";
+		reg = <0 0xe65b0000 0 0x100>;
+		interrupts = <0 110 IRQ_TYPE_LEVEL_HIGH
+			      0 110 IRQ_TYPE_LEVEL_HIGH>;
+		interrupt-names = "ch0", "ch1";
+		clocks = <&mstp3_clks R8A7790_CLK_USBDMAC1>;
+		#dma-cells = <1>;
+		dma-channels = <2>;
+	};
+
+/*
+
+* Renesas USB DMA 컨트롤러 디바이스 트리 바인딩
+
+필수 등록 정보 :
+- 호환 : "renesas, usb-dmac"를 포함해야합니다.
+- reg : DMAC에 대한 레지스터 블록의 기본 주소 및 길이
+- 인터럽트 : DMAC에 대한 인터럽트 지정자, 각 항목에 대한 인터럽트 지정자
+  interrupt-names.
+- interrupt-names : "ch % u"라는 이름의 채널 당 하나의 항목. 여기서 % u는 0에서 채널 수에서 1을 뺀 범위의 채널 번호입니다.
+- clocks : phandle + clock-specifier 쌍의 목록입니다.
+- # dma-cells : <1>이어야하며, 셀은 DMAC의 채널 번호를 지정합니다
+  포트는 DMA 클라이언트에 연결됩니다.
+- dma-channels : DMA 채널 수
+
+Example: R8A7790 (R-Car H2) USB-DMACs
+
+	usb_dmac0: dma-controller@e65a0000 {
+		compatible = "renesas,usb-dmac";
+		reg = <0 0xe65a0000 0 0x100>;
+		interrupts = <0 109 IRQ_TYPE_LEVEL_HIGH
+			      0 109 IRQ_TYPE_LEVEL_HIGH>;
+		interrupt-names = "ch0", "ch1";
+		clocks = <&mstp3_clks R8A7790_CLK_USBDMAC0>;
+		#dma-cells = <1>;
+		dma-channels = <2>;
+	};
+
+	usb_dmac1: dma-controller@e65b0000 {
+		compatible = "renesas,usb-dmac";
+		reg = <0 0xe65b0000 0 0x100>;
+		interrupts = <0 110 IRQ_TYPE_LEVEL_HIGH
+			      0 110 IRQ_TYPE_LEVEL_HIGH>;
+		interrupt-names = "ch0", "ch1";
+		clocks = <&mstp3_clks R8A7790_CLK_USBDMAC1>;
+		#dma-cells = <1>;
+		dma-channels = <2>;
+	};
+
+*/
+

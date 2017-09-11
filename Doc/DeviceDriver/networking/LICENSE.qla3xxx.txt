@@ -1,0 +1,54 @@
+Copyright (c)  2003-2006 QLogic Corporation
+QLogic Linux Networking HBA Driver
+
+This program includes a device driver for Linux 2.6 that may be
+distributed with QLogic hardware specific firmware binary file.
+You may modify and redistribute the device driver code under the
+GNU General Public License as published by the Free Software
+Foundation (version 2 or a later version).
+이 프로그램에는 QLogic 하드웨어 특정 펌웨어 바이너리 파일과 함께 배포 될 수있는 Linux 2.6 용 장치 드라이버가 포함되어 있습니다. Free Software Foundation (버전 2 또는 이후 버전)에서 게시 한 GNU General Public License에 따라 장치 드라이버 코드를 수정하고 재배포 할 수 있습니다.
+
+You may redistribute the hardware specific firmware binary file
+under the following terms:
+다음 조건에 따라 하드웨어 특정 펌웨어 이진 파일을 재배포 할 수 있습니다.
+
+	1. Redistribution of source code (only if applicable),
+	   must retain the above copyright notice, this list of
+	   conditions and the following disclaimer.
+	1. 소스 코드 재배포 (해당되는 경우에만 해당)는 위의 저작권 고지, 본 조건 목록 및 다음 면책 조항을 유지해야합니다.
+
+	2. Redistribution in binary form must reproduce the above
+	   copyright notice, this list of conditions and the
+	   following disclaimer in the documentation and/or other
+	   materials provided with the distribution.
+	2. 바이너리 형식으로 재배포 할 경우 배포와 함께 제공된 설명서 및 / 또는 기타 자료에 위 저작권 공지, 본 조건 목록 및 다음 면책 조항이 포함되어 있어야합니다.
+
+	3. The name of QLogic Corporation may not be used to
+	   endorse or promote products derived from this software
+	   without specific prior written permission
+	3. QLogic Corporation의 이름은 특정 사전 서면 승인없이 이 소프트웨어에서 파생 된 제품을 보증하거나 홍보하는 데 사용할 수 없습니다	
+
+REGARDLESS OF WHAT LICENSING MECHANISM IS USED OR APPLICABLE,
+THIS PROGRAM IS PROVIDED BY QLOGIC CORPORATION "AS IS'' AND ANY
+EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR
+BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+어떠한 라이센스 부여 메커니즘이 사용되었거나 적용 가능한지와 상관없이이 프로그램은 QLOGIC CORPORATION에 의해 "있는 그대로"제공되며, 상품성 및 특정 목적에의 적합성에 대한 묵시적인 보증을 포함하여 (단, 이에 한하지 않음) 명시 적 또는 묵시적 보증이 배제됩니다.
+
+저자는 직접적, 간접적, 부수적, 특별, 징벌 적 또는 결과적 손해 (대체 상품 또는 서비스의 조달, 사용, 데이터 또는 이익의 손실 또는 영업 중단을 포함하되 이에 국한되지는 않음)에 대한 책임을지지 않습니다. 계약 위반, 무과실 책임 또는 불법 행위 (태만 또는 기타 포함)에 관계없이 책임을지지 않으며, 그러한 손해의 가능성을 사전에 알고 있던 경우에도 마찬가지입니다.
+
+USER ACKNOWLEDGES AND AGREES THAT USE OF THIS PROGRAM WILL NOT
+CREATE OR GIVE GROUNDS FOR A LICENSE BY IMPLICATION, ESTOPPEL, OR
+OTHERWISE IN ANY INTELLECTUAL PROPERTY RIGHTS (PATENT, COPYRIGHT,
+TRADE SECRET, MASK WORK, OR OTHER PROPRIETARY RIGHT) EMBODIED IN
+ANY OTHER QLOGIC HARDWARE OR SOFTWARE EITHER SOLELY OR IN
+COMBINATION WITH THIS PROGRAM.
+사용자는 본 프로그램을 사용 함으로서 임무, 구획 또는 기타 지적 재산권 (특허권, 저작권, 영업 비밀 또는 기타 독점적 권리)으로 라이센스를 만들거나 제공하지 않을 것이라는 사실을 양해하고 동의합니다.이 소프트웨어는 귀하가 소프트웨어를 사용하여 소프트웨어를 사용하여 소프트웨어를 사용하지 않을 때도 마찬가지입니다. .

@@ -1,0 +1,113 @@
+What is anchor?
+anchor란 무엇인가?
+===============
+
+A USB driver needs to support some callbacks requiring
+a driver to cease all IO to an interface. To do so, a
+driver has to keep track of the URBs it has submitted
+to know they've all completed or to call usb_kill_urb
+for them. The anchor is a data structure takes care of
+keeping track of URBs and provides methods to deal with
+multiple URBs.
+USB 드라이버는 드라이버가 인터페이스에 대한 모든 IO를 중단하도록 요구하는 콜백을 지원해야합니다.
+그렇게하기 위해, 드라이버는 자신이 모두 완료했음을 알기 위해 제출한 URB를 추적하거나 
+그들을 위해 usb_kill_urb를 호출해야합니다.
+anchor는 URB를 추적 관리하고 여러 URB를 처리할 수 있는 방법을 제공하는 데이터 구조입니다.
+
+
+Allocation and Initialisation
+할당 및 초기화
+=============================
+
+There's no API to allocate an anchor. It is simply declared
+as struct usb_anchor. init_usb_anchor() must be called to
+initialise the data structure.
+anchor를 할당할 API는 없습니다. 단순히 struct usb_anchor로 선언됩니다.
+init_usb_anchor ()를 호출해야합니다. 데이터 구조를 초기화하십시오.
+
+
+Deallocation
+할당 해제
+============
+
+Once it has no more URBs associated with it, the anchor can be
+freed with normal memory management operations.
+연결된 URB가 더 이상 없으면 일반 메모리 관리 작업으로 anchor를 해제할 수 있습니다.
+
+
+Association and disassociation of URBs with anchors
+URB와 anchor의 연관성 및 해리
+===================================================
+
+An association of URBs to an anchor is made by an explicit
+call to usb_anchor_urb(). The association is maintained until
+an URB is finished by (successful) completion. Thus disassociation
+is automatic. A function is provided to forcibly finish (kill)
+all URBs associated with an anchor.
+Furthermore, disassociation can be made with usb_unanchor_urb()
+anchor에 대한 URB의 연관은 usb_anchor_urb()에 대한 명시적 호출에 의해 만들어집니다.
+연계는 URB가 (성공적으로)완료 됨으로써 끝날 때까지 유지된다.
+따라서 분리는 자동적이다.
+앵커와 관련된 모든 URB를 강제로 종료(kill)하는 기능이 제공됩니다.
+또한 disassociation(연관 해제)은 usb_unanchor_urb()를 사용하여 수행할 수 있습니다.
+
+
+Operations on multitudes of URBs
+다수의 URB 운영(실행?)
+================================
+
+usb_kill_anchored_urbs()
+------------------------
+
+This function kills all URBs associated with an anchor. The URBs
+are called in the reverse temporal order they were submitted.
+This way no data can be reordered.
+이 함수는 anchor와 관련된 모든 URB를 제거합니다.
+URBz는 제출된 역시간 순서로 호출됩니다. 이렇게 하면 데이터를 재정렬 할 수 없습니다.
+
+usb_unlink_anchored_urbs()
+--------------------------
+
+This function unlinks all URBs associated with an anchor. The URBs
+are processed in the reverse temporal order they were submitted.
+This is similar to usb_kill_anchored_urbs(), but it will not sleep.
+Therefore no guarantee is made that the URBs have been unlinked when
+the call returns. They may be unlinked later but will be unlinked in
+finite time.
+이 함수는 anchor와 관련된 모든 HERB를 연결 해제합니다.
+URBz는 제출된 역시간 순서로 처리됩니다.
+이것은 usb_kill_anchored_urbs()와 유사하지만 sleep모드가 되지 않습니다.
+따라서 호출이 반환 될 때 URB가 연결 해제 되었다는 보장은 없습니다.
+나중에 링크 해제 될 수 있지만 유한 시간에(일정 시간 후에) 연결 해제됩니다.
+
+usb_scuttle_anchored_urbs()
+---------------------------
+
+All URBs of an anchor are unanchored en masse.
+anchor의 모든 URB는 한꺼번에 풀리지 않습니다.
+
+usb_wait_anchor_empty_timeout()
+-------------------------------
+
+This function waits for all URBs associated with an anchor to finish
+or a timeout, whichever comes first. Its return value will tell you
+whether the timeout was reached.
+이 함수는 anchor와 관련된 모든 URB가 종료되거나 제한 시간 중 더 짧은 시간 동안을 기다립니다.
+
+usb_anchor_empty()
+------------------
+
+Returns true if no URBs are associated with an anchor. Locking
+is the caller's responsibility.
+anchor와 연결된 URB가 없으면 true를 반환합니다.
+잠금은 발신자의 책임입니다.
+
+usb_get_from_anchor()
+---------------------
+
+Returns the oldest anchored URB of an anchor. The URB is unanchored
+and returned with a reference. As you may mix URBs to several
+destinations in one anchor you have no guarantee the chronologically
+first submitted URB is returned.
+anchor 중 가장 오래된 anchor가 된 URB를 반환합니다. URB는 unanchored이며 참조로 반환됩니다.
+URB를 하나의 anchor에 여러 대상으로 혼합할 수 있으므로 시간순으로 제출된 URB가 반환된다는 보장이 없습니다.

@@ -1,0 +1,150 @@
+[cpia2_overview] 파일의 내용
+==============================================
+Programmer's View of Cpia2
+Cpia2의 프로그래머 관점
+ 
+Cpia2 is the second generation video coprocessor from VLSI Vision Ltd (now a division of ST Microelectronics).  There are two versions.  The first is the STV0672, which is capable of up to 30 frames per second (fps) in frame sizes up to CIF, and 15 fps for VGA frames.  The STV0676 is an improved version, which can handle up to 30 fps VGA.  Both coprocessors can be attached to two CMOS sensors - the vvl6410 CIF sensor and the vvl6500 VGA sensor.  These will be referred to as the 410 and the 500 sensors, or the CIF and VGA sensors.
+Cpia2는 VLSI Vision Ltd (현 ST Microelectronics 사업부)의 2 세대 비디오 코-프로세서입니다. 두 가지 버전이 있습니다. 첫 번째는 STV0672로 CIF까지 최대 30 프레임 (fps), VGA 프레임은 15fps까지 가능합니다. STV0676은 최대 30fps VGA를 처리 할 수 있는 향상된 버전입니다. 두 코-프로세서는 두 개의 CMOS 센서 (vvl6410 CIF 센서 및 vvl6500 VGA 센서)에 연결할 수 있습니다. 이를 410 및 500 센서 또는 CIF 및 VGA 센서라고 합니다.
+ 
+The two chipsets operate almost identically.  The core is an 8051 processor, running two different versions of firmware.  The 672 runs the VP4 video processor code, the 676 runs VP5.  There are a few differences in register mappings for the two chips.  In these cases, the symbols defined in the header files are marked with VP4 or VP5 as part of the symbol name.
+두 개의 칩셋은 거의 동일하게 작동합니다. 코어는 두 가지 버전의 펌웨어를 실행하는 8051 프로세서입니다. 672는 VP4 비디오 프로세서 코드를 실행하고, 676은 VP5를 실행합니다. 두 칩에 대한 레지스터 매핑에는 몇 가지 차이점이 있습니다. 이러한 경우 헤더 파일에 정의 된 기호는 기호 이름의 일부로 VP4 또는 VP5로 표시됩니다.
+ 
+The cameras appear externally as three sets of registers. Setting register values is the only way to control the camera.  Some settings are interdependant, such as the sequence required to power up the camera. I will try to make note of all of these cases.
+카메라는 3 세트의 레지스터로 외부에 나타납니다. 레지스터 값을 설정하는 것이 카메라를 제어하는 ​​유일한 방법입니다. 일부 설정은 카메라의 전원을 켜는 데 필요한 순서와 같이 상호 의존적입니다. 나는 이 모든 경우를 기록하려고 노력할 것이다.
+ 
+The register sets are called blocks.  Block 0 is the system block.  This section is always powered on when the camera is plugged in.  It contains registers that control housekeeping functions such as powering up the video processor.  The video processor is the VP block.  These registers control how the video from the sensor is processed.  Examples are timing registers, user mode (vga, qvga), scaling, cropping, framerates, and so on.  The last block is the video compressor (VC).  The video stream sent from the camera is compressed as Motion JPEG (JPEGA).  The VC controls all of the compression parameters.  Looking at the file cpia2_registers.h, you can get a full view of these registers and the possible values for most of them.
+레지스터 세트를 블록이라고 합니다. 블록 0은 시스템 블록입니다. 이 섹션은 카메라가 꽂혀있을 때 항상 켜져 있으며 비디오 프로세서의 전원을 켜는 등의 관리 기능을 제어하는 ​​레지스터를 포함합니다. 비디오 프로세서는 VP 블록입니다. 이 레지스터는 센서의 비디오 처리 방법을 제어합니다. 타이밍 레지스터, 사용자 모드 (vga, qvga), 크기 조정, 자르기, 프레임 속도 등이 그 예입니다. 마지막 블록은 비디오 압축기 (VC)입니다. 카메라에서 전송 된 비디오 스트림은 Motion JPEG (JPEGA)로 압축됩니다. VC는 모든 압축 매개 변수를 제어합니다. cpia2_registers.h 파일을 보면 이러한 레지스터와 그 대부분의 가능한 값을 전체적으로 볼 수 있습니다.
+ 
+One or more registers can be set or read by sending a usb control message to the camera.  There are three modes for this.  Block mode requests a number of contiguous registers.  Random mode reads or writes random registers with a tuple structure containing address/value pairs.  The repeat mode is only used by VP4 to load a firmware patch.  It contains a starting address and a sequence of bytes to be written into a gpio port.
+USB 제어 메시지를 카메라에 보내서 하나 이상의 레지스터를 설정하거나 읽을 수 있습니다. 이를 위한 세 가지 모드가 있습니다. 
+블록 모드는 여러 연속 레지스터를 요청합니다. 
+임의 모드는 주소 / 값 쌍을 포함하는 tuple 구조(참고.데이터베이스 용어임)로 임의의 레지스터를 읽거나 씁니다. 
+반복 모드는 VP4가 펌웨어 패치를 로드하는 데에만 사용됩니다. gpio 포트에 쓰여지는 시작 주소와 일련의 바이트를 포함합니다.
+ 
+
+ 
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+[README.cpia2] 파일의 내용 - 아주 중요한듯 보입니다만..
+ 
+$Id: README,v 1.7 2005/08/29 23:39:57 sbertin Exp $
+ 
+1. Introduction
+    	This is a driver for STMicroelectronics's CPiA2 (second generation Colour Processor Interface ASIC) based cameras. This camera outputs an MJPEG stream at up to vga size. It implements the Video4Linux interface as much as possible.  Since the V4L interface does not support compressed formats, only an mjpeg enabled application can be used with the camera. We have modified the gqcam application to view this stream.
+이 제품은 ST 마이크로 일렉트로닉스의 CPiA2 (2 세대 컬러 프로세서 인터페이스 ASIC) 기반 카메라 용 드라이버이다. 이 카메라는 최대 vga 크기의 MJPEG 스트림을 출력합니다. 가능한 한 Video4Linux 인터페이스를 구현합니다. V4L 인터페이스는 압축 형식을 지원하지 않으므로 mjpeg 지원 응용 프로그램 만 카메라와 함께 사용할 수 있습니다. 이 스트림을 보기 위해 gqcam 응용 프로그램을 수정했습니다.
+ 
+    	The driver is implemented as two kernel modules. The cpia2 module contains the camera functions and the V4L interface.  The cpia2_usb module contains usb specific functions.  The main reason for this was the size of the module was getting out of hand, so I separated them.  It is not likely that there will be a parallel port version.
+드라이버는 두 개의 커널 모듈로 구현됩니다. cpia2 모듈에는 카메라 기능과 V4L 인터페이스가 포함되어 있습니다. cpia2_usb 모듈은 usb 특정 기능을 포함합니다. 이것의 주된 이유는 모듈의 크기가 떨어져 나가는 것이었기 때문에 그들을 분리했습니다. 병렬 포트 버전은 없을 것입니다.
+ 
+FEATURES:
+   - Supports cameras with the Vision stv6410 (CIF) and stv6500 (VGA) cmos sensors. I only have the vga sensor, so can't test the other.
+    	Vision stv6410 (CIF) 및 stv6500 (VGA) CMOS 센서가 있는 카메라를 지원합니다. 나는 vga 센서만 가지고 있으므로 다른 센서를 테스트 할 수 없습니다.
+   - Image formats: VGA, QVGA, CIF, QCIF, and a number of sizes in between.
+ 	VGA and QVGA are the native image sizes for the VGA camera. CIF is done in the coprocessor by scaling QVGA.  All other sizes are done by clipping.
+    	이미지 형식 : VGA, QVGA, CIF, QCIF 및 여러 크기가 있습니다.
+    	VGA 및 QVGA는 VGA 카메라의 기본 이미지 크기입니다. CIF는 QVGA를 스케일링하여 코-프로세서에서 수행됩니다. 다른 모든 크기는 clipping 을 통해 이루어집니다.
+   - Palette: YCrCb, compressed with MJPEG.
+    	MJPEG로 압축 된 YCrCb.
+   - Some compression parameters are settable.
+    	일부 압축 매개 변수를 설정할 수 있습니다.
+   - Sensor framerate is adjustable (up to 30 fps CIF, 15 fps VGA).
+    	센서 프레임 속도는 조정 가능합니다 (최대 30fps CIF, 15fps VGA).
+   - Adjust brightness, color, contrast while streaming.
+    	스트리밍하는 동안 밝기, 색상, 대비를 조정합니다.
+   - Flicker control settable for 50 or 60 Hz mains frequency.
+    	Flicker control 은 50 또는 60Hz 주 전원 주파수로 설정 가능합니다.
+ 
+2. Making and installing the stv672 driver modules:
+    	stv672 드라이버 모듈 만들기 및 설치 :
+ 
+    	Requirements:
+    	-------------
+    	This should work with 2.4 (2.4.23 and later) and 2.6 kernels, but has only been tested on 2.6.  Video4Linux must be either compiled into the kernel or available as a module.  Video4Linux2 is automatically detected and made available at compile time.
+이것은 2.4 (2.4.23 및 이후 버전) 및 2.6 커널에서 작동하지만 2.6에서만 테스트되었습니다. Video4Linux는 커널로 컴파일되거나 모듈로 사용 가능해야 합니다. Video4Linux2는 자동으로 감지되어 컴파일 할 때 사용할 수 있습니다.
+ 
+    	Compiling:
+    	----------
+    	As root, do a make install.  This will compile and install the modules into the media/video directory in the module tree. For 2.4 kernels, use Makefile_2.4 (aka do make -f Makefile_2.4 install).
+    	root 권한으로 make install을하십시오. 그러면 모듈 트리가 컴파일되어 모듈 트리의 미디어 / 비디오 디렉토리에 설치됩니다. 2.4 커널의 경우, Makefile_2.4 (make -f Makefile_2.4 설치라고도 함)를 사용하십시오.
+    	Setup:
+    	------
+    	Use 'modprobe cpia2' to load and 'modprobe -r cpia2' to unload. This may be done automatically by your distribution.
+    	로드하려면 'modprobe cpia2'를 사용하고 언로드하려면 'modprobe -r cpia2'를 사용하십시오. 이는 배포본에 의해 자동으로 수행 될 수 있습니다.
+ 
+3. Driver options
+ 
+    	Option     	Description
+    	------     	-----------
+    	video_nr   	video device to register (0=/dev/video0, etc)
+                   	비디오디바이스 를 레지스터에 올린다
+                   	range -1 to 64.  default is -1 (first available)
+                   	범위는 -1 ~ 64 이며, 기본값은 -1 이다 (처음사용가능)
+                   	If you have more than 1 camera, this MUST be -1.
+                   	카메라가 1 대 이상인 경우 이 값은 -1이어야합니다.
+    	buffer_size	Size for each frame buffer in bytes (default 68k)
+                   	각 프레임버퍼 의 버퍼사이즈는, 바이트로 구성(기본 68k바이트)
+    	num_buffers	Number of frame buffers (1-32, default 3)
+                   	프레임버퍼의 넘버(1~32이며, 기본값 3)
+    	alternate  	USB Alternate (2-7, default 7)
+    	flicker_freq   Frequency for flicker reduction(50 or 60, default 60)
+           	  	플리커 리듀션의 프리퀀시 (화면흔들림(깜박임) 보정과 관련된 옵션인 것 같음)
+    	flicker_mode   0 to disable, or 1 to enable flicker reduction.
+           	  0을 사용하지 않도록 설정하거나 1을 사용하면 화면흔들림(깜박임)을 줄일 수 있다.
+    	    	(default 0). This is only effective if the camera uses a stv0672 coprocessor.
+(기본값은 0). 카메라가 stv0672 보조 프로세서를 사용하는 경우에만 유효합니다.
+ 
+    	Setting the options:
+    	--------------------
+    	If you are using modules, edit /etc/modules.conf and add an options line like this:
+모듈을 사용하는 경우 /etc/modules.conf를 편집하고 다음과 같이 options 행을 추가하십시오.
+    	options cpia2 num_buffers=3 buffer_size=65535
+ 
+    	If the driver is compiled into the kernel, at boot time specify them like this:
+    	드라이버가 커널에 컴파일되면 부팅시 다음과 같이 지정합니다.
+    	cpia2.num_buffers=3 cpia2.buffer_size=65535
+ 
+    	What buffer size should I use?
+    	어떤 버퍼 크기를 사용해야합니까?
+    	------------------------------
+    	The maximum image size depends on the alternate you choose, and the frame rate achieved by the camera.  If the compression engine is able to keep up with the frame rate, the maximum image size is given by the table below.
+최대 이미지 크기는 사용자가 선택하는 대체물과 카메라가 달성 한 프레임 속도에 따라 다릅니다. 압축 엔진이 프레임 속도를 따라 잡을 수 있는 경우 최대 이미지 크기는 아래 표에 나와 있습니다.
+    	The compression engine starts out at maximum compression, and will increase image quality until it is close to the size in the table.  As long as the compression engine can keep up with the frame rate, after a short time the images will all be about the size in the table, regardless of resolution.
+압축 엔진은 최대 압축 상태에서 시작하여 테이블의 크기에 가까워 질 때까지 화질을 향상시킵니다. 압축 엔진이 프레임 속도를 따라 잡을 수 있는 한 짧은 시간이 지나면 해상도에 관계없이 이미지가 모두 테이블의 크기와 비슷합니다.
+    	At low alternate settings, the compression engine may not be able to compress the image enough and will reduce the frame rate by producing larger images.
+대체 설정이 낮으면 압축 엔진이 이미지를 충분히 압축하지 못할 수 있으며 더 큰 이미지를 생성하여 프레임 속도를 줄입니다.
+    	The default of 68k should be good for most users.  This will handle any alternate at frame rates down to 15fps.  For lower frame rates, it may be necessary to increase the buffer size to avoid having frames dropped due to insufficient space.
+대부분의 사용자에게는 기본값 인 68k가 좋을 것입니다. 이렇게 하면 15fps까지의 프레임 속도에서 대체를 처리 할 수 ​​있습니다. 더 낮은 프레임 속도의 경우, 공간이 충분하지 않아 프레임이 손실되지 않도록 버퍼 크기를 늘려야 할 수 있습니다.
+ 
+                   	 	Image size(bytes)
+    	Alternate  bytes/ms   15fps	30fps
+    	    2     	128  	8533     4267
+    	    3     	384 	25600    12800
+    	    4     	640 	42667    21333
+    	    5     	768 	51200    25600
+    	    6     	896 	59733    29867
+    	    7    	1023 	68200    34100
+ 
+    	How many buffers should I use?    	얼마나 많은 버퍼를 사용해야합니까?
+    	------------------------------
+    	For normal streaming, 3 should give the best results.  With only 2, it is possible for the camera to finish sending one image just after a program has started reading the other.  If this happens, the driver must drop a frame.  The exception to this is if you have a heavily loaded machine.  In this case use 2 buffers.  You are probably not reading at the full frame rate.
+일반적인 스트리밍의 경우 3이 가장 좋은 결과를 제공해야 합니다. 2 개만 있으면 프로그램이 다른 프로그램을 읽기 시작한 직후에 하나의 이미지 전송이 완료 될 수 있습니다. 이 경우 드라이버는 프레임을 떨어 뜨려야 합니다. 이것에 대한 예외는 과중한 기계가 있는 경우입니다. 이 경우에는 2 개의 버퍼를 사용하십시오. 아마도 전체 프레임 속도로 읽지 않을 것입니다.
+If the camera can send multiple images before a read finishes, it could overwrite the third buffer before the read finishes, leading to a corrupt image.  Single and double buffering have extra checks to avoid overwriting.
+읽기가 완료되기 전에 카메라가 여러 이미지를 보낼 수 있으면 읽기가 완료되기 전에 세 번째 버퍼를 덮어 쓸 수 있으므로 이미지가 손상 될 수 있습니다. 단일 및 이중 버퍼링에는 덮어 쓰기를 방지하기 위한 추가 검사가 있습니다.
+ 
+4. Using the camera
+ 
+    	We are providing a modified gqcam application to view the output. In order to avoid confusion, here it is called mview.  There is also the qx5view program which can also control the lights on the qx5 microscope. MJPEG Tools (http://mjpeg.sourceforge.net) can also be used to record from the camera.
+우리는 출력을보기 위해 수정 된 gqcam 응용 프로그램을 제공하고 있습니다. 혼란을 피하기 위해 mview라고합니다. 또한 qx5 현미경의 조명을 제어 할 수있는 qx5view 프로그램도 있습니다. MJPEG Tools (http://mjpeg.sourceforge.net)를 사용하여 카메라에서 기록 할 수도 있습니다.
+ 
+5. Notes to developers:           	개발자 참고 사항
+ 
+   - This is a driver version stripped of the 2.4 back compatibility and old MJPEG ioctl API. See cpia2.sf.net for 2.4 support.
+이것은 2.4 버전 호환성 및 오래된 MJPEG ioctl API를 제거한 드라이버 버전입니다. 2.4 지원은 cpia2.sf.net을 참조하십시오.
+ 
+6. Thanks:
+ 
+   - Peter Pregler <Peter_Pregler@email.com>, Scott J. Bertin <scottbertin@yahoo.com>, and Jarl Totland <Jarl.Totland@bdc.no> for the original cpia driver, which this one was modelled from.
+Peter Pregler <Peter_Pregler@email.com>, Scott J. Bertin <scottbertin@yahoo.com>, Jarl Totland <Jarl.Totland@bdc.no>는 원래의 cpia 드라이버를 모델로 한 것입니다.
+ 
+

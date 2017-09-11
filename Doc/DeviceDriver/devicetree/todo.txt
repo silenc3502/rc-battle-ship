@@ -1,0 +1,21 @@
+Todo list for devicetree:
+
+=== General structure ===
+- Switch from custom lists to (h)list_head for nodes and properties structure
+
+=== CONFIG_OF_DYNAMIC ===
+- Switch to RCU for tree updates and get rid of global spinlock
+- Document node lifecycle for CONFIG_OF_DYNAMIC
+- Always set ->full_name at of_attach_node() time
+- pseries: Get rid of open-coded tree modification from arch/powerpc/platforms/pseries/dlpar.c
+
+devicetree에 대한 Todo 목록 :
+
+=== 일반 구조 ===
+- 노드 및 속성 구조에 대한 사용자 지정 목록에서 (h) list_head로 전환
+
+=== CONFIG_OF_DYNAMIC ===
+- 트리 업데이트를 위해 RCU로 전환하고 글로벌 스핀 록 제거
+- CONFIG_OF_DYNAMIC의 문서 노드 수명주기
+- of_attach_node () 시간에 항상 -> full_name을 설정하십시오
+- pseries : arch / powerpc / platforms / pseries / dlpar.c에서 오픈 코드 트리 수정을 제거하십시오.

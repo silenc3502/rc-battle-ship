@@ -1,0 +1,331 @@
+Copyright (c) 2003-2011 QLogic Corporation
+QLogic Linux qlge NIC Driver
+
+You may modify and redistribute the device driver code under the
+GNU General Public License (a copy of which is attached hereto as
+Exhibit A) published by the Free Software Foundation (version 2).
+귀하는 자유 소프트웨어 재단 (버전 2)에 의해 공표 된 GNU 일반 공중 사용 허가서 (아래의 Exhibit A로 첨부 된 사본)에 따라 장치 드라이버 코드를 수정하고 재배포 할 수 있습니다.
+
+
+EXHIBIT A
+
+		    GNU GENERAL PUBLIC LICENSE
+		       Version 2, June 1991
+
+ Copyright (C) 1989, 1991 Free Software Foundation, Inc.
+ 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ Everyone is permitted to copy and distribute verbatim copies
+ of this license document, but changing it is not allowed.
+Copyright (C) 1989, 1991 자유 소프트웨어 재단
+  51 Franklin Street, Boston, MA 02110-1301 USA 누구나이 라이센스 문서의 사본을 그대로 복사 및 배포 할 수 있지만 변경할 수 없습니다.
+
+			    Preamble
+          전문
+
+  The licenses for most software are designed to take away your
+freedom to share and change it.  By contrast, the GNU General Public
+License is intended to guarantee your freedom to share and change free
+software--to make sure the software is free for all its users.  This
+General Public License applies to most of the Free Software
+Foundation's software and to any other program whose authors commit to
+using it.  (Some other Free Software Foundation software is covered by
+the GNU Lesser General Public License instead.)  You can apply it to
+your programs, too.
+대부분의 소프트웨어에 대한 라이센스는 소프트웨어를 공유하고 변경할 수있는 자유를 앗아 갈 수 있도록 고안되었습니다. 반대로 GNU 일반 공중 사용 허가서는 무료 소프트웨어를 공유하고 변경할 자유를 보장하기 위해 소프트웨어가 모든 사용자에게 무료로 제공되도록하기위한 것입니다. 이 일반 공중 라이선스는 대부분의 자유 소프트웨어 재단 소프트웨어 및 저작자가 사용하는 다른 프로그램에 적용됩니다. (다른 자유 소프트웨어 재단 소프트웨어는 GNU 약소 일반 공중 사용 허가서 (GNU Lesser General Public License)의 적용을받습니다.) 프로그램에도 적용 할 수 있습니다.
+
+  When we speak of free software, we are referring to freedom, not
+price.  Our General Public Licenses are designed to make sure that you
+have the freedom to distribute copies of free software (and charge for
+this service if you wish), that you receive source code or can get it
+if you want it, that you can change the software or use pieces of it
+in new free programs; and that you know you can do these things.
+우리가 자유 소프트웨어에 대해 말할 때, 우리는 가격이 아닌 자유를 언급합니다. 우리의 일반 공중 라이선스는 자유 소프트웨어 복사본을 자유롭게 배포 할 수 있고 (원하는 경우이 서비스에 대해 요금을 부과 할 수 있음), 소스 코드를 받거나 원하는 경우 구할 수 있으며, 새로운 자유 프로그램에서 소프트웨어를 사용하거나 조각을 사용하십시오. 그리고 당신은 당신이이 일을 할 수 있다는 것을 알고 있습니다.
+
+  To protect your rights, we need to make restrictions that forbid
+anyone to deny you these rights or to ask you to surrender the rights.
+These restrictions translate to certain responsibilities for you if you
+distribute copies of the software, or if you modify it.
+귀하의 권리를 보호하기 위해, 우리는 누군가가 귀하에게 이러한 권리를 부정하거나 권리를 포기하도록 요구하지 못하도록 제한해야합니다. 이러한 제한은 소프트웨어의 사본을 배포하거나 수정 한 경우 귀하에게 특정 책임을 부여합니다.
+
+  For example, if you distribute copies of such a program, whether
+gratis or for a fee, you must give the recipients all the rights that
+you have.  You must make sure that they, too, receive or can get the
+source code.  And you must show them these terms so they know their
+rights.
+예를 들어 그러한 프로그램의 사본을 무료 또는 유상으로 배포하는 경우 수령인에게 부여한 모든 권리를 제공해야합니다. 그들도 소스 코드를 받거나 얻을 수 있어야합니다. 그리고 당신은 그들에게 그들의 권리를 알 수 있도록이 조건들을 보여 주어야합니다.
+
+  We protect your rights with two steps: (1) copyright the software, and
+(2) offer you this license which gives you legal permission to copy,
+distribute and/or modify the software.
+우리는 (1) 소프트웨어를 저작권으로 보호하고 (2) 소프트웨어를 복사, 배포 및 / 또는 수정할 수있는 법적 권한을 부여하는이 라이센스를 제공하는 두 단계로 귀하의 권리를 보호합니다.
+
+  Also, for each author's protection and ours, we want to make certain
+that everyone understands that there is no warranty for this free
+software.  If the software is modified by someone else and passed on, we
+want its recipients to know that what they have is not the original, so
+that any problems introduced by others will not reflect on the original
+authors' reputations.
+또한 각 저작자의 보호와 우리의 목적을 위해이 무료 소프트웨어에 대한 보증이 없음을 모든 사람이 알고 있음을 확인하고자합니다. 소프트웨어가 다른 사람이 수정하여 전달한 경우 수신자는 원래 가지고있는 내용이 아니라는 사실을 알고 있으므로 다른 사람이 제기 한 문제는 원래 작성자의 평판에 반영되지 않습니다.
+
+  Finally, any free program is threatened constantly by software
+patents.  We wish to avoid the danger that redistributors of a free
+program will individually obtain patent licenses, in effect making the
+program proprietary.  To prevent this, we have made it clear that any
+patent must be licensed for everyone's free use or not licensed at all.
+마지막으로, 무료 프로그램은 소프트웨어 특허에 의해 끊임없이 위협 받고 있습니다. 우리는 무료 프로그램을 재배포하는 사람들이 특허 라이센스를 개별적으로 획득하여 프로그램 독점권을 행사할 위험을 피하기를 원합니다. 이를 막기 위해 우리는 모든 특허가 모든 사람이 무료로 사용하도록 허가 받았는지 또는 전혀 사용 허가를받지 않았는지 명확히했습니다.
+
+  The precise terms and conditions for copying, distribution and
+modification follow.
+복사, 배포 및 수정을위한 정확한 조건이 준수됩니다.
+
+		    GNU GENERAL PUBLIC LICENSE
+   TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
+
+  0. This License applies to any program or other work which contains
+a notice placed by the copyright holder saying it may be distributed
+under the terms of this General Public License.  The "Program", below,
+refers to any such program or work, and a "work based on the Program"
+means either the Program or any derivative work under copyright law:
+that is to say, a work containing the Program or a portion of it,
+either verbatim or with modifications and/or translated into another
+language.  (Hereinafter, translation is included without limitation in
+the term "modification".)  Each licensee is addressed as "you".
+0이 라이센스는 저작권 소유자가이 일반 공중 사용 허가서의 조항에 따라 배포 할 수 있다고 명시한 통지가 포함 된 프로그램이나 기타 저작물에 적용됩니다. 아래의 "프로그램"은 그러한 프로그램 또는 저작물을 말하며 "프로그램에 기반한 저작물"은 프로그램 또는 저작권법에 따른 파생 저작물을 의미합니다. 즉, 프로그램 또는 해당 저작물의 일부를 포함하는 저작물 그것은 축 어적으로 또는 수정으로 및 / 또는 다른 언어로 번역 된 것입니다. (이하, 번역은 "수정"이라는 용어에 제한없이 포함됩니다.) 각 라이센스 사용자는 "귀하"로 취급됩니다.
+
+Activities other than copying, distribution and modification are not
+covered by this License; they are outside its scope.  The act of
+running the Program is not restricted, and the output from the Program
+is covered only if its contents constitute a work based on the
+Program (independent of having been made by running the Program).
+Whether that is true depends on what the Program does.
+복사, 배포 및 수정 이외의 활동은 본 라이센스의 적용을받지 않습니다. 그들은 그 범위 밖에있다. 본 프로그램을 실행하는 행위는 제한되지 않으며, 본 프로그램의 결과물은 해당 내용이 본 프로그램을 기반으로하는 저작물을 구성하는 경우에만 (프로그램 실행과 관계없이) 보상됩니다.
+그것이 사실인지 여부는 프로그램이하는 일에 달려 있습니다.
+
+  1. You may copy and distribute verbatim copies of the Program's
+source code as you receive it, in any medium, provided that you
+conspicuously and appropriately publish on each copy an appropriate
+copyright notice and disclaimer of warranty; keep intact all the
+notices that refer to this License and to the absence of any warranty;
+and give any other recipients of the Program a copy of this License
+along with the Program.
+1. 귀하는 프로그램의 소스 코드를 그대로 받아 그대로 복사 및 배포 할 수 있습니다. 단, 각 복사본에 적절한 저작권 고지 및 보증 부인을 눈에 잘 띄게 적절하게 게시해야합니다. 본 라이센스 및 보증의 부재에 대한 모든 통지를 그대로 유지해야합니다. 본 프로그램의 다른 수신자에게 본 프로그램과 함께 본 사용권의 사본을 제공 할 수 있습니다.
+
+You may charge a fee for the physical act of transferring a copy, and
+you may at your option offer warranty protection in exchange for a fee.
+사본을 전송하는 물리적 행위에 대해 수수료를 부과 할 수 있으며, 귀하는 귀하의 선택에 따라 수수료를 대신하여 보증 보호를 제공 할 수 있습니다.
+
+  2. You may modify your copy or copies of the Program or any portion
+of it, thus forming a work based on the Program, and copy and
+distribute such modifications or work under the terms of Section 1
+above, provided that you also meet all of these conditions:
+2. 귀하는 본 프로그램 또는 그 일부의 사본을 수정하여 프로그램을 기반으로 저작물을 구성하고 위의 제 1 조의 조건에 따라 그러한 수정본 또는 저작물을 복사 및 배포 할 수 있습니다. 단, 모든 조건 충족 :
+
+    a) You must cause the modified files to carry prominent notices
+    stating that you changed the files and the date of any change.
+    a) 수정 된 파일에 파일 및 변경 날짜가 변경되었음을 알리는 눈에 띄는 공지 사항을 표시해야합니다.
+
+    b) You must cause any work that you distribute or publish, that in
+    whole or in part contains or is derived from the Program or any
+    part thereof, to be licensed as a whole at no charge to all third
+    parties under the terms of this License.
+    b) 귀하는 배포 또는 게시하거나 본 프로그램 또는 그 일부로부터 전체적으로 또는 부분적으로 포함되거나 파생 된 저작물을 본 라이센스의 조건에 따라 제 3 자에게 무료로 전체적으로 라이센스 부여해야합니다 .
+
+    c) If the modified program normally reads commands interactively
+    when run, you must cause it, when started running for such
+    interactive use in the most ordinary way, to print or display an
+    announcement including an appropriate copyright notice and a
+    notice that there is no warranty (or else, saying that you provide
+    a warranty) and that users may redistribute the program under
+    these conditions, and telling the user how to view a copy of this
+    License.  (Exception: if the Program itself is interactive but
+    does not normally print such an announcement, your work based on
+    the Program is not required to print an announcement.)
+    c) 수정 된 프로그램이 정상적으로 대화식으로 명령을 읽는 경우, 대화 형으로 사용하기 시작했을 때 가장 일반적인 방법으로 명령을 인쇄하거나 적절한 저작권 고지 및 보증이 없음을 포함하는 공지 사항을 인쇄하거나 표시해야합니다 (또는 귀하가 보증을 제공한다고 말하면서) 사용자는 이러한 조건 하에서 프로그램을 재배포하고 사용자에게 본 라이센스의 사본을 보는 방법을 알려줄 수 있습니다. (예외 : 프로그램 자체는 대화 형이지만 일반적으로 그러한 공지 사항을 인쇄하지 않는 경우, 프로그램을 기반으로하는 작업은 공지 사항을 인쇄 할 필요가 없습니다.)
+
+These requirements apply to the modified work as a whole.  If
+identifiable sections of that work are not derived from the Program,
+and can be reasonably considered independent and separate works in
+themselves, then this License, and its terms, do not apply to those
+sections when you distribute them as separate works.  But when you
+distribute the same sections as part of a whole which is a work based
+on the Program, the distribution of the whole must be on the terms of
+this License, whose permissions for other licensees extend to the
+entire whole, and thus to each and every part regardless of who wrote it.
+이러한 요구 사항은 수정 된 저작물 전체에 적용됩니다. 해당 저작물의 식별 가능한 섹션이 프로그램에서 파생되지 않고 독립적으로 독립적 인 저작물로 간주 될 수있는 경우, 본 라이센스 및 조항은 귀하가 별도로 저작물을 배포 할 때 해당 섹션에 적용되지 않습니다. 그러나 프로그램을 기반으로하는 저작물 전체에 동일한 섹션을 배포하는 경우, 전체 라이센스의 배포는 본 라이센스의 조건에 따라야하며, 다른 라이센스 제공자에 대한 권한은 전체 라이센스 전체에 적용되므로 전체 저작물 이다.
+
+Thus, it is not the intent of this section to claim rights or contest
+your rights to work written entirely by you; rather, the intent is to
+exercise the right to control the distribution of derivative or
+collective works based on the Program.
+따라서,이 섹션의 취지는 귀하가 전적으로 귀하가 작성한 권리를 주장하거나 귀하의 권리를 행사하는 것이 아닙니다. 오히려, 프로그램에 기초한 파생물이나 집단 저작물의 배포를 통제 할 수있는 권리를 행사하려는 의도가 있습니다.
+
+In addition, mere aggregation of another work not based on the Program
+with the Program (or with a work based on the Program) on a volume of
+a storage or distribution medium does not bring the other work under
+the scope of this License.
+또한, 저장 매체 또는 배포 매체의 볼륨에 대한 본 프로그램과 관련이없는 다른 저작물 (또는 프로그램을 기반으로하는 저작물)을 단순히 집계한다고해서 다른 저작물이 본 사용권 계약의 범위에 포함되지는 않습니다.
+
+  3. You may copy and distribute the Program (or a work based on it,
+under Section 2) in object code or executable form under the terms of
+Sections 1 and 2 above provided that you also do one of the following:
+3. 귀하는 다음 중 하나를 수행하는 경우, 제 1 항 및 제 2 항의 조건에 따라 프로그램 (또는 제 2 조에 의거 한 저작물)을 오브젝트 코드 또는 실행 형식으로 복사하여 배포 할 수 있습니다.
+
+    a) Accompany it with the complete corresponding machine-readable
+    source code, which must be distributed under the terms of Sections
+    1 and 2 above on a medium customarily used for software interchange; or,
+    a) 소프트웨어 교환을 위해 통상적으로 사용되는 매체에 대해 상기 제 1 조 및 제 2 조의 조건에 따라 배포되어야하는 완전한 기계 판독 가능한 소스 코드를 함께 제공해야합니다. 또는,
+
+    b) Accompany it with a written offer, valid for at least three
+    years, to give any third party, for a charge no more than your
+    cost of physically performing source distribution, a complete
+    machine-readable copy of the corresponding source code, to be
+    distributed under the terms of Sections 1 and 2 above on a medium
+    customarily used for software interchange; or,
+      b) 3 년 이상 유효한 서면 제안을 함께 제공하여 제 3 자에게 물리적으로 소스 배포를위한 비용, 해당 소스 코드의 기계로 읽을 수있는 완전한 사본을 제공해야합니다. 위의 제 1 조와 제 2 조의 조건에 따라 소프트웨어 교환을 위해 통상적으로 사용되는 매체를 통해 배포됩니다. 또는,
+
+    c) Accompany it with the information you received as to the offer
+    to distribute corresponding source code.  (This alternative is
+    allowed only for noncommercial distribution and only if you
+    received the program in object code or executable form with such
+    an offer, in accord with Subsection b above.)
+    c) 해당 소스 코드를 배포하겠다는 제안과 관련하여 귀하가받은 정보를 함께 제공하십시오. (이 대안은 비상업적 인 배포에만 허용되며 위의 b 절에 따라 프로그램을 오브젝트 코드 또는 실행 가능한 형태로 제공 한 경우에만 허용됩니다.)
+
+The source code for a work means the preferred form of the work for
+making modifications to it.  For an executable work, complete source
+code means all the source code for all modules it contains, plus any
+associated interface definition files, plus the scripts used to
+control compilation and installation of the executable.  However, as a
+special exception, the source code distributed need not include
+anything that is normally distributed (in either source or binary
+form) with the major components (compiler, kernel, and so on) of the
+operating system on which the executable runs, unless that component
+itself accompanies the executable.
+저작물의 소스 코드는 해당 저작물을 수정하기위한 기본 형식을 의미합니다. 실행 가능한 작업의 경우 완전한 소스 코드는 포함 된 모든 모듈의 모든 소스 코드와 관련된 인터페이스 정의 파일과 실행 파일의 컴파일 및 설치를 제어하는 데 사용되는 스크립트를 의미합니다. 그러나 예외적으로, 배포 된 소스 코드는 실행 파일이 실행되는 운영 체제의 주요 구성 요소 (컴파일러, 커널 등)와 함께 정상적으로 배포되는 (소스 또는 바이너리 형식으로) 해당 구성 요소 자체가 실행 파일을 수반하지 않는 한다.
+
+If distribution of executable or object code is made by offering
+access to copy from a designated place, then offering equivalent
+access to copy the source code from the same place counts as
+distribution of the source code, even though third parties are not
+compelled to copy the source along with the object code.
+저작물의 소스 코드는 해당 저작물을 수정하기위한 기본 형식을 의미합니다. 실행 가능한 작업의 경우 완전한 소스 코드는 포함 된 모든 모듈의 모든 소스 코드와 관련된 인터페이스 정의 파일과 실행 파일의 컴파일 및 설치를 제어하는 데 사용되는 스크립트를 의미합니다. 그러나 예외적으로, 배포 된 소스 코드는 실행 파일이 실행되는 운영 체제의 주요 구성 요소 (컴파일러, 커널 등)와 함께 정상적으로 배포되는 (소스 또는 바이너리 형식으로) 구성 요소 자체에서 실행 파일을 포함하지 마십시오.
+
+  4. You may not copy, modify, sublicense, or distribute the Program
+except as expressly provided under this License.  Any attempt
+otherwise to copy, modify, sublicense or distribute the Program is
+void, and will automatically terminate your rights under this License.
+However, parties who have received copies, or rights, from you under
+this License will not have their licenses terminated so long as such
+parties remain in full compliance.
+4. 귀하는 본 라이센스에 명시 적으로 제공된 경우를 제외하고 프로그램을 복사, 수정, 재 라이센스 부여 또는 배포 할 수 없습니다. 달리 프로그램을 복사, 수정, 서브 라이센스 또는 배포하려는 시도는 무효이며 본 라이센스에 따라 귀하의 권리가 자동으로 해지됩니다. 그러나 본 라이센스에 의거하여 귀하로부터 사본 또는 권리를 수령 한 당사자는 해당 당사자가 완전히 준수하는 동안 라이센스가 종료되지 않습니다.
+
+  5. You are not required to accept this License, since you have not
+signed it.  However, nothing else grants you permission to modify or
+distribute the Program or its derivative works.  These actions are
+prohibited by law if you do not accept this License.  Therefore, by
+modifying or distributing the Program (or any work based on the
+Program), you indicate your acceptance of this License to do so, and
+all its terms and conditions for copying, distributing or modifying
+the Program or works based on it.
+5. 귀하는 서명하지 않았으므로 본 라이센스를 수락 할 필요가 없습니다. 그러나 프로그램이나 그 파생 제품을 수정하거나 배포 할 수있는 권한은 귀하에게 부여되지 않습니다. 귀하가 본 라이센스를 수락하지 않으면 이러한 행위는 법으로 금지되어 있습니다. 따라서 프로그램 (또는 프로그램을 기반으로 한 모든 저작물)을 수정하거나 배포함으로써 귀하는 본 사용권 계약 및 프로그램 사용 권한을 기준으로 본 프로그램 또는 프로그램의 복사, 배포 또는 수정에 대한 모든 조건을 수락 함을 나타냅니다.
+
+  6. Each time you redistribute the Program (or any work based on the
+Program), the recipient automatically receives a license from the
+original licensor to copy, distribute or modify the Program subject to
+these terms and conditions.  You may not impose any further
+restrictions on the recipients' exercise of the rights granted herein.
+You are not responsible for enforcing compliance by third parties to
+this License.
+6. 귀하는 프로그램 (또는 프로그램을 기반으로하는 모든 저작물)을 재배포 할 때마다 본 사용권 계약 조건에 따라 본 프로그램을 복사, 배포 또는 수정할 수있는 라이센스를 원본 라이센스 제공자로부터 자동으로 수령합니다. 수령인이 여기에 부여 된 권리 행사에 대한 추가 제한을 부과해서는 안됩니다. 귀하는 제 3 자의 본 라이센스에 대한 준수를 집행 할 책임이 없습니다.
+
+  7. If, as a consequence of a court judgment or allegation of patent
+infringement or for any other reason (not limited to patent issues),
+conditions are imposed on you (whether by court order, agreement or
+otherwise) that contradict the conditions of this License, they do not
+excuse you from the conditions of this License.  If you cannot
+distribute so as to satisfy simultaneously your obligations under this
+License and any other pertinent obligations, then as a consequence you
+may not distribute the Program at all.  For example, if a patent
+license would not permit royalty-free redistribution of the Program by
+all those who receive copies directly or indirectly through you, then
+the only way you could satisfy both it and this License would be to
+refrain entirely from distribution of the Program.
+7. 법원의 판결이나 특허 침해 혐의 또는 다른 이유 (특허 문제에 국한되지 않음)의 결과로 법원 명령, 계약 또는 기타 방법으로이 조건에 위배되는 조건이 부과됩니다 라이센스, 그들은이 라이센스 조건으로부터 당신을 면제하지 않습니다. 귀하가 본 라이센스 및 기타 관련 의무에 따라 귀하의 의무를 동시에 충족시킬 수 있도록 배포 할 수없는 경우 귀하는 본 프로그램을 전혀 배포 할 수 없습니다. 예를 들어, 특허 라이센스가 귀하를 통해 직접 또는 간접적으로 사본을 수령 한 모든 사람이 특허 사용료를 무료로 재배포하는 것을 허용하지 않는 경우, 귀하와 귀하 모두를 만족시킬 수있는 유일한 방법은 프로그램의 배포를 전적으로 삼가는 것입니다 .
+
+If any portion of this section is held invalid or unenforceable under
+any particular circumstance, the balance of the section is intended to
+apply and the section as a whole is intended to apply in other
+circumstances.
+특정 상황에서이 섹션의 일부가 유효하지 않거나 시행 할 수없는 경우, 섹션의 균형을 적용하고 섹션 전체는 다른 상황에서 적용하기위한 것입니다.
+
+It is not the purpose of this section to induce you to infringe any
+patents or other property right claims or to contest validity of any
+such claims; this section has the sole purpose of protecting the
+integrity of the free software distribution system, which is
+implemented by public license practices.  Many people have made
+generous contributions to the wide range of software distributed
+through that system in reliance on consistent application of that
+system; it is up to the author/donor to decide if he or she is willing
+to distribute software through any other system and a licensee cannot
+impose that choice.
+이 섹션의 목적은 귀하가 특허 또는 기타 재산권에 대한 권리를 침해하거나 그러한 권리의 유효성에 이의를 제기하도록 유도하는 것이 아닙니다. 이 섹션은 공개 라이센스 관행에 의해 구현되는 자유 소프트웨어 배포 시스템의 무결성을 보호하기위한 유일한 목적입니다. 많은 사람들이 시스템의 일관된 응용에 의존하여 해당 시스템을 통해 배포되는 광범위한 소프트웨어에 많은 기여를했습니다. 저자 / 기증자가 다른 시스템을 통해 소프트웨어를 기꺼이 배포 할 것인지 결정해야하며, 라이센스 사용자는 그러한 선택을 할 수 없습니다.
+
+This section is intended to make thoroughly clear what is believed to
+be a consequence of the rest of this License.
+이 섹션은 본 라이센스의 나머지 부분의 결과로 여겨지는 것을 철저히 명확히하기위한 것입니다.
+
+  8. If the distribution and/or use of the Program is restricted in
+certain countries either by patents or by copyrighted interfaces, the
+original copyright holder who places the Program under this License
+may add an explicit geographical distribution limitation excluding
+those countries, so that distribution is permitted only in or among
+countries not thus excluded.  In such case, this License incorporates
+the limitation as if written in the body of this License.
+8. 특정 국가에서 특허 또는 저작권이 설정된 인터페이스로 프로그램의 배포 및 / 또는 사용이 제한되는 경우 본 라이센스하에 본 프로그램을 배치 한 원 저작권 보유자는 해당 국가를 제외한 명시적인 지리적 분배 제한을 추가 할 수 있으므로 해당 국가가 아닌 국가 또는 지역에 배포가 허용됩니다 . 그러한 경우, 본 라이센스는 본 라이센스 본문에 쓰여진 것처럼 제한을 통합합니다.
+
+  9. The Free Software Foundation may publish revised and/or new versions of
+the General Public License from time to time.  Such new versions will be
+similar in spirit to the present version, but may differ in detail to address
+new problems or concerns.
+9. 자유 소프트웨어 재단은 GPL의 수정 버전 및 / 또는 새 버전을 수시로 게시 할 수 있습니다. 이러한 새 버전은 현재 버전과 비슷한 정신을 갖지만 새로운 문제 또는 우려 사항을 해결하기 위해 세부 사항이 다를 수 있습니다.
+
+Each version is given a distinguishing version number.  If the Program
+specifies a version number of this License which applies to it and "any
+later version", you have the option of following the terms and conditions
+either of that version or of any later version published by the Free
+Software Foundation.  If the Program does not specify a version number of
+this License, you may choose any version ever published by the Free Software
+Foundation.
+각 버전에는 고유 한 버전 번호가 부여됩니다. 프로그램에 적용되는 본 라이센스의 버전 번호와 "이후 버전"이 명시되어있는 경우, 해당 버전 또는 자유 소프트웨어 재단에서 발행 한 이후 버전의 이용 약관을 따르는 옵션이 있습니다. 프로그램이 본 라이센스의 버전 번호를 지정하지 않은 경우, 자유 소프트웨어 재단이 발행 한 버전을 선택할 수 있습니다.
+
+  10. If you wish to incorporate parts of the Program into other free
+programs whose distribution conditions are different, write to the author
+to ask for permission.  For software which is copyrighted by the Free
+Software Foundation, write to the Free Software Foundation; we sometimes
+make exceptions for this.  Our decision will be guided by the two goals
+of preserving the free status of all derivatives of our free software and
+of promoting the sharing and reuse of software generally.
+10. 배포 조건이 다른 다른 무료 프로그램에 본 프로그램의 일부를 포함 시키려면 작성자에게 허가를 요청하십시오. 자유 소프트웨어 재단이 저작권을 소유 한 소프트웨어의 경우 자유 소프트웨어 재단에 기명하십시오. 우리는 때때로 이것을 예외로합니다. 우리의 결정은 우리의 자유 소프트웨어의 모든 파생물의 자유로운 지위를 유지하고 소프트웨어의 공유 및 재사용을 일반적으로 촉진한다는 두 가지 목표에 따라 진행될 것입니다.
+
+			    NO WARRANTY
+
+  11. BECAUSE THE PROGRAM IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
+FOR THE PROGRAM, TO THE EXTENT PERMITTED BY APPLICABLE LAW.  EXCEPT WHEN
+OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES
+PROVIDE THE PROGRAM "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESSED
+OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.  THE ENTIRE RISK AS
+TO THE QUALITY AND PERFORMANCE OF THE PROGRAM IS WITH YOU.  SHOULD THE
+PROGRAM PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL NECESSARY SERVICING,
+REPAIR OR CORRECTION.
+11. 프로그램에 무료로 라이센스가 부여되기 때문에 해당 법률에서 허용하는 한도 내에서 프로그램에 대해 어떠한 보증도 제공되지 않습니다. 명시 적으로 상품성 및 특정 목적에의 적합성에 대한 묵시적 보증을 포함하여 (단, 이에 국한되지는 않음) 명시 적 또는 묵시적으로 어떤 종류의 보증도없이 "있는 그대로"이 프로그램을 "저작권 소유자 및 / 또는 기타 당사자에게 제공하는 것으로 명시되어있는 경우를 제외하고" . 프로그램의 품질 및 성능에 대한 전적인 책임은 귀하에게 있습니다. 프로그램에 결함이있는 것으로 밝혀지면 필요한 모든 서비스, 수리 또는 수정 비용을 부담해야합니다.
+
+  12. IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING
+WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MAY MODIFY AND/OR
+REDISTRIBUTE THE PROGRAM AS PERMITTED ABOVE, BE LIABLE TO YOU FOR DAMAGES,
+INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES ARISING
+OUT OF THE USE OR INABILITY TO USE THE PROGRAM (INCLUDING BUT NOT LIMITED
+TO LOSS OF DATA OR DATA BEING RENDERED INACCURATE OR LOSSES SUSTAINED BY
+YOU OR THIRD PARTIES OR A FAILURE OF THE PROGRAM TO OPERATE WITH ANY OTHER
+PROGRAMS), EVEN IF SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGES.
+12. 관련 법률에 의해 요구되거나 서면 동의에 동의하지 않는 한, 저작권 보유자 또는 상기 허용 된 프로그램을 수정 및 / 또는 재배포 할 수있는 다른 당사자는 귀하에게 모든 일반, 특수 또는 특수 적 손해, 징벌 적 손해, 프로그램을 사용하거나 사용하지 못함으로 인해 발생하는 부수적 또는 결과적 손해 (귀하가 제 3 자 또는 제 3 자에 의해 부정확하거나 손실 된 데이터 또는 데이터의 손실 또는 다른 프로그램과 함께 작동하지 않는 프로그램을 포함하되 이에 국한되지 않음) 이는 그러한 소유자 또는 다른 당사자가 그러한 손해의 가능성을 사전에 알고 있던 경우에도 마찬가지입니다.

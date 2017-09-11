@@ -1,0 +1,45 @@
+USB OHCI controllers
+
+Required properties:
+- compatible : "generic-ohci"
+- reg : ohci controller register range (address and length)
+- interrupts : ohci controller interrupt
+
+Optional properties:
+- big-endian-regs : boolean, set this for hcds with big-endian registers
+- big-endian-desc : boolean, set this for hcds with big-endian descriptors
+- big-endian : boolean, for hcds with big-endian-regs + big-endian-desc
+- no-big-frame-no : boolean, set if frame_no lives in bits [15:0] of HCCA
+- num-ports : u32, to override the detected port count
+- clocks : a list of phandle + clock specifier pairs
+- phys : phandle + phy specifier pair
+- phy-names : "usb"
+- resets : phandle + reset specifier pair
+
+필수 속성 :
+-  compatible : "generic-ohci"
+- reg : ohci 컨트롤러 레지스터 범위 (주소 및 길이)
+- 인터럽트 : ohci 컨트롤러 인터럽트
+
+선택적 속성 :
+- big-endian-regs : 부울 값, 빅 엔디안 레지스터가있는 hcds로 설정합니다.
+- big-endian-desc : 부울 값, big-endian 설명자가있는 hcds로 설정합니다.
+- big-endian : big-endian-regs + big-endian-desc가있는 hcds의 경우 boolean입니다.
+- no-big-frame-no : 부울 값, frame_no가 HCCA의 비트 [15 : 0]에있는 경우 설정합니다.
+- num-ports : u32 - 감지 된 포트 수를 무시합니다.
+- clocks : phandle + clock specifier 쌍 목록
+- phys : phandle + phy specifier 쌍
+- phy-names : "usb"
+- 재설정 : phandle + 재설정 specifier 쌍
+
+
+Example:
+
+	ohci0: usb@01c14400 {
+		compatible = "allwinner,sun4i-a10-ohci", "generic-ohci";
+		reg = <0x01c14400 0x100>;
+		interrupts = <64>;
+		clocks = <&usb_clk 6>, <&ahb_gates 2>;
+		phys = <&usbphy 1>;
+		phy-names = "usb";
+	};

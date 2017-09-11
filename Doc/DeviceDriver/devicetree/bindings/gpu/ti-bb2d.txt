@@ -1,0 +1,58 @@
+* Texas Instruments BB2D blitter module
+
+This binding describes the 2D BitBlit (BB2D) graphics accelerator
+subsystem based on the GC320 core from Vivante Corporation available
+in Texas Instruments SoCs.
+
+Required properties:
+  - compatible: value should take the following format:
+        "ti,<soc>-bb2d", "vivante,<gpuversion>"
+    accepted values:
+     (a) "ti,dra7-bb2d", "vivante,gc320" for TI DRA7xx / AM57x
+
+  - reg : base address and length of BB2D IP registers
+  - interrupts : BB2D interrupt line number
+  - ti,hwmods : name of the hwmod associated with BB2D module
+  - clocks : handle to BB2D functional clock
+  - clock-names : fclk
+
+Example for DRA7x SoC:
+        bb2d: bb2d@59000000 {
+            compatible = "ti,dra7-bb2d", "vivante,gc320";
+            reg = <0x59000000 0x0700>;
+            interrupts = <GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
+            ti,hwmods = "bb2d";
+            clocks = <&dpll_core_h24x2_ck>;
+            clock-names = "fclk";
+        };
+
+/*
+* Texas Instruments BB2D 블 리터 모듈
+
+이 바인딩은 2D BitBlit (BB2D) 그래픽 가속기를 설명합니다.
+서브 시스템은 텍사스 인스트루먼트 SoC에서 사용 가능한 Vivante Corporation의 GC320 코어를 기반으로합니다.
+
+필수 속성 :
+   - 호환 : 값은 "ti, <soc> -bb2d", "vivante, <gpuversion>"형식을 취해야합니다.
+     허용 된 값 :
+      (a) TI DRA7xx / AM57x의 경우 "ti, dra7-bb2d", "vivante, gc320"
+
+   - reg : BB2D IP 레지스터의 기본 주소와 길이
+   - 인터럽트 : BB2D 인터럽트 회선 번호
+   - ti, hwmods : BB2D 모듈과 관련된 hwmod의 이름
+   - clock : BB2D 기능 clock 처리
+   - clock 이름 : fclk
+
+
+Example for DRA7x SoC:
+        bb2d: bb2d@59000000 {
+            compatible = "ti,dra7-bb2d", "vivante,gc320";
+            reg = <0x59000000 0x0700>;
+            interrupts = <GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
+            ti,hwmods = "bb2d";
+            clocks = <&dpll_core_h24x2_ck>;
+            clock-names = "fclk";
+        };
+
+
+*/

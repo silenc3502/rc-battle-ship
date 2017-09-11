@@ -1,0 +1,53 @@
+* Keystone DDR3 Memory Controller EDAC device bindings
+
+Keystone MC EDAC node is defined to describe the DDR3 memory controller
+ECC error detection hardware. The hardware is capable of auto correcting
+1 bit ECC errors. 2 bit ECC errors are uncorrectable and triggers an
+interrupt and handled by the edac ecc error driver which currently enables
+only interrupt for uncorrectable errors.
+
+The following section describes the EDAC DT node binding.
+
+Required properties:
+- compatible		: Shall be "ti,keystone-ddr3-mc-edac"
+- reg			: DDR3 MC base address
+- interrupts		: ECC error interrupt
+- interrupt-parent	: Interrupt controller node
+
+Example:
+	ddr3edac {
+		compatible = "ti,keystone-ddr3-mc-edac";
+		reg = <0x21010000 0x200>;
+		interrupts = <GIC_SPI 448 IRQ_TYPE_EDGE_RISING>;
+		interrupt-parent = <&gic>;
+	};
+
+/*
+* Keystone DDR3 메모리 컨트롤러 EDAC 장치 바인딩
+
+Keystone MC EDAC 노드는 DDR3 메모리 컨트롤러 ECC 오류 감지 하드웨어를 설명하기 위해 정의됩니다.
+
+ 하드웨어는 1 비트 ECC 오류를 자동으로 수정할 수 있습니다. 
+
+2 비트 ECC 오류는 수정할 수 없으며 인터럽트를 트리거하고 현재 수정할 수없는 오류에 대해 인터럽트만 활성화하는 
+
+edac ecc 오류 드라이버에 의해 처리됩니다.
+
+다음 절에서는 EDAC DT 노드 바인딩에 대해 설명합니다.
+
+필수 속성 :
+- 호환 가능 : "ti, keystone-ddr3-mc-edac"
+- reg : DDR3 MC 기본 주소
+- 인터럽트 : ECC 오류 인터럽트
+- interrupt-parent : 컨트롤러 노드를 중단합니다.
+
+
+Example:
+	ddr3edac {
+		compatible = "ti,keystone-ddr3-mc-edac";
+		reg = <0x21010000 0x200>;
+		interrupts = <GIC_SPI 448 IRQ_TYPE_EDGE_RISING>;
+		interrupt-parent = <&gic>;
+	};
+
+*/

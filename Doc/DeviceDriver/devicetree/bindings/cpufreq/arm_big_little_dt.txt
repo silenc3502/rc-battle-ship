@@ -1,0 +1,77 @@
+Generic ARM big LITTLE cpufreq driver's DT glue
+-----------------------------------------------
+
+This is DT specific glue layer for generic cpufreq driver for big LITTLE
+systems.
+
+Both required and optional properties listed below must be defined
+under node /cpus/cpu@x. Where x is the first cpu inside a cluster.
+
+FIXME: Cpus should boot in the order specified in DT and all cpus for a cluster
+must be present contiguously. Generic DT driver will check only node 'x' for
+cpu:x.
+
+Required properties:
+- operating-points: Refer to Documentation/devicetree/bindings/power/opp.txt
+  for details
+
+Optional properties:
+- clock-latency: Specify the possible maximum transition latency for clock,
+  in unit of nanoseconds.
+
+//이것은 큰 LITTLE 시스템을위한 일반적인 cpufreq 드라이버를위한 DT 특정 접착제 레이어입니다.
+
+아래에 나열된 필수 속성과 선택적 속성은 모두 노드 / cpus / cpu @ x에 정의해야합니다. 여기서 x는 클러스터 내의 첫 x 째 CPU입니다.
+
+FIXME : Cpus는 DT에 지정된 순서대로 부팅해야하며 클러스터에 대한 모든 CPU는 연속적으로 존재해야합니다. 일반 DT 드라이버는 cpu : x 노드 'x'만 검사합니다.
+
+필수 속성 :
+- 작동 포인트 : 자세한 내용은 Documentation / devicetree / bindings / power / opp.txt를 참조하십시오.
+
+선택적 속성 :
+- clock-latency : 시계에 가능한 최대 천이 대기 시간을 나노초 단위로 지정합니다.
+
+Examples:
+
+cpus {
+	#address-cells = <1>;
+	#size-cells = <0>;
+
+	cpu@0 {
+		compatible = "arm,cortex-a15";
+		reg = <0>;
+		next-level-cache = <&L2>;
+		operating-points = <
+			/* kHz    uV */
+			792000  1100000
+			396000  950000
+			198000  850000
+		>;
+		clock-latency = <61036>; /* two CLK32 periods */
+	};
+
+	cpu@1 {
+		compatible = "arm,cortex-a15";
+		reg = <1>;
+		next-level-cache = <&L2>;
+	};
+
+	cpu@100 {
+		compatible = "arm,cortex-a7";
+		reg = <100>;
+		next-level-cache = <&L2>;
+		operating-points = <
+			/* kHz    uV */
+			792000  950000
+			396000  750000
+			198000  450000
+		>;
+		clock-latency = <61036>; /* two CLK32 periods */
+	};
+
+	cpu@101 {
+		compatible = "arm,cortex-a7";
+		reg = <101>;
+		next-level-cache = <&L2>;
+	};
+};

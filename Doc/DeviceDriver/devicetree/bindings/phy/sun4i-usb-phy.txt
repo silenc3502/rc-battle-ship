@@ -1,0 +1,89 @@
+Allwinner sun4i USB PHY
+-----------------------
+
+Required properties:
+- compatible : should be one of
+  * allwinner,sun4i-a10-usb-phy
+  * allwinner,sun5i-a13-usb-phy
+  * allwinner,sun6i-a31-usb-phy
+  * allwinner,sun7i-a20-usb-phy
+  * allwinner,sun8i-a23-usb-phy
+  * allwinner,sun8i-a33-usb-phy
+- reg : a list of offset + length pairs
+- reg-names :
+  * "phy_ctrl"
+  * "pmu1"
+  * "pmu2" for sun4i, sun6i or sun7i
+- #phy-cells : from the generic phy bindings, must be 1
+- clocks : phandle + clock specifier for the phy clocks
+- clock-names :
+  * "usb_phy" for sun4i, sun5i or sun7i
+  * "usb0_phy", "usb1_phy" and "usb2_phy" for sun6i
+  * "usb0_phy", "usb1_phy" for sun8i
+- resets : a list of phandle + reset specifier pairs
+- reset-names :
+  * "usb0_reset"
+  * "usb1_reset"
+  * "usb2_reset" for sun4i, sun6i or sun7i
+
+필수 속성 :
+- 호환 가능 : 다음 중 하나 여야합니다.
+   * allwinner, sun4i-a10-usb-phy
+   * allwinner, sun5i-a13-usb-phy
+   * allwinner, sun6i-a31-usb-phy
+   * allwinner, sun7i-a20-usb-phy
+   * allwinner, sun8i-a23-usb-phy
+   * allwinner, sun8i-a33-usb-phy
+- reg : a list of offset + length pairs
+- reg-names :
+   * "phy_ctrl"
+   * "pmu1"
+   * sun4i, sun6i 또는 sun7i의 경우 "pmu2"
+- # phy-cells : 일반 phy 바인딩에서 1이어야합니다.
+- clocks : phy clock에 대한 phandle + clock 지정자
+- clock-names :
+   * sun4i, sun5i 또는 sun7i의 경우 "usb_phy"
+   * sun6i의 경우 "usb0_phy", "usb1_phy"및 "usb2_phy"
+   * sun8i의 경우 "usb0_phy", "usb1_phy"
+- resets : phandle + reset specifier pairs
+- reset-names :
+   * "usb0_reset"
+   * "usb1_reset"
+   * sun4i, sun6i 또는 sun7i의 경우 "usb2_reset"
+
+Optional properties:
+- usb0_id_det-gpios : gpio phandle for reading the otg id pin value
+- usb0_vbus_det-gpios : gpio phandle for detecting the presence of usb0 vbus
+- usb0_vbus_power-supply: power-supply phandle for usb0 vbus presence detect
+- usb0_vbus-supply : regulator phandle for controller usb0 vbus
+- usb1_vbus-supply : regulator phandle for controller usb1 vbus
+- usb2_vbus-supply : regulator phandle for controller usb2 vbus
+
+선택적 속성 :
+- usb0_id_det-gpios : ogg id 핀 값을 읽는 gpio phandle
+- usb0_vbus_det-gpios : usb0 vbus의 존재를 감지하는 gpio phandle
+- usb0_vbus_power-supply : usb0 vbus 존재 감지를위한 전원 공급 장치 phandle
+- usb0_vbus-supply : 컨트롤러 usb0 vbus 용  regulator phandle
+- usb1_vbus-supply : 컨트롤러 usb1 vbus 용 regulator phandle
+- usb2_vbus-supply : 컨트롤러 usb2 vbus 용 regulator phandle
+
+Example:
+	usbphy: phy@0x01c13400 {
+		#phy-cells = <1>;
+		compatible = "allwinner,sun4i-a10-usb-phy";
+		/* phy base regs, phy1 pmu reg, phy2 pmu reg */
+		/ * 기본 물리 REGS PHY1 PMU 등록 번호 등록 PHY2 PMU * /
+		reg = <0x01c13400 0x10 0x01c14800 0x4 0x01c1c800 0x4>;
+		reg-names = "phy_ctrl", "pmu1", "pmu2";
+		clocks = <&usb_clk 8>;
+		clock-names = "usb_phy";
+		resets = <&usb_clk 0>, <&usb_clk 1>, <&usb_clk 2>;
+		reset-names = "usb0_reset", "usb1_reset", "usb2_reset";
+		pinctrl-names = "default";
+		pinctrl-0 = <&usb0_id_detect_pin>, <&usb0_vbus_detect_pin>;
+		usb0_id_det-gpios = <&pio 7 19 GPIO_ACTIVE_HIGH>; /* PH19 */
+		usb0_vbus_det-gpios = <&pio 7 22 GPIO_ACTIVE_HIGH>; /* PH22 */
+		usb0_vbus-supply = <&reg_usb0_vbus>;
+		usb1_vbus-supply = <&reg_usb1_vbus>;
+		usb2_vbus-supply = <&reg_usb2_vbus>;
+	};

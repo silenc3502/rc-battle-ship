@@ -1,0 +1,37 @@
+EXTCON FOR PALMAS/TWL CHIPS
+
+PALMAS USB COMPARATOR
+Required Properties:
+ - compatible: should contain one of:
+   * "ti,palmas-usb-vid".
+   * "ti,twl6035-usb-vid".
+   * "ti,palmas-usb" (DEPRECATED - use "ti,palmas-usb-vid").
+   * "ti,twl6035-usb" (DEPRECATED - use "ti,twl6035-usb-vid").
+
+Optional Properties:
+ - ti,wakeup : To enable the wakeup comparator in probe
+ - ti,enable-id-detection: Perform ID detection. If id-gpio is specified
+		it performs id-detection using GPIO else using OTG core.
+ - ti,enable-vbus-detection: Perform VBUS detection.
+ - id-gpio: gpio for GPIO ID detection. See gpio binding.
+ - debounce-delay-ms: debounce delay for GPIO ID pin in milliseconds.
+
+palmas-usb {
+       compatible = "ti,twl6035-usb", "ti,palmas-usb";
+       ti,wakeup;
+};
+
+
+
+
+선택적 속성 :
+  - ti,wakeup : probe 에서  wakeup comparator 를 활성화하려면
+  - ti, enable-id-detection : ID 감지를 수행합니다. id-gpio가 지정되면 OTG 코어를 사용하는 GPIO를 사용하여 id-detection을 수행합니다.
+  - ti, enable-vbus-detection : VBUS 감지를 수행합니다.
+  - id-gpio : GPIO ID 감지를위한 gpio. gpio 바인딩을 참조하십시오.
+  - debounce-delay-ms : GPIO ID 핀의 디 바운스 지연 (밀리 초 단위).
+
+palmas-usb {
+        compatible = "ti, twl6035-usb", "ti, palmas-usb";
+        ti,wakeup;
+};

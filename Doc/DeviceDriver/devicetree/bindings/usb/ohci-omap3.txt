@@ -1,0 +1,24 @@
+OMAP HS USB OHCI controller (OMAP3 and later)
+
+Required properties:
+
+- compatible: should be "ti,ohci-omap3"
+- reg: should contain one register range i.e. start and length
+- interrupts: description of the interrupt line
+
+OMAP HS USB OHCI 컨트롤러 (OMAP3 이상)
+
+필수 속성 :
+
+- compatible : "ti, ohci-omap3"이어야합니다.
+- reg : 시작과 길이라는 하나의 레지스터 범위를 포함해야합니다.
+- interrupts : 인터럽트 라인에 대한 설명
+
+
+Example for OMAP4:
+
+usbhsohci: ohci@4a064800 {
+	compatible = "ti,ohci-omap3";
+	reg = <0x4a064800 0x400>;
+	interrupts = <0 76 0x4>;
+};

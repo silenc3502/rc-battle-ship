@@ -1,0 +1,29 @@
+http://www.ni.com/white-paper/2732/ko/
+
+-------
+can 통신 이해 : http://www.fescaro.com/2016/10/can-%ED%86%B5%EC%8B%A0%EC%9D%98-%EC%9D%B4%ED%95%B4/
+can 통신 예제 : http://realsys.co.kr/data/arm/10.CAN%ED%86%B5%EC%8B%A0%20%EC%82%AC%EC%9A%A9.pdf
+
+can/linux 예제 : http://forum.falinux.com/zbxe/index.php?_filter=search&mid=hardware&search_target=title&search_keyword=CAN&document_srl=535839
+
+정리 : 
+1. 배선의 증가로 인한 여러 문제점을 해결하기 위해 CAN 등장
+2. 하나의 CAN BUS 네트워크에 여러 ECU들이 연결되어 있음.
+3. CAN BUS 네트워크를 통해 각 노드(ECU)들은 서로 메세지를 주고 받음
+4. 메세지의 우선순위에 따라 할당된 유일 한 식별자(ID)를 이용해 메세지를 구별함
+5. CAN BUS 네트워크에 두 개의 노드에서 메세지가 동시에 전송되려고 할 때, 더 높은 우선순위(더 낮은 ID번호)를 가진 노트의 메세지가 먼저 전송됨.
+
+CAN PROTOCOL :
+
+CAN CONTROLLER / CAN TREANSCEIVER
+
+CAN controller는 내부 버퍼를 transceiver 전달되는 수신 메세지에 대해 유효한 데이터인지 아닌지를 ID 기반으로 판별한 후 유효한 데이터인 경우 MCU로 전달합니다. 송신 메세지의 경우 MCU에서 전송하고 하는 데이터에 대해 CAN transceiver로 전달합니다. CAN transceiver는 CAN 버스 혹은 MCU에서 전달되는 송수신 데이터를 전기적 신호로 변환합니다. CAN transceiver는 MCU로부터 전달된 데이터를 CAN 통신용 데이터로 변환하며, CAN 버스에서 전달된 CAN 통신용 데이터를 MCU 송수신용 데이터로 변환합니다.
+
+MCU -> 데이터(송신 메세지) -> CAN transceiver -> 전기적 신호로 변환 -> CAN 통신용 데이터
+
+CAN 통신용 데이터 -> CAN transceiver -> MCU 송수신용 데이터
+
+	
+
+
+

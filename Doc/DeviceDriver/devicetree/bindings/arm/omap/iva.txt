@@ -1,0 +1,20 @@
+* TI - IVA (Imaging and Video Accelerator) subsystem
+
+The IVA contain various audio, video or imaging HW accelerator
+depending of the version.
+//IVA는 버전에 따라 다양한 오디오, 비디오 또는 이미징 HW 가속기를 포함합니다.
+
+Required properties:
+- compatible : Should be:
+  - "ti,ivahd" for OMAP4
+  - "ti,iva2.2" for OMAP3
+  - "ti,iva2.1" for OMAP2430
+  - "ti,iva1" for OMAP2420
+- ti,hwmods: "iva"
+
+Examples:
+
+iva {
+    compatible = "ti,ivahd", "ti,iva";
+    ti,hwmods = "iva";
+};

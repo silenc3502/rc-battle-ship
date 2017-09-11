@@ -1,0 +1,56 @@
+Generic USB Properties
+
+Optional properties:
+ - maximum-speed: tells USB controllers we want to work up to a certain
+			speed. Valid arguments are "super-speed", "high-speed",
+			"full-speed" and "low-speed". In case this isn't passed
+			via DT, USB controllers should default to their maximum
+			HW capability.
+ - dr_mode: tells Dual-Role USB controllers that we want to work on a
+			particular mode. Valid arguments are "host",
+			"peripheral" and "otg". In case this attribute isn't
+			passed via DT, USB DRD controllers should default to
+			OTG.
+ - otg-rev: tells usb driver the release number of the OTG and EH supplement
+			with which the device and its descriptors are compliant,
+			in binary-coded decimal (i.e. 2.0 is 0200H). This
+			property is used if any real OTG features(HNP/SRP/ADP)
+			is enabled, if ADP is required, otg-rev should be
+			0x0200 or above.
+ - hnp-disable: tells OTG controllers we want to disable OTG HNP, normally HNP
+			is the basic function of real OTG except you want it
+			to be a srp-capable only B device.
+ - srp-disable: tells OTG controllers we want to disable OTG SRP, SRP is
+			optional for OTG device.
+ - adp-disable: tells OTG controllers we want to disable OTG ADP, ADP is
+			optional for OTG device.
+ - otg-controller: phandle to otg controller. Host or gadget controllers can
+			contain this property to link it to a particular otg
+			controller. If this property is not present then otg
+			core assumes that host and gadget controllers are
+			children of the otg controller.
+
+
+선택적 속성 :
+  -  maximum-speed : 특정 속도까지 작동하려는 USB 컨트롤러를 알려줍니다. 유효한 인수는 "super-speed", "high-speed", "full-speed"및 "low-speed"입니다. 이것이 DT를 통해 전달되지 않는 경우 USB 컨트롤러는 최대 HW 기능을 기본값으로 설정해야합니다.
+  - dr_mode : 이중 모드 USB 컨트롤러에 특정 모드로 작업 할 것을 지시합니다. 유효한 인수는 "host", "peripheral"및 "otg"입니다. 이 속성이 DT를 통해 전달되지 않는 경우 USB DRD 제어기는 OTG로 기본 설정되어야합니다.
+  - otg-rev : 장치 및 해당 설명자가 준수하는 OTG 및 EH 보완의 릴리스 번호를 usb 드라이버에 2 진 코드 10 진수 (예 : 2.0은 0200H)로 알려줍니다. 이 속성은 실제 OTG 기능 (HNP / SRP / ADP)이 		활성화 된 경우에 사용되며 ADP가 필요하면 otg-rev는 0x0200 이상이어야합니다.
+  - hnp-disable : OTG HNP를 비활성화하려는 OTG 컨트롤러에 알려줍니다. 일반적으로 HNP는 실제 OTG의 기본 기능이며, srp 가능 B 장치가되기를 원합니다.
+  - srp-disable : OTG SRP를 비활성화하려는 OTG 컨트롤러에 알려주고, SRP는 OTG 장치의 경우 선택 사항입니다.
+  - adp-disable : OTG ADP를 비활성화하려는 OTG 컨트롤러에 알려주고, ADP는 OTG 장치의 경우 선택 사항입니다.
+  - otg-controller : 컨트롤러에 연결합니다. 호스트 또는 가젯 컨트롤러는 특정 OTG 컨트롤러에 링크하기 위해이 속성을 포함 할 수 있습니다. 이 속성이 없으면 otg 코어는 호스트 및 가젯 컨트롤러가 otg 컨트롤러의 자식이라고 가정합니다.
+
+
+This is an attribute to a USB controller such as:
+다음 은  USB 컨트롤러의 특성입니다.
+
+dwc3@4a030000 {
+	compatible = "synopsys,dwc3";
+	reg = <0x4a030000 0xcfff>;
+	interrupts = <0 92 4>
+	usb-phy = <&usb2_phy>, <&usb3,phy>;
+	maximum-speed = "super-speed";
+	dr_mode = "otg";
+	otg-rev = <0x0200>;
+	adp-disable;
+};

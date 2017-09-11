@@ -1,0 +1,127 @@
+Background
+==========
+
+Bulk endpoint streams were added in the USB 3.0 specification.  Streams allow a
+device driver to overload a bulk endpoint so that multiple transfers can be
+queued at once.
+
+Bulk(대량) endpoint 스트림이 USB 3.0 사양에 추가되었습니다.
+스트림을 사용하면 장치 드라이버가 bulk endpoint에 과부하를 일으킬 수 있어서 여러 전송을 한 번에 대기시킬 수 있습니다.
+
+Streams are defined in sections 4.4.6.4 and 8.12.1.4 of the Universal Serial Bus
+3.0 specification at http://www.usb.org/developers/docs/  The USB Attached SCSI
+Protocol, which uses streams to queue multiple SCSI commands, can be found on
+the T10 website (http://t10.org/).
+
+스트림은 http://www.usb.org/developers/docs/ 에서 Universal Serial Bus 3.0 사양의 섹션 4.4.6.4 및 8.12.1.4에 정의되어 있습니다.
+스트림을 사용하여 여러 SCSI 명령을 대기열(큐)에 넣는 USB에 연결된 SCSI 프로토콜은 T10 웹 사이트에서 찾았습니다. (http://t10.org/)
+
+
+Device-side implications
+========================
+
+Once a buffer has been queued to a stream ring, the device is notified (through
+an out-of-band mechanism on another endpoint) that data is ready for that stream
+ID.  The device then tells the host which "stream" it wants to start.  The host
+can also initiate a transfer on a stream without the device asking, but the
+device can refuse that transfer.  Devices can switch between streams at any
+time.
+
+일단 버퍼가 스트림 링에 대기되면(큐에 올라가면), 디바이스는 해당 스트림 ID에 대해 데이터 준비가 되었음을 
+(다른 endpoint의 대역 외 메커니즘을 통해) 통지받습니다.
+그런 다음 장치는 호스트에게 시작하려는 "스트림"을 알려줍니다.
+호스트는 장치에서 요청하지 않고도 스트림에서 전송을 시작할 수 있지만 장치는 해당 전송을 거부 할 수 있습니다.
+(스트림에서하는 데이터 전송을 요청 받아도 거부 가능)
+장치는 언제든지 스트림을 전환할 수 있습니다.
+
+
+Driver implications
+===================
+
+int usb_alloc_streams(struct usb_interface *interface,
+		struct usb_host_endpoint **eps, unsigned int num_eps,
+		unsigned int num_streams, gfp_t mem_flags);
+
+Device drivers will call this API to request that the host controller driver
+allocate memory so the driver can use up to num_streams stream IDs.  They must
+pass an array of usb_host_endpoints that need to be setup with similar stream
+IDs.  This is to ensure that a UASP driver will be able to use the same stream
+ID for the bulk IN and OUT endpoints used in a Bi-directional command sequence.
+
+디바이스 드라이버는이 API를 호출하여 드라이버가 최대 num_streams 스트림 ID를 사용할 수 있도록 
+호스트 컨트롤러 드라이버가 메모리를 할당하도록 요청합니다.
+그들은 비슷한 스트림 ID(최대 num_streams ID인가?)로 설정해야 하는 usb_host_endpoints 배열을 전달해야 합니다.
+이는 UASP 드라이버가 양방향 명령 시퀀스(Bi-directional command sequence)에 사용된 bulk IN 및 OUT endpoint에 대해 
+동일한 스트림 ID를 사용할 수 있는지 확인하기 위한 것입니다. (그래서 배열을 전달해 최대 스트림 ID로 설정이 되는가 본다는 얘기?)
+
+The return value is an error condition (if one of the endpoints doesn't support
+streams, or the xHCI driver ran out of memory), or the number of streams the
+host controller allocated for this endpoint.  The xHCI host controller hardware
+declares how many stream IDs it can support, and each bulk endpoint on a
+SuperSpeed device will say how many stream IDs it can handle.  Therefore,
+drivers should be able to deal with being allocated less stream IDs than they
+requested.
+
+반환 값은 오류 조건 (endpoint 중 하나에서 스트림을 지원하지 않거나 xHCI 드라이버에서 메모리가 부족한 경우) (오류 상태를 나타내는 값이 있나?)
+또는 호스트 컨트롤러가 이 endpoint에 할당 한 스트림 수입니다. (스트림을 할당하지 못한 경우 오류고 할당한 경우는 그 수를 리턴)
+xHCI 호스트 컨트롤러 하드웨어는 지원할 수 있는 스트림 ID의 수를 선언하며  (스트림이 데이터를 전송하는 작업을 말하는 것인가?)
+SuperSpeed 장치의 각 bulk endpoint는 처리할 수 있는 스트림 ID 수를 나타냅니다. (최대 스트림 ID수)
+따라서 드라이버는 요청한 것보다 적은 스트림 ID가 할당되도록 처리할 수 있어야합니다. (초과로 요청했을 떄?)
+
+Do NOT call this function if you have URBs enqueued for any of the endpoints
+passed in as arguments.  Do not call this function to request less than two
+streams.
+
+인수로 전달된 임의의 endpoint에 대해 대기 행렬에 넣은 URB가있는 경우에는 이 함수를 호출하지 마십시오.
+(URB도 데이터 전송인데 스트림도 이와 관련이 있는 건가? 스트림도 URB의 일종인건가?)
+(URB는 하나씩 큐에 올려 진행하지만 bulk 스트림을 쓰면 한 번에 여러 작업을 큐에 올려놓을 수 있다는 건가?)
+두 개 미만의 스트림을 요청하려면 이 함수를 호출하지 마십시오. (스트림을 대량으로 호출할 때 이 방법을 사용)
+
+Drivers will only be allowed to call this API once for the same endpoint
+without calling usb_free_streams().  This is a simplification for the xHCI host
+controller driver, and may change in the future.
+
+드라이버는 usb_free_streams()를 호출하지 않고 동일한 endpoint에 대해 한 번만 이 API를 호출 할 수 있습니다.
+이것은 xHCI 호스트 컨트롤러 드라이버의 단순화이며 향후 변경 될 수 있습니다.
+
+
+Picking new Stream IDs to use
+============================
+
+Stream ID 0 is reserved, and should not be used to communicate with devices.  If
+usb_alloc_streams() returns with a value of N, you may use streams 1 though N.
+To queue an URB for a specific stream, set the urb->stream_id value.  If the
+endpoint does not support streams, an error will be returned.
+
+스트림 ID 0은 예약되어 있으므로 기기와 통신하는 데 사용해서는 안됩니다.
+usb_alloc_streams()가 N 값을 반환하면 스트림 1을 N으로 사용할 수 있습니다.
+특정 스트림에 대한 URB를 대기열에 넣으려면 urb-> stream_id 값을 설정하십시오.
+endpoint가 스트림을 지원하지 않으면 오류가 리턴됩니다. (여기서 말하는 스크림은 모두 bulk 스트림인건가?)
+
+Note that new API to choose the next stream ID will have to be added if the xHCI
+driver supports secondary stream IDs.
+
+xHCI 드라이버가 2차 스트림 ID를 지원하는 경우, 다음 스트림 ID를 선택하는 새로운 API를 추가해야 합니다.
+(2차 스트림은 1차 스트림을 한 뒤 다시 한 번 할 수 있는 과정인건가? 그래서 새로운 API가 필요?)
+
+
+Clean up
+========
+
+If a driver wishes to stop using streams to communicate with the device, it
+should call
+
+드라이버가 장치와 통신하기 위해 스트림 사용을 중단하려면 드라이버가 아래와 같은 코드를 호출한다.
+(스트림을 사용하면 장치와 통신이 되지 않는 것 같다)
+
+void usb_free_streams(struct usb_interface *interface,
+		struct usb_host_endpoint **eps, unsigned int num_eps,
+		gfp_t mem_flags);
+
+All stream IDs will be deallocated when the driver releases the interface, to
+ensure that drivers that don't support streams will be able to use the endpoint.
+
+스트림을 지원하지 않는 드라이버가 endpoint를 사용할 수 있도록하기 위해
+(URB나 스트림 둘 중에 하나만 써야하는 것 같다. 아까 큐에 URB가 올라가 있을 때 스트림을 사용하지 못하는 것 같았고
+여기서 스트림을 쓰지 않는 드라이버가 endpoint를 사용하려면 스트림 ID를 해제해야 하는 것으로 볼 때)
+드라이버가 인터페이스를 릴리스 할 때 모든 스트림 ID의 할당이 해제됩니다.

@@ -1,0 +1,44 @@
+TI DAC7512 DEVICETREE BINDINGS
+
+Required properties:
+
+	- "compatible"		Must be set to "ti,dac7512"
+
+Property rules described in Documentation/devicetree/bindings/spi/spi-bus.txt
+apply. In particular, "reg" and "spi-max-frequency" properties must be given.
+
+
+Example:
+
+	spi_master {
+		dac7512: dac7512@0 {
+			compatible = "ti,dac7512";
+			reg = <0>; /* CS0 */
+			spi-max-frequency = <1000000>;
+		};
+	};
+
+/*
+
+필수 속성 :
+
+- "compatible" "ti, dac7512"로 설정해야합니다.
+
+Documentation / devicetree / bindings / spi / spi-bus.txt에 설명 된 속성 규칙이 적용됩니다. 
+
+특히 "reg"및 "spi-max-frequency"속성을 지정해야합니다.
+
+
+
+Example:
+
+	spi_master {
+		dac7512: dac7512@0 {
+			compatible = "ti,dac7512";
+			reg = <0>; /* CS0 */
+			spi-max-frequency = <1000000>;
+		};
+	};
+
+
+*/

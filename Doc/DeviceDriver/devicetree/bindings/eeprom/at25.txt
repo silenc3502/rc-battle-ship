@@ -1,0 +1,60 @@
+EEPROMs (SPI) compatible with Atmel at25.
+
+Required properties:
+- compatible : "atmel,at25".
+- reg : chip select number
+- spi-max-frequency : max spi frequency to use
+- pagesize : size of the eeprom page
+- size : total eeprom size in bytes
+- address-width : number of address bits (one of 8, 16, or 24)
+
+Optional properties:
+- spi-cpha : SPI shifted clock phase, as per spi-bus bindings.
+- spi-cpol : SPI inverse clock polarity, as per spi-bus bindings.
+- read-only : this parameter-less property disables writes to the eeprom
+
+Obsolete legacy properties are can be used in place of "size", "pagesize",
+"address-width", and "read-only":
+- at25,byte-len : total eeprom size in bytes
+- at25,addr-mode : addr-mode flags, as defined in include/linux/spi/eeprom.h
+- at25,page-size : size of the eeprom page
+
+Additional compatible properties are also allowed.
+
+
+Atemel at25와 호환되는 EEPROM (SPI).
+
+필수 속성 :
+- 호환 : "atmel, at25"
+- reg : 칩 선택 번호
+- spi-max-frequency : 사용할 최대 spi 주파수
+- pagesize : eeprom 페이지의 크기
+- 크기 : 총 eeprom 크기 (바이트)
+- address-width : 주소 비트 수 (8, 16 또는 24 중 하나)
+
+선택적 속성 :
+- spi-cpha : SPI는 SPI 버스 바인딩에 따라 클럭 위상을 쉬프트합니다.
+- spi-cpol : SPI 버스의 바인딩 당 SPI 반대로 클럭 극성.
+- 읽기 전용 :이 매개 변수가없는 속성은 eeprom에 대한 쓰기를 비활성화합니다.
+
+더 이상 사용되지 않는 레거시 속성은 "size", "pagesize"대신 사용할 수 있습니다.
+"address-width"및 "read-only":
+- at25, byte-len : 총 eeprom 크기 (바이트)
+- at25, addr-mode : include / linux / spi / eeprom.h에 정의 된 addr-mode 플래그
+- at25, page-size : eeprom 페이지의 크기
+
+추가로 호환되는 속성도 사용할 수 있습니다.
+
+
+Example:
+	at25@0 {
+		compatible = "atmel,at25", "st,m95256";
+		reg = <0>
+		spi-max-frequency = <5000000>;
+		spi-cpha;
+		spi-cpol;
+
+		pagesize = <64>;
+		size = <32768>;
+		address-width = <16>;
+	};

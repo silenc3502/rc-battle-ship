@@ -1,0 +1,171 @@
+* Freescale Smart Direct Memory Access (SDMA) Controller for i.MX
+
+Required properties:
+- compatible : Should be one of
+      "fsl,imx25-sdma"
+      "fsl,imx31-sdma", "fsl,imx31-to1-sdma", "fsl,imx31-to2-sdma"
+      "fsl,imx35-sdma", "fsl,imx35-to1-sdma", "fsl,imx35-to2-sdma"
+      "fsl,imx51-sdma"
+      "fsl,imx53-sdma"
+      "fsl,imx6q-sdma"
+  The -to variants should be preferred since they allow to determine the
+  correct ROM script addresses needed for the driver to work without additional
+  firmware.
+- reg : Should contain SDMA registers location and length
+- interrupts : Should contain SDMA interrupt
+- #dma-cells : Must be <3>.
+  The first cell specifies the DMA request/event ID.  See details below
+  about the second and third cell.
+- fsl,sdma-ram-script-name : Should contain the full path of SDMA RAM
+  scripts firmware
+
+The second cell of dma phandle specifies the peripheral type of DMA transfer.
+The full ID of peripheral types can be found below.
+
+	ID	transfer type
+	---------------------
+	0	MCU domain SSI
+	1	Shared SSI
+	2	MMC
+	3	SDHC
+	4	MCU domain UART
+	5	Shared UART
+	6	FIRI
+	7	MCU domain CSPI
+	8	Shared CSPI
+	9	SIM
+	10	ATA
+	11	CCM
+	12	External peripheral
+	13	Memory Stick Host Controller
+	14	Shared Memory Stick Host Controller
+	15	DSP
+	16	Memory
+	17	FIFO type Memory
+	18	SPDIF
+	19	IPU Memory
+	20	ASRC
+	21	ESAI
+	22	SSI Dual FIFO	(needs firmware ver >= 2)
+	23	Shared ASRC
+	24	SAI
+
+The third cell specifies the transfer priority as below.
+
+	ID	transfer priority
+	-------------------------
+	0	High
+	1	Medium
+	2	Low
+
+Examples:
+
+sdma@83fb0000 {
+	compatible = "fsl,imx51-sdma", "fsl,imx35-sdma";
+	reg = <0x83fb0000 0x4000>;
+	interrupts = <6>;
+	#dma-cells = <3>;
+	fsl,sdma-ram-script-name = "sdma-imx51.bin";
+};
+
+DMA clients connected to the i.MX SDMA controller must use the format
+described in the dma.txt file.
+
+Examples:
+
+ssi2: ssi@70014000 {
+	compatible = "fsl,imx51-ssi", "fsl,imx21-ssi";
+	reg = <0x70014000 0x4000>;
+	interrupts = <30>;
+	clocks = <&clks 49>;
+	dmas = <&sdma 24 1 0>,
+	       <&sdma 25 1 0>;
+	dma-names = "rx", "tx";
+	fsl,fifo-depth = <15>;
+};
+
+/*
+====================================================================================
+
+* i.MX 용 프리 스케일 스마트 직접 메모리 액세스 (SDMA) 컨트롤러
+
+필수 속성 :
+- 호환 가능 : 다음 중 하나 여야합니다.
+      "fsl, imx25-sdma"
+      "fsl, imx31-sdma", "fsl, imx31-to1-sdma", "fsl, imx31-to2-sdma"
+      "fsl, imx35-sdma", "fsl, imx35-to1-sdma", "fsl, imx35-to2-sdma"
+      "fsl, imx51-sdma"
+      "fsl, imx53-sdma"
+      "fsl, imx6q-sdma"
+  -to 변형은 드라이버가 추가 펌웨어없이 작동하는 데 필요한 올바른 ROM 스크립트 주소를 결정할 수 있으므로 선호됩니다.
+- reg : SDMA 레지스터 위치와 길이를 포함해야한다.
+- 인터럽트 : SDMA 인터럽트를 포함해야합니다.
+- # dma-cells : <3>이어야합니다.
+  첫 번째 셀은 DMA 요청 / 이벤트 ID를 지정합니다. 두 번째 및 세 번째 셀에 대한 자세한 내용은 아래를 참조하십시오.
+- fsl, sdma-ram-script-name : SDMA RAM 스크립트 펌웨어의 전체 경로를 포함해야합니다.
+
+dma phandle의 두 번째 셀은 주변 장치 유형의 DMA 전송을 지정합니다.
+주변기기 유형의 전체 ID는 아래에서 확인할 수 있습니다.
+
+ID 전송 유형
+---------------------
+0 MCU 도메인 SSI
+공유 SSI 1 개
+2 MMC
+3 SDHC
+4 MCU 도메인 UART
+5 공유 UART
+6 FIRI
+7 MCU 도메인 CSPI
+8 공유 CSPI
+9 SIM
+10 ATA
+11 CCM
+12 외부 주변 장치
+13 메모리 스틱 호스트 컨트롤러
+공유 메모리 스틱 호스트 컨트롤러 14 개
+15 DSP
+16 메모리
+17 FIFO 형 메모리
+18 SPDIF
+19 IPU 메모리
+20 ASRC
+21 ESAI
+22 SSI 이중 FIFO (펌웨어 버전 2 이상 필요)
+23 공유 ASRC
+24 SAI
+
+세 번째 셀은 다음과 같이 전송 우선 순위를 지정합니다.
+
+ID 전송 우선 순위
+-------------------------
+0 높음
+1 중형
+2 낮음
+
+Examples:
+
+sdma@83fb0000 {
+	compatible = "fsl,imx51-sdma", "fsl,imx35-sdma";
+	reg = <0x83fb0000 0x4000>;
+	interrupts = <6>;
+	#dma-cells = <3>;
+	fsl,sdma-ram-script-name = "sdma-imx51.bin";
+};
+i.MX SDMA 컨트롤러에 연결된 DMA 클라이언트는 dma.txt 파일에 설명 된 형식을 사용해야합니다.
+
+
+Examples:
+
+ssi2: ssi@70014000 {
+	compatible = "fsl,imx51-ssi", "fsl,imx21-ssi";
+	reg = <0x70014000 0x4000>;
+	interrupts = <30>;
+	clocks = <&clks 49>;
+	dmas = <&sdma 24 1 0>,
+	       <&sdma 25 1 0>;
+	dma-names = "rx", "tx";
+	fsl,fifo-depth = <15>;
+};
+====================================================================================
+*/

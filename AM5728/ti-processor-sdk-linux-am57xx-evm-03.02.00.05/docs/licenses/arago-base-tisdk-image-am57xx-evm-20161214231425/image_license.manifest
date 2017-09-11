@@ -1,0 +1,5 @@
+RECIPE NAME: linux-processor-sdk
+VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+LICENSE: GPLv2
+FILES: zImage--4.4.32+git0+adde2ca9f8-r7c.2-am571x-idk-lcd-osd101t2587-20161214231425.dtb zImage--4.4.32+git0+adde2ca9f8-r7c.2-am57xx-evm-20161214231425.bin zImage--4.4.32+git0+adde2ca9f8-r7c.2-am572x-idk-pru-excl-uio-20161214231425.dtb zImage--4.4.32+git0+adde2ca9f8-r7c.2-am571x-idk-lcd-osd-20161214231425.dtb zImage--4.4.32+git0+adde2ca9f8-r7c.2-am57xx-beagle-x15-revb1-20161214231425.dtb zImage--4.4.32+git0+adde2ca9f8-r7c.2-am572x-idk-lcd-osd-20161214231425.dtb zImage--4.4.32+git0+adde2ca9f8-r7c.2-am571x-idk-20161214231425.dtb zImage--4.4.32+git0+adde2ca9f8-r7c.2-am57xx-evm-20161214231425.dtb zImage--4.4.32+git0+adde2ca9f8-r7c.2-am57xx-beagle-x15-20161214231425.dtb modules--4.4.32+git0+adde2ca9f8-r7c.2-am57xx-evm-20161214231425.tgz zImage--4.4.32+git0+adde2ca9f8-r7c.2-am57xx-evm-reva3-20161214231425.dtb zImage--4.4.32+git0+adde2ca9f8-r7c.2-am572x-idk-20161214231425.dtb zImage--4.4.32+git0+adde2ca9f8-r7c.2-am572x-idk-lcd-osd101t2587-20161214231425.dtb
+

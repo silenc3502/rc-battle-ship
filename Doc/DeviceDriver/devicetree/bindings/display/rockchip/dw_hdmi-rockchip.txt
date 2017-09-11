@@ -1,0 +1,95 @@
+﻿Rockchip specific extensions to the Synopsys Designware HDMI
+================================
+
+Required properties:
+- compatible: "rockchip,rk3288-dw-hdmi";
+- reg: Physical base address and length of the controller's registers.
+- clocks: phandle to hdmi iahb and isfr clocks.
+- clock-names: should be "iahb" "isfr"
+- rockchip,grf: this soc should set GRF regs to mux vopl/vopb.
+- interrupts: HDMI interrupt number
+- ports: contain a port node with endpoint definitions as defined in
+  Documentation/devicetree/bindings/media/video-interfaces.txt. For
+  vopb,set the reg = <0> and set the reg = <1> for vopl.
+- reg-io-width: the width of the reg:1,4, the value should be 4 on
+  rk3288 platform
+
+Optional properties
+- ddc-i2c-bus: phandle of an I2C controller used for DDC EDID probing
+- clocks, clock-names: phandle to the HDMI CEC clock, name should be "cec"
+
+Example:
+hdmi: hdmi@ff980000 {
+	compatible = "rockchip,rk3288-dw-hdmi";
+	reg = <0xff980000 0x20000>;
+	reg-io-width = <4>;
+	ddc-i2c-bus = <&i2c5>;
+	rockchip,grf = <&grf>;
+	interrupts = <GIC_SPI 103 IRQ_TYPE_LEVEL_HIGH>;
+	clocks = <&cru  PCLK_HDMI_CTRL>, <&cru SCLK_HDMI_HDCP>;
+	clock-names = "iahb", "isfr";
+	status = "disabled";
+	ports {
+		hdmi_in: port {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			hdmi_in_vopb: endpoint@0 {
+				reg = <0>;
+				remote-endpoint = <&vopb_out_hdmi>;
+			};
+			hdmi_in_vopl: endpoint@1 {
+				reg = <1>;
+				remote-endpoint = <&vopl_out_hdmi>;
+			};
+		};
+	};
+};
+
+
+/*
+Synopsys Designware HDMI에 대한 Rockchip 전용 확장
+==================
+
+필수 속성 :
+- 호환 : "rockchip, rk3288-dw-hdmi";
+- reg : 컨트롤러의 레지스터의 물리적 인 기본 주소와 길이.
+- 시계 : hdmi iahb 및 isfr 시계에 대한 phandle.
+- 시계 이름 : "iahb"이어야합니다 "isfr"
+- rockchip, grf :이 soc는 GRF 레지스터를 mux vop / vopb로 설정해야합니다.
+- 인터럽트 : HDMI 인터럽트 번호
+- 포트 : 정의 된 끝점 정의가있는 포트 노드를 포함합니다.
+  Documentation / devicetree / bindings / media / video-interfaces.txt. vopb의 경우 reg = <0>을 설정하고 vop에 reg = <1>을 설정합니다.
+- reg-io-width : reg의 너비 : 1,4, rk3288 플랫폼에서 값은 4 여야합니다.
+
+선택적 속성
+- ddc-i2c-bus : DDC EDID 프로빙에 사용되는 I2C 컨트롤러의 phandle
+- 클럭, 클럭 이름 : HDMI CEC 클록에 대한 phandle, 이름은 "cec"여야합니다.
+
+Example:
+hdmi: hdmi@ff980000 {
+	compatible = "rockchip,rk3288-dw-hdmi";
+	reg = <0xff980000 0x20000>;
+	reg-io-width = <4>;
+	ddc-i2c-bus = <&i2c5>;
+	rockchip,grf = <&grf>;
+	interrupts = <GIC_SPI 103 IRQ_TYPE_LEVEL_HIGH>;
+	clocks = <&cru  PCLK_HDMI_CTRL>, <&cru SCLK_HDMI_HDCP>;
+	clock-names = "iahb", "isfr";
+	status = "disabled";
+	ports {
+		hdmi_in: port {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			hdmi_in_vopb: endpoint@0 {
+				reg = <0>;
+				remote-endpoint = <&vopb_out_hdmi>;
+			};
+			hdmi_in_vopl: endpoint@1 {
+				reg = <1>;
+				remote-endpoint = <&vopl_out_hdmi>;
+			};
+		};
+	};
+};
+
+*/

@@ -1,0 +1,54 @@
+OMAP SoC SHA crypto Module
+
+Required properties:
+
+- compatible : Should contain entries for this and backward compatible
+  SHAM versions:
+  - "ti,omap2-sham" for OMAP2 & OMAP3.
+  - "ti,omap4-sham" for OMAP4 and AM33XX.
+  - "ti,omap5-sham" for OMAP5, DRA7 and AM43XX.
+- ti,hwmods: Name of the hwmod associated with the SHAM module
+- reg : Offset and length of the register set for the module
+- interrupts : the interrupt-specifier for the SHAM module.
+
+Optional properties:
+- dmas: DMA specifiers for the rx dma. See the DMA client binding,
+	Documentation/devicetree/bindings/dma/dma.txt
+- dma-names: DMA request name. Should be "rx" if a dma is present.
+
+
+필수 속성 :
+
+- 호환 :이 항목과 이전 버전과의 호환 가능 항목을 포함해야합니다.
+   SHAM 버전 :
+   - OMAP2 & OMAP3의 경우 "ti, omap2-sham"
+   - OMAP4 및 AM33XX의 경우 "ti, omap4-sham"
+   - OMAP5, DRA7 및 AM43XX의 경우 "ti, omap5-sham"
+- ti, hwmods : SHAM 모듈과 연관된 hwmod의 이름
+- reg : 모듈에 설정된 레지스터 오프셋 및 길이
+- interrupts : SHAM 모듈의 인터럽트 지정자.
+
+
+선택적 속성 :
+- dmas : rx dma에 대한 DMA 지정자. DMA 클라이언트 바인딩 Documentation / devicetree / bindings / dma / dma.txt를 참조하십시오.
+- dma-names : DMA 요청 이름입니다. dma가 있으면 "rx"이어야합니다.
+
+
+
+
+
+
+
+
+
+
+Example:
+	/* AM335x */
+	sham: sham@53100000 {
+		compatible = "ti,omap4-sham";
+		ti,hwmods = "sham";
+		reg = <0x53100000 0x200>;
+		interrupts = <109>;
+		dmas = <&edma 36>;
+		dma-names = "rx";
+	};

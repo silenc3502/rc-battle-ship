@@ -1,0 +1,53 @@
+BMP085/BMP18x digital pressure sensors
+
+Required properties:
+- compatible: bosch,bmp085
+
+Optional properties:
+- chip-id: configurable chip id for non-default chip revisions
+- temp-measurement-period: temperature measurement period (milliseconds)
+- default-oversampling: default oversampling value to be used at startup,
+  value range is 0-3 with rising sensitivity.
+- interrupt-parent: should be the phandle for the interrupt controller
+- interrupts: interrupt mapping for IRQ
+
+Example:
+
+pressure@77 {
+	compatible = "bosch,bmp085";
+	reg = <0x77>;
+	chip-id = <10>;
+	temp-measurement-period = <100>;
+	default-oversampling = <2>;
+	interrupt-parent = <&gpio0>;
+	interrupts = <25 IRQ_TYPE_EDGE_RISING>;
+};
+
+
+/*
+
+BMP085 / BMP18x 디지털 압력 센서
+
+필수 속성 :
+- 호환 가능 : bosch, bmp085
+
+선택 속성 :
+- chip-id : 기본값이 아닌 chip revision에 대한 구성 가능한 칩 ID
+- temp-measurement-period : 온도 측정 기간 (밀리 초)
+- default-oversampling : 기동시에 사용되는 디폴트의 오버 샘플링 치로서, 상승하는 감도로 값의 범위는 0 ~ 3입니다.
+- interrupt-parent : 인터럽트 컨트롤러의 phandle이어야합니다.
+- interrupt : IRQ에 대한 인터럽트 매핑
+
+Example:
+
+pressure@77 {
+	compatible = "bosch,bmp085";
+	reg = <0x77>;
+	chip-id = <10>;
+	temp-measurement-period = <100>;
+	default-oversampling = <2>;
+	interrupt-parent = <&gpio0>;
+	interrupts = <25 IRQ_TYPE_EDGE_RISING>;
+};
+
+*/

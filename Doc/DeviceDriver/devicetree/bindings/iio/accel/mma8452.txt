@@ -1,0 +1,45 @@
+Freescale MMA8452Q, MMA8453Q, MMA8652FC or MMA8653FC triaxial accelerometer
+
+Required properties:
+
+  - compatible: should contain one of
+    * "fsl,mma8452"
+    * "fsl,mma8453"
+    * "fsl,mma8652"
+    * "fsl,mma8653"
+  - reg: the I2C address of the chip
+
+Optional properties:
+
+  - interrupt-parent: should be the phandle for the interrupt controller
+  - interrupts: interrupt mapping for GPIO IRQ
+
+Example:
+
+	mma8453fc@1d {
+		compatible = "fsl,mma8453";
+		reg = <0x1d>;
+		interrupt-parent = <&gpio1>;
+		interrupts = <5 0>;
+	};
+
+
+/*
+
+프리 스케일 MMA8452Q, MMA8453Q, MMA8652FC 또는 MMA8653FC 3 축 가속도계
+
+필수 속성 :
+
+   - compatible : 다음 중 하나를 포함해야합니다.
+     * "fsl, mma8452"
+     * "fsl, mma8453"
+     * "fsl, mma8652"
+     * "fsl, mma8653"
+   - reg : 칩의 I2C 주소
+
+선택 속성 :
+
+   - interrupt-parent : 인터럽트 컨트롤러의 phandle이어야합니다.
+   - 인터럽트 : GPIO IRQ에 대한 인터럽트 매핑
+
+*/

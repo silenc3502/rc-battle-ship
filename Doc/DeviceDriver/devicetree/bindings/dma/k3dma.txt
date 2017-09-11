@@ -1,0 +1,94 @@
+* Hisilicon K3 DMA controller
+
+See dma.txt first
+
+Required properties:
+- compatible: Should be "hisilicon,k3-dma-1.0"
+- reg: Should contain DMA registers location and length.
+- interrupts: Should contain one interrupt shared by all channel
+- #dma-cells: see dma.txt, should be 1, para number
+- dma-channels: physical channels supported
+- dma-requests: virtual channels supported, each virtual channel
+		have specific request line
+- clocks: clock required
+
+Example:
+
+Controller:
+		dma0: dma@fcd02000 {
+			compatible = "hisilicon,k3-dma-1.0";
+			reg = <0xfcd02000 0x1000>;
+			#dma-cells = <1>;
+			dma-channels = <16>;
+			dma-requests = <27>;
+			interrupts = <0 12 4>;
+			clocks = <&pclk>;
+			status = "disable";
+		};
+
+Client:
+Use specific request line passing from dmax
+For example, i2c0 read channel request line is 18, while write channel use 19
+
+		i2c0: i2c@fcb08000 {
+			compatible = "snps,designware-i2c";
+			dmas =	<&dma0 18          /* read channel */
+				 &dma0 19>;        /* write channel */
+			dma-names = "rx", "tx";
+		};
+
+		i2c1: i2c@fcb09000 {
+			compatible = "snps,designware-i2c";
+			dmas =	<&dma0 20          /* read channel */
+				 &dma0 21>;        /* write channel */
+			dma-names = "rx", "tx";
+		};
+
+
+/*
+* Hisilicon K3 DMA 컨트롤러
+
+먼저 dma.txt보기
+
+필수 속성 :
+- 호환 : "hisilicon, k3-dma-1.0"이어야합니다.
+- reg : DMA 레지스터 위치와 길이를 포함해야합니다.
+- interrupts : 모든 채널이 공유하는 하나의 인터럽트를 포함해야합니다.
+- # dma-cells : dma.txt를 참조하십시오. 1, para number 여야합니다.
+- dma-channels : 지원되는 물리 채널
+- dma-requests : 가상 채널 지원, 각 가상 채널은 특정 요청 라인
+- 클럭 : 필요한 클럭
+
+Example:
+
+Controller:
+		dma0: dma@fcd02000 {
+			compatible = "hisilicon,k3-dma-1.0";
+			reg = <0xfcd02000 0x1000>;
+			#dma-cells = <1>;
+			dma-channels = <16>;
+			dma-requests = <27>;
+			interrupts = <0 12 4>;
+			clocks = <&pclk>;
+			status = "disable";
+		};
+
+client:
+dmax에서 전달하는 특정 요청 라인 사용
+예를 들어, i2c0 읽기 채널 요청 행은 18이고 쓰기 채널 사용은 19
+
+i2c0: i2c@fcb08000 {
+			compatible = "snps,designware-i2c";
+			dmas =	<&dma0 18          /* read channel */
+				 &dma0 19>;        /* write channel */
+			dma-names = "rx", "tx";
+		};
+
+		i2c1: i2c@fcb09000 {
+			compatible = "snps,designware-i2c";
+			dmas =	<&dma0 20          /* read channel */
+				 &dma0 21>;        /* write channel */
+			dma-names = "rx", "tx";
+		};
+
+*/

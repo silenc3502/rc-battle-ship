@@ -1,0 +1,93 @@
+synopsys DWC3 CORE
+
+DWC3- USB3 CONTROLLER. Complies to the generic USB binding properties
+      as described in 'usb/generic.txt'
+
+Required properties:
+ - compatible: must be "snps,dwc3"
+ - reg : Address and length of the register set for the device
+ - interrupts: Interrupts used by the dwc3 controller.
+
+DWC3- USB3 컨트롤러. 'usb / generic.txt'에 설명 된대로 일반 USB 바인딩 속성을 준수합니다.
+
+필수 속성 :
+  - compatible : "snps, dwc3"이어야합니다.
+  - reg : 장치에 설정된 레지스터의 주소와 길이
+  - interrupts : dwc3 컨트롤러가 사용하는 인터럽트입니다.
+
+Optional properties:
+ - usb-phy : array of phandle for the PHY device.  The first element
+   in the array is expected to be a handle to the USB2/HS PHY and
+   the second element is expected to be a handle to the USB3/SS PHY
+ - phys: from the *Generic PHY* bindings
+ - phy-names: from the *Generic PHY* bindings
+ - tx-fifo-resize: determines if the FIFO *has* to be reallocated.
+ - snps,usb3_lpm_capable: determines if platform is USB3 LPM capable
+ - snps,disable_scramble_quirk: true when SW should disable data scrambling.
+	Only really useful for FPGA builds.
+ - snps,has-lpm-erratum: true when DWC3 was configured with LPM Erratum enabled
+ - snps,lpm-nyet-threshold: LPM NYET threshold
+ - snps,u2exit_lfps_quirk: set if we want to enable u2exit lfps quirk
+ - snps,u2ss_inp3_quirk: set if we enable P3 OK for U2/SS Inactive quirk
+ - snps,req_p1p2p3_quirk: when set, the core will always request for
+			P1/P2/P3 transition sequence.
+ - snps,del_p1p2p3_quirk: when set core will delay P1/P2/P3 until a certain
+			amount of 8B10B errors occur.
+ - snps,del_phy_power_chg_quirk: when set core will delay PHY power change
+			from P0 to P1/P2/P3.
+ - snps,lfps_filter_quirk: when set core will filter LFPS reception.
+ - snps,rx_detect_poll_quirk: when set core will disable a 400us delay to start
+			Polling LFPS after RX.Detect.
+ - snps,tx_de_emphasis_quirk: when set core will set Tx de-emphasis value.
+ - snps,tx_de_emphasis: the value driven to the PHY is controlled by the
+			LTSSM during USB3 Compliance mode.
+ - snps,dis_u3_susphy_quirk: when set core will disable USB3 suspend phy.
+ - snps,dis_u2_susphy_quirk: when set core will disable USB2 suspend phy.
+ - snps,dis_enblslpm_quirk: when set clears the enblslpm in GUSB2PHYCFG,
+			disabling the suspend signal to the PHY.
+ - snps,is-utmi-l1-suspend: true when DWC3 asserts output signal
+			utmi_l1_suspend_n, false when asserts utmi_sleep_n
+ - snps,hird-threshold: HIRD threshold
+ - snps,hsphy_interface: High-Speed PHY interface selection between "utmi" for
+   UTMI+ and "ulpi" for ULPI when the DWC_USB3_HSPHY_INTERFACE has value 3.
+ - snps,quirk-frame-length-adjustment: Value for GFLADJ_30MHZ field of GFLADJ
+	register for post-silicon frame length adjustment when the
+	fladj_30mhz_sdbnd signal is invalid or incorrect.
+
+선택적 속성 :
+  - usb-phy : PHY 장치에 대한 phandle 배열입니다. array 의 첫 번째 요소는 USB2 / HS PHY의 핸들이 될 것으로 예상되며 두 번째 요소는 USB3 / SS PHY의 핸들이 될 것으로 예상됩니다
+  - phys : * 일반 PHY * 바인딩
+  - phy-names : * 일반 PHY * 바인딩
+  - tx-fifo-resize : FIFO *가 재 할당되어야 하는지를 결정합니다.
+  - snps, usb3_lpm_capable : 플랫폼이 USB3 LPM 가능 여부를 결정합니다.
+  - snps, disable_scramble_quirk : SW가 데이터 스크램블을 비활성화해야하는 경우 true입니다. FPGA 빌드에 정말 유용합니다.
+  - snps, has-lpm-erratum : LPM 에라타를 사용하도록 DWC3을 구성한 경우 true
+  - snps, lpm-nyet-threshold : LPM NYET 임계 값
+  - snps, u2exit_lfps_quirk : u2exit lfps quirk를 활성화하려면 설정하십시오.
+  - snps, u2ss_inp3_quirk : P3을 U2 / SS 용으로 설정하면 설정 됨 비활성 쿼크
+  - snps, req_p1p2p3_quirk : 코어가 설정되면 항상 P1 / P2 / P3 전환 시퀀스를 요청합니다.
+  - snps, del_p1p2p3_quirk : 코어가 설정되면 일정량의 8B10B 오류가 발생할 때까지 P1 / P2 / P3을 지연시킵니다.
+  - snps, del_phy_power_chg_quirk : 코어를 설정하면 PHY 전원이 P0에서 P1 / P2 / P3으로 변경됩니다.
+  - snps, lfps_filter_quirk : 코어가 설정되면 LFPS 수신을 필터링합니다.
+  - snps, rx_detect_poll_quirk : 코어가 설정된 경우 RX.Detect 후 폴링 LFPS를 시작하기 위해 400us 지연을 비활성화합니다.
+  - snps, tx_de_emphasis_quirk : 코어가 설정되면 Tx 디앰 퍼시스 값이 설정됩니다.
+  - snps, tx_de_emphasis : PHY로 구동되는 값은 USB3 준수 모드에서 LTSSM에 의해 제어됩니다.
+  - snps, dis_u3_susphy_quirk : 코어가 설정되면 USB3 suspend phy가 비활성화됩니다.
+  - snps, dis_u2_susphy_quirk : 코어가 설정되면 USB2 suspend phy가 비활성화됩니다.
+  - snps, dis_enblslpm_quirk : GUSB2PHYCFG의 enblslpm을 지우고 PHY에 대한 일시 중지 신호를 비활성화합니다.
+- snps, is-utmi-l1-suspend : DWC3이 출력 신호 utmi_l1_suspend_n을 지정할 때 true, utmi_sleep_n을 지정할 때 false
+  - snps, hird-threshold : HIRD threshold
+  - snps, hsphy_interface : "utmi"사이의 고속 PHY 인터페이스 선택
+    DWC_USB3_HSPHY_INTERFACE 값이 3 일 때 ULPI에 대해 UTMI + 및 "ulpi".
+  - snps, quirk-frame-length-adjustment : fladj_30mhz_sdbnd 신호가 유효하지 않거나 올바르지 않은 경우 실리콘 후 프레임 길이 조정을위한 GFLADJ 레지스터의 GFLADJ_30MHZ 필드 값입니다.
+
+This is usually a subnode to DWC3 glue to which it is connected.
+이것은 일반적으로 연결되어있는 DWC3  glue 의 하위 노드입니다.
+
+dwc3@4a030000 {
+	compatible = "snps,dwc3";
+	reg = <0x4a030000 0xcfff>;
+	interrupts = <0 92 4>
+	usb-phy = <&usb2_phy>, <&usb3,phy>;
+	tx-fifo-resize;
+};

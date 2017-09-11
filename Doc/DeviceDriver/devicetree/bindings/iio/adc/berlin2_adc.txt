@@ -1,0 +1,43 @@
+* Berlin Analog to Digital Converter (ADC)
+
+The Berlin ADC has 8 channels, with one connected to a temperature sensor.
+It is part of the system controller register set. The ADC node should be a
+sub-node of the system controller node.
+
+Required properties:
+- compatible: must be "marvell,berlin2-adc"
+- interrupts: the interrupts for the ADC and the temperature sensor
+- interrupt-names: should be "adc" and "tsen"
+
+Example:
+
+adc: adc {
+	compatible = "marvell,berlin2-adc";
+	interrupt-parent = <&sic>;
+	interrupts = <12>, <14>;
+	interrupt-names = "adc", "tsen";
+};
+
+
+/*
+
+* 베를린 아날로그 - 디지털 변환기 (ADC)
+
+Berlin ADC는 8 개의 채널을 가지고 있으며, 하나는 온도 센서에 연결되어 있습니다.
+이것은 시스템 컨트롤러 레지스터 세트의 일부입니다. ADC 노드는 시스템 컨트롤러 노드의 하위 노드 여야합니다.
+
+필수 속성 :
+- 호환 가능 : "marvell, berlin2-adc"이어야합니다.
+- 인터럽트 : ADC 및 온도 센서에 대한 인터럽트
+- interrupt-names : "adc"및 "tsen"이어야합니다.
+
+Example:
+
+adc: adc {
+	compatible = "marvell,berlin2-adc";
+	interrupt-parent = <&sic>;
+	interrupts = <12>, <14>;
+	interrupt-names = "adc", "tsen";
+};
+
+*/

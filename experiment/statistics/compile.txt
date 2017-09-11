@@ -1,0 +1,50 @@
+평균값, 중앙값, 최빈값
+gcc -D__DEBUG__ mean.c
+평균, 분산, 표준편차
+gcc variance.c -lm
+사분위수, 사분위수 범위
+gcc quartile.c
+표본 분산 추정, 표본 표준 편차 추정
+gcc sample_var.c -lm
+확률
+gcc prob.c
+상호 배반, 교차
+gcc prob_struct.c
+조건부 확률, 베이즈 정리
+gcc cond_prob.c
+기대값, 확률 분포 테이블(pdt), 분산, 표준편차
+gcc expectation.c -lm
+선형 변환
+gcc linear_expect.c - lm
+순열, 조합
+gcc permu_comb.c
+기하 분포
+gcc geometric_dist.c -lm
+이항 분포
+gcc binomial_dist.c -lm
+푸아송 분포
+gcc poisson_dist.c -lm
+푸아송 분포 결합
+gcc poisson_comb.c -lm
+이항 분포 -> 푸아송 분포 근사 기법
+gcc binom2poisson_approx.c -lm
+정규 분포, Z-Score
+gcc gauss_dist.c -lm
+가우시안 분포의 결합
+gcc gauss_dist_add.c -lm
+이항 분포 -> 가우시안 분포 근사 기법
+gcc binom2gauss_approx.c -lm
+푸아송 분포 -> 가우시안 분포 근사 기법
+gcc poisson2gauss_approx.c -lm
+표본내에서 확률 계산(중심 극한 정리 개선 필요)
+gcc sample_prob.c -lm
+신뢰구간 표준화
+gcc confidence_interval_normalize.c -lm
+t 분포
+gcc t_dist.c -lm
+가설 검정
+gcc hypothesis_test.c -lm
+1 종 오류, 2 종 오류, 검정력
+기대도수, 관측도수, 자유도, 카이제곱 분포
+상관 계수, 선형 회귀 분석
+비선형 회귀 분석

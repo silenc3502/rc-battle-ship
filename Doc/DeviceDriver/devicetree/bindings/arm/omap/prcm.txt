@@ -1,0 +1,66 @@
+OMAP PRCM bindings
+
+Power Reset and Clock Manager lists the device clocks and clockdomains under
+a DT hierarchy. Each TI SoC can have multiple PRCM entities listed for it,
+each describing one module and the clock hierarchy under it. see [1] for
+documentation about the individual clock/clockdomain nodes.
+//전원 리셋 및 클럭 관리자는 DT 계층 구조 아래에 장치 클럭 및 클록 도메인을 나열합니다.
+ 각 TI SoC는 여러 개의 PRCM 엔티티를 나열 할 수 있으며 각 엔티티는 하나의 모듈과 그 아래의 클럭 계층을 설명합니다. 
+클럭 / 클럭 도메인 노드에 대한 문서는 [1]을 참조하십시오.
+
+[1] Documentation/devicetree/bindings/clock/ti/*
+
+Required properties:
+- compatible:	Must be one of:
+		"ti,am3-prcm"
+		"ti,am4-prcm"
+		"ti,omap2-prcm"
+		"ti,omap3-prm"
+		"ti,omap3-cm"
+		"ti,omap4-cm1"
+		"ti,omap4-prm"
+		"ti,omap4-cm2"
+		"ti,omap4-scrm"
+		"ti,omap5-prm"
+		"ti,omap5-cm-core-aon"
+		"ti,omap5-scrm"
+		"ti,omap5-cm-core"
+		"ti,dra7-prm"
+		"ti,dra7-cm-core-aon"
+		"ti,dra7-cm-core"
+		"ti,dm814-prcm"
+		"ti,dm816-prcm"
+- reg:		Contains PRCM module register address range
+		(base address and length)
+- clocks:	clocks for this module
+- clockdomains:	clockdomains for this module
+
+Example:
+
+cm: cm@48004000 {
+	compatible = "ti,omap3-cm";
+	reg = <0x48004000 0x4000>;
+
+	cm_clocks: clocks {
+		#address-cells = <1>;
+		#size-cells = <0>;
+	};
+
+	cm_clockdomains: clockdomains {
+	};
+}
+
+&cm_clocks {
+	omap2_32k_fck: omap_32k_fck {
+		#clock-cells = <0>;
+		compatible = "fixed-clock";
+		clock-frequency = <32768>;
+	};
+};
+
+&cm_clockdomains {
+	core_l3_clkdm: core_l3_clkdm {
+		compatible = "ti,clockdomain";
+		clocks = <&sdrc_ick>;
+	};
+};

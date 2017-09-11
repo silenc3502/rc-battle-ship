@@ -1,0 +1,45 @@
+push-pull, open drain mode 출력 타입(가장 기본적이며 그만큼 많이 사용)
+Drain 은 MOSFET의 Drain 핀을 의미한다. Collector 는 BJT의 Collector이다. 
+Open drain 과 open collector 는 동일한 동작 원리를 가지는 구성을 MOSFET로 마들었느냐 BJT로 만들었느냐의 차이일 뿐이다. 
+반면 push-pull 출력은 BJT나 MOSFET나 모두 같은 이름을 사용한다. 
+push-pull 은 Low를 출력할 때엔 0V가 출력되고, high를 출력하면 VCC혹은 VDD가 출력 되는등 Output port에 아무것도 연결되어 있지 않더라도 output port의 전압이 의도한 바 대로 움직인다는 뜻이다.
+반면 open drain 과 open collector는 Push-pull 출력단과 달리 밀어올려주는(PUSH) 위쪽 절반이 없다. 더군다나 VCC나 VDD와도 전혀 연결되어 있지 않다. 반쪽짜리 미완성 회로인 것이다. 대신 level converter(level shifer), buf구성 등의 출력단을 자신의 입맛에 맞게 알아서 꾸며 쓸수 있다. 
+http://irmus.tistory.com/76
+
+BJT: Bipolar Junction Transistor 접합형 트랜지스터,  전류(BJT)
+N형과 P형으로 도핑된 3개의 반도체 영역과 이들에 의해 형성되는 두개의 PN접합으로 구성
+http://web.yonsei.ac.kr/hgjung/Lectures/ENE301/3%20BJT.pdf
+MOSFET:금속 산화막 반도체 전계효과 트랜지스터 (MOS field-effect transistor) 
+FETs, 전압 (FET)
+디지털 회로와 아날로그 회로에서 가장 일반적인 전계효과 트랜지스터 (FET)이다.
+https://ko.wikipedia.org/wiki/MOSFET
+
+CMOS
+CMOS(Complementary Metal Oxide Semiconductor)는 주로 증가형 MOSFET 소자들을
+사용하여 만든 디지털 로직 IC이다.
+CMOS는 TTL에 비하여 훨씬 늦게 개발되었으나, 반도체 구조가 간단하고 칩상의 공간
+을 적게 차지하여 유리하며, 따라서 소자의 집적도를 높일 수 있기 때문에 VLSI에도 널리
+사용된다. 한편, 사용자의 입장에서는 소비전력이 매우 적고 잡음 여유도가 크다는 것이 더
+욱 유리하다. 그러나, 이것은 바이폴라 트랜지스터를 기본으로 하는 TTL 소자에 비하면 동
+작속도가 느리다는 것이 치명적인 단점이다. 정전기에 약하다. 
+
+TTL
+바이폴라 트랜지스터를 사용하여 만든 디지털 로
+직 IC이다. 이것은 이름이 모두 74XXX의 형태를 취하고, 대부분 +5V 전원전압에서 동작하
+며, 속도가 빠른 반면에 소비전력이 크다는 특징을 가진다.
+
+CMOS는 TTL에 비해 월등히 좋지만 TTL은 전류가 많이 필요한 곳에서 쓸모가 있고 잡음 구간에서 강하자는 가점이 있다. 
+MCU는 대부분 CMOS로 구성되어 있다. 
+http://ohmye.co.kr/web/ohmye/ETC/CMOS_TTL.pdf
+http://digital.ni.com/public.nsf/allkb/7185E851DD0606A986257D96004437A1
+
+하이 임피던스(High Impedance)
+그림에서 출력 Z는 출력측에서 어떤 전압도 드라이브 하지 않는 상태다. 즉, 신호가 없고 뜬 상태이다. 
+하나의 신호선에 복수의 출력 소자를 연결하는 버스 구조를 사용하는 경우에는 신호를 출력할 소자와 수신할 소자만 연결되어 있어야 한다. 회로 제어를 잘못하여 복수의 출력 회로가 동시에 접속되어 버리면 회로 사이에 비정상적인 전류가 흘러서 소자가 파괴될 수도 있다.
+https://ko.wikipedia.org/wiki/%EB%94%94%EC%A7%80%ED%84%B8_%ED%9A%8C%EB%A1%9C
+한가지 더 언급하고 싶은 것이 있는데, 그건 바로 High impedance상태 입니다. Hardware 쟁이들은 High impedance라고 부르고, Software 쟁이들은 floating이라고 부르는 것이 편할 것입니다. 왜냐하면 High impedance는 어떤 Digital chip pin이 내부에서 ∞ 저항이 달린 것과 마찬가지로 된 상태니까, 다른 Digital chip과 연결이 되어 있다면 그 chip에서는 이 pin이 보이지 않는 것과 마찬가지 상태가 되어 버리지요. 만일 이런 High impedance pin과 여러개의 pin이 공통 버스로 연결되어 있다면, High impedance 상태의 pin은 다른 chip들에 의해서 유기 되어진 버스상의
+값들의 변화 (transition)에 관여하지 않게 됩니다. 이런 경우라면 High impedance상태의 pin에서 본다면 무슨 값이 될지 모르는 거니까 floating되어 있다고 볼 수 있습니다. 
+http://recipes.egloos.com/4968642
+
+pull up, pull down 방식
+https://kocoafab.cc/tutorial/view/526

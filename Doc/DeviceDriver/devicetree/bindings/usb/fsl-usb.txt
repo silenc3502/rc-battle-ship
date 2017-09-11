@@ -1,0 +1,109 @@
+Freescale SOC USB controllers
+
+The device node for a USB controller that is part of a Freescale
+SOC is as described in the document "Open Firmware Recommended
+Practice : Universal Serial Bus" with the following modifications
+and additions :
+
+Freescale SOC의 일부인 USB 컨트롤러의 장치 노드는 "Open Firmware Recommended Practice : Universal Serial Bus"문서에 설명 된대로 다음과 같이 수정 및 추가됩니다.
+
+Required properties :
+ - compatible : Should be "fsl-usb2-mph" for multi port host USB
+   controllers, or "fsl-usb2-dr" for dual role USB controllers
+   or "fsl,mpc5121-usb2-dr" for dual role USB controllers of MPC5121.
+   Wherever applicable, the IP version of the USB controller should
+   also be mentioned (for eg. fsl-usb2-dr-v2.2 for bsc9132).
+ - phy_type : For multi port host USB controllers, should be one of
+   "ulpi", or "serial". For dual role USB controllers, should be
+   one of "ulpi", "utmi", "utmi_wide", or "serial".
+ - reg : Offset and length of the register set for the device
+ - port0 : boolean; if defined, indicates port0 is connected for
+   fsl-usb2-mph compatible controllers.  Either this property or
+   "port1" (or both) must be defined for "fsl-usb2-mph" compatible
+   controllers.
+ - port1 : boolean; if defined, indicates port1 is connected for
+   fsl-usb2-mph compatible controllers.  Either this property or
+   "port0" (or both) must be defined for "fsl-usb2-mph" compatible
+   controllers.
+ - dr_mode : indicates the working mode for "fsl-usb2-dr" compatible
+   controllers.  Can be "host", "peripheral", or "otg".  Default to
+   "host" if not defined for backward compatibility.
+
+필수 속성 :
+  - 호환 : 다중 포트 호스트 USB 컨트롤러의 경우 "fsl-usb2-mph", 이중 역할 USB 컨트롤러의 경우 "fsl-usb2-dr"또는 MPC5121의 이중 역할 USB 컨트롤러의 경우 "fsl, mpc5121-usb2-dr"이어야합니다.
+    해당되는 경우 USB 컨트롤러의 IP 버전도 언급해야합니다 (예 : bsc9132의 경우 fsl-usb2-dr-v2.2).
+  - phy_type : 멀티 포트 호스트 USB 컨트롤러의 경우 "ulpi"또는 "serial"중 하나 여야합니다. 이중 역할 USB 컨트롤러의 경우 "ulpi", "utmi", "utmi_wide"또는 "serial"중 하나 여야합니다.
+  - reg : 장치에 설정된 레지스터 오프셋 및 길이
+  - port0 :  boolean; 정의 된 경우 port0이 fsl-usb2-mph 호환 제어기에 연결되었음을 나타냅니다. "fsl-usb2-mph"호환 제어기에 대해이 등록 정보 또는 "port1"(또는 둘다)을 정의해야합니다.
+  - port1 : boolean; 정의 된 경우 port1이 fsl-usb2-mph 호환 제어기에 연결되었음을 나타냅니다. "fsl-usb2-mph"호환 제어기에 대해이 등록 정보 또는 "port0"(또는 둘 다)을 정의해야합니다.
+  - dr_mode : "fsl-usb2-dr"호환 컨트롤러의 작동 모드를 나타냅니다. "호스트", "주변 장치"또는 "otg"일 수 있습니다. 이전 버전과의 호환성을 위해 정의되지 않은 경우 기본값은 "host"입니다.
+
+Recommended properties :
+ - interrupts : <a b> where a is the interrupt number and b is a
+   field that represents an encoding of the sense and level
+   information for the interrupt.  This should be encoded based on
+   the information in section 2) depending on the type of interrupt
+   controller you have.
+ - interrupt-parent : the phandle for the interrupt controller that
+   services interrupts for this device.
+
+Optional properties :
+ - fsl,invert-drvvbus : boolean; for MPC5121 USB0 only. Indicates the
+   port power polarity of internal PHY signal DRVVBUS is inverted.
+ - fsl,invert-pwr-fault : boolean; for MPC5121 USB0 only. Indicates
+   the PWR_FAULT signal polarity is inverted.
+
+권장 속성 :
+  - 인터럽트 : a는 인터럽트 번호이고 b는 인터럽트에 대한 감지 및 레벨 정보의 인코딩을 나타내는 필드입니다. 이것은 인터럽트 컨트롤러의 유형에 따라 섹션 2)의 정보를 기반으로 인코딩해야합니다.
+  - interrupt-parent :이 장치에 대한 인터럽트를 서비스하는 인터럽트 컨트롤러의 파들입니다.
+
+선택적 속성 :
+  - fsl, invert-drvvbus : boolean; MPC5121 USB0 전용. 내부 PHY 신호 DRVVBUS의 포트 전원 극성이 반전되었음을 나타냅니다.
+  - fsl, invert-pwr-fault : boolean; MPC5121 USB0 전용. PWR_FAULT 신호의 극성이 바뀌 었음을 나타냅니다.
+
+
+
+
+Example multi port host USB controller device node :
+멀티 포트 호스트 USB 컨트롤러 장치 노드의 예 :
+
+	usb@22000 {
+		compatible = "fsl-usb2-mph";
+		reg = <22000 1000>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		interrupt-parent = <700>;
+		interrupts = <27 1>;
+		phy_type = "ulpi";
+		port0;
+		port1;
+	};
+
+Example dual role USB controller device node :
+ 이중 역할 USB 컨트롤러 장치 노드 예 :
+
+	usb@23000 {
+		compatible = "fsl-usb2-dr";
+		reg = <23000 1000>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		interrupt-parent = <700>;
+		interrupts = <26 1>;
+		dr_mode = "otg";
+		phy = "ulpi";
+	};
+
+Example dual role USB controller device node for MPC5121ADS:
+듀얼 롤 MPC5121ADS 용 USB 컨트롤러 장치 노드  예 :
+	usb@4000 {
+		compatible = "fsl,mpc5121-usb2-dr";
+		reg = <0x4000 0x1000>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		interrupt-parent = < &ipic >;
+		interrupts = <44 0x8>;
+		dr_mode = "otg";
+		phy_type = "utmi_wide";
+		fsl,invert-drvvbus;
+		fsl,invert-pwr-fault;
+	};

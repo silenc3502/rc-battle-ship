@@ -1,0 +1,79 @@
+#
+# Controller Area Network (CAN) network layer core configuration
+#컨트롤러 영역 네트워크 (CAN) 네트워크 계층 코어 구성
+#
+
+menuconfig CAN
+	depends on NET
+	tristate "CAN bus subsystem support"
+	---help---
+	  Controller Area Network (CAN) is a slow (up to 1Mbit/s) serial
+#컨트롤러 영역 네트워크 (CAN)는 느린 (최대 1Mbit / s) 직렬
+
+	  communications protocol which was developed by Bosch in
+	  1991, mainly for automotive, but now widely used in marine
+	  (NMEA2000), industrial, and medical applications.
+	  More information on the CAN network protocol family PF_CAN
+	  is contained in <Documentation/networking/can.txt>.
+
+	  If you want CAN support you should say Y here and also to the
+	  specific driver for your controller(s) below.
+#CAN 지원을 원한다면 여기서 Y를 말하고
+#아래 컨트롤러에 맞는 드라이버를 선택하십시오.
+
+if CAN
+
+config CAN_RAW
+	tristate "Raw CAN Protocol (raw access with CAN-ID filtering)"
+	default y
+	---help---
+	  The raw CAN protocol option offers access to the CAN bus via
+	  the BSD socket API. You probably want to use the raw socket in
+	  most cases where no higher level protocol is being used. The raw
+	  socket has several filter options e.g. ID masking / error frames.
+	  To receive/send raw CAN messages, use AF_CAN with protocol CAN_RAW.
+#원시 CAN 프로토콜 옵션을 통해 CAN 버스에 액세스 할 수 있습니다.
+#BSD 소켓 API. 당신은 아마 원시 소켓을 다음과 같이 사용하고 싶을 것이다.
+#대부분의 경우 더 높은 수준의 프로토콜이 사용되지 않습니다. 원시
+#소켓에는 몇 가지 필터 옵션이 있습니다. ID 마스킹 / 오류 프레임.
+#원시 CAN 메시지를 받거나 보내려면 프로토콜 CAN_RAW로 AF_CAN을 사용하십시오.
+
+config CAN_BCM
+	tristate "Broadcast Manager CAN Protocol (with content filtering)"
+	default y
+	---help---
+	  The Broadcast Manager offers content filtering, timeout monitoring,
+	  sending of RTR frames, and cyclic CAN messages without permanent user
+	  interaction. The BCM can be 'programmed' via the BSD socket API and
+	  informs you on demand e.g. only on content updates / timeouts.
+	  You probably want to use the bcm socket in most cases where cyclic
+	  CAN messages are used on the bus (e.g. in automotive environments).
+	  To use the Broadcast Manager, use AF_CAN with protocol CAN_BCM.
+#Broadcast Manager는 컨텐츠 필터링, 시간 초과 모니터링,
+#영구 사용자가없는 RTR 프레임 전송 및 주기적 CAN 메시지
+#상호 작용. BCM은 BSD 소켓 API를 통해 '프로그래밍'될 수 있으며
+#예를 들어 당신에게 알려줍니다. 콘텐츠 업데이트 / 시간 제한에만 적용됩니다.
+#대부분의 경우 bcm 소켓을 사용하기를 원할 것입니다.
+#CAN 메시지는 버스 (예 : 자동차 환경)에서 사용됩니다.
+#브로드 캐스트 관리자를 사용하려면 AF_CAN을 프로토콜 CAN_BCM과 함께 사용하십시오.
+#
+config CAN_GW
+	tristate "CAN Gateway/Router (with netlink configuration)"
+	default y
+	---help---
+	  The CAN Gateway/Router is used to route (and modify) CAN frames.
+	  It is based on the PF_CAN core infrastructure for msg filtering and
+	  msg sending and can optionally modify routed CAN frames on the fly.
+	  CAN frames can be routed between CAN network interfaces (one hop).
+	  They can be modified with AND/OR/XOR/SET operations as configured
+	  by the netlink configuration interface known e.g. from iptables.
+#CAN 게이트웨이 / 라우터는 CAN 프레임을 라우팅 (및 수정)하는 데 사용됩니다.
+#이것은 msg 필터링을위한 PF_CAN 핵심 인프라와
+#msg를 보내고 선택적으로 라우팅 된 CAN 프레임을 즉시 수정할 수 있습니다.
+#CAN 프레임은 CAN 네트워크 인터페이스간에 라우팅 될 수 있습니다 (1 홉).
+#구성된대로 AND / OR / XOR / SET 조작으로 수정할 수 있습니다
+#예를 들어, 알려진 넷 링크 구성 인터페이스에 의해. iptables에서.
+
+source "drivers/net/can/Kconfig"
+
+endif

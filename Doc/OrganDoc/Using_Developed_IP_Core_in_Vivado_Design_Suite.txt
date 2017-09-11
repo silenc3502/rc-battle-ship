@@ -1,0 +1,959 @@
+* Create a New Project
+
+새로운 HLS Design 을 만드는 첫 번째 단계는 새 프로젝트를 만드는 것이다.
+Vivado HLS New Project Wizard 를 사용하여 새 프로젝트를 작성한다.
+새 프로젝트 마법사가 우리를 위해 APP 프로젝트 파일을 만든다.
+Vivado HLS 가 Design 파일을 구성할 장소이며 설계 상태를 자주 저장하는 것이 좋다.
+
+새 프로젝트를 만들기 위해 아래 절차를 밟는다:
+
+Step 1. Vivado HLS SW 를 구동한다.
+
+Start -> All Programs -> Xilinx Design Tools -> 
+Vivado 2016.4 -> Vivado HLS -> Vivado HLS Version 을 선택하면
+Vivado HLS Welcom Page 가 나타날 것이다.
+(Linux 에서 작업하는 경우 /opt 밑에 있는 Vivado HLS 를 실행하면 된다)
+
+HLS 시작 페이지에는 사용할 수 있는 여러 가지 Quick Start 옵션이 있다:
+
+* Create New Project - 프로젝트 설정 창을 띄운다.
+* Open Project - 기존 프로젝트로 이동하거나 최근 프로젝트 목록을 선택한다.
+* Open Example Project - Vivado HLS 예제를 연다.
+* Tutorials - "Vivado Design Suite Tutorial: High-Level Synthesis" (UG871) 을 연다.
+* User Guide - "Vivado Design Suite User Guide: High-Level Synthesis" (UG902) 문서를 연다.
+* Release Notes Guide - 최신 SW 버전에 대해 "Vivado Design Suite User Guide:
+                        Release Notes, Installation, and Licensing" (UG973) 을 연다.
+
+이전에 열어본 프로젝트가 있으면 최근 프로젝트 창에 표시된다.
+그렇지 않으면 시작 화면에 이 창이 표시되지 않는다.
+
+Step 2. Vivado HLS 시작 페이지에서 새 프로젝트 만들기 옵션을 선택하여 프로젝트를 연다.
+
+Step 3. Project Configuration Dialog 에서 새 프로젝트의 이름과 위치를 지정한다.
+
+* 프로젝트 이름 필드에 새 프로젝트의 이름으로 modulator 를 입력한다.
+* Browse 를 클릭하여 프로젝트 데이터가 저장될 위치를 지정하도록 한다.
+
+참고: Vivado HLS 가 자동으로 최상위 기능을 식별하기 떄문에
+      프로젝트가 SystemC 로 지정된 경우 이러한 절차가 필요하지 않다.
+
+Step 4. Next 를 클릭한다.
+
+Step 5. Add/Remove Files Dialog 박스에서 C 기반 Design 파일을 지정한다.
+
+* Top Function 필드에서 modulator 를 최상위 함수로 지정한다.
+* New File ... 버튼을 클릭하고 다른 이름으로 저장에서
+  파일 이름 필드에 modulator.cpp 를 새 파일 이름으로 지정한 후 저장을 클릭한다.
+* 새로운 modulator.cpp C++ 파일을 추가한 후 Design Files 섹션의 일부로 나타나야 한다.
+* Next 를 누른다.
+
+참고: Add Files 버튼을 사용하여 기존 소스 코드 파일을 프로젝트에 추가할 수 있다.
+
+중요: Header 파일(확장자가 *.h 인 파일)을
+      Add Files 버튼(또는 연관된 add_files Tcl 명령)을 사용하여 프로젝트에 추가하지 말라.
+
+이 예에서 하나의 C Design 파일(modulator.c) 만 사용한다.
+합성할 C 파일이 여러개인 경우 이 단계에서 모든 파일을 프로젝트에 추가해야 한다.
+Local 디렉토리에 있는 헤더 파일은 프로젝트에 자동으로 포함된다.
+Header 가 다른 위치에 있으면 Edit CFLAGS ... 버튼을 사용하여
+표준 gcc/g++ 검색 경로 정보(예: -l<path_to_header_file_dir>) 을 추가하도록 한다.
+
+Step 6. 두번째 Add/Remove Files Dialog 박스에서 C 기반 testbench 파일을 지정한다:
+
+* New File ... 버튼을 클릭하고 다른 이름으로 저장 대화 상자에서
+  파일 이름 필드에 modulator_tb.cpp 를 새로운 testbench 파일 이름으로 지정하고 저장을 클릭한다.
+* 새로운 modulator_tb.cpp testbench 파일을 추가한 후에는 TestBench 파일 섹션의 일부로 나타나야 한다.
+* Next 를 누른다.
+
+참고: test bench 에 의해 사용되는 모든 파일들과 testbench 는 반드시 포함되어야 한다.
+      한 번에 하나씩 파일을 추가하거나 Ctrl + Shift 를 사용하여 여러개를 한 번에 선택할 수 있다.
+
+참고: test bench 와 관련된 헤더 파일이 있지만 Design 파일이 아닌 SystemC Design 의 경우,
+      Add Files 버튼을 사용하여 헤더 파일을 프로젝트에 추가해야 한다.
+
+Vivado HLS 와 함께 제공되는 대부분의 Example Design 에서
+test bench 는 Design 과는 별도의 파일에 있다.
+test bench 와 기능을 별도의 파일로 합성하면 시뮬레이션과 합성 과정을 완전히 분리할 수 있다.
+test bench 가 합성되 함수와 동일한 파일에 있다면 파일을 소스 파일과 test bench 파일로 추가해야 한다.
+
+C 소스 파일과 마찬가지로 Add Files 버튼을 클릭하여 C test bench 를 추가하고
+Edit CFLAGS 버튼을 클릭하여 C Compiler Options 를 포함한다.
+
+디렉토리에 test bench 파일이 있는 경우 Add Folders 버튼을 사용하여
+개별 파일 대신 전체 디렉토리를 프로젝트에 추가할 수 있다.
+
+C Simulation (및 RTL Co-Simulation) 은 솔루션의 하위 디렉토리에서 실행된다.
+
+test bench 에서 사용하는 모든 파일 (예: test bench 에서 읽은 데이터 파일) 을 포함하지 않으면
+데이터 파일을 찾을 수 없기 때문에 C 및 RTL Simulation 이 실패할 수 있다.
+
+솔루션 구성 창 (그림 2.9) 은 첫 번째 솔루션의 기술 사양을 지정한다.
+
+프로젝트는 각각 다른 목표 기술, 패키지, 제약 조건
+및 synthesis 지시문을 사용하는 여러 솔루션을 가질 수 있다.
+
+Step 7. 솔루션 구성 대화 상자에서 기본 솔루션 이름(solution1), clock 주기(10 ns),
+        그리고 blank clock 불확실성(공백으로 남겨두었을 때의 기본값은 클럭 기간의 12.5%)을 사용한다.
+
+솔루션 구성 대화 상자에서 첫 번째 솔루션의 세부 사항을 지정할 수 있다.
+
+* Solution Name: Vivado HLS 는 초기 기본 이름 solution1 을 제공하지만 솔루션의 이름을 지정할 수 있다.
+* Clock Period: ns 단위로 지정된 클록 주기 혹은 MHz 접미사(예: 100 MHz) 로 지정된 주파수 값
+* Uncertainty: 합성에 사용되는 클록주기는 클록주기에서 클록 불확실성을 뺀 것이다.
+               Vivado HLS 는 내부 모델을 사용하여 각 FPGA 의 작업 지연을 예측한다.
+               클럭 불확실성 값은 RTL 논리 합성, 배치 및 경로로 인한
+               순 지연의 증가를 설명하기 위해 제어 가능한 여분을 제공한다.
+               ns 혹은 백분율로 지정하지 않으면 클록 불확실성은 기본적으로 클록 주기의 12.5% 가 된다.
+* Part: 사용하는 적절한 보드를 선택해주도록 한다.
+
+Step 8. 솔루션 구성 대화 상자에서 부품 선택 버튼을 클릭하여 부품 선택 창을 연다.
+
+필터를 사용하여 장치 목록의 장치 수를 줄일 수 있다.
+대상이 보드인 경우 왼쪽 상단 모서리에 보드를 지정하면 장치 목록이 지원되는 보드 목록으로 바뀐다.
+(Vivado HLS 가 자동으로 올바른 대상 장치를 선택함)
+
+Step 9. Device Selection Dialog 에서 프로젝트의 기본 Xilinx 부품 또는 보드를 선택한다.
+        보드를 선택하여 프로젝트의 기본 보드를 선택하면 평가 보드 목록이 표시된다.
+
+Step 10. ZedBoard Zynq Evaluation 및 개발 키트(적절하게 알아서)를 선택하고 확인을 클릭한다.
+         솔루션 구성 대화 상자에서 선택한 부품 이름이 부품 선택 머리글 아래에 나타난다.
+
+Step 11. 솔루션 구성 대화 상자에서 Finish 를 클릭하여 생성된 Vivado HLS 프로젝트를 연다.
+
+새로운 프로젝트 생성이 끝나면 몇 초 안에 Vivado HLS 프로젝트가 나타날 것이다.
+
+Vivado HLS 는 새 프로젝트를 만들 때 GUI 에서 지정한 이름과 위치의 디렉토리를 만든다.
+즉 모든 프로젝트 데이터가 project_name(modulator) 디렉토리에 저장된다.
+
+Vivado HLS 프로젝트에서 아래 사항을 확인할 수 있다:
+
+* 프로젝트 이름은 탐색기 창의 맨 위에 표시된다.
+* Vivado HLS 프로젝트는 정보를 계층적 형식으로 정렬한다.
+* 이 프로젝트는 Design Source, Test Bench, 그리고 Solutions 를 보유한다.
+* 이 솔루션에서 Target Technology, Design 지침 및 결과에 대한 정보가 들어있다.
+* 프로젝트 내에 여러 솔루션이 있을 수 있으며 각 솔루션은 동일한 소스 코드를 구현한다.
+
+참고: 언제든지 툴바의 해당 프로젝트 설정 및 솔루션 설정 버튼을 사용하여
+      프로젝트 혹은 솔루션 설정을 변경할 수 있다.
+
+Vivado HLS GUI 는 4 개의 창으로 구성된다:
+
+* Explorer Pane
+
+프로젝트 계층 구조를 표시한다.
+유효성 검사, 합성, 확인 및 IP 패키징 단계를 진행하면서
+각 단계의 결과가 포함된 하위 폴더가
+솔루션 디렉토리(각각 csim, syn, sim 및 impl)에 자동으로 만들어진다.
+
+새로운 솔루션을 생성하려면 solution1 과 함께 프로젝트 계층구조 내에 나타난다.
+
+* Information Pane
+
+탐색기 창에서 열린 모든 파일의 내용을 표시한다.
+작업이 완료되면 이 창에 보고서 파일이 자동으로 열린다.
+
+* Auxiliary Pane
+
+정보 창과 상호 연결된다.
+이 창에 표시된 정보는 정보 창에 열려있는 파일에 따라 동적으로 조정된다.
+
+* Console Pane
+
+Vivado HLS 가 실행될 때 생성된 메시지를 표시한다.
+콘솔 창 탭에 오류 및 경고가 나타난다.
+
+Vivado HLS GUI 에서 아래도 찾을 수 있다:
+
+* Toolbar Buttons
+
+Toolbar 버튼을 사용하여 가장 일반적인 작업을 수행할 수 있다.
+버튼 위에 커서를 놓으면 팝업 도구 설명이 열리고 기능을 설명한다.
+각 버튼에는 풀다운 메뉴에서 사용할 수 있는 관련 메뉴 항목도 있다.
+
+* Perspectives
+
+Perspectives 는 Vivado HLS GUI 에서 창을 조정하는 편리한 방법을 제공한다.
+
+  - Synthesis Perspective
+    기본 Perspective 를 사용하여 Design 을 합성하고 시뮬레이션을 실행하고 IP 를 패키징할 수 있다.
+
+  - Debug Perspective
+    C Code 디버깅과 관련된 창이 포함된다.
+    C 코드를 컴파일 한 이후에 Debug Perspective 를 열 수 있다.
+    (컴파일 정보 최적화 옵션을 사용하지 않으면 Debug 정보가 비활성화된다)
+
+  - Analysis Perspective
+    이 관점의 창은 하성 결과 분석을 지원하도록 구성된다.
+    합성이 완료된 후에만 Analysis Perspective 를 사용할 수 있다.
+
+
+
+Develop C Algorithm
+
+HLS 프로젝트의 첫 번째 단계는 Design 을 위한 C Algorithm 을 개발하는 것이다.
+이 Tutorial 에서는 실제 알고리즘이 C++ 프로그래밍 언어로 작성된다.
+
+modulator 프로젝트 생성과 함께 이미 2 개의 아무것도 없는
+C++ 파일인 modulator.cpp 와 modulator_tb.cpp 를 생성했다.
+이제 이 2 개의 파일이 저장된 동일한 디렉토리에 저장될
+modulator.h 헤더 파일의 내용과 *.cpp 파일의 내용을 작성해야 한다.
+
+이 3 개의 파일의 내용은 아래에서 살펴보도록 한다.
+
+modulator.cpp
+
+#include "ap_int.h"
+#include "math.h"
+#include "modulator.h"
+// function that calculates sine wave samples value
+void init_sine_table(ap_uint<width> *sine)
+{
+    float temp;
+    init_sine: for (int i = 0; i < sine_samples; i ++)
+        // sin (2*pi*i / N) * (2^(width-1) - 1) + 2^(width-1) - 1, N = 2^depth
+        sine[i] = (ap_uint<width>)(sin(2*3.14*i/sine_samples)*(sine_ampl/2.0-1.0)+sine_ampl/2.0-1.0);
+}
+// pwm generator
+void modulator(
+   ap_uint<1> sw0,       // switch used for selecting frequency
+   ap_uint<1> *pwm_out)  // pointer to pwm output
+{
+    static ap_uint<depth> counter = 0;           // counter for sine wave sample counting
+    static ap_uint<width> sine[sine_samples];    // samples of the sine wave signal
+    // sine table initialization
+    init_sine_table(sine);
+    // hold pwm_out high for specified number of clock cycles
+    onloop: for (ap_uint<20> j = 0; j < (ap_uint<20>)(period[sw0]*sine[counter]); j++)
+    {
+         pwm_out = 1;
+    }
+    // hold pwm_out low for specified number of clock cycles
+    offloop: for (ap_uint<20> j = 0; j < (ap_uint<20>)(period[sw0]*(sine_ampl - sine[counter])); j++)
+    {
+         pwm_out = 0;
+    }
+    counter++;
+}
+
+modulator_tb.cpp
+
+#include <iostream>
+#include "ap_int.h"
+#include "modulator.h"
+using namespace std;
+ap_uint<1> pwm_out;    // pulse width modulated signal
+int main(int argc, char **argv)
+{
+    for (int i = 0; i < 256; i ++)
+        modulator(0, &pwm_out);
+    for (int i = 0; i < 256; i ++)
+        modulator(1, &pwm_out);
+    return 0;
+}
+
+modulator.h
+
+#ifndef __PWM_H__
+#define __PWM_H__
+#include "ap_int.h"
+#include <cmath>
+using namespace std;
+#define depth               8          // the number of bits used to represent sample count of sine wave
+#define width               12         // the number of bits used to represent amplitude value
+                            
+#define sine_samples        256        // maximum number of samples in one period of the signal
+#define sine_ampl           4096       // maximum amplitude value of the sine wave
+                            
+#define refclk_frequency    100000000  // reference clock frequency (100 MHz)
+                            
+#define freq_low            1          // first frequency for the PWM signal, specified in Hz
+#define freq_high           3.5        // second frequency for the PWM signal, specified in Hz
+// minimum duration of high value of pwm signal for two different frequencies 
+const float period[2] = {(float)(refclk_frequency/(sine_ampl*sine_samples*freq_low)),
+                         (float)(refclk_frequency/(sine_ampl*sine_samples*freq_high))};
+// Prototype of top level function for C-synthesis
+void modulator(
+   ap_uint<1> sw0,          // switch used for selecting frequency
+   ap_uint<1> *pwm_out);    // pointer to pwm output
+#endif
+
+modulator.cpp 및 modulator_tb.cpp 파일의 내용을 추가하렴 아래 단계를 수행하라.
+
+Step 1. Vivado HLS Explorer 창에서 Source 폴더를 확장하고
+        modulator.cpp C++ 파일을 두 번 클릭하여 연다.
+
+Step 2. 열려있는 modulator.cpp 파일에서 위 소스 파일의 내용을 복사하고 저장 버튼을 누른다.
+
+Step 3. modulator_tb.cpp test bench 파일에 대해 동일한 절차를 반복한다.
+        따라서 Vivado HLS Explorer 창의 Test Bench 폴더를 확장하고
+        modulator_tb.cpp 파일을 두 번 클릭하여 연다.
+        
+Step 4. 열린 modulation_tb.cpp 파일에 위 소스 내용을 복사하고 저장 버튼을 누른다.
+
+Step 5. modulator.h 헤더 파일을 만들기 위해 편집기에서 작성하여 폴더에 저장한다.
+        이렇게하면 modulator.h 헤더 파일이 자동으로 프로젝트에 포함되며
+        탐색기 창의 Include 폴더에서 해당 헤더 파일을 찾아야 한다.
+        modulator.h 헤더 파일의 내용은 위의 텍스트에서 찾을 수 있다.
+
+
+
+Verify C Algorithm
+
+HLS 프로젝트의 두 번째 단계는 C 코드가 올바른지 확인하는 것이다.
+이 절차를 C Validation 혹은 C Simulation 이라고 한다.
+
+Vivado HLS Flow 의 검증은 2 가지 별개의 절차로 분리될 수 있다:
+
+1. C 프로그램을 검증하는 Pre-Synthesis Validation 은 필수 기능을 올바르게 구현한다.
+2. RTL 을 확인하는 Post-Synthesis Verification
+
+두 절차를 시뮬레이션이라 한다:
+C Simulation 및 C/RTL Co-Simulation
+
+합성 전에 합성될 함수는 C Simulation 을 사용하여 test bench 로 검증되어야 한다.
+C test bench 에서 최상위 함수인 main() 과 합성할 함수가 포함되어 있다.
+다른 기능을 포함할 수 있다.
+이상적인 test bench 에는 아래와 같은 특성이 있다:
+
+* test bench 는 자체 검사를 통해 합성할 함수의 결과가 올바른지 확인한다.
+* 결과가 정확하다면 test bench 는 main() 에 값 0 을 반환한다.
+  그렇지 않으면 test bench 는 0 이 아닌 값을 반환한다.
+
+Vivado HLS 는 OpenCL API C Kernel 을 합성한다.
+OpenCL API C Kernel 을 Simulate 하려면 표준 C test bench 를 사요애향 한다.
+C test bench 로 OpenCL API C Host Code 를 사용할 수 없다.
+
+Step 1. Run C Simulation Toolbar 버튼을 클릭하여 C Simulation Dialog Box 를 연다.
+
+C Simulation Dialog Box 를 여는 다른 방법은 기본 HLS Toolbar 메뉴에서
+Project -> Run C Simulation 옵션을 선택하는 것이다.
+C Simulation Dialog Box 에서 아래 옵션을 찾을 수 있다:
+
+* Launch Debugger - 이 옵션은 C Code 를 컴파일하고 자동으로 Debug Perspective 를 연다.
+                    Debug Perspective 에서 합성 Perspective 버튼(왼쪽 위)를 사용하여
+                    Synthesis Perspective 로 돌아갈 수 있다.
+
+* Build Only - 이 옵션은 C Code 를 컴파일하지만 Simulation 을 실행하지 않는다.
+               C Simulation 실행에 대한 자세한 내용은
+               "Reviewing the Ouptut of C Simulation" 에서 다룬다.
+
+* Clean Build - 이 옵션은 Code 를 컴파일하기 전에
+                Project 에서 기존 실행 파일과 Object 파일을 제거한다.
+
+* Optimized Compile - 기본적으로 Design 은 Debug 정보로 컴파일되므로
+                      Debug Perspective 에서 컴파일을 분석할 수 있다.
+                      이 옵션은 Design 을 컴파일 할 때 더 높은 수준의 최적화를 수행하지만
+                      Debugger 에 필요한 모든 정보를 제거하게 된다.
+                      이렇게하면 컴파일 시간은 늘어나지만
+                      Simulation 실행 시간은 단축된다.
+
+Step 2. C Simulation Dialog 상자에서 OK 를 누른다.
+
+C Simulation Dialog 상자에서 옵션을 선택하지 않으면
+C Code 가 컴파일되고 C Simulation 이 자동으로 실행된다.
+C Code 가 성공적으로 시뮬레이션되면 콘솔 창에 메시지가 표시된다.
+
+Design 은 이제 Synthesis 준비가 되었다.
+
+참고: C Simulation 이 실패한 경우 C Simulation 대화 상자에서 Debugger 시작 옵션을 선택하고
+      Design 을 컴파일 하면 자동으로 Debug Perspective 로 전환한다.
+      여기서 C Debugger 를 사용하여 문제를 해결할 수 있다.
+
+
+
+C Simulation Output Files
+
+C Simulation 이 완료되면 solution1 폴더 내에 csim 폴더가 생성된다.
+
+csim/build 폴더는 C Simulation 과 관련된 모든 파일의 기본 위치다:
+
+* test bench 에서 읽은 파일은 이 폴더에 복사된다.
+* C 실행 파일 csim.exe 가 만들어지고 이 폴더에서 실행된다.
+* test bench 에서 작성한 모든 파일이 이 폴더에 생성된다.
+
+C Simulation Dialog 상자에서 Build Only 옵션을 선택하면
+이 폴더에서 csim.exe 파일이 만들어지지만 파일은 실행되지 않는다.
+C Simulation 은 Command Shell 에서 이 파일을 실행하여 수동으로 실행된다.
+Windows 에서 시작 메뉴를 통해 Vivado HLS Command Shell 을 사용할 수 있다.
+
+csim/report 폴더는 C Simulation 의 Log 파일을 포함한다.
+
+Vivado HLS Design Flow 의 다음 단계는 Synthesis 를 수행하는 것이다.
+
+
+
+Synthesize C Algorithm into an RTL Implementation(High-Level Synthesis)
+
+이 단계에서는 C Design 을 RTL Design 으로 합성하고 합성 보고서를 검토한다.
+
+Step 1. Run C Synthesis Toolbar 버튼을 클릭하거나
+        Solution -> Run C Synthesis -> Active Solution option 을 사용하여
+        Vivado HLS Menu 에서 RTL Implementation 으로 Design 을 합성한다.
+
+합성 절차중 메시지는 콘솔 창에 표시된다.
+메시지에는 합성 절차가 진행되는 방법을 보여주는 정보 메시지가 포함된다.
+메시지는 또한 합성 과정에 대한 세부 사항을 제공한다.
+
+합성이 완료되면 정보 창에 최상위 함수의 합성 보고서가 자동으로 열린다.
+
+합성 보고서는 RTL Design 의 성능과 영역에 대한 세부 사항을 제공한다.
+오른쪽의 개요 탭을 사용하여 보고서를 탐색할 수 있다.
+이 하위 장에서는 Design 개발의 현재 단계에서 중요한 특정 보고서 범주만 설명한다.
+
+Step 2. Outline Tab 에서 Performance Estimation 옵션을 클릭하라.
+
+Performance Estimates Pane 에서 Timing(ns) / Summary 를 확장하면
+클록 주기가 10 ns 로 설정됨을 알 수 있다.
+Vivado HLS 는 Clock Target - Clock Uncertainty 의 클록 주기
+(여기서 10.00 - 1.25 = 8.75 ns) 를 대상으로 한다.
+
+Clock Uncertainty 는 장소 및 라우팅으로 인해(이 단계에서) 알 수 없는 순 지연을 위해
+사용할 수 있는 타이밍 여분이 있음을 보장한다.
+
+예상 클록 주기(최악의 경우 지연) 은 8.37 ns 이며 8.75 ns 의 타이밍 요구 사항을 충족한다.
+
+Performance Estimates Pane 에서 Latency(Clock Cycles)/Summary 를 확장하면 아래를 볼 수 있다:
+
+* Design 이 ? Clock Cycle 의 Latency 를 가지고 있다:
+  결과를 출력하는데 ? Clock 이 소요된다.
+* Interval 은 ? Clock Cycle 을 가진다:
+  다음 입력 집합은 ? Clock 이후에 읽혀진다.
+  이것은 최종 Clock 이 기록된 후 한 주기에 해당한다.
+  이는 Design 이 Pipeline 되지 않았음을 나타낸다.
+  이 함수(또는 다음 트랜잭션)의 다음 실행은 현재 트랜잭션이 완료될 때만 시작할 수 있다.
+
+참고: 우리의 설계에서 Vivado HLS 는 대기 시간 값을 계산할 수 없다.
+
+Performance Estimates Pane 에서 Latency(Clock Cycles)/Detail 을 확장하면 아래를 볼 수 있다:
+
+* 이 Design 에 하위 블록이 없다.
+  Instance 섹션을 확장하면 계층 구조에 하위 모듈이 표시되지 않는다.
+* Loop 섹션을 확장하면 모든 대기 시간 지연은
+  onloop 및 offloop 라는 Loop 에서 합성된 RTL Logic 으로 인한 것이다.
+  이 논리는 ? 번(Trip Count) 을 실행한다.
+  각각의 실행은 이 Loop(Latency)에서 합성된 Logic 의 모든 반복을 실행하기 위해
+  총 1 초 Clock Cycle(반복 지연)을 필요로하며
+  총 Clock Cycle 은 ? 이다.
+
+앞서 적었듯이 Vivado HLS 는 Latency 값을 계산할 수 없다.
+
+Step 3. Outline Tab 에서 Utilization Estimates 옵션을 클릭한다.
+
+Utilization Estimates Pane 의 Summary 섹션에서 아래를 볼 수 있다:
+
+* Design 은 1 개의 BRAM_18K 메모리, 3 개의 DSP48E, 727 플립 플롭 및 1836 개의 LUT 를 사용한다.
+  이 단계에서 Device Resource 번호는 추정치에 해당한다.
+* Resource Utilization 수치는 RTL 합성이 추가 최적화를 수행할 수 있고
+  RTL 합성 후에 이러한 수치가 변경될 수 있으므로 예상치에 해당한다.
+
+Utilization Estimates Pane 에서 Detail/Instance 섹션을 펼치면 아래와 같은 것이 보인다:
+
+* 여기에 지정된 Resource 는 계층 구조 수준에서 Instance 화된 하위 블록에서 사용된다.
+  Design 에 계층 구조가 없지만 Vivado HLS 는 부동 소수점과 부호없는 정수값의 곱셈을 수행할 때
+  이를 도입했다(modulator.cpp 소스 코드의 28 및 34 행)
+  Vivado HLS 는 2 가지 Instance 를 만든다:
+* modulator_fmul_32ns_32ns_32_4_max_dsp_U0 - Single Precision Floating Point 곱셈에 사용된다.
+* modulator_sitofp_64ns_32_6_U1 - 정수값을 부동 소수점값으로 변환하는데 사용된다.
+
+각 Instance 에 대해 Vivado HLS 는 구현에 필요한 Resource(BRAM, DSP, FF, LUT 의 수)를 보고한다.
+
+Step 4. Outline 탭에서 Interface 옵션을 클릭한다.
+
+Interface Report 에서 Interface Synthesis 로 생성된 Port 및 I/O Protocol 을 보여준다:
+
+* Design 에는 Clock 및 Reset Port(ap_clk 및 ap_rst) 가 있다.
+  이것들은 Source Object Modulator 와 관련이 있다: Design 자체
+* Source Object Modulator 에 표시된대로 Design 과 관련된 추가 port 가 있다.
+  Synthesis 는 Block Level 제어 포트 ap_start, ap_done, ap_idle, ap_ready 를 자동으로 추가한다.
+* Interface Synthesis Tutorial 은 이러한 Port 에 대한 자세한 정보를 제공한다.
+* Scalar Input Argument sw0_V 는 I/O 프로토콜이 없는 데이터 포트(ap_none) 으로 구현된다.
+* 마지막으로 Function Outputs pwm_out_V 및 pwm_out_V_ap_vld 는
+  관련된 출력 유효 신호 표시자인 pwm_out_V 를 갖는 1 bit 데이터 포트에 해당한다.
+
+
+
+C Synthesis Output Files
+
+Synthesis 가 완료되면 이제 solution1 폴더에서 syn 폴더를 사용할 수 있다.
+
+syn 폴더에는 4 개의 하위 폴더가 있다.
+각 RTL 출력 형식에 대한 폴더와 report 폴더가 있다.
+
+report 폴더에는 최상위 기능에 대한 report 파일과 design 의 모든 하위 기능에 대한 report 파일이 있다:
+함수가 INLINE 지시문을 사용하여 inline 되지 않았거나
+Vivado HLS 에서 자동으로 inline 되지 않은 경우에 해당한다.
+최상위 기능에 대한 보고서는 전체 design 에 대한 세부 사항을 제공한다.
+
+verilog, vhdl 및 systemc 폴더에는 출력 RTL 파일이 포함되어 있다.
+FIgure 2.28 은 확장된 4 개의 폴더를 모두 보여준다.
+최상위 파일은 합성을 위한 최상위 함수와 이름이 같다.
+C Design 에는 각 함수(inline 되지 않음)에 대해 하나의 RTL 파일이 있다.
+Sub Block(Block RAM, Pipeline 된 곱셈기 등)을 구현하기 위한 추가 RTL 파일이 있을 수 있다.
+
+중요: Xilinx 는 이러한 파일을 RTL 합성에 사용하지 않는게 좋다.
+대신 Xilinx 는 이 Design Flow 에서 나주엥 설명할 Packaged IP 출력 파일을 사용할 것을 권장한다.
+
+Vivado HLS 가 부동 소수점 Design 과 같이 Design 에서 Xilinx IP 를 사용하는 경우
+RTL 디렉토리에 RTL 합성 중에 IP 를 생성하는 Script 가 포함되어 있다.
+syn 폴더에 있는 파일이 RTL 합성에 사용되는 경우
+해당 폴더에 있는 Script 파일을 올바르게 사용하는 것은 사용자의 문제다.
+Package IP 를 사용하는 경우 이 절차는 Design Xilinx Tools 에 의해 자동으로 수행된다.
+
+
+
+C Synthesis Results
+
+RTL Design 을 분석하기 위해 제공되는 2 가지 기본 기능은 아래와 같다:
+
+1. Synthesis Reports
+2. Analysis Perspective
+
+또한 RTL 환경에서 작업하는 것이 더 편한 경우 
+Vivado HLS 는 IP Packaging 절차 중에 2 가지 프로젝트를 만든다:
+
+1. Vivado Design Suite Project
+2. Vivado IP Integrator Project
+
+Synthesis Reports
+
+합성이 완료되면 최상위 함수의 synthesis report 가 information pane 에 자동으로 열린다.
+report 는 RTL Design 의 성능 및 영역에 대한 세부 정보를 제공한다.
+오른쪽의 Outline 탭을 사용하여 보고서를 탐색할 수 있다.
+
+아래 표에서 synthesis report 의 범주를 설명한다.
+
+Table 2.1: Synthesis Report Category
+
+* General Information:
+  결과가 생성된 시기, 사용된 SW 버전, 프로젝트 이름, 솔루션 이름 및 기술 세부 사항에 대한 세부 정보
+
+* Performance Estimates -> Timing:
+  Target Clock 주파수, Clock 불확실성 및 달성 가능한 가장 빠른 Clock 주파수의 추정치
+
+* Performance Estimates -> Latency -> Summary:
+  이 Block 및 해당 Block 에서 Instance 화된 모든 하위 Block 의 대기 시간 및 시작 간격을 보고한다.
+  C 소스의 수준에서 호출되는 각 하위 함수는 inline 되지 않는 한 이 RTL Block 의 Instance 에 해당한다.
+  Latency 는 출력을 생성하는데 걸리는 Cycle 수에 해당한다.
+  initiation interval 은 새로운 입력이 적용될 수 있는 Clock 주기의 수에 해당한다.
+  PIPELINE 지시어가 없으면 대기 시간은 시작 간격보다 1 Cycle 이 짧다.
+  (최종 출력이 기록될 때 다음 입력이 읽혀진다)
+
+* Performance Estimates -> Latency -> Detail:
+  이 Block 의 Instance(하위 기능) 및 Loop 에 대한 대기 시간 및 시작 간격이다.
+  Loop 에 하위 Loop 가 포함되어 있으면 Loop 계층 구조가 표시된다.
+  min 및 max Latency 값은 Loop 의 모든 반복을 실행하는 대기 시간을 나타낸다.
+  Code 에서 조건 분기가 있으면 최소 및 최대가 서로 다를 수 있다.
+  반복 Latency 는 Loop 의 단일 반복에 대한 Latency 에 해당한다.
+  Loop 의 Latency 가 가변적인 경우 Latency 을 결정할 수 없으며 ? 로 표시된다.
+  지정된 Target Initiation Interval 은 달성된 실제 시작 간격 옆에 표시된다.
+  tripcount 는 총 반복 횟수를 표시한다.
+
+* Utilization Estimates -> Summary:
+  report 의 이 부분은 Design 을 구현하는데 사용된 Resource(LUTS, Flip-Flops, DSP48s) 를 보여준다.
+
+* Utilization Estimates -> Detail -> Instance:
+  여기에 지정된 Resource 는 이 계층 구조 수준에서 Instance 화된 하위 Block 에서 사용된다.
+  Design 에 RTL 계층 구조만 있으면 Instance 가 보고되지 않는다.
+  Instance 가 있는 경우 Instance 이름을 클릭하면 해당 Instance 에 대한 Synthesis Report 가 열린다.
+
+* Utilization Estimates -> Details -> Memory:
+  여기에 나열된 자원은 이 계층 구조에서 메모리를 구현하는데 사용되는 자원이다.
+  Vivado HLS 는 단일 포트 BRAM 을 하나의 메모리 뱅크로 보고하고
+  듀얼 포트 BRAM 을 2 개의 메모리 뱅크로 사용한다고 보고한다.
+
+* Utilization Estimates -> Details -> FIFO:
+  여기에 나열된 Resource 는 이 계층 구조 수준에서 구현된 FIFO 의 구현에 사용되는 Resource 이다.
+
+* Utilization Estimates -> Details -> Shift Register:
+  Xilinx SRL 구성 요소에 매핍된 모든 Shift Register 요약이다.
+  RTL 합성 중에 SRL 구성 요소에 추가 맵핑이 발생할 수 있다.
+
+* Utilization Estimates -> Details -> Expressions:
+  이 범주는 현재 계층 구조의 곱셈기, 덧셈기 및 비교기와 같은 식에서 사용되는 리소스를 보여준다.
+  표현식에 대한 입력 포트의 비트 너비가 표시된다.
+
+* Utilization Estimates -> Details -> Multiplexors:
+  이 섹션에서는 계층구조에서 Multiplexor 를 구현하는데 사용된 Resource 를 보여준다.
+  Multiplexor 의 입력 폭이 표시된다.
+
+* Utilization Estimates -> Details -> Register:
+  이 계층구조의 모든 레지스터 목록이 여기 표시된다.
+  보고서에는 레지트서 비트 폭이 포함된다.
+
+* Interface Summary -> Interface:
+  여기선 함수 인자가 RTL 포트로 합성된 방법을 보여준다.
+  RTL 포트 이름은 프로토콜 및 원본 개체와 함께 그룹화된다:
+  이들은 소스 객체가 명시된 I/O Protocol 로 합성될 때 생성되는 RTL 포트에 해당한다.
+
+특정 Xilinx Device 는 SSI(Stacked Silicon Interconnect) 기술을 사용한다.
+이러한 장치에서 사용 가능한 총 Resource 는 여러 Super Logic Regions(SLRs) 로 나뉜다.
+Target Technology 로 SSI Technology Device 를 선택하면
+Utilization Report 에 SLR 사용량과 전체 Device 사용량에 대한 세부 정보가 포함된다.
+
+중요: SSI Technology Device 를 사용할 때는
+      Vivado HLS 가 만든 논리가 단일 SLR 에 맞는지 확인하는 것이 중요하다.
+      SSI Technology Devices 를 사용하기 위한 정보를 파악해야 한다.
+
+Vivado HLS 의 새로운 사용자에 대한 공통 문제는 report 를 살펴보는 것이다.
+Latency 값은 모두 ? 로 표시된다.
+
+Vivado HLS 는 각 Loop 의 반복 횟수를 결정하기 위해 분석을 수행한다.
+Loop 반복 제한이 변수인 경우 Vivado HLS 는 최대 상한을 결정할 수 없다.
+
+Design 의 Latency 혹은 처리량이 가변 인덱스가 있는 Loop 에 종속적인 경우
+Vivado HLS 는 Loop 의 Latency 가 알려지지 않은 것으로 보고한다.
+(report 에는 ? 로 표시됨)
+
+TRIPCOUNT 지시문을 Loop 에 적용하여 Loop 반복 횟수를 수동으롲 ㅣ정하고
+report 에 유용한 숫자가 포함되도록 할 수 있다.
+-max 옵션은 Loop 가 반복하는 최대 반복 횟수를 Vivado HLS 에 알려주고
+-min 옵션은 수행되는 최소 반복 횟수를 지정하고 -avg 옵션은 평균 tripcount 횟수를 지정한다.
+
+참고: TRIPCOUNT 지시문은 합성 결과에 영향을 주지 않는다.
+
+tripcount 값은 report 에만 사용되며 Vivado HLS 에서 생성된 report 가
+Latency 및 Interval 에 대해 의미있는 범위를 표시하는지 확인한다.
+이것은 또한 다른 솔루션 간의 의미있는 비교를 허용한다.
+
+C assert 매크로가 Code 에서 사용되는 경우 Vivado HLS 는 이를 사용하여
+Loop 제한을 자동으로 결정하고 이러한 제한에 정확히 맞는 HW 를 생성한다.
+
+Analysis Perspective
+
+Synthesis Report 외에도 Analysis Perspective 를 사용하여 결과를 분석할 수 있다.
+Analysis Perspective 를 열려면 안경 아이콘의 Analysis 버튼을 클릭하면 된다.
+
+Analysis Perspective 는 Design 성능 및 Resource 에 대한
+표 형식 및 그래픽 보기를 제공하며 두 보기 간의 상호 참조를 지원한다.
+
+Module 계층 구조 창은 전체 RTL Design 의 개요를 제공한다.
+
+* 이 View 는 Design 계층 전체를 탐색할 수 있다.
+* Module 계층 구조 창은 RTL 계층의 각 Block 에 대한 Resource 및 Latency 기여도를 보여준다.
+
+Performance Profile Pane 은 Module 계층 구조 창에서
+현재 선택된 Block 의 성능에 대한 세부 정보를 제공한다.
+이 경우 Module 계층 구조 창에서 강조 표시된 Modulator Block 이 강조 표시된다.
+
+* Block 의 Performance 는 포함된 하위 Block 과 이 계층 구조내의 모든 Logic  의 기능이다.
+  Performance Profile Pane 에는 전체 성능에 기여하는 이 계층 구조의 항목이 표시된다.
+* 성능은 Latency 및 Initiation Interval 로 측정된다.
+  또한 이 창에는 Block 이 Pipeline 되었는지 여부에 대한 세부 정보가 포함된다.
+* 이 예에서는 두 계층의 Loop(Onloop 및 Offloop) 가
+  이 계층 구조에서 로직으로 구현된다는 것을 알 수 있다.
+
+Schedule View Pane 에는 이 특정 Block 의 작업이 Clock 주기로 예약되는 방법이 표시된다.
+Default View 는 Performance View 에 해당한다.
+
+* 왼쪽 열에는 자원이 나열되어 있다.
+  - 하위 블록은 녹색이다.
+  - 소스의 Loop 에서 생성된 연산은 노란색으로 표시된다.
+  - 표준 작업은 자주색이다.
+
+* Modulator 는 3 가지 주요 부분으로 구성된다:
+  - sin 함수 배열을 초기화하는 init_sine_table 함수
+  - onloop 라는 Loop
+  - offloop 라는 Loop
+
+* 맨 위 행에는 Design 의 Control State 가 나열된다.
+  Control State 는 Vivado HLS 에서 Clock 주기로 작업을 예약하는데 사용되는 내부 상태다.
+  Control State 와 RTL FSM 의 최종 상태 사이에는 밀접한 상관 관계가 있지만 일대일 맵핑은 없다.
+
+Source Code View 에서 연관된 변수를 열 수 있다.
+쓰기 연산이 입력 배열 변수로부터 buf 배열에 데이터를 쓰는 것을 구현하고 있음을 알 수 있다.
+
+Analysis Perspective 를 사용하여 Resource Usage 를 분석할 수도 있다.
+Resource Profile 과 Resource Pane 을 보고 파악하도록 한다.
+
+Resource Profile Pane 은 이 계층 구조 수준에서 사용되는 Resource 를 표시한다.
+이 예에서 모든 DSP Resource 가 2 개의 Instance 에서 사용되는 것을 볼 수 있다.
+(modulator_fmul_32ns_32ns_32_4_max_dsp_U0 및 modulator_sitofp_64ns_32_6_U1)
+이 Block 내부에 Instance 화된 Block 을 볼 수 있다.
+
+Expressions 섹션을 확장하면 이 계층구조의 Resource 를 사용하여
+3 개의 감산기, 5 개의 덧셈기, 2 개의 비교기,
+2 개의 오른쪽 시프트 연산자, 5 개의 선택 연산자 및 2 개의 왼쪽 시프트 연산자를 구현할 수 있다.
+
+Resource Pane 은 사용된 작업의 Control State 를 보여준다.
+여기서 모든 덧셈기 동작은 상이한 덧셈기 Resource 와 관련된다.
+덧셈기를 공유하지 않는다.
+각 수평선에 두 번 이상 추가 작업이 수행되면 같은 상태
+혹은 클록 주기에서 동일한 Resource 가 여러번 사용됨을 나타낸다.
+
+Analysis Perspective 는 높은 Interactive 기능에 해당한다.
+Analysis Perspective 에 대한 자세한 내용은 
+Vivado Design Suite Tutorial, "High-Level Synthesis(UG871)" 의
+Design Analysis 섹션에서 확인할 수 있다.
+
+참고: Tcl Flow 를 사용하여 Design 을 작성하는 경우에도
+      프로젝트를 GUI 에서 열 수 있으며 Analysis Perspective 를 사용하여 Design 을 분석한다.
+
+Synthesis Perspective 버튼을 사용하여 Synthesis View 로 돌아간다.
+
+일반적으로 Design Analysis 를 마친 후
+optimization 지시문을 적용할 수 있는 새로운 솔루션을 만들 수 있다.
+이를 위해 새로운 솔루션을 사용하면 다른 솔루션을 비교할 수 있다.
+
+
+
+Clock, Reset, and RTL Output
+
+Vivado HLS 의 가장 일반적인 사용법은 초기 설계를 작성한 다음
+원하는 영역 및 성능 목표를 충족시키는 최적화를 수행하는 것이다.
+솔루션은 이전 합성 실행 결과를 보존하고 비교할 수 있는 편리한 방법을 제공한다.
+
+Step 1. Vivado HLS Main Toolbar 에서 New Solution 버튼을 눌러
+        New Solution Configuration Dialog Box 를 연다.
+
+Solution Configuration Dialog Box 를 여는 또 다른 방법은
+Vivado HLS 메뉴에서 Project -> New Solution 옵션을 사용하는 것이다.
+
+Solution Wizard 에는 New Project Wizard 의 마지막 창과 동일한 옵션과
+기존 솔루션에 적용된 지시문 및 제약 조건을
+수정하거나 제거할 수 있는 새로운 솔루션에 편리하게 복사할 수 있는 추가 옵션이 있다.
+
+Step 2. Solution Configuration Dialog Box 에서 모든 매개 변수를 변경하지 않고 Finish 를 클릭한다.
+
+새로운 솔루션을 만든 후에 optimization 지시문을 추가할 수 있다.
+(또는 이전 솔루션에서 복사한 경우 수정이 가능함)
+다음 섹션에서 지시어를 솔루션에 추가하는 방법에 대해 살펴본다.
+사용자 지정 제약 조건은 구성 옵션을 사용하여 적용된다.
+
+
+
+Applying Optimization Directives
+
+optimization 지시문을 추가하는 첫 번째 단계는 Information Pane 에서 소스 코드를 여는 것이다.
+탐색기 창의 맨 위에있는 Source Container 를 확장하고 Source File(modulator.cpp) 을
+두 번 클릭하여 Information Pane 에서 편집할 수 있도록 연다.
+
+Information Pane 의 활성 소스 코드에서 오른쪽의 Directive Tab 을 선택하여
+파일에 대한 지시문을 표시하고 수정한다.
+Directive Tab 에는 지시문을 적용할 수 있는
+현재 열려 있는 소스코드의 모든 객체와 범위가 포함되어 있다.
+
+참고: 다른 C 파일의 객체에 지시문을 적용하려면
+      파일을 열고 Information Pane 에서 파일을 활성화해야 한다.
+
+Vivado HLS GUI 에서 객체를 선택하고 지시문을 적용할 수 있다.
+Vivado HLS 는 모든 지시문을 객체가 포함된 범위에 적용한다.
+예를 들어 Vivado HLS GUI 의 Interface Object 에 INTERFACE 지시문을 적용할 수 있다.
+Vivado HLS 는 지시문을 최상위 함수(범위)에 적용하고 Interface Port(Object)는 지시문에서 식별한다.
+다음 예에서 foo 함수의 port data_in 은 AXI4-Lite Interface 로 지정된다:
+
+set_directive_interface -mode s_axilite "foo" adata_in
+
+아래 objects 와 scopes 에 optimization 지시문을 적용할 수 있다:
+
+* Interfaces
+  interface 에 지시문을 적용하면
+  Vivado HLS 는 최상위 함수가 interface 를
+  포함하는 범위이기 때문에 지시문을 최상위 함수에 적용한다.
+
+* Functions
+  함수에 지시문을 적용하면 Vivado HLS 는 함수 범위 내에있는 모든 object 에 지시문을 적용한다.
+  모든 지시문의 효과는 다음 수준의 함수 계층에서 중지된다.
+  유일한 예외는 계층 구조의 모든 Loop 를 반복적으로 Unroll 하는
+  PIPELINE 지시문과 같은 재귀 옵션을 지원하거나 사용하는 지시문이다.
+
+* Loops
+  Loop 에 지시문을 적용하면 Vivado HLS 가 지시문을 Loop 범위에 있는 모든 object 에 적용한다.
+  예를 들어 Loop 에 LOOP_MERGE 지시문을 적용하면
+  Vivado HLS 는 지시문을 Loop 내의 모든 하위 Loop 에만 적용하지만 Loop 자체에는 적용하지 않는다.
+
+  참고: 지시문이 적용된 Loop 는 동일한 계층 구조의 다른 녀석들과 병합되지 않는다.
+
+* Arrays
+  배열에 지시문을 적용하면 Vivado HLS 는 해당 지시문을 배열이 포함된 범위에 적용한다.
+
+* Regions
+  region 에 지시문을 적용하면 Vivado HLS 가 지시문을 region 의 전체 범위에 적용한다.
+  region 은 2 개의 중괄호로 묶인 영역이다.
+  예는 아래와 같다:
+
+  {
+    이 괄호 사이의 범위가 region 이다.
+  }
+
+참고: 함수와 Loop 에 지시문을 적용하는 것과 같은 방법으로 region 에 지시문을 적용할 수 있다.
+
+Step 1. 지시문을 적용하려면 Directive Tab(이 경우에는 sw0)에서 Object 를 선택하고
+        마우스 오른쪽 버튼을 클릭한 다음 Insert Directive... 옵션을 선택하여
+        Vivado HLS Directives Editor Dialog 박스를 연다.
+
+Step 2. Vivado HLS Directives Editor Dialog 박스에서
+        Directive Drop-Down 메뉴를 클릭하고 해당 지시문을 선택한다.
+
+Drop-Down 메뉴에는 선택한 Object 혹은 범위에 추가할 수 있는 지시문만 표시된다.
+예로 배열 object 를 선택하면 배열을 pipelining 할 수 없으므로
+Drop-Down 메뉴에 PIPELINE 지시문이 표시되지 않는다.
+
+Vivado HLS Directive Editor Dialog 박스에서 다음 Destination Settings 중 하나를 지정할 수 있다:
+
+* Source File - Vivado HLS 는 지시문을 직접 C 소스 파일에 pragma 로 삽입한다.
+* Directive File - Vivado HLS 는 지시문을 Tcl 명령으로
+                   솔루션 디렉토리의 directives.tcl 파일에 삽입한다.
+
+아래는 2 가지 방법의 장단점에 대해 설명한다.
+
+Tcl Commands vs Pragmas
+
+- Directives file(Tcl Command): Advantages
+  각 솔루션에는 independent 지시문을 있다.
+  이 방법은 Design 탐색에 이상적이다.
+  솔루션이 다시 합성되면 해당 솔루션에 지정된 지시문만 적용된다.
+
+- Directives file(Tcl Command): Disadvantages
+  C 소스 파일이 제 3 자에게 전송되거나 아카이브된 경우 directives.tcl 파일이 포함되어야 한다.
+  결과를 다시 작성하려면 directives.tcl 파일이 필요한다.
+
+- Source Code(Pragma): Advantages
+  optimization 지시문은 C 소스 코드에 내장되어 있다.
+  C 소스 파일이 C IP 로 제 3 자에게 제공될 때 이상적이다.
+  동일한 결과를 다시 만들려면 다른 파일이 필요하지 않는다.
+  TRIPCOUNT 및 INTERFACE 와 같이 변경 가능성이 낮은 지시문 때문에 유용한 방법이다.
+
+- Source Code(Pragma): Disadvantages
+  optimization 지시문이 Code 에 포함되어 있으면 다시 합성될 때 모든 솔루션에 자동으로 적용된다.
+
+Step 3. Vivado HLS Directive Editor Dialog 상자에서 아래를 수행한다:
+
+* Directive drop-down 리스트에서 sw0 입력 포트에 대한 지시문으로 INTERFACE 를 선택한다.
+* 선택한 Directive File 을 Destination 으로 둔다.
+* Option 섹션에서 ap_none I/O Protocol 을 mode(optional) 옵션으로 선택한다.
+* 다른 매개 변수는 변경하지 않는다.
+* 확인을 누른다.
+
+Step 4. pwm_out 출력 포트에 같은 설정으로 동일한 지시문을 적용하면
+        Directive Tab 에 선택한 포트에 적용된 지시문이 표시된다.
+
+Step 5. 필요한 지시어를 모두 적용한 후
+        C Synthesis 버튼(녹색 화살표)을 눌러 C Synthesis 절차를 실행한다.
+
+아래에 Vivado HLS 에서 제공하는 모든 optimization 지시어의 전체 목록이 나와있다.
+
+Vivado HLS Optimization Directives
+
+ALLOCATION:
+사용된 연산의 수, cores 및 functions 에 대한 한계를 지정한다.
+이로 인해 sharing 및 HW Resource 를 강제할 수 있고 Latency 를 증가시킬 수 있다.
+
+ARRAY_MAP:
+여러 개의 작은 배열을 하나의 큰 배열로 결합하여 Block RAM Resource 를 줄인다.
+
+ARRAY_PARTITION:
+대형 배열을 여러 개의 작은 배열 혹은 개별 레지스터로 분할하여
+데이터 접근을 향상시키고 Blcok RAM 병목 현상을 제거한다.
+
+ARRAY_RESHAPE:
+배열이 많은 요소를 가진 배열에서 더 큰 word 폭을 갖는 배열로 바꾼다.
+더 많은 Block RAM 을 사용하지 않고 Block RAM 접근을 향상시키는데 유용하다.
+
+DATA_PACK:
+구조체 데이터 필드를 보다 폭 넓은 word 의 single scalar 로 묶는다.
+
+DATAFLOW:
+함수와 Loop 가 동시에 실행될 수 있도록 Task Level Pipelining 을 활성화한다.
+Interval 을 최소화 하는데 사용된다.
+
+DEPENDENCE:
+Loop Carry 종속성을 극복하고
+Loop 를 Pipeline(혹은 낮은 interval 로 pipeline 되는) 할 수 있는 추가 정보를 제공하는데 사용된다.
+
+EXPRESSION_BALANCE:
+자동식 균형 조정 기능을 해제할 수 있다.
+
+FUNCTION_INSTANTIATE:
+동일한 함수의 여러 Instance 를 Local 로 최적화할 수 있다.
+
+INLINE:
+모든 함수 계층 구조를 제거하여 함수를 inline 화 한다.
+함수 경계를 넘어서 Logic 최적화를 가능하게 하고
+함수 호출 overhead 를 줄임으로써 Latency/Interval 을 개선하는데 사용된다.
+
+INTERFACE:
+function 기술에서 RTL 포트를 만드는 방법을 지정한다.
+
+LATENCY:
+최소 및 최대 Latency 제약 조건을 지정할 수 있다.
+
+LOOP_FLATTEN:
+중첩 Loop 를 Latency 가 향상된 단일 루프로 축소할 수 있다.
+
+LOOP_MERGE:
+연속 루프를 병합하여 전체 Latency 를 줄이고 Sharing 을 늘리고 Logic 최적화를 개선한다.
+
+LOOP_TRIPCOUNT:
+Loop 용으로 사용되며 변수 범위가 있다.
+루프 반복 횟수에 대한 예측치를 제공한다.
+reporting 시에만 사용되며 synthesis 에는 영향을 미치지 않는다.
+
+OCCURRENCE:
+함수 또는 Loop 를 Pipelining 할 때
+location 에 Code 가 둘러싸는 함수 혹은 Loop 의 Code 보다 낮은 속도로 동작하도록 지정한다.
+
+PIPELINE:
+Loop 혹은 함수 내에서 작업의 동시 실행을 허용하여 초기화 간격을 줄인다.
+
+PROTOCOL:
+이 command 는 Code 의 region 을 protocol region 으로 지정한다.
+protocol region 은 interface protocol 을 수동으로 지정하는데 사용할 수 있다.
+
+RESET:
+이 지시어는 특정 상태 변수(전역 혹은 정적)에서 재설정을 추가하거나 제거하는데 사용된다.
+
+RESOURCE:
+특정 Library Resource(core) 가 RTL 에서 변수(배열, 산술 연산 혹은 함수 인수0를 구현하는데 사용되도록 지정한다.
+
+STREAM:
+dataflow optimization 중에 특정 배열을 FIFO 혹은 RAM 메모리 채널로 구현하도록 지정한다.
+
+UNROLL:
+for Loop 를 실행하여 단일 작업 모음이 아닌 여러 독립 작업을 만든다.
+
+Applying Optimization Directives to Class Objects
+
+optimization 지시어는 class 에 정의된 objects 혹은 scopes 에도 적용할 수 있다.
+차이점은 일반적으로 class 가 header 파일에 정의된다는 것이다.
+아래 작업중 하나를 사용하여 header 파일을 연다.
+
+* 탐색기 창에서 Includes 폴더를 열고 header 파일로 이동한 다음 파일을 두 번 클릭하여 연다.
+* C 소스 내에서 헤더 파일(#include 문)에 커서를 놓고 Ctrl 키를 누른 상태에서 header 파일을 클릭한다.
+
+그런 다음 Directive Tab 에 header 파일의 object 가 채워지고 지시문을 적용할 수 있다.
+
+중요:
+header 파일에 지시문을 pragma 로 적용할 때는 주의해야 한다.
+이 파일은 다른 사람이 사용하거나 다른 project 에서 사용될 수 있다.
+pragma 로 추가된 지시문은 header 파일이 Design 에 포함될 때마다 적용된다.
+
+Applying Optimization Directives to Templates
+
+Tcl 명령을 사용할 때 Template 에서 optimization 지시문을 수동으로 적용하려면
+method 를 참조할 때 template 인수와 class 를 지정해야 한다.
+예로 아래 주어진 C++ Code 를 살펴보자:
+
+template <uint32 SIZE, uint32 RATE>
+void DES10<SIZE,RATE>::calcRUN() { ... }
+
+다음 Tcl 명령은 함수에 INLINE 지시어를 지정하는데 사용된다:
+
+set_directive_inline DES10<SIZE,RATE>::calcRUN
+
+다음에 Vivado HLS 가 원하는 성능 및 area goal 을 충족하는 Micro Architecture 를
+생성하도록 지시하는데 사용할 수 있는 다양한 optimization 및 techniques 에 대해 설명한다.
+
+Clock, Reset, and RTL Output
+
+Clock Frequency
+
+C 및 C++ Design 의 경우 Single Clock 만 지원된다.
+동일한 Clock 이 Design 의 모든 기능에 적용된다.
+
+SystemC Design 의 경우 SC_MODULE 은 다른 Clock 으로 지정될 수 있다.
+SystemC Design 에서 여러 clock 을 지정하려면 create_clock 명령의 -name 옵션을 사용하여
+여러개의 명명된 clock 을 만들고 CLOCK 지시문 혹은 pragma 를 사용하여
+SC_MODULE 을 포함하는 함수가 지정된 clock 으로 합성되도록 지정한다.
+각 SC_MODULE 은 단일 clock 을 사용하여 합성할 수 있다.
+clock 은 여러 clock 이 최상위 포트에서 개별 block 으로 연결될 때와 같이
+기능을 통해 분배될 수 있지만 각 SC_MODULE 은 단일 clock 에 민감하다.

@@ -1,0 +1,89 @@
+QCOM BAM DMA controller
+
+Required properties:
+- compatible: must be one of the following:
+ * "qcom,bam-v1.4.0" for MSM8974, APQ8074 and APQ8084
+ * "qcom,bam-v1.3.0" for APQ8064, IPQ8064 and MSM8960
+ * "qcom,bam-v1.7.0" for MSM8916
+- reg: Address range for DMA registers
+- interrupts: Should contain the one interrupt shared by all channels
+- #dma-cells: must be <1>, the cell in the dmas property of the client device
+  represents the channel number
+- clocks: required clock
+- clock-names: must contain "bam_clk" entry
+- qcom,ee : indicates the active Execution Environment identifier (0-7) used in
+  the secure world.
+
+Example:
+
+	uart-bam: dma@f9984000 = {
+		compatible = "qcom,bam-v1.4.0";
+		reg = <0xf9984000 0x15000>;
+		interrupts = <0 94 0>;
+		clocks = <&gcc GCC_BAM_DMA_AHB_CLK>;
+		clock-names = "bam_clk";
+		#dma-cells = <1>;
+		qcom,ee = <0>;
+	};
+
+DMA clients must use the format described in the dma.txt file, using a two cell
+specifier for each channel.
+
+Example:
+	serial@f991e000 {
+		compatible = "qcom,msm-uart";
+		reg = <0xf991e000 0x1000>
+			<0xf9944000 0x19000>;
+		interrupts = <0 108 0>;
+		clocks = <&gcc GCC_BLSP1_UART2_APPS_CLK>,
+			<&gcc GCC_BLSP1_AHB_CLK>;
+		clock-names = "core", "iface";
+
+		dmas = <&uart-bam 0>, <&uart-bam 1>;
+		dma-names = "rx", "tx";
+	};
+
+/*
+QCOM BAM DMA 컨트롤러
+
+필수 속성 :
+- compatible : 다음 중 하나 여야합니다.
+ * MSQ8974, APQ8074 및 APQ8084의 경우 "qcom, bam-v1.4.0"
+ * APQ8064, IPQ8064 및 MSM8960의 경우 "qcom, bam-v1.3.0"
+ * MSM8916의 경우 "qcom, bam-v1.7.0"
+- reg : DMA 레지스터의 주소 범위
+- interrupts : 모든 채널이 공유하는 하나의 interrupt를 포함해야합니다.
+- # dma-cells : <1>이어야하며 클라이언트 장치의 dmas 속성에있는 셀은 채널 번호를 나타냅니다
+- clock : 필수 clock
+- clock-names : "bam_clk"항목을 포함해야합니다.
+- qcom, ee : 보안 세계에서 사용되는 활성 실행 환경 식별자 (0-7)를 나타냅니다.
+
+Example:
+
+	uart-bam: dma@f9984000 = {
+		compatible = "qcom,bam-v1.4.0";
+		reg = <0xf9984000 0x15000>;
+		interrupts = <0 94 0>;
+		clocks = <&gcc GCC_BAM_DMA_AHB_CLK>;
+		clock-names = "bam_clk";
+		#dma-cells = <1>;
+		qcom,ee = <0>;
+	};
+
+DMA 클라이언트는 각 채널에 대해 2 개의 셀 지정자를 사용하여 dma.txt 파일에 설명 된 형식을 사용해야합니다.
+
+Example:
+	serial@f991e000 {
+		compatible = "qcom,msm-uart";
+		reg = <0xf991e000 0x1000>
+			<0xf9944000 0x19000>;
+		interrupts = <0 108 0>;
+		clocks = <&gcc GCC_BLSP1_UART2_APPS_CLK>,
+			<&gcc GCC_BLSP1_AHB_CLK>;
+		clock-names = "core", "iface";
+
+		dmas = <&uart-bam 0>, <&uart-bam 1>;
+		dma-names = "rx", "tx";
+	};
+
+*/

@@ -1,0 +1,297 @@
+Texas Instruments eDMA
+
+The eDMA3 consists of two components: Channel controller (CC) and Transfer
+Controller(s) (TC). The CC is the main entry for DMA users since it is
+responsible for the DMA channel handling, while the TCs are responsible to
+execute the actual DMA tansfer.
+
+------------------------------------------------------------------------------
+eDMA3 Channel Controller
+
+Required properties:
+- compatible:	"ti,edma3-tpcc" for the channel controller(s)
+- #dma-cells:	Should be set to <2>. The first number is the DMA request
+		number and the second is the TC the channel is serviced on.
+- reg:		Memory map of eDMA CC
+- reg-names:	"edma3_cc"
+- interrupts:	Interrupt lines for CCINT, MPERR and CCERRINT.
+- interrupt-names: "edma3_ccint", "emda3_mperr" and "edma3_ccerrint"
+- ti,tptcs:	List of TPTCs associated with the eDMA in the following form:
+		<&tptc_phandle TC_priority_number>. The highest priority is 0.
+
+Optional properties:
+- ti,hwmods:	Name of the hwmods associated to the eDMA CC
+- ti,edma-memcpy-channels: List of channels allocated to be used for memcpy, iow
+		these channels will be SW triggered channels. See example.
+- ti,edma-reserved-slot-ranges: PaRAM slot ranges which should not be used by
+		the driver, they are allocated to be used by for example the
+		DSP. See example.
+
+------------------------------------------------------------------------------
+eDMA3 Transfer Controller
+
+Required properties:
+- compatible:	"ti,edma3-tptc" for the transfer controller(s)
+- reg:		Memory map of eDMA TC
+- interrupts:	Interrupt number for TCerrint.
+
+Optional properties:
+- ti,hwmods:	Name of the hwmods associated to the given eDMA TC
+- interrupt-names: "edma3_tcerrint"
+
+------------------------------------------------------------------------------
+Example:
+
+edma: edma@49000000 {
+	compatible = "ti,edma3-tpcc";
+	ti,hwmods = "tpcc";
+	reg =	<0x49000000 0x10000>;
+	reg-names = "edma3_cc";
+	interrupts = <12 13 14>;
+	interrupt-names = "edma3_ccint", "emda3_mperr", "edma3_ccerrint";
+	dma-requests = <64>;
+	#dma-cells = <2>;
+
+	ti,tptcs = <&edma_tptc0 7>, <&edma_tptc1 7>, <&edma_tptc2 0>;
+
+	/* Channel 20 and 21 is allocated for memcpy */
+	ti,edma-memcpy-channels = <20 21>;
+	/* The following PaRAM slots are reserved: 35-44 and 100-109 */
+	ti,edma-reserved-slot-ranges = <35 10>, <100 10>;
+};
+
+edma_tptc0: tptc@49800000 {
+	compatible = "ti,edma3-tptc";
+	ti,hwmods = "tptc0";
+	reg =	<0x49800000 0x100000>;
+	interrupts = <112>;
+	interrupt-names = "edm3_tcerrint";
+};
+
+edma_tptc1: tptc@49900000 {
+	compatible = "ti,edma3-tptc";
+	ti,hwmods = "tptc1";
+	reg =	<0x49900000 0x100000>;
+	interrupts = <113>;
+	interrupt-names = "edm3_tcerrint";
+};
+
+edma_tptc2: tptc@49a00000 {
+	compatible = "ti,edma3-tptc";
+	ti,hwmods = "tptc2";
+	reg =	<0x49a00000 0x100000>;
+	interrupts = <114>;
+	interrupt-names = "edm3_tcerrint";
+};
+
+sham: sham@53100000 {
+	compatible = "ti,omap4-sham";
+	ti,hwmods = "sham";
+	reg = <0x53100000 0x200>;
+	interrupts = <109>;
+	/* DMA channel 36 executed on eDMA TC0 - low priority queue */
+	dmas = <&edma 36 0>;
+	dma-names = "rx";
+};
+
+mcasp0: mcasp@48038000 {
+	compatible = "ti,am33xx-mcasp-audio";
+	ti,hwmods = "mcasp0";
+	reg = <0x48038000 0x2000>,
+		<0x46000000 0x400000>;
+	reg-names = "mpu", "dat";
+	interrupts = <80>, <81>;
+	interrupt-names = "tx", "rx";
+	status = "disabled";
+	/* DMA channels 8 and 9 executed on eDMA TC2 - high priority queue */
+	dmas = <&edma 8 2>,
+	       <&edma 9 2>;
+	dma-names = "tx", "rx";
+};
+
+------------------------------------------------------------------------------
+DEPRECATED binding, new DTS files must use the ti,edma3-tpcc/ti,edma3-tptc
+binding.
+
+Required properties:
+- compatible : "ti,edma3"
+- #dma-cells: Should be set to <1>
+              Clients should use a single channel number per DMA request.
+- reg: Memory map for accessing module
+- interrupt-parent: Interrupt controller the interrupt is routed through
+- interrupts: Exactly 3 interrupts need to be specified in the order:
+              1. Transfer completion interrupt.
+              2. Memory protection interrupt.
+              3. Error interrupt.
+Optional properties:
+- ti,hwmods: Name of the hwmods associated to the EDMA
+- ti,edma-xbar-event-map: Crossbar event to channel map
+
+Deprecated properties:
+Listed here in case one wants to boot an old kernel with new DTB. These
+properties might need to be added to the new DTS files.
+- ti,edma-regions: Number of regions
+- ti,edma-slots: Number of slots
+- dma-channels: Specify total DMA channels per CC
+
+Example:
+
+edma: edma@49000000 {
+	reg = <0x49000000 0x10000>;
+	interrupt-parent = <&intc>;
+	interrupts = <12 13 14>;
+	compatible = "ti,edma3";
+	ti,hwmods = "tpcc", "tptc0", "tptc1", "tptc2";
+	#dma-cells = <1>;
+	ti,edma-xbar-event-map = /bits/ 16 <1 12
+					    2 13>;
+
+};
+
+
+/*
+==============================================================================================
+
+Texas Instruments eDMA
+
+
+eDMA3는 채널 컨트롤러 (CC)와 전송 컨트롤러 (TC)의 두 가지 구성 요소로 구성됩니다. CC는 DMA 채널 처리를 담당하기 때문에 DMA 사용자의 주요 항목이며, TC는 실제 DMA 송수신기를 실행해야합니다.
+
+-------------------------------------------------- ----------------------------
+eDMA3 채널 컨트롤러
+
+필수 속성 :
+- 호환 : 채널 컨트롤러 용 "ti, edma3-tpcc"
+- # dma-cells : <2>로 설정해야합니다. 첫 번째 숫자는 DMA 요청 번호이고 두 번째 숫자는 채널이 서비스되는 TC입니다.
+- reg : eDMA CC의 메모리 맵
+- reg-names : "edma3_cc"
+- 인터럽트 : CCINT, MPERR 및 CCERRINT에 대한 인터럽트 회선.
+- interrupt-names : "edma3_ccint", "emda3_mperr"및 "edma3_ccerrint"
+- ti, tptcs : 다음 형식의 eDMA와 연관된 TPTC 목록 :
+<& tptc_phandle TC_priority_number>. 가장 높은 우선 순위는 0입니다.
+
+선택적 속성 :
+- ti, hwmods : eDMA CC와 연관된 hwmod의 이름
+- ti, edma-memcpy-channels : memcpy에 사용하기 위해 할당 된 채널 목록. 이러한 채널은 SW 트리거 채널이됩니다. 예제를 참조하십시오.
+- ti, edma-reserved-slot-ranges : 드라이버가 사용해서는 안되는 PaRAM 슬롯 범위로서, 예를 들어 DSP에서 사용하도록 할당됩니다. 
+예제를 참조하십시오.
+
+-------------------------------------------------- ----------------------------
+eDMA3 전송 컨트롤러
+
+필수 속성 :
+- 호환 : 전송 컨트롤러 (들)에 대해 "ti, edma3-tptc"
+- reg : eDMA TC의 메모리 맵
+- 인터럽트 : TCerrint의 인터럽트 번호입니다.
+
+선택적 속성 :
+- ti, hwmods : 주어진 eDMA TC와 연관된 hwmod의 이름
+- 인터럽트 이름 : "edma3_tcerrint"
+
+-------------------------------------------------- ----------------------------
+Example:
+
+edma: edma@49000000 {
+	compatible = "ti,edma3-tpcc";
+	ti,hwmods = "tpcc";
+	reg =	<0x49000000 0x10000>;
+	reg-names = "edma3_cc";
+	interrupts = <12 13 14>;
+	interrupt-names = "edma3_ccint", "emda3_mperr", "edma3_ccerrint";
+	dma-requests = <64>;
+	#dma-cells = <2>;
+
+	ti,tptcs = <&edma_tptc0 7>, <&edma_tptc1 7>, <&edma_tptc2 0>;
+
+	/* Channel 20 and 21 is allocated for memcpy */
+	ti,edma-memcpy-channels = <20 21>;
+	/* The following PaRAM slots are reserved: 35-44 and 100-109 */
+	ti,edma-reserved-slot-ranges = <35 10>, <100 10>;
+};
+
+edma_tptc0: tptc@49800000 {
+	compatible = "ti,edma3-tptc";
+	ti,hwmods = "tptc0";
+	reg =	<0x49800000 0x100000>;
+	interrupts = <112>;
+	interrupt-names = "edm3_tcerrint";
+};
+
+edma_tptc1: tptc@49900000 {
+	compatible = "ti,edma3-tptc";
+	ti,hwmods = "tptc1";
+	reg =	<0x49900000 0x100000>;
+	interrupts = <113>;
+	interrupt-names = "edm3_tcerrint";
+};
+
+edma_tptc2: tptc@49a00000 {
+	compatible = "ti,edma3-tptc";
+	ti,hwmods = "tptc2";
+	reg =	<0x49a00000 0x100000>;
+	interrupts = <114>;
+	interrupt-names = "edm3_tcerrint";
+};
+
+sham: sham@53100000 {
+	compatible = "ti,omap4-sham";
+	ti,hwmods = "sham";
+	reg = <0x53100000 0x200>;
+	interrupts = <109>;
+	/* DMA channel 36 executed on eDMA TC0 - low priority queue */
+	dmas = <&edma 36 0>;
+	dma-names = "rx";
+};
+
+mcasp0: mcasp@48038000 {
+	compatible = "ti,am33xx-mcasp-audio";
+	ti,hwmods = "mcasp0";
+	reg = <0x48038000 0x2000>,
+		<0x46000000 0x400000>;
+	reg-names = "mpu", "dat";
+	interrupts = <80>, <81>;
+	interrupt-names = "tx", "rx";
+	status = "disabled";
+	/* DMA channels 8 and 9 executed on eDMA TC2 - high priority queue */
+	dmas = <&edma 8 2>,
+	       <&edma 9 2>;
+	dma-names = "tx", "rx";
+};
+
+-------------------------------------------------- ----------------------------
+DEPRECATED 바인딩을 사용하려면 새 DTS 파일에 ti, edma3-tpcc / ti, edma3-tptc 바인딩을 사용해야합니다.
+
+필수 속성 :
+- 호환 : "ti, edma3"
+- # dma-cells : <1> (으)로 설정해야합니다.
+              클라이언트는 DMA 요청 당 하나의 채널 번호를 사용해야합니다.
+- reg : 모듈에 접근하기위한 메모리 맵
+- interrupt-parent : 인터럽트가 라우팅 된 인터럽트 컨트롤러
+- 인터럽트 : 정확히 3 개의 인터럽트를 순서대로 지정해야합니다.
+              1. 전송 완료 인터럽트.
+              2. 메모리 보호 인터럽트.
+              3. 오류 인터럽트.
+선택적 속성 :
+- ti, hwmods : EDMA와 관련된 hwmod의 이름
+- ti, edma-xbar-event-map : 채널 간 크로스바 이벤트
+
+사용되지 않는 속성 :
+새 DTB로 이전 커널을 부팅하려는 경우에 대비하여 여기에 나열됩니다. 이러한 속성은 새 DTS 파일에 추가해야 할 수도 있습니다.
+- ti, edma-regions : 지역 수
+- ti, edma-slots : 슬롯 수
+- dma-channels : CC 당 전체 DMA 채널을 지정합니다.
+
+Example:
+
+edma: edma@49000000 {
+	reg = <0x49000000 0x10000>;
+	interrupt-parent = <&intc>;
+	interrupts = <12 13 14>;
+	compatible = "ti,edma3";
+	ti,hwmods = "tpcc", "tptc0", "tptc1", "tptc2";
+	#dma-cells = <1>;
+	ti,edma-xbar-event-map = /bits/ 16 <1 12
+					    2 13>;
+};
+
+*/

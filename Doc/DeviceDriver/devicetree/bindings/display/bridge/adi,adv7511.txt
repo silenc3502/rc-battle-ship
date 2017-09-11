@@ -1,0 +1,166 @@
+Analog Device ADV7511(W)/13 HDMI Encoders
+-----------------------------------------
+
+The ADV7511, ADV7511W and ADV7513 are HDMI audio and video transmitters
+compatible with HDMI 1.4 and DVI 1.0. They support color space conversion,
+S/PDIF, CEC and HDCP.
+
+Required properties:
+
+- compatible: Should be one of "adi,adv7511", "adi,adv7511w" or "adi,adv7513"
+- reg: I2C slave address
+
+The ADV7511 supports a large number of input data formats that differ by their
+color depth, color format, clock mode, bit justification and random
+arrangement of components on the data bus. The combination of the following
+properties describe the input and map directly to the video input tables of the
+ADV7511 datasheet that document all the supported combinations.
+
+- adi,input-depth: Number of bits per color component at the input (8, 10 or
+  12).
+- adi,input-colorspace: The input color space, one of "rgb", "yuv422" or
+  "yuv444".
+- adi,input-clock: The input clock type, one of "1x" (one clock cycle per
+  pixel), "2x" (two clock cycles per pixel), "ddr" (one clock cycle per pixel,
+  data driven on both edges).
+
+The following input format properties are required except in "rgb 1x" and
+"yuv444 1x" modes, in which case they must not be specified.
+
+- adi,input-style: The input components arrangement variant (1, 2 or 3), as
+  listed in the input format tables in the datasheet.
+- adi,input-justification: The input bit justification ("left", "evenly",
+  "right").
+
+Optional properties:
+
+- interrupts: Specifier for the ADV7511 interrupt
+- pd-gpios: Specifier for the GPIO connected to the power down signal
+
+- adi,clock-delay: Video data clock delay relative to the pixel clock, in ps
+  (-1200 ps .. 1600 ps). Defaults to no delay.
+- adi,embedded-sync: The input uses synchronization signals embedded in the
+  data stream (similar to BT.656). Defaults to separate H/V synchronization
+  signals.
+
+Required nodes:
+
+The ADV7511 has two video ports. Their connections are modelled using the OF
+graph bindings specified in Documentation/devicetree/bindings/graph.txt.
+
+- Video port 0 for the RGB or YUV input
+- Video port 1 for the HDMI output
+
+
+Example
+-------
+
+	adv7511w: hdmi@39 {
+		compatible = "adi,adv7511w";
+		reg = <39>;
+		interrupt-parent = <&gpio3>;
+		interrupts = <29 IRQ_TYPE_EDGE_FALLING>;
+
+		adi,input-depth = <8>;
+		adi,input-colorspace = "rgb";
+		adi,input-clock = "1x";
+		adi,input-style = <1>;
+		adi,input-justification = "evenly";
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			port@0 {
+				reg = <0>;
+				adv7511w_in: endpoint {
+					remote-endpoint = <&dpi_out>;
+				};
+			};
+
+			port@1 {
+				reg = <1>;
+				adv7511_out: endpoint {
+					remote-endpoint = <&hdmi_connector_in>;
+				};
+			};
+		};
+	};
+
+/*
+Analog Device ADV7511(W)/13 HDMI Encoders
+
+ADV7511, ADV7511W 및 ADV7513는 HDMI 1.4 및 DVI 1.0과 호환되는 HDMI 오디오 및 비디오 송신기입니다. 
+색 공간 변환, S / PDIF, CEC, HDCP를 지원하고 있습니다.
+
+필수 속성 :
+
+- 호환 : "adi, adv7511", "adi, adv7511w"또는 "adi, adv7513"중 하나 여야합니다.
+- reg : I2C 슬레이브 주소
+
+ADV7511은 각기 다른 입력 데이터 포맷을 지원합니다.
+색상 깊이, 색상 형식, 클록 모드, 비트 정렬 및 데이터 버스의 구성 요소 임의 배치 등이 있습니다.
+다음 특성의 조합은 입력을 설명하고 지원되는 모든 조합을 문서화 한 ADV7511 데이터 시트의 
+비디오 입력 테이블에 직접 맵핑합니다.
+
+- adi, input-depth : 입력에서 색 구성 요소 당 비트 수 (8, 10 또는
+12).
+
+- adi, input-colorspace : 입력 색상 공간, "rgb", "yuv422"또는
+"yuv444".
+
+- adi, input-clock : "1x"(픽셀 당 1 클럭 사이클), 
+"2x"(픽셀 당 2 클럭 사이클) "ddr"(픽셀 당 1 클록 사이클 에지).
+
+"rgb 1x"와 "yuv444 1x"모드를 제외하고 다음의 입력 형식의 속성이 필요합니다.
+
+- adi, input-style : 데이터 시트의 입력 포맷 테이블에 기재되어있는 입력 요소의 배치 변형 (1,2 또는 3).
+ - adi, input-justification : 입력 비트 정렬 ( "left", "evenly", "right").
+
+옵션 속성 :
+ - 인터럽트 : ADV7511 인터럽트 지정자
+ - pd-gpios : 파워 다운 신호에 연결된 GPIO 지정자
+ - adi 클럭 지연 : 픽셀 클럭에 대한 비디오 데이터 클럭 지연 (ps (-1200 ps ... 1600 ps)). 기본적으로 지연은 없습니다.
+- adi, embedded-sync : 입력 데이터 스트림에 포함 된 동기 신호를 사용합니다 (BT.656와 같이). 기본적으로 H / V 동기 신호가 분리됩니다.
+
+필요한 노드 :
+ADV7511는 두 개의 비디오 포트가 있습니다. 그 연결은 Documentation / devicetree / bindings / graph.txt에서 지정된 OF 그래프 바인딩을 사용하여 모델링됩니다.
+ - RGB 또는 YUV 입력의 비디오 포트 0
+ - HDMI 출력 비디오 포트 1
+
+Example
+
+	adv7511w: hdmi@39 {
+		compatible = "adi,adv7511w";
+		reg = <39>;
+		interrupt-parent = <&gpio3>;
+		interrupts = <29 IRQ_TYPE_EDGE_FALLING>;
+
+		adi,input-depth = <8>;
+		adi,input-colorspace = "rgb";
+		adi,input-clock = "1x";
+		adi,input-style = <1>;
+		adi,input-justification = "evenly";
+
+		ports {
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			port@0 {
+				reg = <0>;
+				adv7511w_in: endpoint {
+					remote-endpoint = <&dpi_out>;
+				};
+			};
+
+			port@1 {
+				reg = <1>;
+				adv7511_out: endpoint {
+					remote-endpoint = <&hdmi_connector_in>;
+				};
+			};
+		};
+	};
+
+
+*/

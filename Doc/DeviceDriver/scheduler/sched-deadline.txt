@@ -1,0 +1,955 @@
+Deadline Task Scheduling
+
+마감일 작업 예약
+------------------------
+
+CONTENTS
+========
+
+ 0. WARNING
+ 1. Overview
+ 2. Scheduling algorithm
+ 3. Scheduling Real-Time Tasks
+   3.1 Definitions
+   3.2 Schedulability Analysis for Uniprocessor Systems
+   3.3 Schedulability Analysis for Multiprocessor Systems
+   3.4 Relationship with SCHED_DEADLINE Parameters
+ 4. Bandwidth management
+   4.1 System-wide settings
+   4.2 Task interface
+   4.3 Default behavior
+ 5. Tasks CPU affinity
+   5.1 SCHED_DEADLINE and cpusets HOWTO
+ 6. Future plans
+ A. Test suite
+ B. Minimal main()
+
+0. 경고
+  1. 개요
+  2. 스케줄링 알고리즘
+  3. 실시간 작업 스케줄링
+    3.1 정의
+    3.2 단일 프로세서 시스템을위한 스케줄링 가능성 분석
+    3.3 다중 프로세서 시스템을위한 스케줄링 가능성 분석
+    3.4 SCHED_DEADLINE 매개 변수와의 관계
+  4. 대역폭 관리
+    4.1 시스템 전체 설정
+    4.2 작업 인터페이스
+    4.3 기본 동작
+  5. 작업 CPU 친화력
+    5.1 SCHED_DEADLINE과 cpusets HOWTO
+  6. 향후 계획
+    A. 테스트 스위트
+    B. 최소 주 ()
+
+
+0. WARNING
+==========
+
+ Fiddling with these settings can result in an unpredictable or even unstable
+ system behavior. As for -rt (group) scheduling, it is assumed that root users
+ know what they're doing.
+
+이러한 설정을 사용하면 예측할 수 없거나 불안정한 시스템 동작이 발생할 수 있습니다. 
+-rt (그룹) 스케줄링과 관련하여 루트 사용자는 자신이하는 일을 알고 있다고 가정합니다.
+
+1. Overview
+===========
+
+ The SCHED_DEADLINE policy contained inside the sched_dl scheduling class is
+ basically an implementation of the Earliest Deadline First (EDF) scheduling
+ algorithm, augmented with a mechanism (called Constant Bandwidth Server, CBS)
+ that makes it possible to isolate the behavior of tasks between each other.
+
+sched_dl 스케쥴링 클래스에 포함 된 SCHED_DEADLINE 정책은 기본적으로 EDF (Earliest Deadline First) 스케쥴링 알고리즘을 구현 한 것으로 
+서로 간의 작업 동작을 격리 할 수있는 메커니즘 (Constant Bandwidth Server, CBS)이 추가되었습니다.
+
+
+2. Scheduling algorithm
+==================
+
+ SCHED_DEADLINE uses three parameters, named "runtime", "period", and
+ "deadline", to schedule tasks. A SCHED_DEADLINE task should receive
+ "runtime" microseconds of execution time every "period" microseconds, and
+ these "runtime" microseconds are available within "deadline" microseconds
+ from the beginning of the period.  In order to implement this behavior,
+ every time the task wakes up, the scheduler computes a "scheduling deadline"
+ consistent with the guarantee (using the CBS[2,3] algorithm). Tasks are then
+ scheduled using EDF[1] on these scheduling deadlines (the task with the
+ earliest scheduling deadline is selected for execution). Notice that the
+ task actually receives "runtime" time units within "deadline" if a proper
+ "admission control" strategy (see Section "4. Bandwidth management") is used
+ (clearly, if the system is overloaded this guarantee cannot be respected).
+
+SCHED_DEADLINE은 "runtime", "period"및 "deadline"이라는 세 가지 매개 변수를 사용하여 작업을 예약합니다. 
+SCHED_DEADLINE 태스크는 "기간"마이크로 초마다 실행 시간의 "런타임"마이크로 초를 수신해야하며, 
+이러한 "런타임"마이크로 초는 기간 시작부터 "기한"마이크로 초 내에 사용할 수 있습니다. 
+이 동작을 구현하기 위해 태스크가 깨어날 때마다 스케줄러는 (CBS [2,3] 알고리즘을 사용하여) 보증과 일치하는 "스케줄링 마감"을 계산합니다. 
+그런 다음 작업은 이러한 스케줄링 기한에 대해 EDF [1]를 사용하여 스케줄됩니다 (가장 빠른 스케줄링 기한이 설정된 작업이 실행되도록 선택됨). 
+적절한 "승인 제어"전략 ( "4. 대역폭 관리"절 참조)이 사용되면 (실제로 시스템에 과부하가 걸리면이 보장을 존중할 수 없음) 
+작업에 실제로 "최종 기한"내에 "런타임"시간 단위가 주어집니다.
+
+ Summing up, the CBS[2,3] algorithm assigns scheduling deadlines to tasks so
+ that each task runs for at most its runtime every period, avoiding any
+ interference between different tasks (bandwidth isolation), while the EDF[1]
+ algorithm selects the task with the earliest scheduling deadline as the one
+ to be executed next. Thanks to this feature, tasks that do not strictly comply
+ with the "traditional" real-time task model (see Section 3) can effectively
+ use the new policy.
+
+요약하자면, CBS [2,3] 알고리즘은 각 작업이 매주기마다 실행될 수 있도록 일정 마감 시간을 할당하여 
+EDF [1] 알고리즘이 작업을 선택하는 동안 다른 작업 (대역폭 격리) 사이의 간섭을 피하여 매주기마다 실행합니다. 
+가장 빠른 스케줄링 마감일은 다음에 실행될 예정입니다. 
+이 기능 덕분에 "기존"실시간 작업 모델 (3 절 참조)을 엄격하게 준수하지 않는 작업은 새 정책을 효과적으로 사용할 수 있습니다
+
+ In more details, the CBS algorithm assigns scheduling deadlines to
+ tasks in the following way:
+
+보다 상세하게, CBS 알고리즘은 스케줄링 마감 시간을 다음과 같은 방식으로 태스크에 할당한다 :
+
+  - Each SCHED_DEADLINE task is characterized by the "runtime",
+    "deadline", and "period" parameters;
+
+  - 각 SCHED_DEADLINE 태스크는 "runtime", "deadline"및 "period"매개 변수로 특징 지어집니다.
+
+  - The state of the task is described by a "scheduling deadline", and
+    a "remaining runtime". These two parameters are initially set to 0;
+
+  - 작업의 상태는 "스케줄링 마감"및 "나머지 런타임"으로 설명됩니다. 이 두 매개 변수는 처음에 0으로 설정됩니다.
+
+  - When a SCHED_DEADLINE task wakes up (becomes ready for execution),
+    the scheduler checks if
+
+                 remaining runtime                  runtime
+        ----------------------------------    >    ---------
+        scheduling deadline - current time           period
+
+    then, if the scheduling deadline is smaller than the current time, or
+    this condition is verified, the scheduling deadline and the
+    remaining runtime are re-initialized as
+
+         scheduling deadline = current time + deadline
+         remaining runtime = runtime
+
+    otherwise, the scheduling deadline and the remaining runtime are
+    left unchanged;
+
+  - SCHED_DEADLINE 태스크가 깨어 나면 (실행 준비가 됨), 스케줄러는
+
+		나머지 런타임 런타임			실행시간
+	 ----------------------------------    >     -------------
+	       일정 마감 - 현재 시간			  기간
+
+    스케줄링 데드 라인이 현재 시간보다 작은 경우 또는이 조건이 확인되면 스케줄링 데드 라인 및 나머지 런타임은 다음과 같이 다시 초기화됩니다.
+
+	 예정 기한 = 현재 시간 + 기한 나머지 런타임 = 런타임
+
+	 그렇지 않으면 스케쥴링 기한과 나머지 런타임은 변경되지 않습니다.
+
+  - When a SCHED_DEADLINE task executes for an amount of time t, its
+    remaining runtime is decreased as
+
+         remaining runtime = remaining runtime - t
+
+    (technically, the runtime is decreased at every tick, or when the
+    task is descheduled / preempted);
+
+  - SCHED_DEADLINE 태스크가 일정 시간 t 동안 실행되면 나머지 런타임은 다음과 같이 감소합니다.
+
+	 나머지 런타임 = 나머지 런타임 - t
+
+	 (기술적으로 런타임은 매 틱마다 또는 작업이 예정 / 선점 될 때마다 감소합니다).
+
+  - When the remaining runtime becomes less or equal than 0, the task is
+    said to be "throttled" (also known as "depleted" in real-time literature)
+    and cannot be scheduled until its scheduling deadline. The "replenishment
+    time" for this task (see next item) is set to be equal to the current
+    value of the scheduling deadline;
+
+  -나머지 런타임이 0보다 작거나 같으면 작업을 "제한"(실시간 문헌에서 "고갈 됨"이라고도 함)이라고하며 일정이 끝날 때까지 예약 할 수 없습니다. 
+   이 작업에 대한 "보충 시간"(다음 항목 참조)은 일정 마감 기한의 현재 값과 동일하게 설정됩니다.
+
+  - When the current time is equal to the replenishment time of a
+    throttled task, the scheduling deadline and the remaining runtime are
+    updated as
+
+         scheduling deadline = scheduling deadline + period
+         remaining runtime = remaining runtime + runtime
+
+  - 현재 시간이 스로틀 된 작업의 보충 시간과 같으면 스케줄링 기한 및 나머지 런타임이 다음과 같이 업데이트됩니다.
+
+	 일정 마감 = 일정 마감 기한 + 기간
+	 나머지 런타임 = 나머지 런타임 + 런타임
+
+
+3. Scheduling Real-Time Tasks
+=============================
+
+ * BIG FAT WARNING ******************************************************
+ *
+ * This section contains a (not-thorough) summary on classical deadline
+ * scheduling theory, and how it applies to SCHED_DEADLINE.
+ * The reader can "safely" skip to Section 4 if only interested in seeing
+ * how the scheduling policy can be used. Anyway, we strongly recommend
+ * to come back here and continue reading (once the urge for testing is
+ * satisfied :P) to be sure of fully understanding all technical details.
+ ************************************************************************
+
+ *이 섹션에는 클래식 마감일에 대한 (철저하지 않은) 요약이 포함되어 있습니다.
+ * 스케줄링 이론 및 SCHED_DEADLINE에 적용되는 방법
+ * 독자는 섹션 4로 건너 뛸 수 있습니다.
+ * 스케줄링 정책이 어떻게 사용될 수 있는지. 어쨌든, 우리는 강력하게 추천한다.
+ * 여기로 돌아와 계속 읽기 (테스트를위한 충동이 생기면
+ * 만족 : P) 모든 기술 세부 사항을 완전히 이해해야합니다.
+
+ There are no limitations on what kind of task can exploit this new
+ scheduling discipline, even if it must be said that it is particularly
+ suited for periodic or sporadic real-time tasks that need guarantees on their
+ timing behavior, e.g., multimedia, streaming, control applications, etc.
+
+이 새로운 스케쥴링 분야를 활용할 수있는 태스크의 종류에는 제한이 없습니다. 
+비록 그것이 멀티미디어, 스트리밍, 제어와 같은 타이밍 동작에 대한 보장이 필요한주기적인 
+또는 산발적 인 실시간 태스크에 특히 적합하다고하더라도 반드시 필요합니다. 응용 프로그램 등
+
+3.1 Definitions
+------------------------
+
+ A typical real-time task is composed of a repetition of computation phases
+ (task instances, or jobs) which are activated on a periodic or sporadic
+ fashion.
+ Each job J_j (where J_j is the j^th job of the task) is characterized by an
+ arrival time r_j (the time when the job starts), an amount of computation
+ time c_j needed to finish the job, and a job absolute deadline d_j, which
+ is the time within which the job should be finished. The maximum execution
+ time max{c_j} is called "Worst Case Execution Time" (WCET) for the task.
+ A real-time task can be periodic with period P if r_{j+1} = r_j + P, or
+ sporadic with minimum inter-arrival time P is r_{j+1} >= r_j + P. Finally,
+ d_j = r_j + D, where D is the task's relative deadline.
+ Summing up, a real-time task can be described as
+	Task = (WCET, D, P)
+
+일반적인 실시간 작업은 주기적 또는 산발적 방식으로 활성화되는 계산 단계 (작업 인스턴스 또는 작업)의 반복으로 구성됩니다.
+각 작업 J_j (여기서 J_j는 작업의 j 번째 작업 임)는 도착 시간 r_j (작업이 시작되는 시간), 작업을 완료하는 데 필요한 계산 시간 c_j 및 
+작업 절대 마감 시간 d_j , 이는 작업이 완료되어야하는 시간입니다. 최대 실행 시간 max {c_j}는 작업에 대한 WCET (Worst Case Execution Time)라고합니다.
+실시간 작업은 r_ {j + 1} = r_j + P이거나 최소 상호 도착 시간 P가 산발적 인 경우 주기 P로 r_ {j + 1}> = r_j + P 일 수 있습니다. 
+마지막으로 d_j = r_j + D, 여기서 D는 작업의 상대적인 최종 기한입니다.
+요약하면 실시간 작업은 다음과 같이 설명 할 수 있습니다.
+작업 = (WCET, D, P)
+
+ The utilization of a real-time task is defined as the ratio between its
+ WCET and its period (or minimum inter-arrival time), and represents
+ the fraction of CPU time needed to execute the task.
+
+실시간 작업의 활용은 WCET과 그 기간 (또는 최소 도착 시간) 간의 비율로 정의되며 작업을 실행하는 데 필요한 CPU 시간의 비율을 나타냅니다.
+
+ If the total utilization U=sum(WCET_i/P_i) is larger than M (with M equal
+ to the number of CPUs), then the scheduler is unable to respect all the
+ deadlines.
+ Note that total utilization is defined as the sum of the utilizations
+ WCET_i/P_i over all the real-time tasks in the system. When considering
+ multiple real-time tasks, the parameters of the i-th task are indicated
+ with the "_i" suffix.
+ Moreover, if the total utilization is larger than M, then we risk starving
+ non- real-time tasks by real-time tasks.
+ If, instead, the total utilization is smaller than M, then non real-time
+ tasks will not be starved and the system might be able to respect all the
+ deadlines.
+ As a matter of fact, in this case it is possible to provide an upper bound
+ for tardiness (defined as the maximum between 0 and the difference
+ between the finishing time of a job and its absolute deadline).
+ More precisely, it can be proven that using a global EDF scheduler the
+ maximum tardiness of each task is smaller or equal than
+	((M ? 1) · WCET_max ? WCET_min)/(M ? (M ? 2) · U_max) + WCET_max
+ where WCET_max = max{WCET_i} is the maximum WCET, WCET_min=min{WCET_i}
+ is the minimum WCET, and U_max = max{WCET_i/P_i} is the maximum
+ utilization[12].
+
+총 사용량 U = sum (WCET_i / P_i)이 M (CPU 수와 동일한 M)보다 큰 경우, 스케줄러는 모든 최종 기한을 준수 할 수 없습니다.
+총 사용률은 시스템의 모든 실시간 작업에 대한 사용량 WCET_i / P_i의 합으로 정의됩니다. 다중 실시간 작업을 고려할 때 i 번째 작업의 매개 변수는 "_i"접미사로 표시됩니다.
+또한 총 사용률이 M보다 크면 실시간 작업으로 비 실시간 작업을 굶기 게됩니다.
+대신 총 사용률이 M보다 작 으면 비 실시간 작업이 굶주 리지 않고 시스템이 모든 마감 시간을 준수 할 수 있습니다.
+사실이 경우, 지각에 대한 상한을 제공하는 것이 가능합니다 (0과 작업의 완료 시간과 절대 기한 간의 차이로 정의).
+보다 정확하게, 글로벌 EDF 스케줄러를 사용하면 각 작업의 최대 지각이보다 작거나 같음이 입증 될 수 있습니다.
+WCET_max = max {WCET_i}가 최대 WCET이고, WCET_min = min {WCET_i}가 최소 WCET이고, U_max (WCET_i)가 WCET_max이고, = max {WCET_i / P_i}는 최대 이용률 [12]이다.
+
+3.2 Schedulability Analysis for Uniprocessor Systems
+------------------------
+
+ If M=1 (uniprocessor system), or in case of partitioned scheduling (each
+ real-time task is statically assigned to one and only one CPU), it is
+ possible to formally check if all the deadlines are respected.
+ If D_i = P_i for all tasks, then EDF is able to respect all the deadlines
+ of all the tasks executing on a CPU if and only if the total utilization
+ of the tasks running on such a CPU is smaller or equal than 1.
+ If D_i != P_i for some task, then it is possible to define the density of
+ a task as WCET_i/min{D_i,P_i}, and EDF is able to respect all the deadlines
+ of all the tasks running on a CPU if the sum of the densities of the tasks
+ running on such a CPU is smaller or equal than 1:
+	sum(WCET_i / min{D_i, P_i}) <= 1
+ It is important to notice that this condition is only sufficient, and not
+ necessary: there are task sets that are schedulable, but do not respect the
+ condition. For example, consider the task set {Task_1,Task_2} composed by
+ Task_1=(50ms,50ms,100ms) and Task_2=(10ms,100ms,100ms).
+ EDF is clearly able to schedule the two tasks without missing any deadline
+ (Task_1 is scheduled as soon as it is released, and finishes just in time
+ to respect its deadline; Task_2 is scheduled immediately after Task_1, hence
+ its response time cannot be larger than 50ms + 10ms = 60ms) even if
+	50 / min{50,100} + 10 / min{100, 100} = 50 / 50 + 10 / 100 = 1.1
+ Of course it is possible to test the exact schedulability of tasks with
+ D_i != P_i (checking a condition that is both sufficient and necessary),
+ but this cannot be done by comparing the total utilization or density with
+ a constant. Instead, the so called "processor demand" approach can be used,
+ computing the total amount of CPU time h(t) needed by all the tasks to
+ respect all of their deadlines in a time interval of size t, and comparing
+ such a time with the interval size t. If h(t) is smaller than t (that is,
+ the amount of time needed by the tasks in a time interval of size t is
+ smaller than the size of the interval) for all the possible values of t, then
+ EDF is able to schedule the tasks respecting all of their deadlines. Since
+ performing this check for all possible values of t is impossible, it has been
+ proven[4,5,6] that it is sufficient to perform the test for values of t
+ between 0 and a maximum value L. The cited papers contain all of the
+ mathematical details and explain how to compute h(t) and L.
+ In any case, this kind of analysis is too complex as well as too
+ time-consuming to be performed on-line. Hence, as explained in Section
+ 4 Linux uses an admission test based on the tasks' utilizations.
+
+M = 1 (단일 프로세서 시스템) 또는 분할 스케줄링의 경우 (각 실시간 작업이 하나의 CPU에만 정적으로 할당 됨) 
+모든 마감 시간을 준수하는지 공식적으로 확인할 수 있습니다.
+모든 작업에 대해 D_i = P_i이면 EDF는 해당 CPU에서 실행되는 작업의 총 사용률이 1보다 작거나 같은 경우에만 CPU에서 실행되는 모든 작업의 모든 마감 시간을 준수 할 수 있습니다.
+어떤 작업에 대해 D_i! = P_i이면 작업 밀도를 WCET_i / min {D_i, P_i}로 정의 할 수 있으며 EDF는 CPU에서 실행되는 모든 작업의 ??
+최종 기한을 모두 고려할 수 있습니다. 이러한 CPU에서 실행되는 작업의 밀도는 1보다 작거나 같습니다.
+	합계 (WCET_i / min {D_i, P_i}) <= 1
+이 조건은 단지 충분하다는 것을 알아야합니다.
+필요한 : 스케줄 가능한 작업 집합이 있지만 조건을 존중하지 않습니다. 
+예를 들어 Task_1 = (50ms, 50ms, 100ms) 및 Task_2 = (10ms, 100ms, 100ms)로 구성된 {Task_1, Task_2} 작업 세트를 생각해보십시오.
+EDF는 데드 라인을 놓치지 않고 두 개의 작업을 명확하게 스케줄 할 수 있습니다 
+(Task_1은 출시되는 즉시 스케줄되고 최종 기한을 지키기 위해 끝나고 Task_2는 Task_1 직후에 계획되므로 응답 시간은 50ms보다 클 수 없음) + 10ms = 60ms)
+	50 / min {50,100} + 10 / min {100, 100} = 50 / 50 + 10 / 100 = 1.1
+물론 작업의 정확한 스케줄 가능성을 테스트 할 수 있습니다.
+D_i! = P_i (충분하고 필요한 조건을 검사),
+그러나 이것은 전체 이용도 또는 밀도를 다음과 비교하여 수행 할 수 없습니다.
+상수. 대신, 소위 "프로세서 수요"접근 방식을 사용할 수 있습니다.
+모든 태스크가 필요로하는 CPU 시간 h (t)의 총량을
+크기 t의 시간 간격에서 모든 데드 라인을 존중하고,
+간격 시간 t와 같은 시간. h (t)가 t보다 작은 경우 (즉,
+크기 t의 시간 간격에서 작업에 필요한 시간의 양은
+t의 모든 가능한 값에 대해 간격의 크기보다 작음)
+EDF는 마감일을 모두 준수하는 작업을 예약 할 수 있습니다. 이후
+가능한 모든 값 t에 대해이 검사를 수행하는 것은 불가능합니다.
+t의 값에 대한 테스트를 수행하는 것으로 충분하다는 것을 증명 [4,5,6]
+0과 최대 값 L 사이의 값입니다. 인용 된 논문에는
+수학적 세부 사항 및 h (t)와 L을 계산하는 방법을 설명하십시오.
+어쨌든 이런 종류의 분석은 복잡 할뿐만 아니라 너무 복잡합니다.
+시간이 많이 걸리는 온라인 작업이 필요합니다. 따라서 섹션에서 설명했듯이
+Linux는 작업의 사용률에 기반한 승인 테스트를 사용합니다.
+
+3.3 Schedulability Analysis for Multiprocessor Systems
+------------------------
+
+ On multiprocessor systems with global EDF scheduling (non partitioned
+ systems), a sufficient test for schedulability can not be based on the
+ utilizations or densities: it can be shown that even if D_i = P_i task
+ sets with utilizations slightly larger than 1 can miss deadlines regardless
+ of the number of CPUs.
+
+전역 EDF 스케줄링 (분할되지 않은 시스템)을 갖춘 다중 프로세서 시스템에서 
+스케줄링 가능성에 대한 충분한 테스트는 활용도 또는 밀도를 기반으로 할 수 없습니다. 
+D_i = P_i 일지라도 1보다 약간 큰 활용도를 가진 태스크 세트가 의 CPU 수를 나타냅니다.
+
+ Consider a set {Task_1,...Task_{M+1}} of M+1 tasks on a system with M
+ CPUs, with the first task Task_1=(P,P,P) having period, relative deadline
+ and WCET equal to P. The remaining M tasks Task_i=(e,P-1,P-1) have an
+ arbitrarily small worst case execution time (indicated as "e" here) and a
+ period smaller than the one of the first task. Hence, if all the tasks
+ activate at the same time t, global EDF schedules these M tasks first
+ (because their absolute deadlines are equal to t + P - 1, hence they are
+ smaller than the absolute deadline of Task_1, which is t + P). As a
+ result, Task_1 can be scheduled only at time t + e, and will finish at
+ time t + e + P, after its absolute deadline. The total utilization of the
+ task set is U = M · e / (P - 1) + P / P = M · e / (P - 1) + 1, and for small
+ values of e this can become very close to 1. This is known as "Dhall's
+ effect"[7]. Note: the example in the original paper by Dhall has been
+ slightly simplified here (for example, Dhall more correctly computed
+ lim_{e->0}U).
+
+첫 번째 작업 Task_1 = (P, P, P)가 마침표, 상대 데드 라인 및 WCET와 동일한 M 개의 CPU가있는 시스템에서 
+M + 1 작업의 집합 {Task_1, ... Task_ {M + 1} 나머지 M 개의 작업 Task_i = (e, P-1, P-1)은 
+임의로 작은 최악의 실행 시간 (여기서는 "e"로 표시)과 첫 번째 작업보다 작은주기를 갖는다. 
+따라서 모든 작업이 같은 시간 t에 활성화되면 글로벌 EDF는 이러한 M 작업을 먼저 예약합니다 
+(절대 마감 기한이 t + P - 1이기 때문에 Task_1의 절대 기한 인 t + P보다 작기 때문에) ). 
+결과적으로, Task_1은 t + e 시간에만 스케줄 될 수 있고 절대 마감 시간 이후에 t + e + P 시간에 종료됩니다. 
+작업 집합의 총 이용률은 U = M · e / (P-1) + P / P = M · e / (P-1) + 1이며, e의 값이 작 으면 1에 가깝게 될 수 있습니다. 
+이것은 "Dhall의 효과"[7]로 알려져 있습니다. 참고 : Dhall의 원본 논문의 예제는 여기에서 약간 단순화되었습니다 
+(예 : Dhall은 lim_ {e -> 0} U를보다 정확하게 계산했습니다).
+
+ More complex schedulability tests for global EDF have been developed in
+ real-time literature[8,9], but they are not based on a simple comparison
+ between total utilization (or density) and a fixed constant. If all tasks
+ have D_i = P_i, a sufficient schedulability condition can be expressed in
+ a simple way:
+	sum(WCET_i / P_i) <= M - (M - 1) · U_max
+ where U_max = max{WCET_i / P_i}[10]. Notice that for U_max = 1,
+ M - (M - 1) · U_max becomes M - M + 1 = 1 and this schedulability condition
+ just confirms the Dhall's effect. A more complete survey of the literature
+ about schedulability tests for multi-processor real-time scheduling can be
+ found in [11].
+
+전역 EDF에 대한보다 복잡한 스케줄 성 테스트는 실시간 문헌 [8,9]에서 개발되었지만 총 사용률 (또는 밀도)과 고정 상수 간의 단순한 비교를 기반으로하지는 않습니다. 
+모든 작업에 D_i = P_i가 있으면 충분한 스케줄 가능성 조건을 간단한 방법으로 표현할 수 있습니다.
+	합 (WCET_i / P_i) <= M- (M-1) · U_max
+여기서, U_max = max {WCET_i / P_i} [10]. U_max = 1 일 때,
+M - (M - 1) · U_max는 M - M + 1 = 1이되고이 스케줄 가능성 조건은 Dhall의 효과를 확인합니다. 
+멀티 프로세서 실시간 스케줄링을위한 스케줄 가능성 테스트에 관한 문헌에 대한보다 완벽한 조사는 [11]에서 찾을 수 있습니다.
+
+ As seen, enforcing that the total utilization is smaller than M does not
+ guarantee that global EDF schedules the tasks without missing any deadline
+ (in other words, global EDF is not an optimal scheduling algorithm). However,
+ a total utilization smaller than M is enough to guarantee that non real-time
+ tasks are not starved and that the tardiness of real-time tasks has an upper
+ bound[12] (as previously noted). Different bounds on the maximum tardiness
+ experienced by real-time tasks have been developed in various papers[13,14],
+ but the theoretical result that is important for SCHED_DEADLINE is that if
+ the total utilization is smaller or equal than M then the response times of
+ the tasks are limited.
+
+알 수 있듯이 총 사용량이 M보다 작다고해서 글로벌 EDF가 최종 기한을 놓치지 않고 작업을 예약한다는 보장은 없습니다 
+(즉, 글로벌 EDF는 최적의 스케줄링 알고리즘이 아닙니다). 
+그러나, M보다 작은 전체 활용도는 비 실시간 작업이 굶어지지 않고 실시간 작업의 지각이 상한을 갖도록 보장하기에 충분하다. 
+실시간 작업에 의해 경험되는 최대 지각에 대한 다양한 범위가 다양한 논문에서 개발되었지만 [13,14], 
+SCHED_DEADLINE에서 중요한 이론적 인 결과는 총 사용률이 M보다 작거나 같으면 작업이 제한됩니다.
+
+3.4 Relationship with SCHED_DEADLINE Parameters
+------------------------
+
+ Finally, it is important to understand the relationship between the
+ SCHED_DEADLINE scheduling parameters described in Section 2 (runtime,
+ deadline and period) and the real-time task parameters (WCET, D, P)
+ described in this section. Note that the tasks' temporal constraints are
+ represented by its absolute deadlines d_j = r_j + D described above, while
+ SCHED_DEADLINE schedules the tasks according to scheduling deadlines (see
+ Section 2).
+ If an admission test is used to guarantee that the scheduling deadlines
+ are respected, then SCHED_DEADLINE can be used to schedule real-time tasks
+ guaranteeing that all the jobs' deadlines of a task are respected.
+ In order to do this, a task must be scheduled by setting:
+
+마지막으로, 그 사이의 관계를 이해하는 것이 중요합니다.
+SCHED_DEADLINE 섹션 2 (런타임, 최종 기한 및 기간) 및 실시간 태스크 매개 변수 (WCET, D, P)에 설명 된 스케줄 매개 변수. 작업의 시간적 제약 조건은 다음과 같습니다.
+SCHED_DEADLINE은 스케쥴링 마감 시간 (2 절 참조)에 따라 작업을 스케쥴하는 반면, 절대 마감 시한 d_j = r_j + D로 표현된다.
+SCHED_DEADLINE을 사용하여 실시간 작업을 예약하면 모든 작업의 작업 마감 시간을 준수하도록 할 수 있습니다.
+이를 수행하려면 작업을 설정해야합니다.
+
+  - runtime >= WCET
+  - deadline = D
+  - period <= P
+
+ IOW, if runtime >= WCET and if period is <= P, then the scheduling deadlines
+ and the absolute deadlines (d_j) coincide, so a proper admission control
+ allows to respect the jobs' absolute deadlines for this task (this is what is
+ called "hard schedulability property" and is an extension of Lemma 1 of [2]).
+ Notice that if runtime > deadline the admission control will surely reject
+ this task, as it is not possible to respect its temporal constraints.
+
+IOW, 런타임> = WCET이고 기간이 <= P이면 스케줄링 마감 시간과 절대 마감 시간 (d_j)이 일치하므로 
+적절한 승인 제어가이 작업에 대한 작업의 절대 기한을 준수 할 수 있습니다. "hard schedulability property"이며 [2]의 보조 정리 1의 확장이다).
+runtime> deadline 인 경우 승인 제어는 임시 작업을 존중할 수 없으므로이 작업을 거부합니다.
+
+ References:
+  1 - C. L. Liu and J. W. Layland. Scheduling algorithms for multiprogram-
+      ming in a hard-real-time environment. Journal of the Association for
+      Computing Machinery, 20(1), 1973.
+  2 - L. Abeni , G. Buttazzo. Integrating Multimedia Applications in Hard
+      Real-Time Systems. Proceedings of the 19th IEEE Real-time Systems
+      Symposium, 1998. http://retis.sssup.it/~giorgio/paps/1998/rtss98-cbs.pdf
+  3 - L. Abeni. Server Mechanisms for Multimedia Applications. ReTiS Lab
+      Technical Report. http://disi.unitn.it/~abeni/tr-98-01.pdf
+  4 - J. Y. Leung and M.L. Merril. A Note on Preemptive Scheduling of
+      Periodic, Real-Time Tasks. Information Processing Letters, vol. 11,
+      no. 3, pp. 115-118, 1980.
+  5 - S. K. Baruah, A. K. Mok and L. E. Rosier. Preemptively Scheduling
+      Hard-Real-Time Sporadic Tasks on One Processor. Proceedings of the
+      11th IEEE Real-time Systems Symposium, 1990.
+  6 - S. K. Baruah, L. E. Rosier and R. R. Howell. Algorithms and Complexity
+      Concerning the Preemptive Scheduling of Periodic Real-Time tasks on
+      One Processor. Real-Time Systems Journal, vol. 4, no. 2, pp 301-324,
+      1990.
+  7 - S. J. Dhall and C. L. Liu. On a real-time scheduling problem. Operations
+      research, vol. 26, no. 1, pp 127-140, 1978.
+  8 - T. Baker. Multiprocessor EDF and Deadline Monotonic Schedulability
+      Analysis. Proceedings of the 24th IEEE Real-Time Systems Symposium, 2003.
+  9 - T. Baker. An Analysis of EDF Schedulability on a Multiprocessor.
+      IEEE Transactions on Parallel and Distributed Systems, vol. 16, no. 8,
+      pp 760-768, 2005.
+  10 - J. Goossens, S. Funk and S. Baruah, Priority-Driven Scheduling of
+       Periodic Task Systems on Multiprocessors. Real-Time Systems Journal,
+       vol. 25, no. 2?3, pp. 187?205, 2003.
+  11 - R. Davis and A. Burns. A Survey of Hard Real-Time Scheduling for
+       Multiprocessor Systems. ACM Computing Surveys, vol. 43, no. 4, 2011.
+       http://www-users.cs.york.ac.uk/~robdavis/papers/MPSurveyv5.0.pdf
+  12 - U. C. Devi and J. H. Anderson. Tardiness Bounds under Global EDF
+       Scheduling on a Multiprocessor. Real-Time Systems Journal, vol. 32,
+       no. 2, pp 133-189, 2008.
+  13 - P. Valente and G. Lipari. An Upper Bound to the Lateness of Soft
+       Real-Time Tasks Scheduled by EDF on Multiprocessors. Proceedings of
+       the 26th IEEE Real-Time Systems Symposium, 2005.
+  14 - J. Erickson, U. Devi and S. Baruah. Improved tardiness bounds for
+       Global EDF. Proceedings of the 22nd Euromicro Conference on
+       Real-Time Systems, 2010.
+
+참고 문헌 :
+  1 - C. L. Liu and J. W. Layland. 멀티 프로그램 -
+      하드 실시간 환경에서 작동합니다. 협회 저널
+      Computing Machinery, 20 (1), 1973 년
+  2 - L. Abeni, G. Buttazzo. 하드 디스크에 멀티미디어 응용 프로그램 통합
+      실시간 시스템. 제 19 회 IEEE 실시간 시스템 학회 논문지
+      Symposium, 1998. http://retis.sssup.it/~giorgio/paps/1998/rtss98-cbs.pdf
+  3 - L. Abeni. 멀티미디어 응용 프로그램을위한 서버 메커니즘. ReTiS Lab
+      기술 보고서. http://disi.unitn.it/~abeni/tr-98-01.pdf
+  4 - J.Y. Leung and M.L. 메릴. 선제 적 스케쥴링에 대한 참고 사항
+      정기적 인 실시간 작업. 정보 처리 Letters, vol. 도 11에 도시 된 바와 같이,
+      아니. 3, pp.115-118, 1980]에 기재되어있다.
+  5 - S. K. Baruah, A. K. Mok 및 L. E. Rosier. 사전 예약
+      하나의 프로세서에서 하드 실시간 산발적 태스크. 의 진행
+      제 11 회 IEEE 실시간 시스템 심포지엄, 1990.
+  6 - S. K. Baruah, L. E. Rosier 및 R. R. Howell. 알고리즘과 복잡성
+      에 대한 주기적 실시간 작업의 선점 예약에 관한
+      하나의 프로세서. 실시간 시스템 저널, vol. 4, 아니오. 2, pp 301-324, 1990.
+  7 - S. J. Dhall 및 C. L. Liu. 실시간 스케줄링 문제. 운영
+      연구, vol. 26, no. 1, pp127-140, 1978]에 기재되어있다.
+  8 - T. 베이커. 다중 프로세서 EDF 및 마감일 단조 일정 성
+      분석. 제 24 회 IEEE 실시간 시스템 심포지엄, 2003 년 논문집.
+  9 - T. Baker. 다중 프로세서에서의 EDF 스케줄링 가능성 분석
+      병렬 및 분산 시스템에 관한 IEEE 트랜잭션, vol. 16, no. 도 8에 도시 된 바와 같이, pp 760-768, 2005.
+  10 - J. Goossens, S. Funk 및 S. Baruah, 우선 순위 기반 스케줄링
+      다중 프로세서의 주기적 태스크 시스템. 실시간 시스템 저널, vol. 25, no. 2-3, pp. 187-205, 2003.
+  11 - R. Davis와 A. Burns. 하드 실시간 스케줄링에 대한 조사
+       다중 프로세서 시스템. ACM Computing Surveys, vol. 43, no. 2011 년 4 월 4 일
+       http://www-users.cs.york.ac.uk/~robdavis/papers/MPSurveyv5.0.pdf
+  12 - U. C. Devi and J. H. Anderson. 글로벌 EDF 하에서의 지각 경계
+       다중 프로세서에서 스케줄링. 실시간 시스템 저널, vol. 32,
+       아니. 2, pp 133-189, 2008.
+  13 - P. Valente and G. Lipari. 연약한 지각의 상 한계
+       다중 프로세서에서 EDF가 예약하는 실시간 작업. 의 진행
+       제 26 회 IEEE Real-Time Systems Symposium, 2005.
+  14 - J. Erickson, U. Devi and S. Baruah. 지각 한계 개선
+       글로벌 EDF. 제 22 회 Euromicro 컨퍼런스의 진행 실시간 시스템, 2010.
+
+
+4. Bandwidth management
+=======================
+
+ As previously mentioned, in order for -deadline scheduling to be
+ effective and useful (that is, to be able to provide "runtime" time units
+ within "deadline"), it is important to have some method to keep the allocation
+ of the available fractions of CPU time to the various tasks under control.
+ This is usually called "admission control" and if it is not performed, then
+ no guarantee can be given on the actual scheduling of the -deadline tasks.
+
+앞에서 언급했듯이, - 마감 시간 계획이 효과적이고 유용하기 때문에 (즉, "마감 시한"에서 "런타임"시간 단위를 제공 할 수 있도록) 
+할당을 유지할 수있는 방법이 있어야합니다
+사용 가능한 CPU 시간의 일부를 제어중인 다양한 작업에 할당합니다.
+이것은 일반적으로 "승인 제어"라고하며 수행되지 않으면 실제 작업 일정에 대한 보장이 제공되지 않습니다.
+
+
+ As already stated in Section 3, a necessary condition to be respected to
+ correctly schedule a set of real-time tasks is that the total utilization
+ is smaller than M. When talking about -deadline tasks, this requires that
+ the sum of the ratio between runtime and period for all tasks is smaller
+ than M. Notice that the ratio runtime/period is equivalent to the utilization
+ of a "traditional" real-time task, and is also often referred to as
+ "bandwidth".
+ The interface used to control the CPU bandwidth that can be allocated
+ to -deadline tasks is similar to the one already used for -rt
+ tasks with real-time group scheduling (a.k.a. RT-throttling - see
+ Documentation/scheduler/sched-rt-group.txt), and is based on readable/
+ writable control files located in procfs (for system wide settings).
+ Notice that per-group settings (controlled through cgroupfs) are still not
+ defined for -deadline tasks, because more discussion is needed in order to
+ figure out how we want to manage SCHED_DEADLINE bandwidth at the task group
+ level.
+
+3 절에서 이미 언급했듯이, 실시간 작업 세트를 올바르게 스케줄링하기 위해 필요한 조건은 총 사용률이 M보다 작아야한다는 것입니다. 
+-deadline 작업에 대해 이야기 할 때, 이것은 런타임과 런타임 사이의 비율 모든 작업의 ??기간은 M보다 작습니다. 
+런타임 / 기간 비율은 "기존"실시간 작업의 사용률과 동일하며 "대역폭"이라고도합니다.
+-deadline 작업에 할당 할 수있는 CPU 대역폭을 제어하는 ??데 사용되는 인터페이스는 실시간 그룹 예약 
+(일명 RT 스로틀 링 - Documentation / scheduler / sched-rt-group 참조)과 함께 -rt 작업에 이미 사용 된 인터페이스와 유사합니다. 
+txt)이며 procfs에있는 읽기 / 쓰기 가능한 제어 파일을 기반으로합니다 (시스템 전체 설정의 경우).
+작업 그룹 수준에서 SCHED_DEADLINE 대역폭을 관리하는 방법을 파악하려면 더 많은 논의가 필요하기 때문에 
+cgroupfs를 통해 제어되는 그룹 별 설정은 여전히 ??-deadline 작업에 정의되어 있지 않습니다
+
+ A main difference between deadline bandwidth management and RT-throttling
+ is that -deadline tasks have bandwidth on their own (while -rt ones don't!),
+ and thus we don't need a higher level throttling mechanism to enforce the
+ desired bandwidth. In other words, this means that interface parameters are
+ only used at admission control time (i.e., when the user calls
+ sched_setattr()). Scheduling is then performed considering actual tasks'
+ parameters, so that CPU bandwidth is allocated to SCHED_DEADLINE tasks
+ respecting their needs in terms of granularity. Therefore, using this simple
+ interface we can put a cap on total utilization of -deadline tasks (i.e.,
+ \Sum (runtime_i / period_i) < global_dl_utilization_cap).
+
+데드 라인 대역폭 관리와 RT 스로틀 링의 주된 차이점은 - 데드 라인 작업은 자체적으로 대역폭을 가지므로 (필요하지는 않지만!) 
+원하는 대역폭을 적용하기 위해 더 높은 수준의 스로틀 링 메커니즘이 필요하지 않다는 것입니다. 
+즉, 인터페이스 매개 변수는 승인 제어 시간 (즉, 사용자가 sched_setattr ()을 호출 할 때만 사용됨을 의미합니다. 
+그런 다음 실제 작업의 매개 변수를 고려하여 예약이 수행되므로 CPU 대역폭이 필요에 따라 세분화 된 SCHED_DEADLINE 작업에 할당됩니다. 
+따라서이 간단한 인터페이스를 사용하여 -deadline 작업 (즉, \ Sum (runtime_i / period_i) <global_dl_utilization_cap)의 총 사용량을 제한 할 수 있습니다.
+
+4.1 System wide settings
+------------------------
+
+ The system wide settings are configured under the /proc virtual file system.
+
+시스템 전체 설정은 / proc 가상 파일 시스템 아래에 구성됩니다.
+
+ For now the -rt knobs are used for -deadline admission control and the
+ -deadline runtime is accounted against the -rt runtime. We realize that this
+ isn't entirely desirable; however, it is better to have a small interface for
+ now, and be able to change it easily later. The ideal situation (see 5.) is to
+ run -rt tasks from a -deadline server; in which case the -rt bandwidth is a
+ direct subset of dl_bw.
+
+지금은 -rt 노브가 -deadline 승인 제어에 사용되며 -deadline 런타임은 -rt 런타임에 대해 설명됩니다. 
+우리는 이것이 전적으로 바람직하지 않다는 것을 알고 있습니다. 그러나 지금은 작은 인터페이스를 가지고 나중에 쉽게 변경할 수 있어야합니다. 
+이상적인 상황 (5 참조)은 -deadline 서버에서 -rt 작업을 실행하는 것입니다. 이 경우 -rt 대역폭은 dl_bw의 직접적인 부분 집합입니다
+
+ This means that, for a root_domain comprising M CPUs, -deadline tasks
+ can be created while the sum of their bandwidths stays below:
+
+   M * (sched_rt_runtime_us / sched_rt_period_us)
+
+ It is also possible to disable this bandwidth management logic, and
+ be thus free of oversubscribing the system up to any arbitrary level.
+ This is done by writing -1 in /proc/sys/kernel/sched_rt_runtime_us.
+
+즉, M CPU로 구성된 root_domain의 경우 - 데드 라인 작업을 만들 수 있으며 대역폭의 합계는 다음과 같이 유지됩니다.
+
+M * (sched_rt_runtime_us / sched_rt_period_us)
+
+또한이 대역폭 관리 논리를 비활성화하여 시스템을 임의의 수준까지 초과 할당 할 필요가 없습니다.
+이것은 / proc / sys / kernel / sched_rt_runtime_us에 -1을 쓰면됩니다.
+
+
+4.2 Task interface
+------------------
+
+ Specifying a periodic/sporadic task that executes for a given amount of
+ runtime at each instance, and that is scheduled according to the urgency of
+ its own timing constraints needs, in general, a way of declaring:
+  - a (maximum/typical) instance execution time,
+  - a minimum interval between consecutive instances,
+  - a time constraint by which each instance must be completed.
+
+각 인스턴스에서 주어진 양의 런타임에 대해 실행되고 자체 타이밍 제약 조건의 긴급성에 따라 스케줄되는 
+주기적 / 산발적 태스크를 지정하는 것은 일반적으로 다음을 선언하는 방법입니다.
+
+   - (최대 / 표준) 인스턴스 실행 시간,
+   - 연속되는 인스턴스 간의 최소 간격
+   - 각 인스턴스를 완료해야하는 시간 제약 조건.
+
+ Therefore:
+  * a new struct sched_attr, containing all the necessary fields is
+    provided;
+  * the new scheduling related syscalls that manipulate it, i.e.,
+    sched_setattr() and sched_getattr() are implemented.
+
+따라서:
+   * 모든 필수 필드를 포함하는 새로운 구조체 sched_attr이 제공됩니다.
+   * sched_setattr () 및 sched_getattr ()와 같은 새로운 스케줄 관련 syscalls이 구현됩니다.
+
+
+4.3 Default behavior
+---------------------
+
+ The default value for SCHED_DEADLINE bandwidth is to have rt_runtime equal to
+ 950000. With rt_period equal to 1000000, by default, it means that -deadline
+ tasks can use at most 95%, multiplied by the number of CPUs that compose the
+ root_domain, for each root_domain.
+ This means that non -deadline tasks will receive at least 5% of the CPU time,
+ and that -deadline tasks will receive their runtime with a guaranteed
+ worst-case delay respect to the "deadline" parameter. If "deadline" = "period"
+ and the cpuset mechanism is used to implement partitioned scheduling (see
+ Section 5), then this simple setting of the bandwidth management is able to
+ deterministically guarantee that -deadline tasks will receive their runtime
+ in a period.
+
+SCHED_DEADLINE 대역폭의 기본값은 rt_runtime이 950000과 같습니다. 기본적으로 rt_period가 1000000이면 
+마감일 묻기는 각 root_domain에 대해 root_domain을 구성하는 CPU 수를 곱한 최대 95 %를 사용할 수 있습니다.
+즉, 비 기본 작업은 CPU 시간의 5 % 이상을받으며 "마감 시한"매개 변수에 대한 최악의 경우 지연을 보장하여 런타임을 수신합니다.
+"deadline"= "period"이고 cpuset 메커니즘이 분할 스케줄링 (5 절 참조)을 구현하는 데 사용되는 경우 대역폭 관리의 간단한 설정을 통해 
+-deadline 작업이 해당 기간 동안 런타임을 수신하도록 결정적으로 보장 할 수 있습니다.
+
+ Finally, notice that in order not to jeopardize the admission control a
+ -deadline task cannot fork.
+
+마지막으로 승인 제어를 위험에 빠뜨리지 않도록 마감 시간 작업을 포크 할 수 없습니다.
+
+5. Tasks CPU affinity
+=====================
+
+ -deadline tasks cannot have an affinity mask smaller that the entire
+ root_domain they are created on. However, affinities can be specified
+ through the cpuset facility (Documentation/cgroups/cpusets.txt).
+
+데드 라인 작업은 생성 된 전체 root_domain보다 작은 선호도 마스크를 가질 수 없습니다. 
+그러나 cpuset 기능을 통해 동질성을 지정할 수 있습니다 (Documentation / cgroups / cpusets.txt).
+
+5.1 SCHED_DEADLINE and cpusets HOWTO
+------------------------------------
+
+ An example of a simple configuration (pin a -deadline task to CPU0)
+ follows (rt-app is used to create a -deadline task).
+
+간단한 구성 (예 : CPU0에 대한 데드 라인 작업을 핀)은 다음과 같습니다 (rt-app는 -deadline 작업을 만드는 데 사용됩니다).
+
+ mkdir /dev/cpuset
+ mount -t cgroup -o cpuset cpuset /dev/cpuset
+ cd /dev/cpuset
+ mkdir cpu0
+ echo 0 > cpu0/cpuset.cpus
+ echo 0 > cpu0/cpuset.mems
+ echo 1 > cpuset.cpu_exclusive
+ echo 0 > cpuset.sched_load_balance
+ echo 1 > cpu0/cpuset.cpu_exclusive
+ echo 1 > cpu0/cpuset.mem_exclusive
+ echo $$ > cpu0/tasks
+ rt-app -t 100000:10000:d:0 -D5 (it is now actually superfluous to specify
+ task affinity)
+
+6. Future plans
+===============
+
+ Still missing:
+
+  - refinements to deadline inheritance, especially regarding the possibility
+    of retaining bandwidth isolation among non-interacting tasks. This is
+    being studied from both theoretical and practical points of view, and
+    hopefully we should be able to produce some demonstrative code soon;
+  - (c)group based bandwidth management, and maybe scheduling;
+  - access control for non-root users (and related security concerns to
+    address), which is the best way to allow unprivileged use of the mechanisms
+    and how to prevent non-root users "cheat" the system?
+
+아직 실종 :
+
+특히 상호 작용이없는 작업에서 대역폭 격리를 유지할 가능성에 관한 마감 시간 상속을 개선합니다. 
+이것은 이론적 관점과 실용적인 관점에서 연구되고 있으며, 곧 우리는 시범적인 코드를 조만간 생산할 수 있어야합니다.
+- (c) 그룹 기반 대역폭 관리 및 아마도 스케줄링;
+- 비 루트 사용자 (및 관련 보안 문제를 해결하기위한 액세스 제어)는 메커니즘의 비 독점적 사용을 허용하는 가장 좋은 방법이며 
+  비 루트 사용자가 시스템을 "속이려는"것을 방지하는 방법은 무엇입니까?
+
+ As already discussed, we are planning also to merge this work with the EDF
+ throttling patches [https://lkml.org/lkml/2010/2/23/239] but we still are in
+ the preliminary phases of the merge and we really seek feedback that would
+ help us decide on the direction it should take.
+
+이미 설명한 바와 같이이 작업을 EDF 조절 패치 [https://lkml.org/lkml/2010/2/23/239]와 병합 할 계획도 있지만 병합의 예비 단계에 있습니다. 
+우리가 취해야 할 방향을 결정하는 데 도움이 될 의견을 구하십시오.
+
+Appendix A. Test suite
+======================
+
+ The SCHED_DEADLINE policy can be easily tested using two applications that
+ are part of a wider Linux Scheduler validation suite. The suite is
+ available as a GitHub repository: https://github.com/scheduler-tools.
+
+SCHED_DEADLINE 정책은보다 광범위한 Linux Scheduler 유효성 검사 제품군의 일부인 두 응용 프로그램을 사용하여 쉽게 테스트 할 수 있습니다. 
+이 제품군은 GitHub 저장소 (https://github.com/scheduler-tools)로 제공됩니다.
+
+ The first testing application is called rt-app and can be used to
+ start multiple threads with specific parameters. rt-app supports
+ SCHED_{OTHER,FIFO,RR,DEADLINE} scheduling policies and their related
+ parameters (e.g., niceness, priority, runtime/deadline/period). rt-app
+ is a valuable tool, as it can be used to synthetically recreate certain
+ workloads (maybe mimicking real use-cases) and evaluate how the scheduler
+ behaves under such workloads. In this way, results are easily reproducible.
+ rt-app is available at: https://github.com/scheduler-tools/rt-app.
+
+첫 번째 테스트 애플리케이션은 rt-app이며 특정 매개 변수로 여러 스레드를 시작하는 데 사용할 수 있습니다. 
+rt-app는 SCHED_ {OTHER, FIFO, RR, DEADLINE} 예약 정책 및 관련 매개 변수 (예 : 멋지다, 우선 순위, 실행 시간 / 기한 / 마침표)를 지원합니다. 
+rt-app는 특정 워크로드를 종합적으로 재현하고 (실제 사용 사례를 모방 한 것일 수도 있음) 사용하고 스케줄러가 그러한 작업 부하에서 어떻게 작동하는지 평가할 수 있으므로 유용한 도구입니다. 
+이 방법으로 결과를 쉽게 재현 할 수 있습니다.
+rt-app는 https://github.com/scheduler-tools/rt-app에서 다운로드 할 수 있습니다.
+
+ Thread parameters can be specified from the command line, with something like
+ this:
+
+스레드 매개 변수는 다음과 같이 명령 줄에서 지정할 수 있습니다.
+
+  # rt-app -t 100000:10000:d -t 150000:20000:f:10 -D5
+
+ The above creates 2 threads. The first one, scheduled by SCHED_DEADLINE,
+ executes for 10ms every 100ms. The second one, scheduled at SCHED_FIFO
+ priority 10, executes for 20ms every 150ms. The test will run for a total
+ of 5 seconds.
+
+위의 두 스레드를 만듭니다. SCHED_DEADLINE에 의해 스케쥴 된 첫 번째 것은 100ms마다 10ms 동안 실행됩니다. 
+SCHED_FIFO 우선 순위 10에서 예약 된 두 번째 것은 150ms마다 20ms 동안 실행됩니다. 테스트는 총 5 초 동안 실행됩니다.
+
+ More interestingly, configurations can be described with a json file that
+ can be passed as input to rt-app with something like this:
+
+좀 더 흥미롭게도, rt-app에 입력으로 전달할 수있는 json 파일을 사용하여 다음과 같이 구성 할 수 있습니다.
+
+  # rt-app my_config.json
+
+ The parameters that can be specified with the second method are a superset
+ of the command line options. Please refer to rt-app documentation for more
+ details (<rt-app-sources>/doc/*.json).
+
+두 번째 방법으로 지정할 수있는 매개 변수는 명령 줄 옵션의 수퍼 집합입니다. 
+자세한 내용은 rt-app 설명서를 참조하십시오 (<rt-app-sources> / doc / *. json).
+
+ The second testing application is a modification of schedtool, called
+ schedtool-dl, which can be used to setup SCHED_DEADLINE parameters for a
+ certain pid/application. schedtool-dl is available at:
+ https://github.com/scheduler-tools/schedtool-dl.git.
+
+두 번째 테스트 응용 프로그램은 schedtool-dl이라는 schedtool을 수정 한 것으로, 특정 PID / 응용 프로그램에 대한 SCHED_DEADLINE 매개 변수를 설정하는 데 사용할 수 있습니다. 
+schedtool-dl은 https://github.com/scheduler-tools/schedtool-dl.git에서 다운로드 할 수 있습니다.
+
+ The usage is straightforward:
+
+사용법은 간단합니다.
+
+  # schedtool -E -t 10000000:100000000 -e ./my_cpuhog_app
+
+ With this, my_cpuhog_app is put to run inside a SCHED_DEADLINE reservation
+ of 10ms every 100ms (note that parameters are expressed in microseconds).
+ You can also use schedtool to create a reservation for an already running
+ application, given that you know its pid:
+
+이를 통해 my_cpuhog_app는 100ms마다 10ms의 SCHED_DEADLINE 예약 내에서 실행됩니다 (매개 변수는 마이크로 초로 표시됨).
+또한 schedtool을 사용하여 이미 실행중인 응용 프로그램에 대한 예약을 만들 수 있습니다 (pid를 알고있는 경우).
+
+  # schedtool -E -t 10000000:100000000 my_app_pid
+
+Appendix B. Minimal main()
+==========================
+
+ We provide in what follows a simple (ugly) self-contained code snippet
+ showing how SCHED_DEADLINE reservations can be created by a real-time
+ application developer.
+
+우리는 실시간 애플리케이션 개발자가 SCHED_DEADLINE 예약을 생성하는 방법을 보여주는 간단한 (못생긴) 자체 코드 스 니펫을 제공합니다.
+
+ #define _GNU_SOURCE
+ #include <unistd.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>
+ #include <time.h>
+ #include <linux/unistd.h>
+ #include <linux/kernel.h>
+ #include <linux/types.h>
+ #include <sys/syscall.h>
+ #include <pthread.h>
+
+ #define gettid() syscall(__NR_gettid)
+
+ #define SCHED_DEADLINE	6
+
+ /* XXX use the proper syscall numbers 
+XXX는 적절한 시스템 호출 번호를 사용합니다.*/
+
+ #ifdef __x86_64__
+ #define __NR_sched_setattr		314
+ #define __NR_sched_getattr		315
+ #endif
+
+ #ifdef __i386__
+ #define __NR_sched_setattr		351
+ #define __NR_sched_getattr		352
+ #endif
+
+ #ifdef __arm__
+ #define __NR_sched_setattr		380
+ #define __NR_sched_getattr		381
+ #endif
+
+ static volatile int done;
+
+ struct sched_attr {
+	__u32 size;
+
+	__u32 sched_policy;
+	__u64 sched_flags;
+
+	/* SCHED_NORMAL, SCHED_BATCH */
+	__s32 sched_nice;
+
+	/* SCHED_FIFO, SCHED_RR */
+	__u32 sched_priority;
+
+	/* SCHED_DEADLINE (nsec) */
+	__u64 sched_runtime;
+	__u64 sched_deadline;
+	__u64 sched_period;
+ };
+
+ int sched_setattr(pid_t pid,
+		  const struct sched_attr *attr,
+		  unsigned int flags)
+ {
+	return syscall(__NR_sched_setattr, pid, attr, flags);
+ }
+
+ int sched_getattr(pid_t pid,
+		  struct sched_attr *attr,
+		  unsigned int size,
+		  unsigned int flags)
+ {
+	return syscall(__NR_sched_getattr, pid, attr, size, flags);
+ }
+
+ void *run_deadline(void *data)
+ {
+	struct sched_attr attr;
+	int x = 0;
+	int ret;
+	unsigned int flags = 0;
+
+	printf("deadline thread started [%ld]\n", gettid());
+
+	attr.size = sizeof(attr);
+	attr.sched_flags = 0;
+	attr.sched_nice = 0;
+	attr.sched_priority = 0;
+
+	/* This creates a 10ms/30ms reservation
+	이로 인해 10ms / 30ms 예약이 생성됩니다. */
+
+	attr.sched_policy = SCHED_DEADLINE;
+	attr.sched_runtime = 10 * 1000 * 1000;
+	attr.sched_period = attr.sched_deadline = 30 * 1000 * 1000;
+
+	ret = sched_setattr(0, &attr, flags);
+	if (ret < 0) {
+		done = 0;
+		perror("sched_setattr");
+		exit(-1);
+	}
+
+	while (!done) {
+		x++;
+	}
+
+	printf("deadline thread dies [%ld]\n", gettid());
+	return NULL;
+ }
+
+ int main (int argc, char **argv)
+ {
+	pthread_t thread;
+
+	printf("main thread [%ld]\n", gettid());
+
+	pthread_create(&thread, NULL, run_deadline, NULL);
+
+	sleep(10);
+
+	done = 1;
+	pthread_join(thread, NULL);
+
+	printf("main dies [%ld]\n", gettid());
+	return 0;
+ }

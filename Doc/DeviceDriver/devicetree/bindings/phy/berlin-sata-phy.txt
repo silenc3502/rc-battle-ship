@@ -1,0 +1,54 @@
+Berlin SATA PHY
+---------------
+
+Required properties:
+- compatible: should be one of
+    "marvell,berlin2-sata-phy"
+    "marvell,berlin2q-sata-phy"
+- address-cells: should be 1
+- size-cells: should be 0
+- phy-cells: from the generic PHY bindings, must be 1
+- reg: address and length of the register
+- clocks: reference to the clock entry
+
+Sub-nodes:
+Each PHY should be represented as a sub-node.
+
+Sub-nodes required properties:
+- reg: the PHY number
+
+동일 속성 :
+- compatible : 다음 중 하나 여야합니다.
+     "marvell, berlin2-sata-phy"
+     "marvell, berlin2q-sata-phy"
+- address-cells : 1이어야합니다.
+-size-cells : 0이어야합니다.
+- phy-cells : 일반 PHY 바인딩에서 1이어야합니다.
+- reg : 레지스터의 주소와 길이
+- clocks : clock entry에 대한 참조
+
+하위 노드 :
+각 PHY는 하위 노드로 표시되어야합니다.
+
+서브 노드 필수 등록 정보 :
+- 등록 번호 : PHY 번호
+
+
+
+Example:
+	sata_phy: phy@f7e900a0 {
+		compatible = "marvell,berlin2q-sata-phy";
+		reg = <0xf7e900a0 0x200>;
+		clocks = <&chip CLKID_SATA>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		#phy-cells = <1>;
+
+		sata-phy@0 {
+			reg = <0>;
+		};
+
+		sata-phy@1 {
+			reg = <1>;
+		};
+	};

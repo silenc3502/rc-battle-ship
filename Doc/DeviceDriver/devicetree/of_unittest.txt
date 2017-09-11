@@ -1,0 +1,252 @@
+Open Firmware Device Tree Unittest
+----------------------------------
+
+Author: Gaurav Minocha <gaurav.minocha.os@gmail.com>
+
+1. Introduction
+
+This document explains how the test data required for executing OF unittest
+is attached to the live tree dynamically, independent of the machine's
+architecture.
+이 문서는 unittest를 실행하는데 필요한 테스트 데이터가 머신의 아키텍처와 관계없이
+ 동적으로 라이브 트리에 어떻게 첨부되는지 설명합니다.
+
+It is recommended to read the following documents before moving ahead.
+앞으로 나아 가기 전에 다음 문서를 읽는 것이 좋습니다.
+
+[1] Documentation/devicetree/usage-model.txt
+[2] http://www.devicetree.org/Device_Tree_Usage
+
+OF Selftest has been designed to test the interface (include/linux/of.h)
+provided to device driver developers to fetch the device information..etc.
+from the unflattened device tree data structure. This interface is used by
+most of the device drivers in various use cases.
+OF Selftest는 장치 드라이버 개발자에게 제공되는 인터페이스 (include / linux / of.h)를 테스트하여 
+장치 정보 등을 가져 오도록 설계되었습니다. unflattened 화 된 장치 트리 데이터 구조로부터.
+이 인터페이스는 다양한 유스 케이스에서 대부분의 장치 드라이버에서 사용됩니다.
+
+2. Test-data
+
+The Device Tree Source file (drivers/of/unittest-data/testcases.dts) contains
+the test data required for executing the unit tests automated in
+drivers/of/unittest.c. Currently, following Device Tree Source Include files
+(.dtsi) are included in testcases.dts:
+장치 트리 소스 파일 (drivers / of / unittest-   ata / testcases.dts)에는 drivers / of / unittest.c에서 
+자동화 된 단위 테스트를 실행하는 데 필요한 테스트 데이터가 들어 있습니다. 
+현재 다음 Device Tree Source Include 파일 (.dtsi)이 testcases.dts에 포함되어 있습니다.
+
+drivers/of/unittest-data/tests-interrupts.dtsi
+drivers/of/unittest-data/tests-platform.dtsi
+drivers/of/unittest-data/tests-phandle.dtsi
+drivers/of/unittest-data/tests-match.dtsi
+
+When the kernel is build with OF_SELFTEST enabled, then the following make rule
+커OF_SELFTEST를 사용하여 커널을 빌드하면 다음 규칙에 따라 한다.
+
+$(obj)/%.dtb: $(src)/%.dts FORCE
+	$(call if_changed_dep, dtc)
+
+is used to compile the DT source file (testcases.dts) into a binary blob
+(testcases.dtb), also referred as flattened DT.
+DT 소스 파일 (testcases.dts)을 flattened DT라고 하고 이진 blob (testcases.dtb)로 컴파일하는 데 사용됩니다.
+
+After that, using the following rule the binary blob above is wrapped as an
+assembly file (testcases.dtb.S).
+그 후, 다음 규칙을 사용하여 위의 바이너리 BLOB가 어셈블리 파일 (testcases.dtb.S)로 래핑됩니다.
+
+$(obj)/%.dtb.S: $(obj)/%.dtb
+	$(call cmd, dt_S_dtb)
+
+The assembly file is compiled into an object file (testcases.dtb.o), and is
+linked into the kernel image.
+어셈블리 파일은 오브젝트 파일 (test cases.dtb.o)로 컴파일되고 커널 이미지에 링크됩니다.
+
+2.1. Adding the test data
+
+Un-flattened device tree structure:
+Un-flattened  장치 트리 구조 :
+
+Un-flattened device tree consists of connected device_node(s) in form of a tree
+structure described below.
+Un-flattened 장치 트리는 아래에 설명 된 트리 구조의 형태로 연결된 device_node (들)로 구성됩니다.
+
+// following struct members are used to construct the tree
+// 다음 구조체 멤버가 트리를 생성하는 데 사용됩니다.
+
+struct device_node {
+    ...
+    struct  device_node *parent;
+    struct  device_node *child;
+    struct  device_node *sibling;
+    ...
+ };
+
+Figure 1, describes a generic structure of machine's un-flattened device tree
+considering only child and sibling pointers. There exists another pointer,
+*parent, that is used to traverse the tree in the reverse direction. So, at
+a particular level the child node and all the sibling nodes will have a parent
+pointer pointing to a common node (e.g. child1, sibling2, sibling3, sibling4's
+parent points to root node)
+그림 1은 자식 및 형제 포인터 만 고려한 시스템의 계층을 가진(un-flattened) 장치 트리의 일반 
+구조를 설명합니다. 반대 방향으로 트리를 탐색하는 데 사용되는 또 다른 포인터, * parent가 
+있습니다. 따라서 특정 레벨에서 자식 노드와 모든 형제 노드는 공통 노드 
+(예 : child1, sibling2, sibling3, sibling4의 부모가 루트 노드를 가리킴)를 가리키는 부모 포인터를 갖습니다.
+
+
+
+root ('/')
+   |
+child1 -> sibling2 -> sibling3 -> sibling4 -> null
+   |         |           |           |
+   |         |           |          null
+   |         |           |
+   |         |        child31 -> sibling32 -> null
+   |         |           |          |
+   |         |          null       null
+   |         |
+   |      child21 -> sibling22 -> sibling23 -> null
+   |         |          |            |
+   |        null       null         null
+   |
+child11 -> sibling12 -> sibling13 -> sibling14 -> null
+   |           |           |            |
+   |           |           |           null
+   |           |           |
+  null        null       child131 -> null
+                           |
+                          null
+
+Figure 1: Generic structure of un-flattened device tree
+그림 1 : 평평하지 않은 장치 트리의 일반 구조
+
+Before executing OF unittest, it is required to attach the test data to
+machine's device tree (if present). So, when selftest_data_add() is called,
+at first it reads the flattened device tree data linked into the kernel image
+via the following kernel symbols:
+unittest를 실행하기 전에 테스트 데이터를 시스템의 장치 트리 (있는 경우)에 첨부해야합니다.
+따라서 selftest_data_add ()가 호출되면 처음에는 다음 커널 심볼을 통해 커널 이미지에 링크
+ 된 병합 된 장치 트리 데이터를 읽습니다.
+
+__dtb_testcases_begin - address marking the start of test data blob
+__dtb_testcases_begin - 테스트 데이터 blob의 시작을 표시하는 주소
+
+__dtb_testcases_end   - address marking the end of test data blob
+__dtb_testcases_end - 테스트 데이터 blob의 끝을 표시하는 주소
+
+Secondly, it calls of_fdt_unflatten_tree() to unflatten the flattened
+blob. And finally, if the machine's device tree (i.e live tree) is present,
+then it attaches the unflattened test data tree to the live tree, else it
+attaches itself as a live device tree.
+두 번째로, of_fdt_unflatten_tree ()를 호출하여 평평한 블롭을 평평하게합니다. 
+마지막으로 기기의 기기 트리 (예 : 실시간 트리)가있는 경우 평평하지 않은 테스트
+ 데이터 트리를 실제 트리에 연결하고, 그렇지 않으면 실시간 기기 트리로 연결합니다.
+
+attach_node_and_children() uses of_attach_node() to attach the nodes into the
+live tree as explained below. To explain the same, the test data tree described
+ in Figure 2 is attached to the live tree described in Figure 1.
+attach_node_and_children ()은 of_attach_node ()를 사용하여 아래에 설명 된대로 라이브 
+트리에 노드를 연결합니다. 이를 설명하기 위해 그림 2에서 설명한 테스트 데이터 트리가 그림
+ 1에서 설명한 라이브 트리에 첨부됩니다.
+
+root ('/')
+    |
+ testcase-data
+    |
+ test-child0 -> test-sibling1 -> test-sibling2 -> test-sibling3 -> null
+    |               |                |                |
+ test-child01      null             null             null
+
+
+Figure 2: Example test data tree to be attached to live tree.
+그림 2 : 라이브 트리에 첨부 할 테스트 데이터 트리의 예.
+
+
+
+
+According to the scenario above, the live tree is already present so it isn't
+required to attach the root('/') node. All other nodes are attached by calling
+of_attach_node() on each node.
+위의 시나리오에 따르면 라이브 트리가 이미 있으므로 루트 ( '/') 노드를 연결하지 않아도됩니다. 
+다른 모든 노드는 각 노드에서 of_attach_node ()를 호출하여 연결됩니다.
+
+In the function of_attach_node(), the new node is attached as the child of the
+given parent in live tree. But, if parent already has a child then the new node
+replaces the current child and turns it into its sibling. So, when the testcase
+data node is attached to the live tree above (Figure 1), the final structure is
+ as shown in Figure 3.
+of_attach_node () 함수에서 새 노드는 라이브 트리에서 지정된 부모의 자식으로 연결됩니다.
+ 그러나 부모가 이미 자식이있는 경우 새 노드는 현재 자식을 대체하여 해당 자식을 형제로 바꿉니다. 
+ 따라서 테스트 케이스 데이터 노드가 위의 라이브 트리에 연결되면 (그림 1) 최종 구조는 그림 3과 같습니다.
+
+root ('/')
+   |
+testcase-data -> child1 -> sibling2 -> sibling3 -> sibling4 -> null
+   |               |          |           |           |
+ (...)             |          |           |          null
+                   |          |         child31 -> sibling32 -> null
+                   |          |           |           |
+                   |          |          null        null
+                   |          |
+                   |        child21 -> sibling22 -> sibling23 -> null
+                   |          |           |            |
+                   |         null        null         null
+                   |
+                child11 -> sibling12 -> sibling13 -> sibling14 -> null
+                   |          |            |            |
+                  null       null          |           null
+                                           |
+                                        child131 -> null
+                                           |
+                                          null
+-----------------------------------------------------------------------
+
+root ('/')
+   |
+testcase-data -> child1 -> sibling2 -> sibling3 -> sibling4 -> null
+   |               |          |           |           |
+   |             (...)      (...)       (...)        null
+   |
+test-sibling3 -> test-sibling2 -> test-sibling1 -> test-child0 -> null
+   |                |                   |                |
+  null             null                null         test-child01
+
+
+Figure 3: Live device tree structure after attaching the testcase-data.
+그림 3 : testcase-data를 첨부 한 후의 라이브 디바이스 트리 구조
+
+Astute readers would have noticed that test-child0 node becomes the last
+sibling compared to the earlier structure (Figure 2). After attaching first
+test-child0 the test-sibling1 is attached that pushes the child node
+(i.e. test-child0) to become a sibling and makes itself a child node,
+ as mentioned above.
+독창적 인 독자는 test-child0 노드가 이전 구조와 비교하여 마지막 형제가된다는 
+것을 알았을 것입니다 (그림 2). 첫 번째 test-child0을 첨부 한 후 위에서 언급 한
+ 바와 같이 자식 노드 (즉, test-child0)를 형제가되도록 푸시하고 그 자체를 자식 노드로 
+ 만드는 test-sibling1이 첨부됩니다.
+
+If a duplicate node is found (i.e. if a node with same full_name property is
+already present in the live tree), then the node isn't attached rather its
+properties are updated to the live tree's node by calling the function
+update_node_properties().
+중복 된 노드가 발견되면 (즉, 동일한 full_name 속성을 가진 노드가 이미 라이브 
+트리에있는 경우) 노드는 연결되지 않고 update_node_properties () 함수를 호출하여 
+해당 속성이 라이브 트리의 노드로 업데이트됩니다.
+
+2.2. Removing the test data
+2.2. 테스트 데이터 제거
+
+Once the test case execution is complete, selftest_data_remove is called in
+order to remove the device nodes attached initially (first the leaf nodes are
+detached and then moving up the parent nodes are removed, and eventually the
+whole tree). selftest_data_remove() calls detach_node_and_children() that uses
+of_detach_node() to detach the nodes from the live device tree.
+테스트 케이스 실행이 완료되면 초기에 첨부 된 디바이스 노드를 제거하기 위해 selftest_data_remove가
+ 호출됩니다 (먼저 리프 노드가 분리 된 다음 부모 노드가 위로 이동하고 결국 트리 전체가 이동).
+  selftest_data_remove ()는 of_detach_node ()를 사용하여 라이브 장치 트리에서 노드를 분리하는 
+  detach_node_and_children ()을 호출합니다.
+
+To detach a node, of_detach_node() either updates the child pointer of given
+node's parent to its sibling or attaches the previous sibling to the given
+node's sibling, as appropriate. That is it :)
+of_detach_node ()는 노드를 분리하기 위해 주어진 노드의 부모 노드의 자식 포인터를 
+형제 노드로 업데이트하거나 이전 형제 노드를 주어진 노드의 형제 노드에 적절하게 부착합니다. 그게 다예요 :)

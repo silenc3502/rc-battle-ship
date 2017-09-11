@@ -1,0 +1,106 @@
+* ARM PrimeCells PL080 and PL081 and derivatives DMA controller
+
+Required properties:
+- compatible: "arm,pl080", "arm,primecell";
+	      "arm,pl081", "arm,primecell";
+- reg: Address range of the PL08x registers
+- interrupt: The PL08x interrupt number
+- clocks: The clock running the IP core clock
+- clock-names: Must contain "apb_pclk"
+- lli-bus-interface-ahb1: if AHB master 1 is eligible for fetching LLIs
+- lli-bus-interface-ahb2: if AHB master 2 is eligible for fetching LLIs
+- mem-bus-interface-ahb1: if AHB master 1 is eligible for fetching memory contents
+- mem-bus-interface-ahb2: if AHB master 2 is eligible for fetching memory contents
+- #dma-cells: must be <2>. First cell should contain the DMA request,
+              second cell should contain either 1 or 2 depending on
+              which AHB master that is used.
+
+Optional properties:
+- dma-channels: contains the total number of DMA channels supported by the DMAC
+- dma-requests: contains the total number of DMA requests supported by the DMAC
+- memcpy-burst-size: the size of the bursts for memcpy: 1, 4, 8, 16, 32
+  64, 128 or 256 bytes are legal values
+- memcpy-bus-width: the bus width used for memcpy: 8, 16 or 32 are legal
+  values
+
+Clients
+Required properties:
+- dmas: List of DMA controller phandle, request channel and AHB master id
+- dma-names: Names of the aforementioned requested channels
+
+Example:
+
+dmac0: dma-controller@10130000 {
+	compatible = "arm,pl080", "arm,primecell";
+	reg = <0x10130000 0x1000>;
+	interrupt-parent = <&vica>;
+	interrupts = <15>;
+	clocks = <&hclkdma0>;
+	clock-names = "apb_pclk";
+	lli-bus-interface-ahb1;
+	lli-bus-interface-ahb2;
+	mem-bus-interface-ahb2;
+	memcpy-burst-size = <256>;
+	memcpy-bus-width = <32>;
+	#dma-cells = <2>;
+};
+
+device@40008000 {
+	...
+	dmas = <&dmac0 0 2
+		&dmac0 1 2>;
+	dma-names = "tx", "rx";
+	...
+};
+
+* ARM PrimeCells PL080 및 PL081 및 파생물 DMA 컨트롤러
+
+필수 속성 :
+- 호환 가능 : "arm, pl080", "arm, primecell";
+"팔, pl081", "팔, primecell";
+- reg : PL08x 레지스터의 주소 범위
+- 인터럽트 : PL08x 인터럽트 번호
+- clocks : IP 코어 클럭을 실행하는 클록
+- clock-names : "apb_pclk"를 포함해야합니다.
+- lli-bus-interface-ahb1 : AHB 마스터 1이 LLI를 가져올 수있는 경우
+- lli-bus-interface-ahb2 : AHB 마스터 2가 LLI를 가져올 수있는 경우
+- mem-bus-interface-ahb1 : AHB 마스터 1이 메모리 내용을 가져올 수있는 경우
+- mem-bus-interface-ahb2 : AHB 마스터 2가 메모리 내용을 가져올 수있는 경우
+- # dma-cells : <2> 여야합니다. 첫 번째 셀에는 DMA 요청이 포함되어야하고 두 번째 셀에는 사용되는 AHB 마스터에 따라 1 또는 2가 있어야합니다.
+
+선택적 속성 :
+- dma-channels : DMAC에서 지원하는 총 DMA 채널 수를 포함합니다.
+- dma-requests : DMAC에서 지원하는 총 DMA 요청 수를 포함합니다.
+- memcpy-burst-size : memcpy의 버스트 크기 : 1, 4, 8, 16, 32, 64, 128 또는 256 바이트는 유효한 값입니다.
+- memcpy-bus-width : memcpy에 사용 된 버스 너비 : 8, 16 또는 32는 유효한 값 클라이언트
+
+필수 속성 :
+- dmas : DMA 컨트롤러 phandle, 요청 채널 및 AHB 마스터 ID 목록
+- dma-names : 위에서 언급 한 요청 된 채널의 이름
+
+Example:
+
+dmac0: dma-controller@10130000 {
+	compatible = "arm,pl080", "arm,primecell";
+	reg = <0x10130000 0x1000>;
+	interrupt-parent = <&vica>;
+	interrupts = <15>;
+	clocks = <&hclkdma0>;
+	clock-names = "apb_pclk";
+	lli-bus-interface-ahb1;
+	lli-bus-interface-ahb2;
+	mem-bus-interface-ahb2;
+	memcpy-burst-size = <256>;
+	memcpy-bus-width = <32>;
+	#dma-cells = <2>;
+};
+
+device@40008000 {
+	...
+	dmas = <&dmac0 0 2
+		&dmac0 1 2>;
+	dma-names = "tx", "rx";
+	...
+};
+
+*/

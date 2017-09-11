@@ -1,0 +1,183 @@
+GPIO Interfaces
+===============
+
+The documents in this directory give detailed instructions on how to access GPIOs in drivers, and how to write a driver for a device that provides GPIOs itself.
+
+이 디렉토리에 있는 문서는 드라이버에서 GPIO 에 접근하는 방법과
+GPIO 자체를 제공하는 Device 전용 Driver 를 작성하는 방법에 대한 지침을 제공한다.
+
+Due to the history of GPIO interfaces in the kernel, there are two different ways to obtain and use GPIOs:
+
+기존 커널의 GPIO 인터페이스로 인해 GPIO 를 얻고 사용하는 방법은 2 가지다:
+
+  - The descriptor-based interface is the preferred way to manipulate GPIOs, and is described by all the files in this directory excepted gpio-legacy.txt.
+  - The legacy integer-based interface which is considered deprecated (but still usable for compatibility reasons) is documented in gpio-legacy.txt.
+
+- Descriptor 기반 인터페이스는 GPIO 제어에서 선호되는 방법이며 gpio-legacy.txt 를 제외한 모든 파일에서 설명한다.
+- 더 이상 사용되지 않지만(호환성을 위해 계속 사용할 수 있는) 기존의 정수 기반 인터페이스는 gpio-legacy.txt 에 문서화되어 있다.
+
+The remainder of this document applies to the new descriptor-based interface.
+gpio-legacy.txt contains the same information applied to the legacy integer-based interface.
+
+이 문서의 나머지 부분은 새로운 Descriptor 기반 인터페이스에 적용된다.
+gpio-legacy.txt 에는 기존의 정수 기반 인터페이스에 적용되는 정보가 들어 있다.
+
+
+
+What is a GPIO?
+===============
+
+A "General Purpose Input/Output" (GPIO) is a flexible software-controlled digital signal.
+They are provided from many kinds of chip, and are familiar to Linux developers working with embedded and custom hardware.
+Each GPIO represents a bit connected to a particular pin, or "ball" on Ball Grid Array(BGA) packages.
+Board schematics show which external hardware connects to which GPIOs.
+Drivers can be written generically, so that board setup code passes such pin configuration data to drivers.
+
+GPIO(General Purpose Input/Output) 은 SW 로 제어되는 유연한 디지털 신호다.
+여러 종류의 Chip 에서 제공되며 임베디드 및 사용자 정의 HW 로 작업하는 Linux 개발자에게 친숙하다.
+각 GPIO 는 BGA(Ball Grid Array) 패키지의 특정 핀 또는 "ball" 에 연결된 비트를 나타낸다.
+보드 회로도는 외부 HW 가 어떤 GPIO 에 연결되는지 보여준다.
+Driver 는 일반적으로 write 가 가능하므로 보드 설정 코드는 Driver 에 이러한 핀 구성 데이터를 쓸 수 있다.
+
+System-on-Chip (SOC) processors heavily rely on GPIOs.
+In some cases, every non-dedicated pin can be configured as a GPIO;
+and most chips have at least several dozen of them.
+Programmable logic devices (like FPGAs) can easily provide GPIOs;
+multifunction chips like power managers, and audio codecs often have a few such pins to help with pin scarcity on SOCs;
+and there are also "GPIO Expander" chips that connect using the I2C or SPI serial buses.
+Most PC southbridges have a few dozen GPIO-capable pins (with only the BIOS firmware knowing how they're used).
+
+SoC(System-on-Chip) 프로세서는 GPIO 에 크게 의존한다.
+경우에 따라 모든 비 전용 핀을 GPIO 로 구성할 수 있다.
+대부분의 Chip 에는 적어도 수십 개의 Chip 이 있다.
+Programmable Logic Devices(FPGA 와 같은) 는 GPIO 를 쉽게 제공할 수 있다.
+Audio 코덱과 전력 관리자와 같은 다기능 Chip 은 종종 SoC 의 핀 부족을 돕기 위한 핀을 몇 개 가지고 있다.
+또한 I2C 혹은 SPI 직렬 버스를 사용하여 연결하는 GPIO Expander 칩도 존재한다.
+대부분의 PC 사우스 브릿지에는 수십 개의 GPIO 가능 핀이 있다
+(BIOS Firmware 만 이들의 사용 방법을 알고 있음)
+
+The exact capabilities of GPIOs vary between systems.
+Common options:
+
+GPIO 의 정확한 기능은 시스템마다 다르다.
+일반적인 옵션:
+
+  - Output values are writable (high=1, low=0).
+Some chips also have options about how that value is driven, so that for example only one value might be driven, supporting "wire-OR" and similar schemes for the other value (notably, "open drain" signaling).
+
+  - 출력 값을 쓸 수 있다(High = 1, Low = 0)
+    일부 Chip 은 또한 이 값이 어떻게 구동되는지에 대한 옵션을 가지며
+    예로 "wire-OR" 및 다른 값("open drain" 신호)을 지원하는 하나의 값을 가진다.
+
+  - Input values are likewise readable (1, 0). Some chips support readback of pins configured as "output", which is very useful in such "wire-OR" cases (to support bidirectional signaling).
+GPIO controllers may have input de-glitch/debounce logic, sometimes with software controls.
+
+  - 입력 값도 마찬가지로 읽을 수 있다(1, 0)
+    일부 Chip 은 "output" 으로 구성된 핀의 readback(다시 읽기)를 지원하므로
+    이러한 "wire-OR" 경우(양방향 신호 전달 지원)에 매우 유용하다.
+    GPIO 컨트롤러는 입력 De-glitch(파형이 올라갈때 또는 내려갈때
+    예기치 못한 아주 날카로운 pulse 같은 것이 발생할수 있는데 이를 glitch라 하며 외부노이즈,반사파,파형에서 나타남.
+    상승,하강이 무딘파형이 LOGIC IC로 인입될때 주로 발생.
+    이러한 파형이 DATA 또는 CLOCK으로 들어오면 LOGIC회로는 전혀 엉뚱한 동작을 하게 됨. 
+    이때 이런 Glitch를 막는 Deglitch 로서 D-FF를 많이 사용하는편.
+    D-FF는 일단 DATA가 들어가도 출력으로 나오지 않고 있다가 CLOCK을 넣어주면
+    data가 출력으로 나가게 되므로 data보다 약간 delay 된 clock을 넣어주므로
+    DATA 의 상승,하강시 발생하는 glitch를 제거할수 있는 것) 혹은
+    Debounce Logic(Timer tick이 저장되는 방식이 감소되는 방향이라고 할 때,
+    1번에서 저장된 값이 0x00000000이고 2번에서 저장된 값이 0xFFFFFFFF이라고 한다면
+    (1 - 2)의 값은 debounce tick보다 크게 되므로 한 바퀴 더 돌게 됨) 이 존재할 수 있으며 때때로 SW 제어를 수행한다.
+
+  - Inputs can often be used as IRQ signals, often edge triggered but sometimes level triggered.
+Such IRQs may be configurable as system wakeup events, to wake the system from a low power state.
+
+  - 입력은 IRQ 신호로 사용될 수 있으며 주로 에지 트리거 되지만 때로는 레벨 트리거 된다.
+    이러한 IRQ 는 System 을 저전력 상태에서 깨우기 위해 System Wakeup Event 로 구성할 수 있다.
+
+  - Usually a GPIO will be configurable as either input or output, as needed by different product boards; single direction ones exist too.
+
+  - 일반적으로 GPIO 는 다른 제품 보드에서 필요에 따라 입력 또는 출력으로 구성할 수 있다.
+    단방향의 것들도 존재한다.
+
+  - Most GPIOs can be accessed while holding spinlocks, but those accessed through a serial bus normally can't. Some systems support both types.
+
+  - 대부분의 GPIO 는 spinlock 을 유지하면서 접근할 수 있지만 일반적으로 직렬 버스를 통해 접근하는 GPIO 는 접근할 수 없다.
+    일부 System 은 두 가지 유형을 모두 지원한다.
+
+On a given board each GPIO is used for one specific purpose like monitoring MMC/SD card insertion/removal, detecting card write-protect status, driving a LED, configuring a transceiver, bit-banging a serial bus, poking a hardware watchdog, sensing a switch, and so on.
+
+주어진 보드에서 각 GPIO 는 MMC/SD 카드 삽입/제거, 카드 쓰기 방지 상태 감지,
+LED 구동, 트랜시버(송수신기) 구성, 직렬 버스 비트 밴딩, HW 와치독 활성화, 스위치 감지등을 수행한다.
+
+
+
+Common GPIO Properties
+======================
+
+These properties are met through all the other documents of the GPIO interface and it is useful to understand them, especially if you need to define GPIO mappings.
+
+이러한 속성은 GPIO 인터페이스의 다른 모든 문서를 통해 충족되며
+특히 GPIO Mapping 을 정의해야하는 경우 이를 이해하는 것이 유용하다.
+
+Active-High and Active-Low
+--------------------------
+It is natural to assume that a GPIO is "active" when its output signal is 1 ("high"), and inactive when it is 0 ("low").
+However in practice the signal of a GPIO may be inverted before is reaches its destination, or a device could decide to have different conventions about what "active" means.
+Such decisions should be transparent to device drivers, therefore it is possible to define a GPIO as being either active-high ("1" means "active", the default) or active-low ("0" means "active") so that drivers only need to worry about the logical signal and not about what happens at the line level.
+
+GPIO 출력 신호가 1 ("high") 일 때 GPIO 가 "활성"이고 0 ("low") 일 때 GPIO 가 비활성이라고 가정하는 것은 당연하다.
+그러나 실제 GPIO 신호가 목적지에 도달하기 전에 반전될 수도 있고 장치가 "활성" 이라는 의미에 대해 다른 규칙을 가질 수도 있다.
+이러한 결정은 Device Driver 에 투명해야하므로
+GPIO 를 Active-High (기본적으로 "1" 은 "active") 혹은 Active-Low ("0" 이 "active") 로 정의할 수 있다.
+Driver 는 논리적 신호에 대해서만 신경 써야하며 전기 회선 수준에선 어떤 일도 일어나지 않아야 한다.
+
+Open Drain and Open Source
+--------------------------
+Sometimes shared signals need to use "open drain" (where only the low signal level is actually driven), or "open source" (where only the high signal level is driven) signaling.
+That term applies to CMOS transistors; "open collector" is used for TTL.
+A pullup or pulldown resistor causes the high or low signal level.
+This is sometimes called a "wire-AND";
+or more practically, from the negative logic (low=true) perspective this is a "wire-OR".
+
+때때로 공유 신호는 "Open Drain"(낮은 신호 레벨만 구동) 혹은 오픈 소스(높은 신호 레벨만 구동) 신호를 사용해야 한다.
+이 용어는 CMOS 트랜지스터에 적용된다.
+"Open Collector" 는 TTL 에 사용된다.
+Pull-Up 혹은 Pull-Down 레지스터는 High 혹은 Low 신호 레벨을 만든다.
+이것은 때때로 "wire-AND" 라 불린다.
+또는 더 실제적으로, 부정 논리(low = true) 관점에서 이것은 "wire-OR" 이다.
+
+One common example of an open drain signal is a shared active-low IRQ line.
+Also, bidirectional data bus signals sometimes use open drain signals.
+
+Open Drain 신호의 일반적인 예로 Shared Active-Low IRQ Line 이 있다.
+또한 양방향 데이터 버스 신호는 때때로 Open Drain 신호를 사용한다.
+
+Some GPIO controllers directly support open drain and open source outputs;
+many don't.
+When you need open drain signaling but your hardware doesn't directly support it, there's a common idiom you can use to emulate it with any GPIO pin that can be used as either an input or an output:
+
+일부 GPIO Controller 는 Open Drain 및 Open Source 출력을 직접 지원한다.
+많은 것들이 그렇지 않다.
+Open Drain Signaling 이 필요하지만 HW 가 직접적으로 이를 지원하지 않는다면 입력 혹은 출력으로 사용할 수 있는 GPIO 핀으로 에뮬레이션 할 수 있는 일반적인 방식이 있다:
+
+ LOW: gpiod_direction_output(gpio, 0) ... this drives the signal and overrides the pullup.
+
+LOW: gpiod_direction_output(gpio, 0) ... 이것은 신호를 구동하고 풀업을 재정의 한다.
+
+ HIGH: gpiod_direction_input(gpio) ... this turns off the output, so the pullup(or some other device) controls the signal.
+
+HIGH: gpiod_direction_input(gpio) ... 이것은 출력을 끄기 때문에 Pull-Up(또는 다른 장치) 이 신호를 제어한다.
+
+The same logic can be applied to emulate open source signaling, by driving the high signal and configuring the GPIO as input for low.
+This open drain/open source emulation can be handled transparently by the GPIO framework.
+
+High 신호를 구동하고 GPIO 를 Low 로 설정함으로써 오픈 소스 신호를 에뮬레이션할 때도 동일한 로직을 적용할 수 있다.
+Open Drain / Open Source 에뮬레이션은 GPIO Framework 에서 투명하게 처리할 수 있다.
+
+If you are "driving" the signal high but gpiod_get_value(gpio) reports a low value (after the appropriate rise time passes), you know some other component is driving the shared signal low.
+That's not necessarily an error. As one common example, that's how I2C clocks are stretched: 
+a slave that needs a slower clock delays the rising edge of SCK, and the I2C master adjusts its signaling rate accordingly.
+
+gpiod_get_value(gpio) 가 Low 값(적절한 상승 시간이 지난 후) 을 보고하지만 신호를 High 로 구동하면, 다른 일부 구성 요소가 Shared Signal 을 Low 로 구동하는 것을 알 수 있다.
+반드시 이러하지는 않다.
+하나의 일반적인 예로서, 이것은 I2C Clock 을 확장하는 방법중 하나다:
+느린 Clock 을 필요로 하는 Slave 는 SCK 의 상승 에지를 지연시키며 I2C Master 는 그에 따라 신호 속도를 조정한다.

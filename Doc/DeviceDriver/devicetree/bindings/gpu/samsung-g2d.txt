@@ -1,0 +1,62 @@
+* Samsung 2D Graphics Accelerator
+
+Required properties:
+  - compatible : value should be one among the following:
+	(a) "samsung,s5pv210-g2d" for G2D IP present in S5PV210 & Exynos4210 SoC
+	(b) "samsung,exynos4212-g2d" for G2D IP present in Exynos4x12 SoCs
+	(c) "samsung,exynos5250-g2d" for G2D IP present in Exynos5250 SoC
+
+  - reg : Physical base address of the IP registers and length of memory
+	  mapped region.
+
+  - interrupts : G2D interrupt number to the CPU.
+  - clocks : from common clock binding: handle to G2D clocks.
+  - clock-names : names of clocks listed in clocks property, in the same
+		  order, depending on SoC type:
+		  - for S5PV210 and Exynos4 based SoCs: "fimg2d" and
+		    "sclk_fimg2d"
+		  - for Exynos5250 SoC: "fimg2d".
+
+Example:
+	g2d@12800000 {
+		compatible = "samsung,s5pv210-g2d";
+		reg = <0x12800000 0x1000>;
+		interrupts = <0 89 0>;
+		clocks = <&clock 177>, <&clock 277>;
+		clock-names = "sclk_fimg2d", "fimg2d";
+		status = "disabled";
+	};
+
+
+/*
+
+* 삼성 2D 그래픽 가속기
+
+필수 속성 :
+   - compatible : 값은 다음 중 하나 여야합니다.
+(a) S5PV210 및 Exynos4210 SoC에있는 G2D IP 용 "samsung, s5pv210-g2d"
+(b) Exynos4x12 SoC에있는 G2D IP를위한 "samsung, exynos4212-g2d"
+(c) Exynos5250 SoC에있는 G2D IP 용 "samsung, exynos5250-g2d"
+
+   - reg : IP 레지스터의 물리적 기본 주소와 메모리의 길이
+맵핑 된 영역.
+
+   - interrupts : G2D CPU에 대한 인터럽트 번호.
+   - 클럭 : 공통 클럭 바인딩에서 : G2D 클럭으로 처리합니다.
+   - clock-names : clocks에 나열된 clock의 이름
+SoC 유형에 따라 다름 :
+- S5PV210 및 Exynos4 기반 SoC의 경우 : "fimg2d"및 "sclk_fimg2d"
+- Exynos5250 SoC의 경우 : "fimg2d".
+
+
+Example:
+	g2d@12800000 {
+		compatible = "samsung,s5pv210-g2d";
+		reg = <0x12800000 0x1000>;
+		interrupts = <0 89 0>;
+		clocks = <&clock 177>, <&clock 277>;
+		clock-names = "sclk_fimg2d", "fimg2d";
+		status = "disabled";
+	};
+
+*/

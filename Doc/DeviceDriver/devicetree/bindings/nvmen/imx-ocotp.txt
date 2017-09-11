@@ -1,0 +1,31 @@
+Freescale i.MX6 On-Chip OTP Controller (OCOTP) device tree bindings
+
+This binding represents the on-chip eFuse OTP controller found on
+i.MX6Q/D, i.MX6DL/S, i.MX6SL, and i.MX6SX SoCs.
+
+Required properties:
+- compatible: should be one of
+	"fsl,imx6q-ocotp" (i.MX6Q/D/DL/S),
+	"fsl,imx6sl-ocotp" (i.MX6SL), or
+	"fsl,imx6sx-ocotp" (i.MX6SX), followed by "syscon".
+- reg: Should contain the register base and length.
+- clocks: Should contain a phandle pointing to the gated peripheral clock.
+
+
+이 바인딩은 i.MX6Q / D, i.MX6DL / S, i.MX6SL 및 i.MX6SX SoC에있는 온칩 eFuse OTP 컨트롤러를 나타냅니다.
+
+필수 속성 :
+- 호환 가능 : 다음 중 하나 여야합니다.
+"fsl, imx6q-ocotp"(i.MX6Q / D / DL / S)
+"fsl, imx6sl-ocotp"(i.MX6SL) 또는
+"fsl, imx6sx-ocotp"(i.MX6SX) 다음에 "syscon"이옵니다.
+- reg : 레지스터 기본과 길이를 포함해야합니다.
+- clocks : 게이트 된 주변 장치 클럭을 가리키는 phandle을 포함해야합니다.
+
+Example:
+
+	ocotp: ocotp@021bc000 {
+		compatible = "fsl,imx6q-ocotp", "syscon";
+		reg = <0x021bc000 0x4000>;
+		clocks = <&clks IMX6QDL_CLK_IIM>;
+	};

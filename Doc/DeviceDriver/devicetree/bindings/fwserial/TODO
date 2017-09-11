@@ -1,0 +1,24 @@
+TODOs prior to this driver moving out of staging
+------------------------------------------------
+1. Implement retries for RCODE_BUSY, RCODE_NO_ACK and RCODE_SEND_ERROR
+   - I/O is handled asynchronously which presents some issues when error
+     conditions occur.
+2. Implement _robust_ console on top of this. The existing prototype console
+   driver is not ready for the big leagues yet.
+3. Expose means of controlling attach/detach of peers via sysfs. Include
+   GUID-to-port matching/whitelist/blacklist.
+
+-- Issues with firewire stack --
+1. This driver uses the same unregistered vendor id that the firewire core does
+     (0xd00d1e). Perhaps this could be exposed as a define in
+     firewire.h?
+
+//이 드라이버가 스테이징에서 벗어나기 전의 TODO
+------------------------------------------------
+1. RCODE_BUSY, RCODE_NO_ACK 및 RCODE_SEND_ERROR에 대한 재시도 구현
+    - I / O는 비동기 적으로 처리되며 오류 조건이 발생할 때 몇 가지 문제를 나타냅니다.
+2.이 위에 _robust_ console을 구현하십시오. 기존 프로토 타입 콘솔 드라이버는 빅 리그에 아직 준비가되어 있지 않습니다.
+3. sysfs를 통해 피어의 연결 / 분리를 제어하는 수단을 폭로하십시오. GUID- 포트 일치 / 허용 목록 / 차단 목록을 포함합니다.
+
+- Firewire 스택 관련 문제 -
+1.이 드라이버는 Firewire 코어가 수행하는 것과 동일한 미등록 벤더 ID를 사용합니다 (0xd00d1e). 아마도 이것은 firewire.h에서 정의로 드러날 수 있습니까?

@@ -1,0 +1,67 @@
+Simple Power-Managed Bus
+========================
+
+A Simple Power-Managed Bus is a transparent bus that doesn't need a real
+driver, as it's typically initialized by the boot loader.
+
+However, its bus controller is part of a PM domain, or under the control of a
+functional clock.  Hence, the bus controller's PM domain and/or clock must be
+enabled for child devices connected to the bus (either on-SoC or externally)
+to function.
+
+While "simple-pm-bus" follows the "simple-bus" set of properties, as specified
+in ePAPR, it is not an extension of "simple-bus".
+
+
+Required properties:
+  - compatible: Must contain at least "simple-pm-bus".
+		Must not contain "simple-bus".
+		It's recommended to let this be preceded by one or more
+		vendor-specific compatible values.
+  - #address-cells, #size-cells, ranges: Must describe the mapping between
+		parent address and child address spaces.
+
+Optional platform-specific properties for clock or PM domain control (at least
+one of them is required):
+  - clocks: Must contain a reference to the functional clock(s),
+  - power-domains: Must contain a reference to the PM domain.
+Please refer to the binding documentation for the clock and/or PM domain
+providers for more details.
+
+단순 전원 관리 버스
+============
+
+단순 전원 관리 버스는 일반적으로 부트 로더에 의해 초기화되므로 실제 드라이버가 필요없는 transparent bus입니다.
+
+그러나 버스 컨트롤러는 PM 도메인의 일부이거나 기능 클록의 제어를받습니다. 따라서 버스 컨트롤러 (PM 컨트롤러)의 PM 도메인 및 / 또는 클럭은 버스에 연결된 (SoC 또는 외부에서) 하위 장치가 작동하도록 활성화되어야합니다.
+
+"simple-pm-bus"는 ePAPR에 지정된 "단simple-bus"속성 집합을 따르지만 "simple-bus"의 확장은 아닙니다.
+
+필수 속성 :
+   - 호환 : 적어도 "simple-pm-bus"를 포함해야합니다.
+"simple-bus"를 포함해서는 안됩니다.
+하나 이상의 공급 업체별 호환 가능 값이 선행되도록하는 것이 좋습니다.
+   - # address-cells, # size-cells, ranges : 상위 주소와 하위 주소 공간 사이의 매핑을 설명해야합니다.
+
+클럭 또는 PM 도메인 제어를위한 플랫폼 별 등록 정보 (적어도 하나는 필수) :
+   - 클럭 : 기능 클럭에 대한 참조를 포함해야하며,
+   - power-domains : PM 도메인에 대한 참조를 포함해야합니다.
+자세한 내용은 클럭 및 / 또는 PM 도메인 공급자의 바인딩 설명서를 참조하십시오.
+
+
+
+
+
+Example:
+
+	bsc: bus@fec10000 {
+		compatible = "renesas,bsc-sh73a0", "renesas,bsc",
+			     "simple-pm-bus";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges = <0 0 0x20000000>;
+		reg = <0xfec10000 0x400>;
+		interrupts = <0 39 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&zb_clk>;
+		power-domains = <&pd_a4s>;
+	};

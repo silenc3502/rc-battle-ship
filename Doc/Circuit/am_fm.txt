@@ -1,0 +1,2473 @@
+AM/FM Radio Project 는 AM Radio Section 과
+FM Radio Section 의 두 부분으로 나뉜다.
+AM 은 AM 만 FM 은 FM 만 작업하도록 한다.
+
+
+
+* PARTS LIST FOR THE AM RADIO SECTION
+
+10 ohm x 1
+47 ohm x 2
+100 ohm x 4
+330 ohm x 1
+470 ohm x 1
+1k ohm x 1
+2.2k ohm x 1
+3.3k ohm x 3
+10k ohm x 1
+12k ohm x 1
+27k ohm x 1
+39k ohm x 1
+56k ohm x 1
+470k ohm x 1
+1M ohm x 1
+50k ohm Potentiometer x 1
+
+150p F x 1
+0.001u F x 1
+0.01u F x 1
+0.02u F x 5
+0.022u F x 5
+0.047u F x 1
+0.1u F x 2
+10u F x 4
+47u F x 1
+100u F x 1
+470u F x 2
+Variable Cap
+
+1N4148 x 2
+2N3904 x 5
+2N3906 x 1
+JE8050 x 1
+JE8550 x 1
+LM386 x 1
+
+AM Oscillator Coil(Red) x 1
+AM IF Coil(Yellow) x 1
+AM IF Coil(White) x 1
+AM IF Coil(Black) x 1
+AM Antenna Holder x 1
+
+Iron Core x 1
+Brass Core x 1
+Shrink Tubing x 4
+
+PCB - Transistor Audio Amplifier x 1
+PCB - Main x 1
+Switch x 1
+Battery Holder x 1
+Speaker x 1
+Heder male 4-pin x 2
+Speaker Pad x 1
+Knob(Dial) x 1
+Knob(Pot) x 1
+Earphone Jack with Nut x 1
+Radio Stand x 1
+Earphone x 1
+Screw M1.8 x 7.5mm(Battery Holder) x 3
+Screw M2.5 x 7.5mm(Dial) x 1
+Screw M2.5 x 3.8mm(Gang) x 2
+Nut M1.8 x 3
+Plastic Washer x 1
+Socket 8-pin x 1
+Test Point Pin x 12
+Label AM/FM x 1
+Wire 22AWG insulated x 8
+Solder Lead-free x 1
+
+
+
+* IDENTIFYING RESISTOR VALUES
+
+저항 테이블을 확인하며 작업해야 한다.
+
+
+
+* IDENTIFYING CAPACITOR VALUES
+
+콘덴서 테이블도 확인하며 작업한다.
+
+
+
+* METRIC UNITS AND CONVERSIONS
+
+단위에 각별히 주의하도록 한다.
+
+
+
+* INTRODUCTION
+
+AM / FM Radio 는 표준 AM(진폭 변조) 및
+FM(주파수 변조) 방송 주파수의 Superheterodyne 수신기다.
+PCB 의 표면에 적절한 부품을 배치할 수 있게 함으로써 어셈블리 오류를 최소화한다.
+그러나 납땜 문제가 발생할 수 있으므로 납땜 가이드를 주의해야 한다.
+
+실제 어셈블리는 9 개의 Block 으로 나뉜다.
+어셈블리를 시작하기 전에 각 섹션 혹은 스테이지의 작동 이론을 알아야 한다.
+각 어셈블리를 마친 후 각 섹션이 제대로 작동하는지
+파악하기 위해 특정 테스트와 측정을 하도록 지시 받는다.
+테스트에서 올바른 결과가 나오지 않으면 문제를 해결하는데
+도움이되는 문제 해결 가이드를 살펴보도록 한다.
+테스트 장비가 있으면 더 많은 측정 및 계산을 통해
+각 단계가 엔지니어링 사양을 충족하는지 확인할 수 있다.
+모든 테스트가 완료된 후 수신기의 성능을 극대화하도록 한다.
+
+
+
+* GENERAL DISCUSSION
+
+Section 1 Audio Amplfier Stage 의 목적은 검출기로부터
+수신된 Audio 신호의 전력을 Speaker 를
+구동할 수 있는 전력 레벨로 증가시키는 것이다.
+Audio Amplifier 는 IC 혹은 TR 버전이다.
+
+Section 2 는 AM Detector Circuit 과 AGC(자동 이득 제어) 단계를 포함한다.
+AM Detector 는 진폭 변조된 IF(중간 주파수) 신호를 낮은 레벨의 Audio 신호로 변환한다.
+AGC Stage 는 Detector 에서 거의 일정한 레벨의 Audio 신호를 유지하기 위해
+제 1 AM IF Amplifier 에 DC Voltage 를 Feedback 한다.
+
+Section 3 는 두 번째 AM IF Amplifier 이다.
+두 번째 AM IF Amplifier 는 455 kHz(Kilohertz)로
+튜닝되어 있으며 50 의 주파수에서 고정 이득을 갖는다.
+
+Section 4 는 AGC Stage 에서 수신한 AGC Voltage 에 따라
+가변 이득을 갖는 첫 번째 AM IF Amplifier 다.
+첫 번째 AM IF Amplifier 는 또한 455 kHz 로 튜닝된다.
+
+Section 5 는 AM Mixer, AM Oscillator 및 AM Antenna Stage 가 포함되어 있다.
+전파가 Antenna 를 통과하면 Antenna Coil 에 작은 전압이 유도된다.
+이 전압은 Mixer 혹은 Converter Stage 에 결합되어 455 kHz 의 주파수로 변경된다.
+이 변화는 Radio Frequency Signal 을 Oscillator Signal 과
+Mixing(Heterodyne) 함으로써 달성된다.
+
+Section 6 은 FM Ratio Detector Circuit 이다.
+FM Ratio Detector 의 고정 이득은 약 20 이다.
+
+Section 7 은 두 번째 FM IF Amplifier 다.
+두 번째 FM IF Amplifier 는 10.7 MHz 로 튜닝되며 약 20 의 이득을 갖는다.
+이 단계의 3 dB Bandwidth 는 약 350 kHz 여야한다.
+
+Section 8 은 첫 번째 FM IF Amplifier 다.
+첫 번째 FM IF Amplifier 는 10.7 MHz 로 튜닝되어 약 10 의 이득을 얻는다.
+또한 3 dB Bandwidth 350 kHz 를 갖는다.
+
+Section 9 는 FM Mixer, FM Oscillator, FM RF(Radio Frequency) Amplifier,
+AFC(Automatic Frequency Control) Stage, 그리고 FM Antenna 가 포함된다.
+
+들어오는 전파는 FM RF Amplifier 에 의해 증폭되고
+88 MHz ~ 108 MHz 의 FM Frequency Bandwidth 에서 원하는 Radio 방송국으로 튜닝된다.
+이 증폭된 신호는 FM Mixer Stage 에 결합되어 10.7 MHz 의 주파수로 변경된다.
+AM 에서처럼 이 변경은 Radio Frequency 신호를
+Oscillator 신호로 헤테로다인(Heterodyning)하여 수행된다.
+AFC Stage 는 Oscillator 가 표류하는 것을 방지하기 위해
+FM Oscillator 에 DC Voltage 를 Feedback 한다.
+
+
+
+* CONSTRUCTION
+
+- Introduction
+
+AM / FM Radio 를 만들 때 가장 중요한 요소는 우수한 납땜 기술이다.
+적절한 납땜 인두를 사용하는 것이 가장 중요하다.
+25 와트의 작은 연필형 납땜 인두가 권장된다.
+인두의 끝은 항상 청결하게 유지되어야하며 주석 도금이 되어 있어야 한다.
+
+- Solder
+
+수년 동안 납은 전자 산업에서 사용되는 가장 일반적인 유형의 납땜이었지만
+현재는 건강상의 이유로 납없는 납땜으로 대체되고 있다.
+99.3% 의 주석, 0.7% 의 구리를 함유하며
+Rosin Flux Core 가 있는 무연 Solder 를 사용하면 좋다.
+
+무연 Solder 는 납 Solder 와 다르다.
+무연의 경우 융점이 높으므로 Solder 가 제대로 흐르려면 더 높은 온도가 필ㅇ하다.
+권장 온도는 약 700 화씨로 370 섭씨로 볼 수 있다.
+온도가 높을수록 납의 흐름이 좋지만 Tip 붕괴가 가속화된다.
+좋은 결과를 얻으려면 납땜 시간이 길어질 수 있다.
+Soldering Iron Tip 은 무연 Solder 가 부식성이 높고
+Soldering 온도가 높을수록 부식이 빨라지기 때문에 빨리 마모된다.
+그렇기에 적절한 Tip 관리가 중요하다.
+Solder 접합부 마무리는 무연 Solder 로 약간 더 둔해 보일 것이다.
+
+무연 Solder 를 사용할 때 아래 절차를 사용하여 납땜 인두 끝의 수명을 늘려라
+
+1. 인두를 잘 보관한다.
+
+2. 최상의 열 전달을 위해 올바른 팁 사이즈를 선택한다.
+   원추형 팁이 가장 일반적으로 사용된다.
+
+3. Soldering Station 을 사용할 때 온도 설정을 잘 하도록 한다.
+
+4. Tip 은 제거가 불가능해지기 전에 산화를 제거하기 위해 자주 청소해야 한다.
+   Dry Tip Cleaner 혹은 Tip Cleaner 를 사용하라.
+   스펀지로 Tip 을 닦으면 증류수를 사용한다.
+   (수돗물에는 불순물이 있어 부식을 촉진한다)
+
+- Safety Procedures
+
+1. 공구 또는 납땜 인두 작업시 눈을 보호하기 위해
+   안전 안경을 착용하도록 한다.
+
+2. 납땜할 때 통풍이 잘 되는지 확인한다.
+
+3. 납땜 인두는 주변에 사람이 돌아다니지 않는 곳에 설치하라.
+   유아의 손이 닿지 않는 곳에 보관한다.
+
+4. 입안에 납땜을 두지 마라.
+   납은 독성 물질이며 납을 취급한 후엔 손을 철저하게 씻으라!
+
+- Assemble Components
+
+조립 단계에서 별도로 명시하지 않는 한 구성 요소는 PCB 의 윗면에 설치한다.
+Lead 는 보드의 구멍을 통과하여 호일쪽에 납땜된다.
+Rosin Core Solder 만을 사용하도록 한다.
+
+
+
+* What Good Soldering Looks Like
+
+잘 된 땜질은 모든 표면에서 밝고 윤기 있고 부드럽고 균일하게 흘러야 한다.
+
+1. 모든 부품을 동박면에서만 땜질한다.
+   리드선과 회로판 호일에 납땜 인두 팁을 밀어 넣어라.
+
+2. 인두 팁에 소량의 납을 바른다.
+   그리고 부품을 땜질한다.
+
+3. 납을 골고루 잘 바른다.
+   잘 발라졌다면 연결부를 식힌다.
+   주변에 납이 묻지 않아야 한다.
+
+
+
+* Types of Poor Soldering Connections
+
+1. 불충분한 열  
+   Solder 가 제대로 연결되지 않는다. 
+
+2. 불충분한 땜질
+   땜이 충분히 덮일 때까지 충분히 발라준다. 
+   연결부를 덮을만큼 땜용 납을 사용하라. 
+
+3. 과도한 땜질
+   인접한 포일 영역이나 다른 부품 공간에 의도하지 않은 연결을 만듬
+
+
+
+* SEMICONDUCTOR PARTS FAMILIARIZATION
+
+TR 과 Diode 를 테스트하는데 사용되는 적절한 방법을 학습한다.
+
+
+
+* TRANSISTOR TEST(NPN and PNP)
+
+Emitter, Base, Collector 의 위치는 데이터시트를 참고하도록 한다.
+저항계를 사용하여 TR 을 계측하여본다.
+계측기는 낮은 저항 값을 읽을 것이다.
+Emitter 에서 Collector 로 확인해봐도 낮은 저아을 볼 수 있다.
+(+ 를 Base 에 고정시키고 - 를 왔다갔다한다: NPN)
+
+저항계를 사용하여 TR 을 계측해본다.
+계측기는 높은 저항 값을 읽는다.
+Emitter 에서 Collector 로 연결하면 높은 저항을 읽으며
+일반적으로 약 1M ohm 에서 무한대까지 읽는다.
+(- 를 Base 에 고정시키고 + 를 왔다갔다한다: NPN)
+
+Emitter, Base, Collector 의 위치는 부품 목록을 참조하고 PNP TR 을 찾으라.
+저항계를 사용하여 계측을 해보면 낮은 저항을 읽게 된다.
+(- 를 Base 에 고정시키고 + 를 왔다갔다한다: PNP)
+
+저항계를 사용하여 TR 을 계측하면 높은 저항을 읽게 된다.
+(+ 를 Base 에 고정시키고 - 를 왔다갔다한다: PNP)
+
+
+
+* DIODE TEST
+
+부품 목록을 참조하고 Diode 를 찾으라.
+음극 및 양극의 위치는 Datasheet 를 참조하라.
+저항계를 사용하여 Diode 를 연결하면 낮은 저항을 읽는다.
+반면 반대로 연결하면 높은 저항을 읽어야 한다.
+실리콘 다이오드(1N4148)의 경우 무한대에서 1M ohm 까지 읽는다.
+
+
+
+* INTEGRATED CIRCUIT(IC) AUDIO AMPLIFIER
+
+이 Radio Kit 은 2 개의 별도 Audio System 이 포함되어 있다.
+첫 번째는 집적 회로(IC)이고 두 번째는 5 개의 TR Circuit 이다.
+목표는 이 2 개의 회로가 어떻게 작동하는지 살펴보고
+각 회로의 성능을 비교하는 것이다.
+먼저 IC Audio Amplifier 를 제작하여 Radio Project 를 시작한다.
+
+Audio Amplifier 의 목적은 Audio Power 를
+8 ohm Speaker 를 구동하기에 충분한 수준으로 높이는 것이다.
+이를 위해 Battery 로부터 DC(직류)가
+Amplifier 에 의해 Speaker 의 AC(교류)로 변환된다.
+Speaker 로 전달되는 전력과 Battery 에서 소비되는 전력의 비율은 Amplifier 의 효율이다.
+Audio Amplifier 의 경우 집적 회로(IC) LM-386 을 사용한다.
+동일한 회로에 대해 스케치 해보고 시뮬레이션 해보도록 한다.
+
+Class A Amplifier(전체 Cycle 에 걸친 Transistor)에서
+최대 이론 효율은 0.5 혹은 50% 다.
+그러나 Class B Amplifier(1/2 Cycle 에 대한 Transistor)에서
+최대 이론 효율은 0.785 혹은 78.5% 다.
+Transistor 특성이 순수한 Class B Amplifier 에서 이상적이지 않기 때문에
+Transistor 는 Crossover Distortion(왜곡)을 유발하게 된다.
+이는 Zero Current 혹은 차단 근처의 비선형 전달 곡선 때문이다.
+이러한 유형의 왜곡은 전자회로 교과서에 아주 잘 나와있다.
+
+Crossover 왜곡을 없애고 효율을 극대화하기 위해
+Audio Amplifier Circuit 의 TR 은 Class AB 주기의 1/2 이상에서 Bias 된다.
+바꾸어 말해 TR 은 Speaker 에 매우 작은 레벨의 전원을 공급하기 위해
+Class A Amplifier 로 작동하지만 더 큰 전력 레벨에서는 Class B 로 동작하게 된다.
+
+LM-386 을 보다 범용적인 Amplifier 로 만들기 위한
+Gain Control 을 위해 2 개의 Pins(1 과 8)이 제공된다.
+핀 1 과 8 이 열린 상태에서 1.35k ohm 은 이득을 20 으로 설정한다.
+이득은 핀 1 과 핀 8 사이에 콘덴서를 배치하여 최대 200 이 될 수 있다.
+저항을 콘덴서와 직렬로 배치하면 이득을 20 ~ 200 사이의 값으로 설정할 수 있다.
+이를 기반으로 이득이 150 인 증폭기를 설계해보도록 한다.
+
+150 의 이득을 가진 Amplifier 설계에서
+콘덴서는 제어된 Audio Signal 의 볼륨을 Audio Amplifier 입력에 연결한다.
+또한 커플링용 콘덴서는 AC 가 통과하는 동안 Speaker 에 DC 를 차단하는 역할을 수행한다.
+
+
+
+* ASSEMBLY INSTRUCTIONS
+
+저항을 먼저 연결하도록 한다.
+저항 색상을 확인하고 잘 설치하도록 한다.
+모든 부품을 올바르게 장착하고 땜질을 한다.
+Diode, TR 및 전해 콘덴서는 극성이 바뀌므로 각별히 주의하여 연결한다.
+각 연결을 완료했음을 표기하기 위해 체크 표시를 해두도록 한다.
+
+-- 조립 단계에서 안전 고글을 착용하라 --
+
+
+
+* Test Point Pin
+
+PCB 의 파란색면이 앞 부분
+PCB 의 초록색면이 뒷 부분
+
+
+
+* Lytic Capacitor
+
+음극(짧은) 리드가 PCB 의 올바른 구멍에 있는지 확인하라.
+
+경고:
+콘덴서가 올바르지 않은 극성으로 연결되면
+열이 올라서 누출되거나 콘덴서가 폭발할 수 있다.
+
+- 극성 표시
+- PCB 의 Foil 쪽(녹색면)
+
+
+
+* Integrated Circuit(IC)
+
+- 점이 위쪽(파란색면)의 표시와 같은 방향으로 IC Socket 을 PCB 에 삽입한다.
+  IC Socket 을 제자리에 납땜하라.
+
+- 점이 Socket 의 점과 같은 방향으로 일치되도록 IC 를 삽입하라.
+
+
+
+PCB 의 Foil(녹색)쪽 (PCB 의 GND 패드에 있는 터미널 #1)의 너트로 잭을 마운트하라.
+탭을 PCB 의 Foil 쪽 패드에 맞춰라.
+납땜 단자 #1 은 PCB 의 패드에 연결한다.
+
+
+
+1 단계:
+Speaker 패드에 중앙 및 외부 조각이 있는 경우 제거한다.
+Speaker 패드의 한쪽면을 뒤쪽으로 떼어내고 패드를 Speaker 위에 붙인다.
+
+2 단계:
+Speaker 패드에서 다른 받침을 제거하라.
+
+3 단계:
+Speaker 를 PCB 의 납땜면에 붙인다.
+
+
+
+2 개의 1" Wire 와 1 1/2" Wire 를 자르고 양쪽 끝의 절연체를 1/4" 벗겨낸다.
+표시된 위치에 Wire 를 땜질한다.
+
+
+
+* STATIC MEASUREMENTS(POWER TEST)
+
+모든 측정을 위해 장비 GND 를 회로 GND TP15 에 연결하라.
+VOM(Volt-OhmMillimeter)을 2 amp DC 로 설정한다.
+건전지의 - 를 PCB 의 - 에 연결하고
+건전지의 + 를 멀티미터 + 에 연결한다.
+그리고 멀티미터의 - 를 PCB 의 + 에 연결한다.
+
+볼륨 조절기가 OFF 위치에 있는지 확인하라(완전히 반 시계 방향으로 돌림)
+VOM 을 보면서 볼륨을 ON 위치로 돌린다("딸깍" 소리가 들릴 때까지 시계 방향으로 돌림)
+VOM 은 매우 낮은 전류를 나타내야 한다.
+필요한 경우 측정기를 조정하여 정확한 판독 값을 얻어야 한다.
+전류가 20 mA 보다 크면 즉시 전원을 끄도록 한다.
+전류는 10 mA 미만이어야 한다.
+이것은 입력 신호가 없을 때 Battery 가 소비하는 전류다("유휴 전류").
+회로가 이 테스트를 통과하지 못한다면
+모든 부품이 올바르게 설치되었는지 확인하고 단락 또는 불량한 솔더 연결을 점검하라!
+
+
+
+* OUTPUT BIAS TEST
+
+Battery 를 Holder 에 넣으라!
+
+VOM 을 조정하여 9 Volt 를 읽고 GND 와 Amp 피드백 중간단을 찍어보자
+Battery 또는 9V 전원 공급 장치(사용 가능한 경우)가
+올바르게 연결되었는지 확인하고 전원을 켜라.
+TP1 의 전압은 3 ~ 6V 사이여야 한다.
+이 값을 확인하고 다음을 계측한다.
+이 검사를 통과하지 못했다면 전원을 끄고
+집적 회로가 올바른 위치에 올바르게 삽입되었는지 확인한다.
+IC 의 점이 PCB 에 표시된 것과 같은 방향이어야 한다.
+모든 저항 값이 올바른 값이고 잘못 연결 되었는지 확인한다.
+Dynamic Test 나 다음 절차를 진행하기 전에 모든 정적 테스트가 통과되어야 한다.
+
+
+
+* DYNAMIC MEASUREMENTS(GAIN)
+
+VOM 및 Audio Generator 를 회로에 연결한다.
+
+일반적으로 AC Gain 은 1 kHz 의 주파수에서 측정된다.
+그러나 VOM 은 이 주파수에서 AC 전압을 정확하게 읽을 수 없다.
+따라서 이 검사는 400 Hz 에서 수행하는 것이 좋다.
+Audio Generator 를 400 Hz 및 최소 전압 출력으로 설정한다.
+전원을 켠 상태에서 테스트 포인트 TP1 에서
+1 Volt 의 AC 전압을 읽도록 VOM 을 설정한다.
+볼륨 제어를 절반 정도 늘린다.
+VOM 이 1V AC 를 읽을 때까지 Audio Generator 의 진폭을 천천히 높인다.
+Audio Generator 를 이 설정 상태로 두고 VOM 의 양극 도선을 점퍼 J3 로 옮긴다.
+Amplifier 에 AC 입력 전압을 기록하라:
+
+Vin = x Volts
+
+가장 정확한 수치를 보려면 VOM 의 척도를 변경해야 할 수도 있다.
+전원을 끈다.
+Audio Amplifier 의 AC Voltage Gain 은
+AC Output Voltage 를 AC Input Voltage 혹은 1 / Vin 으로 나눈 것과 같다.
+
+이득을 계산하라.
+이득은 100 ~ 180 이어야 한다.
+
+Gain = x
+
+
+
+* AC BANDWIDTH
+
+Oscilloscope 와 Audio Generator 를 회로상에 적절하게 연결한다.
+스코프를 그라운딩 하고 TP1 에 연결한다.
+Audio Generator 도 그라운딩하고 TP2 에 연결한다.
+Audio Generator 를 1 kHz 의 주파수 및 최소 전압 출력으로 설정한다.
+Oscilloscope 를 0.5 단위로 읽도록 설정한다.
+전원을 켜고 천천히 볼륨 조절기를 올리도록 한다.
+Oscilloscope 가 TP1 에서 2V peak to peak(Vpp) 를 표시할 때까지
+Audio Generator 의 진폭을 늘려라.
+볼륨 컨트롤을 조정해야 할 수도 있다.
+Oscilloscope Probe 를 점퍼 J3 으로 이동하고 여기에 입력 전압을 기록한다.
+
+Vin = x Vpp
+
+(이 시점에서 AC 이득을 검증할 수 있다)
+
+Oscilloscope Probe 를 다시 TP1 으로 옮기고
+Oscilloscope 의 파형이 원본 판독 값 1.4 Vpp
+혹은 2.8 Division 의 0.7 이 될 때까지
+Audio Generator 의 주파수를 천천히 높인다.
+출력이 원래값의 0.7 로 떨어지면
+Generator 의 주파수는 고주파 3 dB Corner 라 부른다.
+이 주파수를 기록하라.
+
+(f high 3 dB) = x kHz
+
+Output 이 원래 판독값인 1.4 Vpp 혹은
+2.8 Divisions 의 0.7 이 될 때까지 발전기의 주파수를 천천히 낮춘다.
+
+(f low 3 dB) = x kHz
+
+AC Bandwidth 를 계산하라:
+
+(f high 3 dB - f low 3 dB) = x kHz
+AC Bandwidth = x
+
+계산된 답은 30 kHz 보다 커야 한다.
+
+
+
+* DISTORTION
+
+Generator 와 Oscilloscope 를 앞선 작업과 동일하게 연결하도록 한다.
+Generator 를 1 kHz 의 주파수로 설정하고 전원을 켠다.
+Generator 출력을 조정하고 Generator 출력을 조정하고
+TP1 에서 sine 파의 피크가 최대 신호를 낼 때까지 볼륨을 돌린다.
+(Clipping Circuit 에서 보여지는 파형이 나오면 된다)
+sine 파의 한면은 TP1 의 DC 중심에 따라 다른면보다 먼저 Clip 될 수 있다.
+진동이 보이면 Generator 에 회로의 GND 로 Clip Lead 를 연결하라.
+Clipping 이 처음 발생했을 때 최대 전압 피크를 측정하고 여기에 그 값을 기록하라.
+
+Vclp = x Vpp
+
+전원을 끈다.
+
+
+
+* MAXIMUM POWER OUTPUT
+
+"Clipping" 으로 인한 왜곡 전의 최대 출력은
+아래와 같이 왜곡 단계에서 얻은 전압 Vclp 를 사용하여 계산할 수 있다.
+
+Vpeak(Vp) = Vclp / 2
+
+Vroot mean squared(Vrms) = Vp x 0.7
+
+Max power out = (Vrms)^2 / 8 ohm = (Vclp x 0.35)^2 / 8
+
+최대 출력은 200 밀리 와트 이상이어야 한다.
+
+
+
+* EFFICIENCY
+
+최대 전력 출력 Level 에서 Battery 로부터 얻은
+DC Power 를 측정함으로써 Audio Amplifier 의 효율을 계산할 수 있다.
+Battery 의 전력은 최대 전력 출력 동안
+배터리의 전압과 배터리에서 나오는 전류를 곱한 값과 같다.
+효율성은 아래와 같이 계산할 수 있다:
+
+Eff(효율성) = Max Audio Power / Battery Power
+
+이러한 측정중에 전원 전압이 변하지 않도록
+전원 공급 장치(사용 가능한 경우)를 사용하는 것이 가장 좋다.
+
+Generator, Oscilloscope, Power Supply(혹은 Battery) 및 Current Meter 를 연결한다.
+Generator 를 그라운딩하고 TP2 에 건다.
+Power Supply - 를 배터리 홀더 - 에 건다.
+그리고 Current Meter 의 + 를 Power Supply + 에 건다.
+Current Meter 의 - 를 Battery Holder + 에 건다.
+Oscilloscope 를 그라운딩하고 TP1 에 건다.
+
+Current Meter 를 1 amp DC 로 설정한다.
+전원을 켜고 볼륨 조절기를 최대로 돌린다.
+Clipping Circuit 과 유사해질 때까지 Audio Generator 의 진폭을 서서히 높인다.
+
+Vclp 를 기록하라:
+
+Vclp = x Vpp
+
+Distortion Step 의 Vclp 와 같아야 한다.
+9V Supply 에서 끌어온 DC Current 를 기록하라:
+
+Current(I) max = x A
+
+공급 전압을 측정하고 V 전원을 기록하라:
+
+V supply = x volts
+
+전원을 끈다.
+
+최대 출력 단계에서의 출력을 계산하고 기록하라.
+
+Vp = Vclp / 2
+Vrms = Vp x 0.7
+Max power out = (Vrms)^2 / 8
+
+Vp = x
+Vrms = x
+Max power out = x
+
+Battery 전력은 Battery 전압과 Battery 의 전류를 곱한 값이다.
+Battery Power 를 계산하라:
+
+Battery power = I(max) x Vsupply
+
+Battery power = x
+
+효율(N)이 최대 전력을 Battery 전력으로 나눈 값과 같기 때문에
+이제 Audio Amplifier 의 효율을 계산할 수 있다.
+
+N = Max power out / Battery power
+N in % = N x 100
+
+N = x
+N = x%
+
+계산 결과가 0.5 혹은 50% 의 근처에 있어야 한다.
+
+
+
+* TRANSISTOR AUDIO AMPLIFIER
+
+IC Audio Amplifier 를 성공적으로 완성했다면
+이제 5 개의 Transistor Audio Amplifier 를 만들 준비가 완료된 것이다.
+Transistor Audio Amplifier 는
+별도의 PCB 에 내장되어 있으며 IC Socket 에 연결된다.
+Socket 에서 IC 를 제거해야 한다.
+
+Speaker 로 전달되는 전력과
+Battery 에서 소비되는 전력의 비율은 Amplifier 의 효율이다.
+Class A Amplifier 의 최대 이론 효율은 0.5 혹은 50% 지만
+Class B Amplifier 의 최대 이론 효율은 0.785 혹은 78.5% 에 해당한다.
+Transistor 특성이 이상적인 것이 아니므로
+순수한 Class B Amplifier 에서 Transistor 는 Crossover 왜곡을 일으킬 것이다.
+이는 Zero Current 혹은 차단 근처의 비선형 전달 곡선 때문이다.
+이러한 것은 전자 회로의 Transistor 부분에서 많이 다루는 내용에 해당한다.
+
+Crossover 왜곡을 제거하고 효율을 극대화하기 위해
+Audio Amplifier Circuit 의 TR 은 AB 급으로 주기의 1/2 이상에서 약간 Bias 된다.
+다시 말해 TR 은 Speaker 에 매우 적은 전력을 공급하는
+Class A Amplifier 로 작동하지만
+더 큰 전력 레벨에서는 Class B Amplifier 로 작동한다.
+
+TR 은 Bias String 저항 2 개와 다이오드를 통해
+TR 2 개를 구동하는 Class A Amplifier 에 해당한다.
+TR 2 개는 다른 TR 2 개의 전류를 증폭하는 전류 증폭기로 동작한다.
+AC 및 DC 이득은 TR 의 DC 전류와 Collector 저항에 의해 결정된다.
+Audio Amplifier 의 AC 이득은 거의 100 이며 DC 이득은 약 50 이다.
+TR 은 자체 Bias 되므로 Emitter 에서의 전압은 공급 전압의 약 1 / 2 이다.
+저항은 대략 0.7 V 로 바이어스된 TR 의 Base 에 Feedback 을 제공한다.
+콘덴서는 볼륨 제어를 위한 Audio Signal 을 Audio 입력에 연결한다.
+콘덴서는 AC 가 통과하는 동안 Speaker 에 전류를 차단한다.
+
+
+
+* ASSEMBLY INSTRUCTIONS
+
+모든 부품을 올바르게 장착하고 납땜하라.
+Diode, Transistor 및 전해 콘덴서는 극성이 바뀌므로
+지시사항을 주의 깊게 따라 거꾸로 장착하면 안된다.
+각 설치를 완료할 때마다 체크를 표시하여 오류가 없게 만든다.
+
+모든 설치 과정은 반드시 안전 고글을 장착하고 수행하라.
+
+
+
+* Diode
+
+Band 가 PCB 에 표시된 것과 같은 방향인지 확인하라.
+
+
+
+* NPN Transistor
+
+E 리드가 화살표 구멍에 있고 평평한 면이 위쪽 범례에 표시된 것과 같은 방향이다.
+부품과 PCB 사이에 1/4" 정도의 간격을 유지하도록 한다.
+PNP Transistor 도 마찬가지다.
+
+
+
+* STATIC MEASUREMENTS(POWER TEST)
+
+VOM(Volt-Ohm-Millimeter)을 2 amps DC 로 설정한다.
+아래와 같이 Meter 를 회로에 연결한다.
+건전지의 - 를 Battery Holder 의 - 에 연결한다.
+그리고 전압 메터의 + 와 Battery 의 + 를 연결한다.
+VOM 의 GND 와 Battery Holder 의 + 를 건다.
+볼륨 조절기가 OFF 위치에 있는지 확인하라(완전히 반 시계 방향으로 돌려라)
+VOM 을 보면서 볼륨을 ON 위치로 돌립니다.
+("딸깍" 소리가 날 때까지 시계 방향을 회전)
+VOM 은 매우 낮은 전류를 나타내야 한다.
+필요한 경우 측정기를 조정하여 정확한 판독값을 얻도록 한다.
+전류가 20 mA 보다 크면 즉시 전원을 끈다.
+전류는 10 mA 미만이어야 한다.
+이것은 입력 신호가 없을 때 Battery 가 소비하는 전류다.("idle current")
+전원을 끈다.
+회로가 이 검사를 통과하지 못하면
+모든 부품이 올바르게 설치되었는지 확인하고 단락 혹은 불량 땜을 확인하라.
+
+VOM 을 9V 로 조정하고 TP17 에 그라운딩을 하고 + 쪽을 TP19 에 연결한다.
+Battery 혹은 9V 전원 공급 장치(사용 가능한 경우)가
+올바르게 연결되었는지 확인하고 전원을 켠다.
+TP19 의 전압은 3 ~ 6V 사이여야 한다.
+이 값을 읽으면 다음 검사를 수행하도록 한다.
+회로가 이 검사에 실패하면 전원을 끄고
+모든 Transistor 가 올바른 위치에 연결되었는지 확인하도록 한다.
+TR 의 E 는 Emitter Lead 를 나타내며 항상 옆에 E 가 있는 구멍에 있어야 한다.
+모든 저항 값이 올바른 값이고 교환되지 않았는지 확인하라.
+
+
+
+* OUTPUT BIAS TEST
+
+VOM 의 양극 Lead 를 Q11 의 Base 로 이동한다.
+전원이 켜져 있는지 확인한다.
+전압은 TP19 의 전압보다 0.5 ~ 0.8V 높아야한다.
+전도를 위해 Bias 된 모든 실리콘 TR 은 Base 에서 Emitter 까지 약 0.7V 가 된다.
+이제 VOM 의 양극 Lead 를 Q12 의 Base 로 이동한다.
+
+
+
+* TRANSISTOR BIAS TEST
+
+VOM 의 양극 Lead 를 Q11 의 Base 에 연결한다.
+전원이 켜져 있는지 확인한다.
+전압은 TP19 의 전압보다 0.5 ~ 0.8V 높아야 한다.
+전도를 위해 Bias 된 모든 실리콘 TR Base 에서 Emitter 까지 약 0.7V 가 된다.
+이제 VOM 의 양극 Lead 를 Q12 의 Base 로 이동한다.
+이 지점의 전압은 TP19 의 전압보다 0.5 ~ 0.8V 낮아야 한다.
+이것은 Q12 가 PNP 형 TR 이기 때문이다.
+전원을 끄도록 한다.
+회로가 이 검사에 실패하면 Q11 과 Q12 가 회로 보드에 제대로 연결되었는지 확인한다.
+Dynamic Test 나 다음 섹션을 진행하기 이전에 모든 정적 검사를 통과해야 한다.
+
+
+
+* DYNAMIC MEASUREMENTS(DC GAIN)
+
+Audio Amplifier 의 DC Gain 은 TR Q10 의 전류에 의해 설정된다.
+회로를 보고 출력 Bias 가 V+ 혹은 4.5V 의 1/2 이라 가정하면
+Q11 의 Base 는 0.7V 혹은 5.2V 가 된다.
+이는 R50 에서 무시할 수 있는 전압 강하가 있기 때문이다.
+이것은 R46 에 3.8 의 전압 강하가 있음을 의미한다.
+R46 을 통과하는 전류는 3.8 / R46
+혹은 3.8 / 3.3k 로 계산할 수 있으며 이는 1.15 mA 와 동일하다.
+D5 와 R49 는 Biasing TR Q11 과 Q12 에 사용되므로
+Q10 을 통과하는 전류는 1.15 mA 로 가정할 수 있다.
+Q10 의 DC Gain 은 Emitter 저항 + 유효 Emitter 저항으로 나눈
+Collector 저항 R46 으로 계산할 수 있다.
+실효 Emitter 저항은 실제로 실리콘 동적 저항이며
+근사 방정식에 의해 계산될 수 있다.
+
+따라서 Rj = 26 / 1.15 = 22.6 ohm 이다.
+이제 DC Gain 은 아래와 같이 계산될 수 있다:
+
+R46 / (R48 + Rj) 혹은 3300 / (47 + 22.6) 는 47.4 와 같다.
+
+다음 검사에서 전압 변화가 적기 때문에 Digital meter 를 사용하는 것이 좋다.
+VOM 을 회로에 연결하라.
+TP17 을 GND 에 연결하고 + 를 TP16 에 연결한다.
+VOM 을 1V DC 로 읽고 전원을 켜라.
+여기에 Q10 의 Base 를 기록하라:
+
+Vb1 = x volts
+
+이제 VOM 을 9V 로 설정하고 양극 도선을 Test Point TP19 에 연결한다.
+여기에 출력 Bias Voltage 를 기록하라:
+
+Vo = x volts
+
+전원을 끈다.
+1M ohm 저항(갈검녹금), R34 로 전원 공급 장치를 회로에 연결한다.
+(TP17 을 GND 에 물리고 + 를 1M ohm 과 직렬 연결하여 TP16 에 연결한다.
+ 그리고 Meter 는 TP17 에 GND 를 물리고 + 를 TP19 에 연결한다)
+
+Radio 를 켜고 전원을 켜라.
+TP19 의 전압이 Vo 가 될 때까지 전원 전압을 높이라.
+이제 TP19 의 전압이 1 Volt 낮아질 때까지 전원 전압을 높이라.
+VOM 의 양극 도선을 Q10 의 바닥으로 옮기고 여기에 전압을 기록한다.
+
+Vb2 = x
+
+보다 정확한 계측을 위해 VOM 의 척도를 변경해야 할 수도 있다.
+전원을 끄고 전원 공급 장치를 분리한다.
+DC Gain 은 출력에서의 DC 변화를 입력에서의 DC 변화로 나눈 것과 같기 때문에
+Audio 의 DC Gain 은 1 / (Vb2 - Vb1) 로 계산될 수 있다.
+답은 계산된 DC Gain 47.4 에 가깝다.
+
+
+
+* AC GAIN
+
+AC 이득은 두 가지 차이점을 제외하고는 DC 이득과 동일한 방식으로 계산할 수 있다.
+AC 의 경우 콘덴서 C47 은 Emitter 저항 R48 을 bypass 하여
+유효 Emitter 저항만 남기고 Q13 및 Q14 의 출력에서 저항이 나타난다.
+Q10 의 AC 이득은 R46 / Rj 혹은 3300 / 22.6(146 과 동일)으로 계산할 수 있다.
+입력 신호가 양수면 Q11 에 전류가 흐르고 I(Q11) 라고 한다.
+이 전류는 TR Q13 의 베타(B)를 곱하거나 B x I(Q11)이다.
+출력에서 총 전류는 I(Q11) x (1 + B)와 같다.
+출력에서 R50 의 저항도 볼 수 있다.
+저항은 B 로 나눠 R50 / B 다.
+출력 TR 의 B 가 100 이라고 가정하면
+100 / 100 으로 출력에서 볼 수 있는 저항은 1 ohm 과 같다.
+이것은 출력과 8 ohm Speaker 사이에 전압 분배기가 있음을 의미한다.
+신호는 이제 출력이 AC(Q10 의 이득) x (8 / (1 + 8))
+혹은 146 x (8/9) 와 130 이 되도록 나누어진다.
+입력 신호가 음수일 때도 마찬가지다.
+유일한 차이점은 Q12 와 Q14 가 현재 전도되고 있다는 것이다.
+VOM 과 Audio Generator 를 회로에 연결한다.
+(Generator 의 GND 를 TP17 에 연결하고 + 를 R43 에 연결한다.
+ 그리고 Meter 의 GND 를 TP17 에 연결하고 + 를 TP19 에 연결한다)
+
+일반적으로 AC Gain 은 1 kHz 의 주파수에서 측정된다.
+그러나 VOM 은 이 주파수에서 AC Voltage 를 정확하게 읽을 수 없을 수도 있다.
+따라서 이 Test 는 400 Hz 에서 수행하는 것이 좋다.
+Audio Generator 를 400 Hz 및 최소 전압 출력으로 설정한라.
+전원을 켠 상태에서 Test Point TP19 에서 1 Volt 의 AC 전압을 읽도록 VOM 을 설정하라.
+Volume Control 을 절반 정도 늘린다.
+VOM 이 1V AC 를 읽을 때까지 Audio Generator 의 진폭을 천천히 높인다.
+Audio Generator 를 이 설정 상태로 두고 VOM 의 양극 도선을 TP16 으로 옮긴다.
+Amplifier 에 AC 입력 전압을 기록하라:
+
+Vin = x volts
+
+가장 정확한 수치를 보려면 VOM 의 척도를 변경해야 할 수도 있다.
+전원을 끈다.
+Audio Amplifier 의 AC Voltage Gain 은
+AC Output Voltage 를 AC Input Voltage 로 나눈 것 혹은 1 / Vin 과 같다.
+Gain 은 계산된 Gain 과 대략 동일해야 한다.
+
+
+
+* AC BANDWIDTH
+
+Oscilloscope 와 Audio Generator 를 연결한다.
+Generator 의 GND 를 TP17 에 Scope 의 GND 도 TP17 로 한다.
+Generator 의 + 를 R43 에 갔다대고 그라운딩한 스코프를 TP19 에 찍는다.
+
+Audio Generator 를 1 kHz 의 주파수 및 최소 전압 출력으로 설정한다.
+Oscilloscope 를 0.5 Volts 단위로 읽도록 설정한다.
+전원을 켜고 천천히 볼륨 조절기를 올린다.
+스코프가 TP19 에서 최대 2V 피크(Vpp)를 표시할 때까지 Audio Generator 의 진폭을 늘린다.
+Volume Control 을 조정해야할 수도 있다.
+오실로스코프 Probe 를 Q10(TP16) 의 베이스로 이동시키고 여기에 입력 전압을 기록하라:
+
+Vin = x Vpp
+
+(이 시점에 AC Gain 을 확인하는 것이 좋다)
+
+오실로스코프 Probe 를 다시 TP19 로 옮기고
+오실로스코프의 파형이 원래 판독값의 0.7(1.4 Vpp 혹은 2.8 Divisions)로 떨어질 때까지
+Audio Generator 에서 주파수를 천천히 높인다.
+출력이 원래 값의 0.7 로 떨어지면 Generator 의 주파수는 고주파 3 dB Corner 라 부른다.
+이 주파수를 여기에 기록하라:
+
+(f high 3 dB) = x kHz
+
+출력이 원래 판독값인 1.4 Vpp 혹은 2.8 div 의 0.7 이 될 때까지 발전기의 주파수를 천천히 낮춘다.
+이 주파수를 저주파 3 dB Corner 라고 하며,
+저주파 3 dB Corner 혹은 (f high 3 dB) - (f low 3 dB) 에 해당한다.
+계산된 값은 30 kHz 보다 커야 한다.
+
+
+
+* DISTORTION
+
+앞서 연결했듯이 Generator 와 Oscilloscope 를 연결한다.
+Generator 를 1 kHz 의 주파수로 설정하고 전원을 켜고 볼륨을 최대로 돌린다.
+Clipping Circuit 과 같이 TP19 에서 sine 파의 피크가 잘릴 때까지 Generator 출력을 조정하라.
+sine 파의 한 쪽은 TP19 의 DC 중심에 따라 다른 쪽보다 먼저 Clip 될 수 있다.
+진동이 보이면 Generator 의 GND 에서 회로의 GND 로 Clip Lead 를 연결하라.
+
+Clipping 이 처음 발생했을 때 최대 전압 피크를 측정하고 해당 값을 기록하라:
+
+Vclp = x Vpp
+
+Diode D5 와 저항 R49 를 사용한다.
+파형은 0.6 손실이 있는 다이오드 달린 사인파형을 보면 된다.
+각 사인파의 중심 근처에 있는 "flat spots" 은 crossover distortion(교차 왜곡)이라 불린다.
+이 왜곡의 대부분은 단락 Lead 를 제거할 때 사라진다.
+전원을 끈다.
+
+
+
+* MAXIMUM POWER OUTPUT
+
+"clipping" 으로 인한 왜곡 전의 최대 전력 출력은
+아래와 같이 4 단계에서 얻은 전압 Vclp 를 사용하여 계산할 수 있다.
+
+Vpeak(Vp) = Vclp / 2
+Vroot mean squared(Vrms) = Vp x 0.7
+
+최대 전력 출력 = (Vrms)^2 / 8 ohms = (Vclp x 0.35)^2 / 8 
+최대 전력은 350 mW 보다 커야 한다.
+
+
+
+* EFFICIENCY
+
+최대 전력 출력 레벨에서 Battery 로부터 얻은 DC 전력을 측정함으로써
+Audio Amplifier 의 효율을 계산할 수 있다.
+Battery 의 전력은 최대 전력 출력 중에 Battery 의 전압과 Battery 의 전압을 뺀 값과 같다.
+효율성은 아래와 같이 계산할 수 있다.
+Eff = 최대 Audio Power / Battery Power.
+이러한 측정 중에 전원 전압이 변하지 않도록
+전원 공급 장치(사용 가능한 경우)를 사용하는 것이 가장 좋다.
+Generator, Oscilloscope 및 Current Meter 를 연결하라.
+
+Generator 와 Oscilloscope 를 TP17 에 그라운딩한다.
+Generator 의 + 를 R43 에 찍는다.
+그리고 Scope 는 TP19 에 찍는다.
+전원 공급기의 - 를 Battery Holder - 에 찍는다.
+공급기의 + 에 Current Meter 의 + 를 연결한다.
+Current Meter 의 - 를 Battery Holder + 에 연결한다.
+
+Current Meter 를 1A DC 로 설정한다.
+전원을 켜고 Volume Control 을 최대로 돌린다.
+Clipping Circuit 과 같이 출력이 잘릴 때까지 Audio Generator 의 진폭을 천천히 높인다.
+
+Vclp = x Vpp
+
+이것은 단계 4 에서 Vclp 와 같아야 한다.
+여기에 9V 전원에서 끌어온 DC 전류를 기록하라:
+
+Current(I) max = x Amps
+
+공급 전압을 측정하고 공급된 전압을 기록한다:
+
+V supply = x volts
+
+전원을 끈다.
+최대 출력 단계에서 수행한 최대 출력을 계산하라.
+
+계측된 값들을 기록한다:
+
+Vp = Vclp / 2
+Vp = x
+
+Vrms = Vp x 0.7
+Vrms = x
+
+Max power out = (Vrms)^2 / 8
+Max power out = x
+
+Battery 전력은 Battery 전압과 Battery 전류를 곱한 값이므로 Battery 전력을 계산하라:
+
+Battery power = Imax x V supply
+Battery power = x
+
+효율(N)이 최대 전력을 Battery 전력으로 나눈 값과 같기 때문에
+이제 Audio Amplifier 의 효율을 계산할 수 있다.
+
+N = Max power out / Battery power
+N = x
+
+N in % = N x 100
+N = x%
+
+계산된 값은 0.5 혹은 50% 주변이어야 한다.
+
+
+
+* AM DETECTOR AND AGC STAGE
+
+Detector 의 목적은 진폭 변조된 IF Signal 을 다시 Audio Signal 로 변경하는 것이다.
+이것은 Detection 혹은 Demodulation 작업에 의해 수행된다.
+먼저 진폭 변조된 IF Signal 은 해당 Signal 의 음의 부분만 남기는 방식으로 Diode 에 적용된다.
+(AM 변조 회로 그림을 참조하라)
+
+Diode 는 전자 체크 밸브와 같은 역할을 하며
+화살표로 표시된 방향(Diode 기호에서)과 같은 방향으로만 전류를 흐르게 한다.
+Diode 가 전도 상태(On Condition)에 있을 때
+콘덴서 C33 과 C38 은 IF Signal 의 음의 피크와 거의 같은 전압으로 충전된다.
+전도 상태가 Diode 에서 멈춘 후(Off 조건) 콘덴서는 저항 R36 과 R42 를 통해 방전된다.
+방전 시간 상수는 Audio Signal 을 따르기에 충분해야하며
+그렇지 않으면 고주파 Audio Distortion 이 발생한다.
+그러나 방전 시간 상수는 중간 주파수(455 kHz)를 제거하고
+Audio Signal 만 남기기 위해 충분히 커야 한다.
+
+AGC(Automatic Gain Control) Circuit 의 목적은
+들어오는 Signal 의 세기에 관계없이 Detector 에서 일정한 레벨을 유지하는 것이다.
+AGC 가 없으면 Volume Control 을 각 Station 에 맞게 조정해야하고
+중간 정도의 강한 Station 조차도 최종 IF Amplifier 에서 Clip 하여 Audio Distortion 이 발생한다.
+AGC 는 Signal Strength 가 증가함에 따라
+첫 번째 IF Amplifier 의 DC Bias 를 조정하여 Gain 을 낮추어 수행한다.
+이 회로는 강한 신호가 발생할 때
+음량 DC Control 에서 Volume Control 상단의 Audio 가 실제로 "riding" 함을 보여준다.
+음의 DC 성분은 들어오는 Signal 의 강도에 해당한다.
+신호가 클수록 성분이 음수가 된다.
+Test Point 5(TP5)에서 Audio 는 Low Pass Filter R36 및 C32 에 의해 제거되어 DC 구성 요소만 남게 된다.
+저항 R35 는 Signal 이 없을 때 TR Q8 의 Base 를
+최대 이득 위치로 Bias 할만큼 충분히 높은 TP5 에서 전압을 Shift 하기 위해 사용된다.
+저항 R35 와 R36 은 또한 "On Condition" 문턱 전압을 최소화하기에 충분하도록 Bias Diode D4 를 포워드한다.
+
+
+
+* ASSEMBLY INSTRUCTIONS
+
+
+
+* STATIC MEASUREMENTS(AGC ZERO SIGNAL BIAS)
+
+전원을 끄고 VOM 을 TP15 에 그라운딩하고 TP5 에 연결한다.
+AM/FM Switch 가 AM 위치에 있는지 확인한다.
+
+VOM 이 9V DC 를 읽고 전원을 켜도록 조정되었는지 확인하라.
+전압계는 약 1.5V DC 를 읽어야 한다.
+읽는 값이 이 값에서 0.5V 이상 변하면 전원을 끄고 D4 의 극성을 확인하라.
+또한 R36 과 R35 를 점검하고 변압기 T6 이 올바르게 설치되었는지 점검하라.
+
+
+
+* T8 TEST
+
+전원을 끄고 VOM 의 양극 Lead 를 TP3 에 연결하고 음극 리드를 접지핀 TP15 에 연결한다.
+VOM 이 9V DC 를 읽고 전원을 켜도록 설정되었는지 확인하라.
+VOM 의 전압은 Battery 전압 혹은 전원 공급 장치 전압과 같아야 한다.
+그렇지 않은 경우 전원을 끄고 T8 이 올바르게 설치되어 있는지 확인하라.
+전원을 끈다.
+
+
+
+* DYNAMIC MEASUREMENTS(AM DETECTOR AND AGC TEST)
+
+VOM 과 RF Generator 를 연결한다.
+VOM 의 GND 를 TP15 에 물리고 + 를 TP5 에 물린다.
+RF Generator 의 GND 를 TP15 에 물리고 + 를 0.001u F 콘덴서와 직렬로 연결하여 TP3 에 연결한다.
+
+변조가 없는 최소 전압 출력을 위해 VOM 을 2V DC 에 정확히 맞추고 RF Generator 는 455 kHz 에 맞춘다.
+전원을 켜고 TP5 의 전압이 떨어지기 시작할 때까지 Generator 의 진폭을 천천히 높인다.
+이 점을 IF Gain 이 없는 AGC Threshold 라 부른다.
+RF Generator 의 진폭 설정을 기록한다: x
+
+
+
+* SYSTEM CHECK
+
+RF Generator 와 스코프를 TP15 에 그라운딩하고
+스코프를 R43 근처의 TP에 찍도록 한다.
+Generator 는 0.001u F 콘덴서와 직렬 연결하여 TP3 에 찍도록 한다.
+
+RF Generator 를 80% 변조 및 최소 전압 출력 455 kHz, 1 kHz 로 설정한다.
+전원을 켜고 Volume Control 을 최대로 설정한다.
+Speaker 에 1 kHz Tone 이 들릴 때까지 RF Generator 출력의 진폭을 천천히 조정한다.
+이 검사가 실패하면 전원을 끄고 R42 와 D4 를 확인한다.
+전원을 끈다.
+
+
+
+* AM DETECTOR BANDWIDTH TEST
+
+앞서와 동일하게 장비를 연결한다.
+스코프를 구간당 0.1V 를 읽도록 설정한다.
+전원을 켜고 Volume 을 최소로 설정한다.
+스코프의 신호가 peak2peak 4 분할 구간이 될 때까지 Generator 의 진폭을 증가시킨다.
+신호에 왜곡이 없는지 확인하라.
+Generator 의 주파수는 455 kHz 로 유지하고
+출력이 0.28Vpp 로 떨어질 때까지 변조 주파수를 높인다.
+여기에 Generator 의 변조 주파수를 기록하라: x
+
+이 주파수는 5 kHz 보다 커야 한다.
+전원을 끈다.
+
+
+
+* SECOND AM IF AMPLIFIER
+
+두 번째 IF 증폭기의 목적은 중간 주파수(IF)의 진폭을 증가시키고 동시에 SELECTIVITY 를 제공한다.
+Selectivity 는 다른 모든 것을 거부하면서 하나의 Radio 방송국을 "선택"하는 기능이다.
+두 번째 IF Transformer(T8)은 약 6 kHz 의 3 dB 대역폭을 갖는 대역 통과 필터로서 동작한다.
+두 번째 IF 증폭기의 진폭 대 주파수 응답은 우리가 항상 봐오는 3 dB Bandwidth 폭으로 표현된다.
+
+2 개의 IF 증폭기는 모두 455 kHz 의 주파수로 조정되며 무선 장치를 조립할 때 한 번만 정렬하면 된다.
+이 증폭기는 Radio 방송국을 분리하는데 필요한 대부분의 이득과 선택도를 제공한다.
+
+2 번째 IF 증폭기에서 455 kHz 이득은 변압기 T8 의 1 차 AC 임피던스와 Q9 의 DC 전류에 의해 고정된다.
+Q9 의 전류는 저항 R39, R40 및 R41 에 의해 설정된다.
+C36 과 C37 모두 455 kHz 신호를 접지로 Bypass 하여 Q9 을 공통 Emitter 증폭기로 만든다.
+신호는 변압기 T7 을 통해 제 1 IF 증폭기에서 제 2 IF 증폭기로 연결된다.
+IF Transformer 는 커플링과 선택도를 제공할뿐만 아니라
+한 Stage 의 Collector 와 다음 Stage 의 Base 사이에 임피던스 정합을 제공한다.
+이 일치는 최대 전력이 한 Stage 에서 다음 Stage 로 전송되도록 한다.
+
+
+
+* ASSEMBLY INSTRUCTIONS
+
+
+
+* STATIC MEASUREMENTS(Q9 BIAS)
+
+VOM 을 연결한다.
+GND 를 TP15 에 연결하고 + 를 Transistor Emitter 에 찍는다.
+VOM 을 9V DC 로 읽고 전원을 켠다.
+Q9 의 Emitter 전압은 약 1V 가 나와야 한다.
+0.5V 이상 차이가 나는 경우 전원을 끄고 R39, R40, R41 및 Q9 구성요소를 점검하라!
+
+
+
+* DYNAMIC MEASUREMENTS(AC GAIN)
+
+Generator 와 Scope 를 연결한다.
+Generator 와 Scope 의 GND 를 TP15 에 연결하고
+Scope 를 T8 근처의 TP 포인트에 찍는다.
+Generator 는 0.001u F 콘덴서를 직렬로 연결하여 TP4 에 연결한다.
+
+Generator 를 455 kHz 로 설정하고 변조 및 최소 전압 출력을 설정하지 않는다.
+Oscilloscope 를 1 구간 당 1V 로 설정한다.
+Scope Probe 는 12p F 이하의 입력 콘덴서를 갖거나 T8 을 디튜닝한다.
+전원을 켜고 Scope 에 4V peak2peak 가 나타날 때까지 Generator 의 진폭을 천천히 증가시킨다.
+정렬 도구 혹은 screwdriver 를 사용하여 T8 을 범위에서 peak 로 조정하고
+Generator 의 진폭을 다시 조정하여 Scope 에서 4Vpp 를 유지한다.
+T8 이 정렬된 후 Scope Probe 를 Q9 의 Base 로 이동시키고 신호의 peak2peak 진폭을 기록하라:
+
+Vb = x Vpp
+
+전원을 끈다.
+455 kHz 에서 두 번째 IF 증폭기의 AC 이득은 4 / Vb 와 같으며 100 보다 커야 한다.
+값이 50 보다 작으면 R39, R40, R41, C36 및 C37 구성 요소를 확인하라.
+또한 Q9 가 제대로 설치되었는지 확인하라
+전원을 끈다.
+
+
+
+* BANDWIDTH
+
+앞서 구성한대로 다시 장비를 연결한다.
+전원을 켜고 Generator 를 TP3 에서 peak2peak 4 볼트로 조정한다.
+필요한 경우 출력 최대화를 위해 T8 을 재배선하면서 TP3 에서 4Vpp 를 유지하도록 발전기의 출력을 조정하라.
+TP3 의 신호가 원래 값의 0.707 혹은 2.8 Vpp 로 떨어질 때까지 RF Generator 의 주파수를 천천히 낮춘다.
+여기에 RF Generator 의 주파수를 기록하라:
+
+Fl = x kHz
+
+이제 신호가 peak 값의 0.707 까지 떨어지는 지점까지 peak 를 지나서 Generator 의 주파수를 증가시킨다.
+해당 주파수를 여기에 기록하라:
+
+Fh = x kHz
+
+더 높은 3 dB Corner Frequency 에서 낮은 3 dB Corner Frequency 를 빼서
+두 번째 IF Amplifier 의 Bandwidth 를 얻는다.
+
+Bandwidth 는 (Fl - Fh) 로 계산된다.
+
+결과는 대역폭을 보여주는 그림과 유사해야한다.
+전원을 끈다.
+
+
+
+* FIRST AM IF AMPLIFIER
+
+첫 번째 IF 증폭기는 하나의 중요한 차이점을 가진 두 번째 IF 증폭기와 동일하다.
+1 차 IF 증폭기의 이득은 AGC 임계값이 통과한 후에 감소하여
+Audio 출력을 Detector 에서 일정하게 유지하고 2 차 IF 증폭기의 과부하를 방지한다.
+이는 신호 강도가 증가함에 따라 TR(Q8)의 Base 상의 전압을 낮춤으로써 달성된다.
+Base 에서 Emitter 까지의 전압은 일정하기 때문에
+Base 에서의 전압 강하는 Q8 의 Emitter 에서의 전압 강하를 만들어낸다.
+이 강하는 R37 양단의 전압을 낮추고 R37 을 통과하는 DC 전류를 감소시킨다.
+Q8 의 Emitter 에서 나오는 모든 DC 전류는 R37 을 통과해야하므로 Q8 의 DC 전류는 낮아진다.
+TR 의 DC 전류가 낮아지면 TR 의 유효 Emitter 저항이 증가한다.
+TR Q8 의 AC Gain 은 Q8 의 AC Collector Load 를 유효 Emitter 저항으로 나눈 값과 같다.
+그러므로 유효 Emitter 저항의 값을 높이면 Q8 의 AC Gain 이 낮아진다.
+
+
+
+* ASSEMBLY INSTRUCTIONS
+
+
+
+* STATIC MEASUREMENTS(Q8 BASE BIAS)
+
+VOM 을 회로에 연결한다.
+TP15 에 GND 를 연결하고 TP5 에 + 를 연결한다.
+VOM 이 2V DC 로 놓고 전원을 켠다.
+TP5 의 전압은 약 1.5V 여야 한다.
+회로가 이 검사에 실패하면 Q8 과 R37 을 확인한다.
+전원을 끈다.
+
+
+
+* Q8 CURRENT
+
+VOM 의 양극 도선을 Q8 의 Emitter 에 연결하고 음극 도선을 접지점 TP15 에 연결한다.
+전원을 켠다.
+전압은 약 0.8V 여야 한다.
+Q8 의 전류는 R37 의 전류와 같기 때문에 I(Q2) = 0.8 / R37 혹은 약 0.8 mA 다.
+전원을 끈다.
+
+
+
+* DYNAMIC MEASUREMENTS(AC GAIN)
+
+장비를 연결한다.
+TP6 에 0.001u F 콘덴서와 직렬로 연결된 Generator
+Generator 와 Scope 는 TP15 에 그라운딩하고 Scope 를 TP4 에 찍는다.
+그리고 R38 과 TP3 을 쇼트 시킨다.
+
+Scope Probe 는 12pF 이하의 입력 콘덴서를 달아야 한다.
+그렇지 않으면 변압기 T7 이 Detue 된다.
+Clip Lead 를 사용하여 TP3 과 R38 을 쇼트한다.
+이러한 단점은 AGC 가 첫 번째 IF 증폭기의 Gain 을 낮추는 것을 방지한다.
+Generator 를 455 kHz 로 설정하고 변조가 없으며 최소 전압 출력을 설정한다.
+한 구간 당 1V 를 읽도록 범위를 설정하고 전원을 켠다.
+범위에서 약 4Vpp 가 보일 때까지 Generator 의 진폭을 늘린다.
+TP4 에서 455 kHz 를 최대화하기 위해 IF Transformer T7 을 다시 조정한다.
+T7 을 조정한 후 TP4 에서 4Vpp 를 유지하려면 Generator 진폭을 조정한다.
+이제 Scope Probe 를 Q8 의 Base 로 옮기고 455 kHz Signal 의 peak2peak 수준을 기록하라:
+
+Vb = x Vpp
+
+첫 번째 IF Amplifier 의 AC Gain 은 4 / Vb 와 같다.
+AC Gain 은 100 보다 커야 한다.
+전원을 끄지 말고 다음 검사로 가도록 한다.
+
+
+
+* AGC ACTION
+
+Scope Probe 를 다시 TP4 로 옮기고 필요한 경우 4Vpp 로 Generator 를 조정한다.
+Clip Lead 로 TP3 과 R38 을 쇼트한 부분을 제거한다.
+AGC 는 TP4 의 Signal Level 을 약 0.8V 로 줄인다.
+전원을 끈다.
+
+
+
+* AM MIXER, AM OSCILLATOR, AND AM ANTENNA
+
+Superheterodyne 형 수신기에서 Antenna 상의 전파는 증폭된 후
+Local Oscillator 와 혼합되어 IF(중간 주파수)를 생성한다.
+TR(Q7)은 RF Signal 을 증폭할 뿐만 아니라
+원하는 Radio 방송국 주파수보다 455 kHz 높은 주파수에서 동시에 발진한다.
+Collector 에서 Q7 의 Emitter 까지의 양의 Feedback 은 Coil L5 및 콘덴서 C31 에 의해 제공된다.
+Heterodyning 과정에서 Q7 의 Collector 는 아래 4 개의 주파수가 존재한다:
+
+1. Local Oscillator 주파수, OF
+2. RF 반송파 혹은 무선국 주파수
+3. 이 두 주파수의 합, OF + RF
+4. 이 두 주파수의 차, OF - RF
+
+"주파수 차이"는 AM Radio 의 중간 주파수로 사용된다.
+Q7 의 Collector 에는 차동 주파수에만 튜닝된 IF Transformer(T6)도 포함되어있다.
+이 변압기는 455 kHz 근처의 주파수를 제외한 모든 주파수를 차단한다.
+또한 T6 은 455 kHz Signal 을 IF 증폭기로 처리할 Q8 의 Base 에 연결한다.
+Antenna 와 Generator Coil 은 Radio 가 다른 방송국에 맞춰질 때 변경되는 유일한 2 개의 공진 회로다.
+Radio 방송국은 Generator 주파수보다 455 kHz 높을 수 있기 때문에
+Antenna 가 이 Station 을 거부하고 Oscillator 주파수보다 455 kHz 낮은 Station 만 선택하는 것이 중요하다.
+Oscillator 위의 원하지 않는 방송국의 주파수 455 kHz 를 Image Frequency 라고 한다.
+Antenna 의 선택도(Q Factor)가 높으면 Image 가 충분히 줄어든다.
+
+원하는 Radio 방송국의 튜닝보다 455 kHz 이상을 유지하기 위해
+Radio 를 튜닝할 경우 Oscillator Circuit 을 반드시 변경해야 한다.
+Oscillator Frequency 를 정확히 Antenna 의 튜닝보다
+455 kHz 높게 유지하는 정확성의 정도를 Tracking Accuracy 라고 한다.
+
+
+
+* ASSEMBLY INSTRUCTIONS
+
+알림:
+PCB Foil(녹색)쪽에 튜닝 콘덴서를 장착하라.
+
+3 선식 코일 혹은 4 선식 코일이 있는지 확인한다.
+저항 측정은 코일의 구성을 확인하는데 사용된다.
+하나의 Holder 를 Antenna Assembly 의 Ferrite Core 에서 밀어낸다.
+그런 다음 Coil 을 Ferrite Core 에서 밀어낸다.
+Coil 의 저항을 측정한다.
+측정 값은 표시된 값과 일치해야 한다.
+
+알림:
+Antenna 에서 전선의 끝이 끊어지면 뜨거운 납땜 인두로 끝 부분의 절연재를 벗겨낸다.
+단단한 표면에 철사를 내려놓고 인두로 철사를 친다.
+단열재는 매우 쉽게 벗겨진다.
+
+주의:
+납땜 인두는 작업중인 단단한 표면을 태울 것이다.
+
+중요:
+Antenna Coil 을 설치하기 전에 3 선식 코일 혹은 4 선식 코일이 있는지 확인한다.
+아래와 같이 PCB 에 조립하도록 한다.
+Antenna Assembly 를 PCB 에 장착한다.
+
+1. 첫 번째 Holder 의 Tab 을 오른쪽 구멍에 넣고 Tab 을 90도 뒤튼다.
+2. 두 번째 Holder 의 Tab 을 왼쪽 구멍에 넣고 Tab 을 90 도 뒤튼다.
+3. Holder 를 통해 Ferrite Core 를 통해 밀어 넣는다.
+4. Antenna Coil 을 Ferrite Core 를 통해 밀어 넣는다.
+
+알림:
+Antenna 에서 전선의 끝이 끊어지면 뜨거운 납땜 인두로 끝 부분의 절연재를 벗겨낸다.
+단단한 표면에 철사를 내려 놓고 인두로 철사를 치도록 한다.
+단열재는 매우 쉽게 벗겨진다.
+
+주의:
+나땜 인두는 작업중인 단단한 표면을 태운다.
+
+상자의 앞면 Flap 에서 하나의 Antenna 심을 펀치 아웃한다.
+Ferrite Core 와 Antenna Coil 사이에 골판지 안테나 심을 삽입하라.
+그러면 일시적으로 Coil 이 고정된다.
+
+3 선식 안테나:
+PCB 에 3 색의 전선을 납땜하라:
+"RED" 라고 표시된 구멍에 A(적색)을,
+"BLK" 라고 표시된 구멍에 B(검정색)을,
+"WHT"라고 표시된 구멍에 C(흰색)을 연결한다.
+
+4 선식 안테나:
+PCB 에 4 색 전선을 땜질하라
+"RED"라고 표시된 구멍에 A(녹색)을 연결하고,
+"BLK"라고 표시된 구멍에 B(적색과 검정색을 꼬아서) 연결하고,
+"WHT"라고 표시된 구멍에 C(흰색) 와이어를 연결한다.
+
+Kit 로 받은 Tuning Gang Capacitor 의 2 가지 유형 중 어느 것을 알고 있어야 한다.
+가지고 있는 콘덴서를 확인해봐라.
+
+Locator Lead 부분
+(제거하지 말고 양쪽 Lead 를 함께 구멍에 납땜하라)
+
+- AM 및 FM 면이 올바른 방향으로 놓인 상태에서 PCB 의 Foil 쪽에 Tuning 콘덴서를 장착하라.
+- PCB 의 앞면에 있는 2 개의 나사를 사용하여 고정시킨다.
+- Lead 를 제자리에 납땜하고 전면의 PCB 를 통과하는 초과 Lead 를 차단한다.
+
+손잡이를 나사로 콘덴서 축에 고정하라.
+
+Knob 을 시계 방향으로 완전히 돌린다.
+Label 의 보호용 Backing 을 벗겨낸다.
+Label 의 긴 흰색 선을 PCB 의 화살표로 정렬한다.
+
+
+
+* PC Board Stand
+
+PCB 를 Stand 에 삽입하라.
+
+
+
+* STATIC MEASUREMENTS(Q7 BIAS)
+
+TP6 과 TR Q7 의 Collector 를 쇼트한다.
+VOM 의 GND 를 TP15 에 물리고 TP7 에 찍는다.
+
+TP6 의 Clip Lead 를 Q7 의 Collector 에 연결한다.
+이렇게 짧게하면 Q7 이 진동하지 않는다.
+VOM 을 2V DC 로 읽고 전원을 켠다.
+TP7 의 DC 전압은 약 1.6V 여야 한다.
+회로의 전압이 0.5V 이상 차이가 나면 전원을 켜고 Battery Voltage 를 확인한다.
+Battery 전압이 8.5V 보다 큰 경우 R31, R32, R33 및 Q7 구성 요소를 점검하라.
+전원을 끈다.
+
+
+
+* DYNAMIC MEASUREMENTS(AM OSCILLATOR CIRCUIT)
+
+Scope 의 GND 를 TP15 에 연결하고 AGC Collector 를 찍는다.
+
+구간당 1V 를 읽도록 범위를 설정하고 전원을 켠다.
+Scope 에 저전압 sinewave 가 표시되어야 한다.
+Tuning Gang 을 돌리면 sine 파의 주파수가 변경된다.
+회로가 이 검사에 실패하면 구성 요소 Q7, Gang 콘덴서, C28, C29, C30, C31, L4 및 L5 를 점검하라.
+전원을 끈다.
+
+
+
+* AM FINAL ALIGNMENTS
+
+두 가지 AM 정렬 절차가 있다.
+첫 번째 정렬 절차는 테스트 장비가 없는 사람들을 위한 것이고
+두 번째 절차는 테스트 장비를 가진 사람들을 위한 것이다.
+
+공진 회로를 정렬하는데 사용되는 "Magic Wand" 라는 특별한 장치가 포함되어 있다.
+이것은 보통 한 쪽 끝에는 황동 조각이 있고 다른 쪽 끝에는 철 조각이 있다.
+"Magic Wand" 의 황동 끝이 AM Antenna 근처에 배치되면
+Inductance 가 제거된 것처럼 Antenna Coil 이 반응한다.
+마찬가지로 "Magic Wand"의 철제 끝이 AM Antenna 근처에 놓여지면
+Inductance 가 추가된 것처럼 Antenna Coil 이 반응한다.
+따라서 황동 혹은 철을 Antenna Coil 근처에 배치하면 Antenna Coil Inductance 가 변경된다.
+Inductance 의 이러한 변화는 회로의 공진 주파수를 변화시켜 Antenna 가 선택적으로 주파수를 변화시킨다.
+Antenna 와 Oscillator Circuit 을 정렬할 때
+Coil L4 와 L5 는 Band 의 하단에서 조정되는 반면
+Oscillator 와 Antenna Trimer 콘덴서는 Band 의 상단에서 조정된다.
+이것은 Antenna 와 Oscillator 가 올바르게 추적될 수 있도록 한다.
+
+
+
+* Magic Wand Assembly
+
+1/4" 바깥쪽에 Shrink Tubing 끝 부분에 황동 조각을 놓는다.
+놋쇠 주위에 Tube 가 수축될 때까지 납땜 인두로 놋쇠를 가열하라.
+같은 방법으로 철편을 다른 끝에 조립하라.
+
+
+
+* AM ALIGNMENT WITHOUT TEST EQUIPMENT
+
+이 절차를 위해 이어폰을 사용하는 것이 가장 좋다.
+Switch 가 AM 에 있는지 확인한다.
+정렬 도구나 Screwdriver 로 Coil L5, T6, T7, T8 을 멈출 때까지 반 시계 방향으로 돌린다.
+더 이상의 Coil 은 강요하지 말라.
+각 Coil 을 약 1 1/4 ~ 1 1/2 fh ehfflsek.
+Ferrite Rod 의 끝에서 AM Antenna Coil 을 약 1/8" 로 설정하라.
+
+
+
+* IF ALIGNMENT
+
+전원을 켜고 볼륨을 조절한다.
+약한 방송이 들릴 때까지 Dial 을 돌린다.
+Station 이 없으면 Antenna 를 Ferrite Core 앞뒤로 밀고 필요한 경우 Dial 을 다시 조정한다.
+큰 소리의 방송이 들릴 때까지 T6 을 조정하다.
+필요한 경우 볼륨을 줄여라.
+방송이 크게 들릴 때까지 T7 을 조절하고 필요한 경우 음량을 줄여라.
+방송이 크게 들릴 때까지 T8 을 조절하고 필요한 경우 음량을 줄여라.
+다른 방송이 약하게 들리는 Radio 를 재조정하고
+방송이 약하게 들리는 부분을 최대한 개선하도록 한다.
+이 절차는 IF 증폭기를 최대 이득으로 피크 처리한다.
+
+
+
+* OSCILLATOR ALIGNMENT
+
+600 kHz 주변의 알려진 AM 방송이 들릴 때까지 Radio 를 튜닝한다.
+방송 주파수가 broadcasting 될 때까지 방송을 청취 시도한다.
+AM Band 의 낮은쪽에 방송이 없으면 방송이 들릴 때까지 L5 를 조정한다.
+방송이 발견되고 방송 주파수가 알려지면
+흰색 포인터가 Dial 의 해당 방송국 주파수 표시에 정렬될 때까지 Dial 을 돌린다.
+방송이 들릴 때까지 L5 를 조정한다.
+1400 kHz 주변의 알려진 방송이 들릴 때까지 Radio 를 튜닝한다.
+방송 주파수가 들릴 때까지 방송을 청취 시도한다.
+방송이 없다면 AM Oscillator Trimer 를 방송이 들릴 때까지 조정하라.
+방송국을 발견하고 방송 주파수가 알려지면
+흰색 포인터가 Dial 의 해당 방송국 주파수 표시에 정렬될 때까지 Dial 을 돌린다.
+AM Oscillator Trimer 를 방송이 들릴 때까지 조정한다.
+Oscillator 정렬이 최적화 될 때까지 이 작업을 반복한다.
+이 절차는 Oscillator 범위를 955 kHz ~ 2055 kHz 로 설정한다.
+
+
+
+* ANTENNA ALIGNMENT
+
+주변의 600 kHz 방송에 맞게 Radio 를 조정한다.
+그와 더불어 "Magic Wand" 황동 끝을 Antenna Coil 근처에 놓는다.
+출력에서 듣는 신호가 증가하면 Antenna Coil 에 필요한 Inductance 가 줄어든다.
+Inductance 를 제거하려면 Antenna Coil 을 Ferrite Core 에 따라 슬슬 밀어준다.
+"Magic Wand" 철 부분의 끝을 Antenna Coil 근처에 놓는다.
+출력에서 듣는 신호가 증가하면
+이것은 Antenna Coil 에 더 많은 Inductance 가 필요하다는 것을 의미한다.
+더 많은 Inductance 를 추가하려면 Antenna Coil 을
+Ferrite Core 를 따라 적절한 방향으로 슬슬 밀어준다.
+"Magic Wand" 양쪽 끝의 신호음이 줄어들 때까지 이 단계를 반복한다.
+주변의 1400 kHz 방송에 맞게 Radio 를 조정하라.
+"Magic Wand"로 Antenna Coil 의 가까이에 황동의 끝을 두어라.
+출력에서 듣는 신호가 증가하면 Antenna Coil 에 더 많은 콘덴서가 필요하다는 의미다.
+신호가 가장 큰 소리가 들릴 때까지 Gang 뒤쪽의 Antenna Trimmer 를 조정하라.
+Antenna Trimmer 의 위치를 잘 조절하도록 한다.
+"Magic Wand" 철 부분의 끝을 Antenna Coil 근처에 놓는다.
+출력에서 듣는 신호가 증가하면 Antenna Coil 의 콘덴서가 줄어든다.
+신호가 가장 큰 소리가 들릴 때까지 Gang 뒤쪽의 Antenna Trimmer 를 조정한다.
+"Magic Wand" 양쪽 끝의 신호음이 줄어들 때까지 이 작업을 반복한다.
+Antenna Trimmer 와 Antenna Coil 을 모두 조정하면
+Antenna 정렬에 영향을 미치므로
+Antenna 정렬이 최적화 될 때까지 전체 절차를 반복하는 것이 좋다.
+이 절차는 AM Radio 섹션의 추적을 설정한다.
+Antenna 가 올바르게 정렬되면 Antenna Coil 과 Ferrite Rod 에
+CANDLE WAX 혹은 접착제를 조심스럽게 붙여서 움직이지 않도록 한다.
+Shim(심) 과 같은 높이로 Antenna 를 잘라낸다.
+
+이것으로 AM Radio Section 의 alignment 를 정리한다.
+방송이 들리지 않으면 근처에 있는 다른 AM Radio 를 청취하여
+해당 지역에 AM Signal 이 있는지 확인한다.
+AM 섹션이 여전히 수신되지 않으면 돌아가서
+각 단계에서 잘못된 값과 납땜 불량 여부를 확인하라.
+이제 FM Assembly 작업을 진행하도록 한다.
+
+
+
+* AM ALIGNMENT WITH TEST EQUIPMENT(IF ALIGNMENT)
+
+RF Generator 와 Oscilloscope 를 연결한다.
+둘다 TP15 에 그라운딩하고 Generator 와 0.001uF 콘덴서를 직렬로 연결하고 TP7 을 찍는다.
+스코프는 TP2 부분을 찍도록 한다.
+Switch 가 AM 위치에 있는지 확인한다.
+Q7 의 컬렉터에서 TP6 까지 단락한다.
+이 단락은 AM Oscillator 를 "죽인다"
+
+RF Generator 를 455 kHz, 400 Hz 80% 변조 및 최소 전압으로 설정하라.
+Scope 가 Division 당 0.1V 를 읽고 전원을 켜도록 설정한다.
+Scope 가 400 Hz 사인파 5 분할 혹은 0.5Vpp 를 나타낼 때까지 Generator 의 진폭을 증가시킨다.
+정렬 도구 혹은 Screwdriver 를 사용하여 T6 을 피크로 조정한다.
+5 개 구획이 유지되도록 Generator 진폭을 줄인다.
+T7 을 Peak 로 조정하고 필요한 경우 다시 해당 진폭을 줄인다.
+IF Alignment 를 최적화하려면 이 단계를 반복한다.
+이 절차는 IF 증폭기를 455 kHz 로 맞춘다.
+
+IF Alignment 가 완료된 후,
+전압이 정점의 0.707 혹은 0.35 Vpp 가 될 때까지 발전기의 주파수를 낮춘다.
+하단 3 dB Corner Frequency 를 기록한다:
+
+Fl = x kHz
+
+Scope 에 표시된 전압이 정점의 0.707 혹은 0.35Vpp 가 될 때까지
+Generator 의 Peak 를 지나서 Frequency 를 높인다.
+상단 3 dB Corner Frequency 를 기록한다:
+
+Fh = x kHz
+
+IF 의 Bandwidth 는 BW = Fh - Fl 이다.
+IF 의 Bandwidth 는 약 6 kHz 여야 한다.
+전원을 끄고 Q7 의 Collector 에서 TP6 로의 쇼트를 제거한다.
+
+Bandwidth 를 계산한다: x kHz
+
+
+
+* OSCILLATOR ALIGNMENT
+
+RF Generator 를 540 kHz, 400 Hz 80% AM 변조 및 낮은 출력 레벨로 설정한다.
+전원을 켜고 볼륨 조절기를 적정한 수준으로 설정한다.
+흰색 포인터가 Dial 의 540 kHz 마킹에 정렬될 때까지 조정하고
+손잡이를 반 시계 방향으로 돌린다.
+정렬 도구 또는 Screwdriver 로 400 Hz Tone 이 들릴 때까지 L5 를 조정한다.
+Scope 의 Peak 에 대해 L5 를 조정한다.
+RF Generator 의 진폭을 조정하여 peak2peak 혹은 그 이하의 0.5V 레벨을 유지한다.
+L5 가 정점에 도달한 후 Generator Frequency 를 1600 kHz 로 설정한다.
+흰색 포인터가 Dial 의 1600 kHz 마킹에 정렬될 때까지 튜닝 knob 를 시계 방향으로 돌린다.
+Alignment tool 혹은 screwdriver 로 400 Hz Tone 이 들릴 때까지
+Tuning Gang 의 뒷면에 있는 AM Generator Trimmer 를 조정하라.
+Scope 의 Peak 에 대한 Trimmer 를 조정하라.
+Oscillator Alignment 를 최적화 하려면 이 단계를 반복한다.
+이 절차는 Oscillator 범위를 955 kHz ~ 2055 kHz 로 설정한다.
+
+
+
+* ANTENNA ALIGNMENT
+
+전원을 끄고 테스트 장비를 연결한다.
+Generator 와 Scope 를 TP15 에 그라운딩한다.
+그리고 안테나에 가깝게 도선의 Loop 를 만든다.
+Scope 를 T2 부분에 찍는다.
+
+Generator 를 600 kHz, 400 Hz 80% 변조, 적당한 신호 강도로 설정하라.
+Scope 가 1 구간 당 0.1V 를 읽도록 설정한다.
+Tuning Knob 를 반 시계 방향으로 완전히 돌리고 전원을 켠다.
+Scope 에 400 Hz 사인파가 나타날 때까지 시계 방향으로 천천히 조율 knob 를 돌린다.
+볼륨 조절기를 적정한 수준으로 조절한다.
+600 kHz 에 Station 이 있으면 발진기의 주파수 를 낮추고 이전 단계를 반복한다.
+"Magic Wand" 황동의 끝을 Antenna Coil 에 배치한다.
+Scope 의 신호가 증가하면 Antenna Coil 의 Inductance 가 줄어든다.
+더 많은 Inductance 를 추가하려면 Antenna Coil 을 Ferrite Core 를 따라 슬슬 밀어 넣는다.
+"Magic Wand" 양쪽 끝의 신호가 줄어들 때까지 이 작업을 반복한다.
+Generator 의 주파수를 1400 kHz 로 높이고
+400 Hz 사인파가 Scope 에 나타날 때까지 시계 방향으로 돌려서 Tuning Knob 를 돌린다.
+1400 kHz 에 방송이 있는 경우 Generator 의 주파수를 높이고 이전 단계를 반복한다.
+"Magic Wand"의 황동 끝을 Antenna Coil 근처에 놓는다.
+신호가 증가하면 Antenna Coil 의 콘덴서가 줄어든다.
+Peak 의 Antenna Trimmer 를 조정한다.
+두 가지 Antenna Alignment 가 최적화되어 있다.
+Antenna 가 올바르게 정렬되면
+Candle Wax 를 조심스럽게 바르거나 Antenna Coil 을 Ferrite Rod 에 붙인다.
+심과 같은 높이로 안테나를 잘라낸다.
+FM Assembly 섹션을 진행하도록 한다.
+
+이것으로 AM Radio 섹션의 정렬을 마무리한다.
+방송이 들리지 않으면 근처에 이는 다른 AM Radio 를 청취하여
+해당 지역에 AM Signal 이 있는지 확인하도록 한다.
+AM 섹션이 여전히 수신되지 않으면 돌아가서
+각 단계에서 잘못된 값과 납땜 불량 여부를 확인한다.
+FM Assembly 섹션을 향해 진행한다.
+
+
+
+* AM RADIO HIGHLIGHTS
+
+1. 소리에 의해 생성되는 초당 진동 수(혹은 주기)는 주파수라고 하며 Hz 로 측정된다.
+
+
+2. 음파 봉우리 사이의 거리를 파장이라고 한다.
+
+3. 음파는 초당 일정 진도수만큼 발생한다.
+   초당 진동이 많을수록 주파수가 높아진다.
+   진동이 적을수록 주파수는 낮아진다.
+
+4. 매우 높은 주파수의 파동은 전파라 불리며
+   전선을 사용하지 않고 공기를 통해 먼 거리를 이동한다.
+
+5. 반송파는 방송국이 Audio 파를 전송하는데 사용하는 전파다.
+
+
+6. 전파에 Audio 파를 부가하는 과정을 변조라하며
+   Audio 파에서 전파를 제거하는 과정을 검출기에 의해
+   AM Radio 에서 수행되는 복조라고 한다.
+
+7. Antenna 에 의해 수신되는 신호의 양은
+   전송된 신호의 전력과 신호가 이동한 거리에 따라 달라진다.
+
+8. 정류는 신호의 절반을 제거하는 과정이며, 필터링은 신호를 부드럽게 하는 과정이다.
+
+9. 헤테로다이닝은 2 개의 신호(들어오는 RF 신호와 국부 발진기의 RF 신호)를 혼합하여
+   세 번째 신호(IF 신호)를 생성하는 과정이다.
+
+
+
+* DC VOLTAGES
+
+아래의 전압 수치는 AM Section 의 문제 해결에 사용되어야 한다. (AM 위치에서 Switch)
+
+
+
+* QUIZ - AM Radio Section
+
+
+
+* PARTS LIST FOR FM SECTION
+
+100 ohm x 2
+220 ohm x 1
+470 ohm x 1
+1k ohm x 5
+1.8k ohm x 1
+2.2k ohm x 2
+6.8k ohm x 2
+10k ohm x 7
+22k ohm x 2
+33k ohm x 2
+47k ohm x 3
+390k ohm x 2
+
+15p F x 1
+30p F x 1
+33p F x 1
+220p F x 1
+470p F x 2
+0.001u F x 3
+0.005u F x 3
+0.01u F x 10
+0.02u F x 1
+0.022u F x 1
+0.1u F x 1
+10u F x 1
+470u F x 1
+
+FV1043 x 1
+1N34A x 2
+2N3904 x 6
+
+FM Detector(Blue) x 1
+FM Detector(Pink) x 1
+FM IF(Green) x 2
+FM Mixer(Orange) x 1
+FM RF Amp(6 Turns) x 1
+FM RF Amp(2 Turns) x 1
+FM Oscillator(5 Turns) x 1
+
+Antenna FM x 1
+Screw M1.8 x 7.5mm x 2
+Screw M2 x 5mm(antenna) x 2
+Nut M1.8 x 2
+Test Point pin x 7
+Coil Spacer x 1
+
+
+
+* THE FM RADIO
+
+Section 6 에서 FM Radio 의 구성을 시작한다.
+구축할 단계는 아래의 Block Diagram 에 나와 있다.
+FM Ratio Detector 로 시작하여 FM Antenna 로 돌아간다.
+각 단계는 다음 단계로 진행하기 전에 검사되어야한다.
+
+
+
+* FM RATIO DETECTOR
+
+AM Detector 섹션에서 들어오는 신호의 진폭 변화로부터 Audio 가 감지되었음을 관찰했다.
+FM Detection 에서 Audio 는 들어오는 신호의 주파수 변화로부터 감지된다.
+Ratio Detector 에는 FM Carrier 에 잡음이 최소화되도록
+신호를 제한하는 제한 조치가 내장되어 있다.
+설명의 편의를 위해 Ratio Detector 가 아래에 다시 그려져 있다.
+
+들어오는 신호가 T4 및 T5 에 있을 때, 전류는 D2, R26, R28, R27, D3 을 통해 흐른다.
+아무런 변조가 없으면 T5 가 중앙 탭핑되어 있기 때문에
+Diode D2 와 D3 를 통과하는 전류는 동일하다.
+따라서 C23 을 통해 전류가 흐르지 않으므로 Audio 출력 전압은 제로가 된다.
+들어오는 신호가 변조되면 한 Diode 를 통과하는 전류는 다른 Diode 보다 커진다.
+이로 인해 C23 에 전류가 흐르게되어 C23 에서 Audio 전압이 생성된다.
+변조가 이전과 반대 방향인 경우, 
+다른 Diode 에서 더 많은 전류가 흐르게 되어
+다시 C23 에서 반대 방향으로 전류가 흐르게되어 C23 에서 Audio 전압이 생성된다.
+Audio 에서 나오는 큰 전류를 배터리 전압의 변화에서 야기된다.
+Ratio Detector 는 저항 R23 과 콘덴서 C21 에 의해 bypass 된다.
+
+
+
+* ASSEMBLY INSTRUCTIONS
+
+- FM Detector Coil(T4)
+
+알림:
+line 혹은 notch 는 PCB 위쪽을 가리켜야 한다.
+일부 FM Detector Coil 에는 Line/Notch 부품 번호가 있다.
+
+
+
+* STATIC MEASUREMENTS(FM VOLTAGE)
+
+아래와 같이 VOM 을 연결하도록 한다.
+TP15 에 그라운딩하고 R25 에 찍는다.
+
+AM/FM Switch 를 FM 위치로 전환한다.
+VOM 을 9V DC 로 설정한다.
+전원을 켠다.
+이 지점의 전압은 7V 와 9V 사이여야 한다.
+전원을 끈다.
+이 값을 읽지 못하면 R25, C24 및 배터리 전압을 확인하라.
+
+
+
+* TRANSISTOR CURRENT TEST
+
+아래와 같이 VOM 을 회로에 연결한다.
+전원을 켠다.
+Q6 의 Emitter 에서의 전압은 약 0.7V 가 되어야 한다.
+여기에 전압을 기록하라:
+
+V(Q6) = x
+
+전원을 끈다.
+2V 보다 크다면 R20, R21, R22, R24, Q6 및 배터리를 확인하라.
+저항 R22 를 통과하는 전류가 Transistor Q6 을 통과하는 전류와 같기 때문에
+아래와 같이 Q6 을 통과하는 전류를 계산한다.
+
+Current(I) = V(Q6) / R22
+
+계산된 답은 0.0005 amps(0.5 milliamps) 와 0.0011 amps(1.1 milliamps) 사이여야 한다:
+
+Current(I) = x
+
+
+
+* DYNAMIC MEASUREMENTS(AC GAIN)
+
+Ratio Detector 의 AC Gain 은 T4 의 1차 AC Impedance 와 Q6 을 통과하는 전류로 설정된다.
+전류는 R20, R21, R22 에 의해 설정된다.
+콘덴서(C22, C19)는 AC 신호를 접지로 우회한다.
+아래와 같이 RF Generator 와 Scope 를 회로에 연결하도록 한다.
+Generator 와 Scope 모두 TP15 에 그라운딩하고
+Generator 에 0.001uF 를 직렬 연결하고 TR 의 Base 에 찍는다.
+Scope 는 Collector 에 들어가는 부분에 존재하는 Test Point 에 찍는다.
+
+Scope Probe 의 입력 콘덴서는 12 pF 이하여야 한다.
+그렇지 않으면 Probe 가 T4 를 Detune 하여 AC Gain 을 잘못 측정한다.
+10.7 MHz 의 변조 및 최소 전압 출력을 위해 Generator 를 설정한다.
+범위를 50mV/division 으로 읽도록 설정한다.
+전원을 켜고 Scope 에 3 개 혹은 150mVpp 가 나타날 때까지 Generator 의 진폭을 천천히 높인다.
+Alignment Tool 혹은 Screwdriver 를 사용하여 T4 를 Peak 로 조정한다.
+범위에서 150mVpp 를 유지하도록 Generator 입력을 줄인다.
+Scope Probe 를 Q6 의 Base 로 옮기고 여기에 전압을 기록한다:
+
+Vb = x mVpp
+
+전원을 끈다.
+AC Gain 은 아래와 같이 계산할 수 있다:
+
+AC Gain = 150mV / Vb
+
+계산된 결과는 20 에 근접해야 한다.
+결과를 기록하라:
+
+AC Gain = x
+
+
+
+* RATIO DETECTOR ALIGNMENT METHOD #1(ALIGNMENT WITH NO TEST EQUIPMENT)
+
+Alignment Tool 혹은 Screwdriver 로
+Coil T4 와 T5 를 멈출 때까지 반 시계 방향으로 완전히 돌린다.
+너무 과도한 힘을 주지 않도록 주의한다.
+1 1/4 에서 1 1/2 로 모든 코일을 시계 방향으로 돌린다.
+
+
+
+* METHOD #2 ALIGNMENT OF RATIO DETECTOR USING A RF GENERATOR AND OSCILLOSCOPE
+
+아래와 같이 RF Generator 와 Scope 를 회로에 연결한다.
+둘 다 모두 TP15 에 그라운딩하고 Generator 와 0.001uF 를 직렬로 하여 TR Base 에 찍는다.
+그리고 Scope 는 Test Point 2 번에 찍는다.
+
+1 kHz 에서 변조된 10.7 MHz 의 Generator 를 설정하고
+최소 전압을 출력하면서 22.5 kHz 편차를 조정하라.
+Radio 를 켜고 볼륨 조절기를 최소로 돌린다.
+Scope 에서 1 kHz 사인파가 나타날 때까지 Generator 의 진폭을 증가시킨다.
+Alignment Tool 혹은 Screwdriver 를 사용하여
+분홍색 코일 T4 를 최대 진폭으로 Peak 처리한다.
+이제 파란색 코일 T5 를 최소로 최적화한다.
+전원을 끈다.
+
+
+
+* METHOD #3 ALIGNMENT OF RATIO DETECTOR USING A SWEEP GENERATOR AND OSCILLOSCOPE
+
+앞서와 동일하게 Sweep Generator 와 Scope 를 회로에 연결한다.
+Sweep Generator 를 10.7 MHz 로 설정하고 최소 전압을 출력하라.
+전원을 켜고 볼륨을 최소로 설정하라.
+"S" 곡선이 보일 때까지 Sweep Generator 의 진폭을 증가시킨다.
+Alignment Tool 혹은 Screwdriver 를 사용하여
+"S" 곡선의 각 절반이 같아질 때까지
+"S" 곡선이 가운데 맞춰질 때까지 파란색 코일 T5 를 조정하라.
+Alignment 가 최적화 될 때까지 이 단계를 반복한다.
+전원을 끈다.
+
+
+
+* SECOND FM IF AMPLIFIER
+
+두 번째 IF 증폭기의 목적은 중간 주파수(IF)의 진폭을 높이는 동시에 선택도를 제공하는 것이다.
+선택성이란 다른 방송을 거부하면서 특정 방송을 "선택"하는 기능이다.
+T3 는 10.7 MHz 주변의 신호만 통과시키는 Band Pass Filter 역할을 한다.
+저항 R19 는 두 번째 FM IF 증폭기의 3 dB Bandwidth 를 넓히는데 사용된다.
+10.7 MHz 에서의 이득은 T3 의 1차 AC 임피던스와 Q5 의 전류에 의해 고정된다.
+전류는 R16, R17, R18 에 의해 고정된다.
+콘덴서 C18, C17 은 AC 신호를 접지로 bypass 한다.
+C20 은 V+ 에서 접지까지의 bypass 콘덴서다.
+
+
+
+* ASSEMBLY INSTRUCTIONS
+
+
+
+* STATIC TESTS(Q5 BIAS)
+
+아래와 같이 VOM 을 회로에 연결한다.
+GND 를 TP15 에 접지하고 TP10 에 찍는다.
+
+전원을 켠다.
+Q5 의 Base 전압은 약 1.4V 여야 한다.
+전원을 끈다.
+이 값을 읽지 못하면 R16, R17, R18, Q5, T2 를 확인해야 한다.
+
+
+
+* DYNAMIC MEASUREMENTS(AC GAIN)
+
+RF Generator 와 Scope 를 아래와 같이 연결한다.
+둘 다 TP15 에 그라운딩하고 Generator 와 0.001uF 를 직렬 연결하여
+TP10 에 찍고 Scope 는 TP9 에 찍는다.
+
+Scope Probe 의 입력 콘덴서는 12pF 이하여야 한다.
+그렇지 않으면 Probe 가 T3 를 Detune 하여 AC Gain 을 잘못 읽게 된다.
+Generator 를 변조 및 최소 전압 출력이 없는 10.7 MHz 로 설정하라.
+구간 당 50 mV 를 읽도록 범위를 설정하고 전원을 켠다.
+Scope 에 150mVpp 혹은 3 div 가 나타날 때까지 천천히 Generator 를 증가시킨다.
+Alignment Tool 혹은 Screwdriver 를 사용하면 T3 가 Peak 로 조정된다.
+범위에 150mVpp 혹은 3 개 구획이 나타날 때까지 Generator 를 줄인다.
+Alignment Tool 혹은 Screwdriver 를 사용하면 T3 가 Peak 로 조정된다.
+범위에서 3 분할을 유지하려면 Generator 입력을 줄인다.
+Probe 를 Q5 의 Base 로 이동시키고 여기에 입력 전압을 기록한다:
+
+Vb = x mVpp
+
+전원을 끈다.
+AC Gian 은 아래와 같이 계산할 수 있다.
+
+AC Gain = 150mV / Vb
+
+계산된 결과는 약 20 이어야 한다.
+계산 결과를 기록한다:
+
+AC Gain = x
+
+
+
+* BANDWIDTH
+
+전원이 꺼진 상태에서 앞서와 동일학 장비들을 연결한다.
+Generator 를 변조 및 최소 전압 출력이 없는 10.7 MHz 로 설정한다.
+범위 당 50 mV 를 읽도록 설정한다.
+전원을 켜고 Scope 에 150 mVpp 가 나타날 때까지 천천히 Generator 진폭을 조정한다.
+필요한 경우 최대 출력을 위해 T3 을 다시 정렬하고
+Generator 를 조정하여 150 mVpp 를 유지한다.
+전압이 원래 값의 0.707, 2.1 Divisions 혹은 106 mVpp 가 될 때까지
+발전기의 주파수를 천천히 낮춘다.
+낮은 3 dB Drop-Off Point 의 주파수를 여기에 기록하라:
+
+Fl = x MHz
+
+전압이 원래 값의 0.707, 2.1 division 
+혹은 106mVpp 로 떨어질 때까지 주파수를 높이도록 한다.
+고주파 3 dB Drop-Off Point 의 주파수를 기록하라:
+
+Fh = x MHz
+
+두 번째 IF 의 Bandwidth 는 아래와 같이 계산할 수 있다:
+
+Bandwidth = Fh - Fl
+
+결과는 300 ~ 500 Hz 구간이 나와야 한다.
+
+계산 결과를 기록하라:
+
+Bandwidth = x
+
+
+
+* FIRST FM IF AMPLIFIER
+
+첫 번째 IF 증폭기의 동작은
+이득이 다르다는 것을 제외하고는 2 차 IF 증폭기와 동일하다.
+이득은 T2 의 1 차 AC 임피던스와 Q4 의 전류에 의해 설정된다.
+Q4 의 전류는 저항 R12, R13 및 R15 에 의해 설정된다.
+콘덴서 C14 및 C15 는 AC 신호를 접지로 bypass 한다.
+C13 및 C16 은 V+ Line 의 Feedback 을 방지하기 위해
+V+ 에서 접지로 bypass 하는 콘덴서다.
+R19 는 변압기 T2 의 대역폭을 넓히는데 사용된다.
+
+
+
+* ASSEMBLY INSTRUCTIONS
+
+
+
+* STATIC TESTS(Q4 BIAS)
+
+아래와 같이 VOM 을 연결한다.
+GND 를 TP15 에 그라운딩하고 TP10 에 찍는다.
+
+전원을 켜라.
+Q4 의 Base 전압은 대략 1.4V 가 되어야한다.
+이 값을 읽지 못하면 R12, R13, R15, Q4 및 T1 을 확인하라.
+
+
+
+* DYNAMIC MEASUREMENTS(AC GAIN)
+
+아래와 같이 RF Generator 및 Scope 를 연결하도록 한다.
+Generator 와 Scope 를 TP15 에 그라운딩한다.
+Generator 를 0.001uF 콘덴서와 직렬 연결하고 Base 에 찍고
+Scope 를 TP11 에 찍도록 한다.
+
+Scope Probe 는 12pF 이하의 입력 콘덴서를 가져야 한다.
+그렇지 않으면 Probe 가 T2 를 Detune 하여 AC Gain 을 잘못 측정한다.
+Generator 를 변조 및 최소 전압 출력이 없는 10.7 MHz 로 설정한다.
+구간 당 20 mV 를 읽도록 범위를 설정하고 전원을 켠다.
+Scope 에 3 개 구획 혹은 60 mVpp 가 나타날 때까지
+천천히 Generator 의 진폭을 증가시킨다.
+Alignment Tool 혹은 Screwdriver 로 T2 를 조정하여 Peak 를 얻는다.
+Scope 에서 3 개의 구간을 유지하려면 Generator 입력을 줄인다.
+Scope Probe 를 Q4 의 Base 로 이동시키고 여기에 입력 전압을 기록한다:
+
+Vb = x mVpp
+
+전원을 끈다.
+AC Gain 은 아래와 같이 계산될 수 있다:
+
+AC Gain = 60 mV / Vb
+
+계산 결과는 10 근처가 나와야 한다.
+계산 결과를 기록하라:
+
+AC Gain = x
+
+
+
+* BANDWIDTH
+
+위와 동일하게 장비를 연결한다.
+Generator 를 변조 및 최소 전압 출력이 없는 10.7 MHz 로설정한다.
+범위 당 20 mV 를 읽도록 설정한다.
+전원을 켜고 Scope 에 60 mVpp 가 나타날 때까지
+천천히 Generator 의 진폭을 증가시킨다.
+전압이 원래 값의 0.707, 2.1 Divisions
+혹은 42 mVpp 가 될 때까지 Generator 의 주파수를 증가시킨다.
+높은 3 dB Drop-Off Point 의 주파수를 기록하라:
+
+Fh = x MHz
+
+전압이 원래 값인 2.1 Divisions 혹은 42 mVpp 의 0.707 구간으로 떨어질 때까지
+Generator 의 주파수를 낮추도록 한다.
+낮은 3 dB Drop-Off Point 의 주파수를 기록하라:
+
+Fl = x MHz
+
+첫 번째 IF 의 Bandwidth 는 아래와 같이 계산될 수 있다:
+
+Bandwidth = Fh - Fl
+
+계산 결과는 300 ~ 500 kHz 가 나와야 한다.
+계산 결과를 기록하라:
+
+Bandwidth = x kHz
+
+
+
+* FM RF AMPLIFIER, MIXER, OSCILLATOR, AND AFC STAGE
+
+Superheterodyne Receiver 에서 전파가 방출된 다음
+LO(Local Oscillator) 와 혼합되어 IF(Intermediate Frequency) 를 생성한다.
+첫 번째 단계는 Radio Station 을 선택하고 증폭하는 RF 증폭기다.
+두 번째 단계는 원하는 Radio Station 주파수보다
+10.7 MHz 높은 주파수에서 발진하는 Local Oscillator 에 해당한다.
+세 번째 단계는 증폭된 전파가 Local Oscillator 와
+Heterodyning 되는 Mixing 단계에 해당한다.
+Mixing 절차 동안 10.7 MHz 의 차이가 나는 주파수가 생성된다.
+이 차이가 나는 주파수는 FM Radio 의 IF 로 사용된다.
+TR(Q3) 의 Collector 는 차동 주파수로만 튜닝된 IR Transformer(T1) 을 포함한다.
+이 Transformer 는 10.7 MHz 근처의 주파수를 제외한 모든 주파수를 차단한다.
+T1 은 또한 10.7 MHz Signal 을 첫 번째 FM IF 증폭기에 연결한다.
+RF 증폭기와 발진기는 Radio 가 다른 Station 을 위해 튜닝될 때
+변경되는 유일한 2 개의 공진 회로에 해당한다.
+Radio Station 이 발진기 주파수보다 10.7 MHz 이상 존재할 수 있기 때문에
+RF Stage 에서 이 Station 을 거부하고
+발진기 주파수보다 10.7 MHz 낮은 방송국만 선택하는 것이 중요하다.
+
+Oscillator 보다 10.7 MHz 높은
+원하지 않는 Station 의 주파수를 Image Frequency 라 한다.
+이 FM 수신기에는 RF 증폭기가 있기 때문에 Image Frequency 가 크게 감소한다.
+저항(R9) 와 콘덴서(C12) 는 IF Stage 의 전압으로부터 Tuner 의 전압을 분리시킨다.
+
+
+
+* MIXER ASSEMBLY INSTRUCTIONS
+
+
+
+* STATIC MEASUREMENTS(Q3 BIAS)
+
+전원을 끄고 아래와 같이 VOM 을 회로에 연결한다.
+TP15 에 그라운딩하고 TP13 에 찍는다.
+
+VOM 을 9V DC 에 놓고 전원을 켠다.
+Q3 의 Base 에 있는 DC 전압은 약 1.8V 여야 한다.
+응답이 2V 이상 변하면 전원을 끄고 R7, R8, R11, Q3 구성요소를 점검한다.
+
+
+
+* DYNAMIC MEASUREMENTS(AC GAIN)
+
+Mixer 의 AC Gain 은 T1 의 1 차 임피던스와 Q3 에 흐르는 전류에 의해 설정된다.
+Q3 의 전류는 저항 R7, R8, R11 에 의해 설정된다.
+아래와 같이 테스트 장비를 회로에 연결하도록 한다.
+Generator 와 Scope 모두 TP15 에 그라운딩하고
+Generator 와 0.001uF 콘덴서를 직렬로 연결하여 TP13 에 찍는다.
+그리고 Scope 는 TP12 에 찍도록 한다.
+
+Scope Probe 의 입력 콘덴서는 12pF 이하여야 한다.
+그렇지 않으면 Probe 가 T1 을 Detune 하여 잘못된 측정 결과를 초래한다.
+구간당 10 mV 를 읽도록 범위를 설정하라.
+RF Generator 를 변조 최소 전압 출력이 없는 10.7 MHz 로 설정한다.
+전원을 켜고 Scope 에 4 개 혹은 40 mVpp 가 나타날 때까지
+Generator 의 진폭을 천천히 높여주도록 한다.
+Alignment Tool 혹은 Screwdriver 를 사용하여 T1 을 조정하라.
+Scope 에서 4 Divisions 를 유지하려면 Generator 진폭을 줄이도록 한다.
+Scope Probe 를 Q3 의 Base 로 이동시키고 여기에 입력 전압을 기록하라:
+
+Vb = x mVpp
+
+전원을 끈다.
+Gain 은 아래와 같이 계산할 수 있다.
+
+AC Gain = 40 mV / Vb
+
+계산 결과는 3 근처에 있어야 한다.
+계산 결과를 기록한다:
+
+AC Gain = x
+
+Generator 로부터의 Signal 이 Q3 의 Emitter 에서 입력되므로
+Emitter 저항은 접지로 bypass 되지 않는다.
+이것이 Mixer 의 Gain 이 다른 IF Stage 와 비교하여 낮은 이유다.
+
+
+
+* BANDWIDTH TEST
+
+위와 동일하게 테스트 장비를 회로에 연결한다.
+Generator 를 변조 및 최소 전압 출력이 없는 10.7 MHz 로 설정한다.
+구간 당 10 mV 의 범위를 설정한다.
+전원을 켜고 Scope 에 40 mVpp 가 나타날 때까지
+Generator 의 진폭을 천천히 높이도록 한다.
+전압이 원래 값의 0.707, 2.8 Divisions 
+혹은 28 mVpp 가 될 때까지 주파수를 높인다.
+그리고 이 때의 주파수를 기록한다.
+낮은 3 dB Drop-Off Point 를 기록한다:
+
+Fl = x MHz
+
+전원을 끈다.
+아래와 같이 Bandwidth 를 계산할 수 있다.
+
+Bandwidth = Fh - Fl
+
+계산 결과는 300 ~ 500 kHz 가 나와야 한다.
+계산 결과를 기록하라:
+
+Bandwidth = x kHz
+
+
+
+* FM OSCILLATOR ASSEMBLY INSTRUCTIONS
+
+
+
+* STATIC MEASUREMENTS(Q2 BIAS)
+
+VOM 을 아래와 같이 연결하도록 한다.
+TP15 에 그라운딩하고 Q2 의 Base 를 찍는다.
+
+VOM 을 9V 에 놓고 전원을 켠다.
+Q2 의 Base 전압은 약 4V 여야 한다.
+전원을 끈다.
+이 측정 값을 얻지 못하면 R4, R5, Q2 를 확인한다.
+
+
+
+* AFC
+
+Radio 가 Station 에 맞춰지면 해당 Station 에 고정되는 것이 좋다.
+온도, 전압 및 다른 효과로 인해 Local Oscillator 를 변경할 수 있다.
+이 경우 10.7 MHz 의 중심 주파수가 유지되지 않는다.
+자동 주파수 제어(AFC)는 10.7 MHz 중심 주파수를 유지하는데 사용된다.
+Local Oscillator 가 Drift 되면 Ratio Detector 는 DC "보정" 전압을 생성한다.
+Audio Signal 은 이 DC 보정 전압을 사용한다.
+이 Signal 은 순수 DC 전압이 생성되도록
+Audio 를 제거하는 Filter Network 에 공급된다.
+이 전압은 Varactor(버랙터)라 불리는 특별한 Diode 에 공급된다.
+버랙터는 전압이 가해질 때 내부 콘덴서를 변경한다.
+Ratio Detector Diode 는 10.7 MHz 중심 주파수가 증가할 때
+DC 보정 전압이 감소하는 형식으로 구성된다.
+마찬가지로 10.7 MHz 의 중심 주파수가 감소하면 DC 보정 전압이 증가한다.
+이 전압 변화는 버랙터의 콘덴서를 변화시킨다.
+버랙터는 Q2 의 Emitter 에 연결되어있고
+버랙터의 모든 콘덴서 변화가 Oscillator 의 Emitter 에서 보여진다.
+Q2 의 Emitter 에서 콘덴서가 변경되면 LO 의 발진 주파수가 변경된다.
+
+
+
+* AFC ASSEMBLY INSTRUCTIONS
+
+아래와 같이 RF Generator 와 VOM 을 회로에 연결한다.
+Generator 와 VOM 을 모두 TP15 에 그라운딩하고
+RF Generator 와 0.001uF 콘덴서를 직렬 연결하여 TP13 에 찍는다.
+VOM 은 AFC, R30, C27 을 이어주는 구간에 찍는다.
+
+VOM 을 9V DC 로 설정한다.
+Generator 를 10.7 MHz 로 설정하고
+변조 없는 적당한 신호 강도 출력을 설정한다.
+전원을 켠다.
+D1 의 전압을 기록한다.
+
+V(D1) = x
+
+VOM 을 보면서 천천히 Generator 이 주파수를 감소시킨다.
+주파수가 감소함에 따라 D1 에서의 전압이 증가해야 한다.
+전압이 V(D1) 와 같아질 때까지 Generator 의 주파수를 증가시킨다.
+VOM 을 보면서 Generator 의 주파수를 증가시킨다.
+주파수가 증가함에 따라 D1 에서의 전압은 감소해야 한다.
+이 보정 전압은 Generator 가 표류하지 않도록 한다.
+D1 의 전압이 여전히 D1 에서 변경되지 않으면 D1, R29, R30, C26, C27 을 확인하라.
+이 부품들이 올바르게 삽입되어 있고 D1 의 전압이 전혀 변하지 않으면
+Generator 의 진폭을 높이고 동일한 단계를 다시 반복한다.
+전원을 끈다.
+
+
+
+* RF AMPLIFIER ASSEMBLY INSTRUCTIONS
+
+
+
+* STATIC MEASUREMENTS(Q1 BIAS)
+
+아래와 같이 VOM 을 회로에 연결한다.
+TP15 에 그라운딩하고 Q1 의 Base 에 찍는다.
+
+Q1 의 Base 전압은 약 1.6V 여야 한다.
+이 값을 읽지 못하면 R1, R2, R3, Q1 을 확인하라.
+
+
+
+* ANTENNA FM ASSEMBLY
+
+아래와 같이 2 개의 나사를 사용하여 Antenna 를 PCB 에 장착하라.
+알림:
+일부 Antenna 에는 나사 구멍이 하나만 있다.
+
+나머지 점퍼 선의 양단에서 2 1/2" Wire 를 절단하고 1/4" 절연체를 벗긴다.
+이 위치엔 Wire 용 구멍이 없으므로 그림과 같이 Wire 를 Pad 에 납땜한다.
+
+
+
+* FM FINAL ALIGNMENTS
+
+최종 Alignment 단계에는 2 가지 절차가 있다.
+첫 번째 정렬 절차는 Test 장비가 없는 사람들을 위한 것이고
+두 번째 절차는 테스트 장비를 가진 사람들을 위한 것이다.
+
+"Magic Wand" 는 FM Oscillator Circuit 과 FM RF 증폭기를 Align 하는데 사용된다.
+"Magic Wand" 의 황동 끝이 FM Oscillator Coil L3 근처에 놓이면
+Inductance 가 제거된 것처럼 코일이 반응한다.
+마찬가지로 "Magic Wand" 의 철 끝이 Coil L3 근처에 놓이면
+Inductance 가 추가된 것처럼 반응한다.
+RF Coil L1 및 L2 에 대해서도 마찬가지다.
+공진 회로의 Inductance 가 변화하면 공진 주파수도 변화한다.
+
+Oscillator 와 RF Circuit 을 Align 할 때
+Coil L1 및 L3 는 Band 의 하단에서 조정될 것이며
+Oscillator 와 RF Trimmer 콘덴서는 Band 의 높은쪽 끝에서 조정된다.
+이것은 RF 증폭기가 Oscillator 를 적절하게 추적할 수 있도록 수행된다.
+
+
+
+* ALIGNMENT WITH NO TEST EQUIPMENT
+
+Alignment Tool 혹은 Screwdriver 로
+Coil T1, T2, T3 를 완전히 반 시계 방향으로 돌린다.
+너무 세게 Coil 에 힘을 주지 않도록 한다.
+각 Coil 을 약 1 1/4 ~ 1 1/2 돌리도록 한다.
+
+
+
+* IF ALIGNMENT
+
+Alignment Tool 혹은 Screwdriver 로
+Coil T1, T2, T3 를 완전히 반 시계 방향으로 돌린다.
+너무 세게 Coil 에 힘을 주지 않도록 한다.
+각 Coil 을 약 1 1/4 ~ 1 1/2 돌리도록 한다.
+
+최상의 결과를 위해 제공된 이어폰을 사용하라.
+FM 으로 Switch 를 셋팅한다.
+VOM 을 아래와 같이 회로에 연결한다.
+TP15 에 그라운딩하고 TP2 에 찍는다.
+
+Radio 를 켜고 Radio 를 약한 Station 에 맞춘다.
+볼륨을 낮은 수준으로 유지하는 것이 가장 좋다.
+VOM 의 최소 전압을 T1 으로 조정한다.
+필요한 경우 볼륨을 줄인다.
+T2 에서 VOM 의 최소 전압을 조정하고 필요한 경우 볼륨을 줄인다.
+T3 에서 VOM 의 최소 전압을 조정하고 필요한 경우 볼륨을 줄인다.
+Coil 을 조정할 때 왜곡 및 잡음이 덜 들린다.
+FM IF Gain 이 최적화 될 때까지 이 절차를 반복한다.
+이 절차는 FM IF 증폭기를 최대 Gain 으로 Peak 처리한다.
+
+
+
+* DETECTOR ALIGNMENT
+
+VOM 의 최소 전압을 T4 로 조정한다.
+최소 왜곡을 위해 T5 를 조정한다.
+Ratio Detector Alignment 가 최적화 될 때까지 이 두 단계를 반복한다.
+
+
+
+* OSCILLATOR ALIGNMENT
+
+Radio 를 90 MHz 주변의 알려진 Station 으로 조정한다.
+Station 이 발견되고 방송 주파수가 알려지면
+흰색 포인터가 Dial 의 해당 방송 주파수가 align 될 때까지 Dial 을 돌린다.
+"Magic Wand" 를 사용하여 황동 끝을 Coil L3 근처에 놓는다.
+
+방송이 들리면 L3 에 필요한 Inductance 가 줄어든다.
+방송이 들릴 때까지 L3 를 조심스럽게 당겨 빼낸다.
+철재 끝을 L3 근처에 놓는다.
+방송이 들리면 L3 에 더 많은 Inductance 가 필요함을 의미한다.
+방송이 들릴 때까지 L3 를 함께 조심스럽게 누른다.
+L3 을 약간 당기거나 누를 경우 Coil 공진 주파수에 큰 영향을 미친다.
+포인터가 Station 의 주파수에 맞춰질 때까지 이 단계를 반복한다.
+Radio 를 106 MHz 주변의 방송으로 조정한다.
+방송이 발견되고 방송 주파수가 알려지면
+흰색 포인터가 Dial 의 해당 방송 주파수와 Align 될 때까지 Dial 을 돌린다.
+"Magic Wand" 의 황동 끝을 L3 근처에 놓는다.
+방송이 들리면 L3 에 더 많은 Capacitance 가 필요하다는 의미다.
+방송이 들릴 때까지 Gang 뒤쪽의 FM Oscillator Trimmer 를 조심스럽게 조정한다.
+"Magic Wand" 의 철제 끝을 L3 근처에 놓는다.
+방송이 들리면 L3 의 Capacitance 가 줄어든다.
+방송이 들릴 때까지 Gang 뒤쪽의 FM Oscillator Trimmer 를 조정하도록 한다.
+포인터가 Station 의 주파수에 맞춰질 때까지 이 단계를 반복한다.
+Oscillator Coil L3 와 Oscillator Trimmer 콘덴서 모두를 조정하면
+Oscillator 의 주파수가 영향을 받으므로
+FM Oscillator Alignment 가 최적화될 때까지 이 절차를 반복하는 것이 좋다.
+이 절차는 FM Oscillator 범위를 98.7 MHz ~ 118.7 MHz 로 설정한다.
+
+
+
+* RF ALIGNMENT
+
+L1 과 L2 를 함께 누른다.
+약간의 틈새를 만들어 Coil L1 을 벌린다.
+간격은 1/32" ~ 1/16" 사이여야 한다.
+이 절차는 RF 추적을 설정한다.
+Coil Gap 하기 위해 제공된 특수 Coil Spacer 를 사용하도록 한다.
+Coil 사이에 Coil Spacer 를 조심스럽게 밀어 넣어 간격을 확보한다.
+
+이것으로 FM Radio Alignment 가 완료된다.
+방송이 들리지 않는다면 다른 FM Radio 를 청취하여
+해당 위치에 FM Signal 이 들리는지 확인한다.
+FM Signal 여전히 들어오지 않는다면
+각 단계에서 잘못된 값과 납땜 불량을 확인하도록 한다.
+
+
+
+* ALIGNMENT WITH RF GENERATOR AND OSCILLOSCOPE IF ALIGNMENT
+
+FM Section 으로 스위칭한다.
+RF Generator 와 Scope 를 아래와 같이 연결하도록 한다.
+둘다 TP15 에 그라운딩하고 Generator 는 TP14 를 찍고 Scope 는 TP2 를 찍는다.
+그리고 Q2 의 Base 와 Emitter 를 쇼트시키도록 한다.
+
+RF Generator 를 최소 전압 출력에서 1 kHz 편차로 변조된 10.7 MHz 로 설정한다.
+Scope 를 50 mV 를 읽도록 설정한다.
+Clip Lead 로 Q2 의 Base 와 Emitter 를 쇼트시킨다.
+이 단락은 Local Oscillator 를 "죽인다".
+
+전원을 켠다.
+Scope 에 1 kHz 신호가 나타날 때까지 천천히 Generator 의 진폭을 증가시킨다.
+IF 섹션이 제한을 받지 않도록 Generator 를 낮은 수준의 출력으로 유지한다.
+Alignment Tool 혹은 Screwdriver 를 사용하여
+T1 에서 Scope Peak 의 크기를 조정한다.
+필요한 경우 입력 신호의 진폭을 줄이도록 한다.
+T2 Peak 를 조정하고 필요한 경우 입력 신호의 진폭을 줄인다.
+IF Alignment 가 최적화 될 때까지 이 단계를 반복한다.
+이 절차는 FM IF 증폭기를 10.7 MHz 로 조정한다.
+
+
+
+* OSCILLATOR ALIGNMENT
+
+Clip Lead 를 제거하고 1 kHz, 22.5 kHz 편차 및 최소 전압 출력에서
+88 MHz 변조기로 Generator 를 설정한다.
+Scope 에서 1 kHz 신호가 보일 때까지 Radio 를 조정한다.
+Generator 의 진폭을 늘려야 할 수도 있다.
+흰색 포인터가 88 MHz 에 맞춰질 때까지 Dial 을 돌린다.
+"Magic Wand" 를 사용하여 황동 끝을 L3 근처에 놓는다.
+Scope 에 표시된 Signal 이 증가하면 L3 에 필요한 Inductance 가 감소한다.
+Inductance 를 제거하려면 Coil L3 을 조심스럽게 펼친다.
+풀리거나 Coil L3 을 함께 누르면 소량은 Coil 의 공진 주파수에 큰 영향을 미친다.
+"Magic Wand" 의 철제 끝을 L3 근처에 놓는다.
+Scope 에 표시된 Signal 이 증가하면 L3 에 더 많은 Inductance 가 필요하다는 의미다.
+Inductance 를 추가하려면 Coil L3 을 조심스럽게 누른다.
+"Magic Wand" 양쪽 끝의 신호가 감소할 때까지 이 단계를 반복한다.
+Generator 의 주파수를 108 MHz 로 높인다.
+Scope 에서 1 kHz 신호가 보일 때까지 Radio 를 조정한다.
+흰색 포인터가 108 MHz 에 맞춰질 때까지 Dial 을 돌린다.
+"Magic Wand" 의 황동 끝을 L3 근처에 놓는다.
+Scope 의 신호가 증가하면 L3 에 더 많은 Capacitance 가 필요하다는 의미다.
+1 kHz 신호가 최고가 될 때까지 Gang 에 FM Oscillator Trimmer 를 조정한다.
+"Magic Wand" 의 철제 끝을 L3 근처에 놓는다.
+신호가 증가하면 Coil L3 의 Capacitance 가 줄어든다.
+1 kHz 신호가 Peak 에 도달할 때까지 Gang 에 FM Oscillator Trimmer 를 조정한다.
+"Magic Wand" 양쪽 끝의 신호가 감소할 때까지 이 두 단계를 반복한다.
+Oscillator Coil L3 과 Oscillator Trimmer 를 모두 조정하면
+발진 주파수가 영향을 받으므로
+Oscillator Alignment 가 최적화 될 때까지 이 절차를 반복하는 것이 좋다.
+이 절차는 FM Oscillator 범위를 98.7 MHz ~ 118.7 MHz 로 설정한다.
+
+
+
+* RF ALIGNMENT
+
+Generator 를 1 kHz, 22.5 kHz 편차
+및 최소 전압에서 변조된 90 MHz 주변 주파수로 설정한다.
+1 kHz Tone 이 들릴 때까지 Radio 를 조정한다.
+RF Coil L1 근처에 "Magic Wand" 의 황동 끝을 놓는다.
+Scope 의 신호가 증가하면 Coil L1 에 필요한 Inductance 가 작음을 의미한다.
+Inductance 를 줄이려면 Coil L1 을 조심스럽게 펼친다.
+지팡이의 철제 끝을 L1 가까이에 놓는다.
+신호가 증가하면 Coil L1 에 더 많은 Inductance 가 필요함을 의미한다.
+Coil L1 을 조심스럽게 눌러 Inductance 를 증가시킨다.
+Scope 의 신호가 "Magic Wand" 의 양 끝에서 줄어들 때까지 이 절차를 반복한다.
+Generator 를 106 MHz 근처의 주파수로 증가시킨다.
+1 kHz Tone 이 들릴 때까지 Radio 를 조정한다.
+L1 근처에 "Magic Wand" 의 황동 끝을 놓는다.
+신호가 증가하면 Coil L1 이 더 많은 Capacitance 를 필요로 함을 의미한다.
+Alignment Tool 혹은 Screwdriver 로 FM Antenna Trimmer 를 조정한다.
+신호가 증가하면 Coil L1 의 Capacitance 가 줄어든다.
+Scope 에 Peak 가 보일 때까지 조심스럽게 FM Antenna Trimmer 를 조정한다.
+Scope 의 신호가 "Magic Wand" 의 양 끝에서 모두 줄어들 때까지 이 절차를 반복한다.
+RF Coil L1 과 Antenna Trimmer 를 모두 조정하면 RF Stage 의 이득에 영향을 주므로
+RF 증폭기 Alignment 가 최적화 될 때까지 이 절차를 반복하는 것이 좋다.
+이 과정은 FM Oscillator Stage 를 "track" 하도록 RF Stage 를 설정한다.
+
+이것으로 FM Radio Section 의 Alignment 가 완료된다.
+Station 이 들리지 않으면 근처의 다른 FM Radio 를 청취하여
+FM Signal 이 사용자 근처에 있는지 확인하도록 한다.
+FM Section 이 여전히 수신되지 않으면
+돌아가서 각 단계에서 잘못된 값과 납땜 불량 여부를 확인하라.
+
+
+
+* FM RADIO HIGHLIGHTS
+
+1. FM Broadcast Band 는 88 MHz ~ 108 MHz 의 주파수 범위를 커버한다.
+
+2. 최대 15 kHz 의 Audio Signal 이 FM 반송파(Carrier) 에서 전송된다.
+
+3. RF Carrier 가 주파수를 변경하는 양은 변조 신호의 진폭에 의해 결정된다.
+
+4. 일정 기간 동안 Carrier 주파수가 변하는 횟수는
+   Audio 주파수와 정확히 동일하다.
+
+5. 주파수의 변화를 편차라하며 Monaural FM 의 경우 75 kHz 로 제한된다.
+
+6. FM 에 할당된 Bandwidth 는 200 kHz 에 해당한다.
+
+
+
+* DC VOLTAGES
+
+
+
+* SPECIFICATIONS(Audio)
+
+Frequency Response 3 dB 가 8 ohm 부하 저항으로 떨어진다.
+Low End 800 MHz ~ High End 120 kHz
+총 고조파 왜곡시 최대 출력 10%
+500 mW
+1000 Hz 에서 일반적인 Audio Gain: 150
+100 mW 출력에서의 일반적인 왜곡률: 2% 미만
+
+
+
+* AM Radio Specifications
+
+튜닝 범위 - 520 kHz ~ 1620 kHz
+IF 주파수 - 455 kHz
+Tracking = 700 kHz ~ 1400 kHz 까지의 3 dB
+일반적인 200 uV 에서 10 dB SNR
+
+
+
+* FM Radio Specifications
+
+튜닝 범위 = 88 MHz ~ 108 MHz
+IF 주파수 - 10.7 MHz
+90 MHz 에서 106 MHz 까지 Tracking + 5 dB
+12 uV 에서 10 dB SNR
+Ratio Detector 및 Full Time Auto Frequency Control 사용
+
+
+
+* QUIZ
+
+
+
+* AM/FM Radio Baffle
+
+주의:
+키트 상자 보관에 주의하도록 한다.
+Radio 를 완료하고 만족스럽게 작동하면
+Baffle 을 설치하여 Sound 를 향상시킬 수 있다.
+
+마지막 단계는 Speaker 에 Baffle 을 조립하고 부착하는 것이다.
+상자의 바닥에 있는 Baffle 을 제거한다.
+칼을 사용하여 잘라 내도록 한다.
+
+Speaker 가 밀폐되어 있지 않으면 음파가 모든 방향으로 이동할 수 있다.
+Speaker 가 바깥쪽으로 움직이면
+Speaker 는 앞쪽의 공기에 양의 압력을 만들고 뒤쪽에 음수의 압력을 생성한다.
+저주파에서는 앞뒤 파형이 서로 섞여 음파가 부분적으로 또는 전체적으로 제거된다.
+최종 결과는 Speaker 의 효율성이 낮고 왜곡된다.
+
+저주파 영향을 제거하기 위해 Speaker 는 밀봉된 곳 안에 배치되어야 한다.
+이제 전방 음파가 뒤쪽으로 이동하는 것을 방지한다.
+이제 Speaker 는 내부의 공기를 압축 및 압축 해제하며
+자유 공기 값에 비례하여 공진 주파수와 Q 를 증가시킨다.
+이러한 유형의 공기 밀폐형 상자를 Acoustic Suspension 이라고 한다.
+
+1. 한 쪽 가장자리에서 시작하여 상자 바닥에서 Baffle 의 윤곽을 잡는다.
+
+2. 4 개의 Flap 을 위쪽으로 구부리도록 한다.
+
+3. 윗면을 위로 구부린다.
+
+4. 양면을 위로 구부린다.
+   접착제를 사용하여 3 개의 면을 부착한다.
+
+5. 아래쪽 면을 위쪽으로 구부리고 접착제를 사용하여 다른면에 붙인다.
+   2 개의 장착 Flap 을 아래로 구부린다.
+
+6. Baffle 을 Speaker 위에 놓는다.
+   장착 구멍을 정렬하고 2 개의 나사와 2 개의 너트를 사용하여 장착한다.
+   나사는 Baffle Flap 의 X 표시를 통과해야 한다.
+
+선택 사항:
+공기의 밀폐를 유지하려면
+PCB 보드와 Baffle 모서리 사이에 접착제로된 Bead 를 배치하라.

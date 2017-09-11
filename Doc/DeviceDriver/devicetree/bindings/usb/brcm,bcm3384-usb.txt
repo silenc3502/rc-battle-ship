@@ -1,0 +1,23 @@
+* Broadcom USB controllers
+
+Required properties:
+- compatible: "brcm,bcm3384-ohci", "brcm,bcm3384-ehci"
+
+  These currently use the generic-ohci and generic-ehci drivers.  On some
+  systems, special handling may be needed in the following cases:
+
+  - Restoring state after systemwide power save modes
+  - Sharing PHYs with the USBD (UDC) hardware
+  - Figuring out which controllers are disabled on ASIC bondout variants
+
+
+* Broadcom USB 컨트롤러
+
+필수 속성 :
+- 호환 : "brcm, bcm3384-ohci", "brcm, bcm3384-ehci"
+
+   현재는 generic-ohci 및 generic-ehci 드라이버를 사용합니다. 일부 시스템에서는 다음과 같은 경우에 특수 처리가 필요할 수 있습니다.
+
+   - 시스템 전체 절전 모드 이후의 상태 복원
+   - USBD (UDC) 하드웨어로 PHY 공유
+   - ASIC 본드 아웃 변형에서 사용할 수없는 컨트롤러 파악

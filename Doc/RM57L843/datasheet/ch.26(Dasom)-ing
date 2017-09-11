@@ -1,0 +1,343 @@
+-1143p
+Controller Area Network (DCAN) Module - Non-host bus방식의 네트워크 프로토콜 
+ ㄴ http://www.ni.com/white-paper/2732/ko/ 
+ ㄴ http://www.eskorea.net/html/data/technique/ESUpdate200811.pdf
+
+26.1 Overview 개요
+  26.1.1 Features 기능
+  26.1.2 Functional Description 기능 설명 
+26.2 CAN Blocks CAN 블록
+  26.2.1 CAN Core
+  26.2.2 Message RAM
+  26.2.3 Message Handler
+  26.2.4 Message RAM Interface 메세지 RAM 인터페이스
+  26.2.5 Register and Message Object Access 레지스터와 메세지 객체 액세스
+  26.2.6 Dual Clock Source 
+26.3 CAN Bit Timing CAN 비트 타이밍
+  26.3.1 Bit Time and Bit Rate
+    26.3.1.1 Synchronization Segment 동기화 세그먼트
+    26.3.1.2 Propagation Time Segment 전파 시간 세그먼트
+    26.3.1.3 Phase Buffer Segments and Synchronization 위상 버퍼 세그먼트 및 동기화
+    26.3.1.4 Oscillator Tolerance Range 발진기 허용 오차 범위
+  26.3.2 DCAN Bit Timing Registers
+    26.3.2.1 Calculation of the Bit Timing Parameters 비트 타이밍 매개 변수 계산
+    26.3.2.2 Calculation of BRP Values BRP 값 계산
+    26.3.2.3 Example for Bit Timing at High Baudrate 높은 Baudrate에서의 비트 타이밍 예
+    26.3.2.4 Example for Bit Timing at Low Baudrate 낮은 Baudrate에서의 비트 타이밍 예
+26.4 CAN Module Configuration CAN 모듈 구성
+   26.4.1 DCAN RAM Initialization Through Hardware 하드웨어를 통한 DCAN RAM 초기화  
+   26.4.2 CAN Module Initialization CAN 모듈 초기화
+    26.4.2.1 Software Configuration of CAN Bit Timings CAN 비트 타이밍의 소프트웨어 구성
+    26.4.2.2 Configuration of Message Objects 메시지 개체 구성
+
+26.5 Message RAM 메세지 RAM
+26.6 Message Interface Register Sets 메세지 인터페이스 레지스터 세트
+26.7 Message Object Configurations 메시지 개체 구성
+26.8 Message Handling 메세지 처리
+26.9 CAN Message Transfer CAN 메세지 전송
+26.10 Interrupt Functionality 인터럽트 기능
+26.11 Global Power Down Mode 전역 전원 종료 모드
+26.12 Local Power Down Mode 지역 전원 종료 모드
+26.13 GIO Support GIO 지원
+26.14 Test Modes 테스트 모드
+26.15 SECDED Mechanism SECDED 메커니즘
+26.16 Debug/Suspend Mode 디버그/일시 중단 모드
+26.17 DCAN Control Registers DCAN 제어 레지스터
+
+이 장에서는 DCAN 모듈의 수퍼 셋 구현에 대해 설명합니다. DMA 관련 기능의 적용 가능성, DCAN IP의 인스턴스 수 및 사용중인 특정 장치에서 지원되는 사서함 수를 확인하려면 장치 별 데이터 시트를 참조하십시오.
+
+-1144p
+26.1 Overview 개요 
+Controller Area Network는 분산 실시간 응용 프로그램을위한 높은 무결성, 직렬, 다중 마스터 통신 프로토콜입니다. 
+이 CAN 모듈은 ISO 11898-1에 따라 구현되며 산업, 자동차 및 일반 임베디드 통신에 적합합니다.
+
+26.1.1 Features 기능
+DCAN 모듈은 아래와 같은 기능을 제공 합니다.
+
+ Protocol
+- CAN 프로토콜 버전 2.0 파트 A, B 지원
+
+ Speed
+- 최대 1 MBit/s의 비트 전송률
+
+ MailBox - 메세지가 왔음을 알리는 것으로 이해하면 좋을듯.
+- 구성 가능한 메시지 개체
+- 각 메시지 객체에 대한 개별 식별자 마스크
+- 메시지 객체를 위한 프로그래밍 가능한 FIFO 모드
+
+ High Speed MailBox Access
+- 메시지 RAM에 대한 DMA 액세스
+
+ Power ( 뒤에 상세한 내용이 있음 )
+- 전역 전원 종료 및 실행 지원
+- 지역 전원 종료 및 실행 지원
+
+ Debug ( 뒤에 상세한 내용이 있음 )
+- 디버그 지원을위한 일시 중단 모드
+- 자체 테스트 작동을 위한 프로그래밍 가능한 루프백 모드
+- 테스트 모드에서 메시지 RAM에 직접 액세스
+- 2 개의 인터럽트 라인을 지원합니다 - 레벨 0과 레벨 1
+
+ Others ( 왠지 뒤에 상세한 내용이 있을 것 같다 )
+- 자동 메시지 RAM 초기화
+- 프로그램 가능한 32 비트 타이머에 의한 버스 오프 상태 후 자동 버스 온
+- 범용 IO 핀으로 구성 가능한 CAN Rx / Tx 핀
+- 소프트웨어 모듈 재설정
+- SECDED 메커니즘이있는 메시지 RAM
+- 지터(잡음)를 줄이기위한 듀얼 클럭 소스
+
+ 26.1.2 Functional Description 기능 설명 
+- CAN 프로토콜은 직렬 데이터 통신을위한 ISO 표준 (ISO 11898)입니다. 이 프로토콜은 NRZ (Non-Return To Zero)를 비트 스터핑과 함께 사용합니다. 그리고 통신은 2 선식 평형 신호 방식으로 수행됩니다.
+ㄴ NRZ ( bit가 0이더라도 전류가 0이 되지 않는 방식 ) 
+ㄴ 비트 스터핑 : 전송된 데이터열에 여분의 비트를 삽입하는 것. 비트 스터핑은 특수한 비트열이 확실히 원하는 위치에만 나타나도록 하기 위해 사용한다.
+
+- DCAN 데이터 통신은 CAN_TX 및 CAN_RX 핀을 통해 발생합니다. 물리적 레이어 (CAN 버스) CAN_High 및 CAN_Low에 연결하려면 추가 트랜시버 하드웨어가 필요합니다.
+
+- DCAN 레지스터 세트는 CPU에 의해 직접 액세스 될 수 있습니다. 이 레지스터는 CAN 모듈과 메시지 RAM을 제어하고 구성하는 데 사용됩니다.
+
+- 개별 CAN 메시지 객체는 CAN 네트워크를 통한 통신을 위해 구성되어야합니다. 메시지 객체 및 식별자 마스크는 메시지 RAM에 저장됩니다.
+
+- CAN 모듈은 허용 필터링, 메시지 RAM과의 메시지 전송, 전송 요청 처리 및 인터럽트 또는 DMA 요청 생성과 같은 기능을 내부적으로 처리합니다
+
+-1145p
+26.2 CAN Blocks
+DCAN 모듈 (그림 26-1)은 다음 기본 블록으로 구성됩니다.
+
+ 26.2.1 CAN Core
+CAN 코어는 CAN 프로토콜 컨트롤러와 Rx / Tx 시프트 레지스터로 구성됩니다. 모든 ISO 11898-1 프로토콜 기능을 처리합니다.
+
+ 26.2.2 Message RAM 
+DCAN 메시지 RAM은 CAN 메시지를 저장할 수 있습니다. 
+실제 장치 데이터 시트는 메시지 RAM 주소의 세부 정보를 제공합니다. ( 26.5 구조도 참고 )
+
+ 26.2.3 Message Handler
+메시지 핸들러는 단일 포트 메시지 RAM과 CAN 코어의 Rx / Tx 시프트 레지스터 간의 데이터 전송을 제어하는 상태 장치입니다. 또한 제어 레지스터에 프로그래밍 된 수용 필터링 및 인터럽트 / DMA 요청 생성을 처리합니다.
+
+-1146p
+ 26.2.4 Message RAM Interface 메세지 RAM 인터페이스 ( 뒤에 IF1, 2, 3에 대한 비트 세팅 영역이 기술되 있음 )
+인터페이스 레지스터 세트는 메시지 RAM에 대한 CPU 읽기 및 쓰기 액세스를 제어합니다. 세 개의 인터페이스 레지스터 IF1, IF2 및 IF3이 있습니다. 
+- IF1, IF2 인터페이스 레지스터는 읽기 및 쓰기 액세스를 설정합니다.
+- IF3 인터페이스 레지스터는 읽기 전용으로 설정됩니다.
+인터페이스 레지스터의 길이는 메시지 RAM과 동일합니다. 추가 정보는 26.6 절에 나와 있습니다.
+
+ 26.2.5 Register and Message Object Access 레지스터와 메세지 객체 액세스
+정상 동작 동안, 메시지 객체의 데이터 일관성은 인터페이스 레지스터 IF1 및 IF2를 통해 메시지 객체에 간접적으로 액세스함으로써 보장됩니다. 
+메시지 객체 메모리에 대한 테스트를 수행 할 수 있도록 전용 테스트 모드가 구현되어 CPU 또는 DMA 중 하나에 직접 액세스 할 수 있습니다. 
+정상 작동 중에는 직접 액세스를 피하십시오.
+
+ 26.2.6 Dual Clock Source
+두 개의 클록 도메인이 DCAN 모듈에 제공됩니다.
+1. VCLK - 일반 모듈 클럭 소스로서의 주변 동기 클록 도메인.
+2. VCLKA - 주변 비동기 클럭 소스 도메인은 CAN 비트 타이밍을 생성하기 위한 클럭 소스(CAN_CLK)로 CAN 코어에 제공됩니다.
+
+( 아래는 두 클럭의 메커니즘에 대한 설명 같음 )
+FCLLL에서 주파수 변조 클록 출력을 VCLK 소스로 사용하는 경우 VCLKA는 변조되지 않은 클럭 소스 (예 : OSCIN 소스)에서 파생되어야 합니다.
+VCLKA의 클록 소스는 시스템 모듈의 주변 비동기 클럭 소스 레지스터에 의해 선택됩니다.
+두 클럭 도메인은 동일한 클럭 소스에서 파생 될 수 있습니다 (VCLK = VCLKA가되도록). 
+그러나 FMPLL의 주파수 변조 (스프레드 스펙트럼 클럭)가 활성화 된 경우 CAN 코어의 고정밀 클록 요구 사항으로 인해 VCLKA에 FMPLL 클럭 소스를 사용하면 안됩니다.
+또는 VCLKA를 위해 변조가없는 별도의 클록 (예 : OSCIN 클럭에서 직접 파생)을 사용해야합니다.
+시스템 모듈에서 관련 클럭 소스 레지스터를 구성하는 방법에 대한 자세한 내용은 시스템 모듈 참조 안내서 및 장치 데이터 시트를 참조하십시오.
+두 클록 도메인 사이에서 올바른 데이터 전송을 보장하기 위해 DCAN 모듈에 동기화 메커니즘이 구현됩니다.
+
+NOTE:
+듀얼 클록 기능이 사용되는 경우 (두 클록 모두 사용)
+DCAN의 안정된 기능을 달성하기 위해 VCLK는 항상 CAN_CLK (비동기 클럭 소스에서 파생)보다 크거나 같아야합니다. 
+여기에서도 변조된 VCLK의 주파수 이동을 고려해야합니다.
+
+- 위의 설명을 괜히 어렵게 수식으로 써놓은 것 
+ƒ0, VCLK ± ΔƒFM,VCLK ≥ ƒCANCLK
+
+CAN 코어는 비트 시간당 최소 8 클럭 사이클로 프로그래밍 되어야 합니다. 비동기 클럭 도메인을 CAN_CLK의 클럭 소스로 사용할 때 
+1MBaud의 전송 속도를 달성하려면 8MHz 이상의 오실레이터 주파수를 사용해야합니다
+
+* Baud란? 1초동안 전송된 신호의 단위를 말하는 것으로 1bit가 하나의 데이터 단위라면 bps와 baud는 동일하다
+  즉, 1초에 전송하는 비트수라 이해하면 된다. 
+http://blog.naver.com/gmqgufrn/220862079486
+
+26.3 CAN Bit Timing
+DCAN은 1kBit / s 미만과 1000kBit / s 사이의 비트 전송률을 지원합니다
+CAN 네트워크의 각 구성 요소에는 일반적으로 수정 발진기에서 파생 된 자체 클록 생성기가 있습니다.
+비트 타이밍 매개 변수는 각 CAN 노드에 대해 개별적으로 구성하여 공통 비트 전송률을 생성 할 수 있습니다
+CAN 노드의 발진기주기 (fosc)가 다를 수 있습니다.
+
+ 26.3.1 Bit Time and Bit Rate
+CAN 사양에 따르면 비트 시간은 4 개의 세그먼트로 나뉩니다 (그림 26-2 참조).
+- 동기화 세그먼트 (Sync_Seg)
+- 전파 시간 세그먼트 (Prop_Seg)
+- 위상 버퍼 세그먼트 1 (Phase_Seg1)
+- 위상 버퍼 세그먼트 2 (Phase_Seg2)
+
+각 세그먼트는 특정 시간 퀀텀 수로 구성됩니다.
+비트 시간의 기본 시간 단위 인 한 시간 퀀텀의 길이 (tq)는 CAN_CLK와 Baud Rate Prescalers (BRPE 및 BRP)에 의해 주어집니다. 이 두 개의 Baud Rate Prescalers를 결합하면 1에서 1024까지의 분배기 값을 프로그래밍 할 수 있습니다.
+
+tq = Baud Rate Prescaler / CAN_CLK
+
+동기화 세그먼트의 고정 된 길이는 별개로 프로그램 할 수 있습니다.
+표 26-1은 CAN 프로토콜에 필요한 최소 프로그래밍 가능 범위를 설명합니다. 주어진 비트율은 상이한 비트 시간 구성에 의해 충족 될 수 있습니다. 
+
+NOTE : 
+CAN 네트워크의 적절한 기능을 위해서는 물리적 지연 시간과 발진기의 허용 오차 범위를 고려해야합니다.
+
+( 프로그래밍 시 tq 범위 설정의 주의사항 )
+Table 26-1. Parameters of the CAN Bit Time
+Sync_Seg : 버스 입력을 CAN_CLK에 동기화
+Prop_Seg : 물리적 지연 시간을 보정합니다.
+Phase_Seg1 : 동기화로 일시적으로 길어질 수 있음
+Phase_Seg2 : 동기화로 일시적으로 짧아질 수 있음
+Synchronization Jump Width (SJW) : 위상 버퍼 세그먼트보다 길어서는 안됩니다
+
+ 26.3.1.1 Synchronization Segment 동기화 세그먼트
+동기화 세그먼트 (Sync_Seg)는 CAN 버스 레벨의 에지가 발생할 것으로 예상되는 비트 시간의 일부입니다. 
+Sync_Seg 외부에서 에지가 발생하면 Sync_Seg까지의 거리를 이 에지의 위상 오차라고합니다.
+
+ 26.3.1.2 Propagation Time Segment 전파 시간 세그먼트
+비트 시간의 이 부분은 CAN 네트워크 내의 물리적 지연 시간을 보정하는 데 사용됩니다. 
+이러한 지연 시간은 버스 상의 신호 전파 시간과 CAN 노드의 내부 지연 시간으로 구성됩니다.
+
+ 26.3.1.3 Phase Buffer Segments and Synchronization 위상 버퍼 세그먼트 및 동기화
+위상 버퍼 세그먼트 (Phase_Seg1 및 Phase_Seg2) 및 동기화 점프 폭 (SJW)은 오실레이터 허용 오차를 보완하기 위해 사용됩니다.
+
+위상 버퍼 세그먼트가 샘플 지점을 둘러 쌉니다. 위상 버퍼 세그먼트는 동기화를 통해 길어 지거나 짧아 질 수 있습니다.
+
+SJW (Synchronization Jump Width)는 재 동기화 메커니즘이 위상 버퍼 세그먼트에서 정의한 한계 내에서 샘플 포인트를 이동시켜 에지 위상 오류를 보상 할 수있는 거리를 정의합니다.
+
+동기화는 열성에서 지배적인 가장자리에서 발생합니다. 그 목적은 모서리와 샘플 포인트 사이의 거리를 제어하는 것입니다.
+
+각 시간 퀀텀에서 실제 버스 레벨을 샘플링하고 이전 샘플 포인트의 버스 레벨과 비교하여 에지를 감지합니다. 리세 시브 비트가 이전 샘플 포인트에서 샘플링되고 실제 시간 퀀텀의 버스 레벨이 지배적 인 경우에만 동기화가 수행 될 수 있습니다.
+
+에지가 Sync_Seg 내부에서 발생하면 에지가 동기화되고, 그렇지 않으면 Sync_Seg까지의 거리가 시간 퀀텀에서 측정 된 에지 위상 오차가됩니다. Sync_Seg 이전에 에지가 발생하면 위상 오류는 음수이고 그렇지 않으면 양수입니다.
+
+  26.3.1.4 Oscillator Tolerance Range 발진기 허용 오차 범위
+CAN 프로토콜 버전 1.2가 출시됨에 따라 우위에서 열성까지 에지에서 동기화하는 옵션은 쓸모 없게 되었습니다. 
+열성에서 우성까지의 에지 만 동기화를 고려합니다. 버전 2.0 (A 및 B)에 대한 프로토콜 업데이트는 발진기 허용 오차엔 변화가 없습니다.
+
+공칭 주파수 fnom 주변의 발진기 주파수 fosc에 대한 오차 범위 : df
+ 
+ 
+Phase_Seg1, Phase_Seg2, SJW 및 비트 시간의 비율에 따라 달라집니다. 최대 허용오차 df는 다음 두 조건에 의해 정의됩니다 (둘 다 충족되어야 함).
+
+
+
+SJW가 위상 버퍼 세그먼트 중 작은 것보다 클 수 없고 위상 시간 세그먼트가 위상 버퍼 세그먼트에 사용될 수있는 비트 시간의 일부를 제한한다고 간주되어야 합니다.
+Prop_Seg = 1 및 Phase_Seg1 = Phase_Seg2 = SJW = 4의 조합은 1.58 %의 가능한 최대 오실레이터 허용 오차를 허용합니다. 비트 시간의 10 % 만 전파 시간 세그먼트와 결합하면 짧은 비트 시간에는 적합하지 않습니다. 버스 길이가 40m 인 경우 최대 125kBit / s (비트 시간 = 8μs)의 비트 전송률에 사용할 수 있습니다
+
+26.3.2 DCAN Bit Timing Registers
+DCAN에서 비트 타이밍 구성은 두 레지스터 바이트로 프로그래밍되며, 추가로 4 비트 (BREP)의 보오율 프리스케일러 확장을위한 세 번째 바이트가 제공됩니다.
+Prop_Seg와 Phase_Seg1의 합계 (TSEG1로서)는 1 바이트에서 Phase_Seg2 (TSEG2로서)와 결합되고, SJW와 BRP (3 바이트에서의 BRPE)는 다른 바이트안에서 결합됩니다. 
+
+이 비트 타이밍 레지스터에서 TSEG1, TSEG2, SJW 및 BRP 구성 요소는 기능 값보다 하나 작은 숫자 값으로 프로그래밍 해야합니다. 따라서 [1 ... n]의 범위에 있는 값 대신 [0 ... n-1] 범위의 값이 프로그래밍 됩니다. 그런 식으로, SJW ([1 ... 4]의 기능 범위)는 단지 2 비트로 표현됩니다.
+
+따라서 비트 시간의 길이는 [프로그래밍 된 값] [TSEG1 + TSEG2 + 3] tq 또는 (기능 값)
+[Sync_Seg + Prop_Seg + Phase_Seg1 + Phase_Seg2] tq.
+
+비트 타이밍 레지스터 (BTR)의 데이터는 CAN 프로토콜 컨트롤러의 구성 입력입니다. Baud Rate Prescaler (BRPE / BRP로 구성)는 시간 퀀텀의 길이 (비트 시간의 기본 시간 단위)를 정의합니다.
+비트 타이밍 논리 (TSEG1, TSEG2 및 SJW로 구성)는 비트 시간의 시간 퀀텀 수를 정의합니다.
+
+ 26.3.2.1 Calculation of the Bit Timing Parameters 비트 타이밍 매개 변수 계산
+일반적으로 비트 타이밍 구성의 계산은 원하는 비트 전송률 또는 비트 시간으로 시작됩니다. 결과 비트 시간 (1 / 비트 전송률)은 CAN 클록주기의 정수배 여야합니다.
+
+NOTE:
+8 MHz는 1 MBit / s의 비트 속도로 DCAN을 작동시키는 데 필요한 최소 CAN 클록 주파수입니다.
+
+비트 시간은 8-25 시간 퀀텀으로 구성 될 수 있습니다. 시간 퀀텀 tq의 길이는 tq = (Baud Rate Prescaler) / CAN_CLK 인 Baud Rate Prescaler에 의해 정의됩니다. 여러 조합을 통해 원하는 비트 시간이 생겨 다음 단계를 반복 할 수 있습니다.
+
+정의 할 비트 시간의 첫 번째 부분은 Prop_Seg입니다. 길이는 시스템에서 측정 된 지연 시간에 따라 다릅니다. 확장 가능한 CAN 버스 시스템을 위해 최대 버스 길이와 최대 노드 지연을 정의해야합니다. Prop_Seg의 결과 시간은 시간 퀀텀 (tq의 가장 가까운 정수 배수로 반올림 됨)으로 변환됩니다.
+
+Sync_Seg는 1 tq 길이 (고정)이며 두 개의 위상 버퍼 세그먼트에 대해 (비트 시간 - Prop_Seg - 1) tq를 남긴다. 나머지 tq의 수가 짝수이면, 위상 버퍼 세그먼트는 동일한 길이, Phase_Seg2 = Phase_Seg1, 그렇지 않으면 Phase_Seg2 = Phase_Seg1 + 1을 갖는다.
+
+Phase_Seg2의 최소 공칭 길이도 고려해야합니다. Phase_Seg2는 네트워크에있는 CAN 컨트롤러의 정보 처리 시간보다 짧을 수는 없으며 장치에 따라 다르며 [0 ... 2] tq 범위 내에있을 수 있습니다.
+
+동기화 점프 폭의 길이는 최소값 인 4와 Phase_Seg1의 최대 값으로 설정됩니다.
+특정 비트 속도에 도달 할 수있는 구성이 두 가지 이상이면 가장 높은 오실레이터 허용 범위를 허용하는 구성을 선택하는 것이 좋습니다.
+
+클럭이 다른 CAN 노드는 동일한 비트 전송률을 가지기 위해 서로 다른 구성을 필요로 합니다. 지연 시간이 가장 긴 노드를 기반으로 한 CAN 네트워크의 전파 시간 계산은 전체 네트워크에 대해 한 번 수행됩니다.
+
+CAN 시스템의 오실레이터 허용 오차 범위는 허용 오차 범위가 가장 낮은 노드에 의해 제한됩니다.
+
+CAN 비트 타이밍의 프로토콜 호환 구성을 찾기 위해 버스 길이 또는 비트 전송률을 줄이거나 발진기 주파수의 안정성을 높여야한다는 
+계산이 있을 수 있습니다.
+
+결과 구성은 비트 타이밍 레지스터에 기록됩니다.
+
+Tseg2 = Phase_Seg2 - 1
+Tseg1 = Phase_Seg1 + Prop_Seg - 1
+SJW = SynchronizationJumpWidth - 1
+BRP = Prescaler - 1
+
+ 26.3.2.2 Calculation of BRP Values BRP 값 계산
+Baud 및 CAN_CLK (VCLK)가 이미 알려져있는 경우 BRP / BRPE 값을 계산하여 레지스터에 프로그래밍 해야합니다. 
+다음 방정식을 사용하여 계산됩니다.
+
+BRP = CAN_CLK / (BAUD) (1 + TSEG1 + TSEG2)
+
+ 26.3.2.3 Example for Bit Timing at High Baudrate 높은 Baudrate에서의 비트 타이밍 예제
+이 예에서 CAN_CLK의 주파수는 10MHz이고 BRP는 0, 비트 전송률은 1MBit / s입니다.
+
+이 예에서 연결된 비트 시간 매개 변수는 (1-1) 3 & (8-1) 4 & (1-1) 2 & (1-1) 6이므로 비트 타이밍 레지스터는 0000 0700h로 프로그래밍됩니다.
+
+ 26.3.2.4 Example for Bit Timing at Low Baudrate 낮은 Baudrate에서의 비트 타이밍 예
+이 예에서 CAN_CLK의 주파수는 2MHz이고 BRP는 1이며 비트 전송률은 100KBit / s입니다.
+
+이 예에서 연결된 비트 시간 매개 변수는 (3-1) 3 & (5-1) 4 & (4-1) 2 & (2-1) 6이므로 비트 타이밍 레지스터는 0000 24C1h로 프로그래밍됩니다.
+
+26.4 CAN Module Configuration CAN 모듈 구성
+하드웨어 리셋 후에 모든 CAN 프로토콜 기능이 비활성화됩니다. CAN 모듈은 CAN 버스에 참여하기 전에 초기화되고 구성되어야합니다.
+
+26.4.1 DCAN RAM Initialization Through Hardware 하드웨어를 통한 DCAN RAM 초기화
+클리어된 DCAN RAM으로 시작하려면 전체 DCAN RAM을 0으로 초기화해야하고 
+ECC 비트는 시스템 모듈에 다음 레지스터를 구성하여 설정해야합니다.
+
+1. 메모리 하드웨어 초기화 전역 제어 레지스터 (MINITGCR)
+2. 메모리 초기화 활성화 레지스터 (MSINENA)
+
+RAM 하드웨어 초기화 지원에 대한 자세한 내용은 시스템 모듈 참조 안내서를 참조하십시오.
+
+26.4.2 CAN Module Initialization CAN 모듈 초기화
+CAN 컨트롤러를 초기화하려면 CAN 비트 타이밍과 CAN 통신에 사용해야하는 메시지 개체를 설정해야합니다. 
+필요하지 않은 메시지 객체는 비활성화 할 수 있습니다.
+
+따라서 두 가지 중요한 단계는 다음과 같습니다.
+1. CAN 비트 타이밍 구성
+2. 메시지 객체의 설정
+
+26.4.2.1 Software Configuration of CAN Bit Timings CAN 비트 타이밍의 소프트웨어 구성
+이 단계에서는 계산 된 CAN 비트 타이밍 값으로 CAN baud rate 레지스터(BTR)를 구성합니다. 
+BTR 레지스터에 대한 CAN 비트 타이밍 값의 계산 절차는 26.3 절에 나와 있습니다. 
+CAN 비트 타이밍 소프트웨어 구성 흐름에 대해서는 그림 26-3을 참조하십시오.
+
+Figure 26-3. CAN Bit-timing Configuration CAN 비트-타이밍 구성
+
+Step 1: CAN 제어 레지스터의 Init (초기화) 비트를 설정하여 "초기화 모드"로 들어갑니다.
+( 초기화 모드 시의 작동 )
+Init 비트가 설정되어있는 동안 CAN 버스와의 메시지 전송이 중지되고 CAN_TX 출력의 상태는 열성 (높음)입니다.
+CAN 오류 카운터는 업데이트되지 않습니다. Init 비트를 설정해도 다른 구성 레지스터는 변경되지 않습니다.
+또한 CAN 모듈은 하드웨어 리셋 및 버스 오프 중에 초기화 모드에 있습니다.
+
+Step 2: CAN 제어 레지스터에 CCE (Configure Change Enable) 비트를 설정하십시오.
+비트 타이밍의 구성을 위한 비트 타이밍 레지스터에 대한 액세스는 CAN 제어 레지스터의 Init 및 CCE 비트가 모두 설정된 경우에 활성화됩니다.
+
+Step 3: Init 비트가 설정 될 때까지 기다립니다. 이렇게하면 모듈이 "초기화 모드"에 들어 갔는지 확인할 수 있습니다.
+
+Step 4: 비트 타이밍 레지스터 (BTR)에 비트 타이밍 값을 씁니다. 주어진 비트 타이밍에 대한 BTR 값 계산에 대해서는 26.3.2.1 절을 참조하십시오.
+
+Step 5: CCE 비트를 지우고 Init 비트를 지운다.
+
+Step 6: 초기 비트가 클리어 되길 기다립니다. 이렇게하면 모듈이 "초기화 모드"에서 벗어 났는지 확인할 수 있습니다.
+
+6 단계 (초기 비트가 지워짐) 이후, 모듈은 BTR 설정이 CAN 버스 매개 변수를 충족 시키면 CAN 버스에서 동기화를 시도합니다.
+
+NOTE:
+4 단계에서 잘못된 BTR 값이 기록되면 모듈이 "초기화 모드"에서 벗어나지 않습니다.
+
+26.4.2.2 Configuration of Message Objects 메시지 개체 구성
+CAN을 작동시키기 전에 전체 메시지 RAM을 구성해야합니다. 모든 메시지 개체는 기본적으로 비활성화됩니다.
+특정 식별자에 사용될 메시지 객체를 구성해야합니다. 메시지 오브젝트의 구성을 변경하거나 비활성화가 필요할 때 이를 비활성화 할 수 있습니다.
+
+메시지 개체는 인터페이스 레지스터 (IFx)를 통해서만 구성 할 수 있으며 DCAN이 작동 중일 때 
+CPU는 메시지 개체 (메시지 RAM)에 직접 액세스 할 수 없습니다.
+메시지 개체를 구성하려면 다음 사항을 알아야합니다.
+
+1. 메시지 객체 구조 (26.5 절)
+2. 인터페이스 레지스터 세트 (IFx) (섹션 26.6)
+
+NOTE: 메시지 개체 초기화는 비트 타이밍 구성 절차와 독립적입니다.

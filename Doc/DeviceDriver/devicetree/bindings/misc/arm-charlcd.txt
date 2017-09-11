@@ -1,0 +1,31 @@
+ARM Versatile Character LCD
+-----------------------------------------------------
+This binding defines the character LCD interface found on ARM Versatile AB
+and PB reference platforms.
+
+Required properties:
+- compatible : "arm,versatile-clcd"
+- reg : Location and size of character LCD registers
+
+Optional properties:
+- interrupts - single interrupt for character LCD. The character LCD can
+  operate in polled mode without an interrupt.
+
+ARM 다용도 문자 LCD
+-------------------------------------------------- ---
+이 바인딩은 ARM Versatile AB 및 PB 참조 플랫폼에서 발견되는 문자 LCD 인터페이스를 정의합니다.
+
+필수 속성 :
+- 호환 가능 : "arm, versatile-clcd"
+- reg : 문자 LCD 레지스터의 위치와 크기
+
+선택적 속성 :
+- 인터럽트 - 문자 LCD의 단일 인터럽트. 문자 LCD는 인터럽트없이 폴링 모드로 작동 할 수 있습니다.
+
+
+
+Example:
+	lcd@10008000 {
+		compatible = "arm,versatile-lcd";
+		reg = <0x10008000 0x1000>;
+	};

@@ -1,0 +1,40 @@
+* Nuvoton NAU7802 Analog to Digital Converter (ADC)
+
+Required properties:
+  - compatible: Should be "nuvoton,nau7802"
+  - reg: Should contain the ADC I2C address
+
+Optional properties:
+  - nuvoton,vldo: Internal reference voltage in millivolts to be
+    configured valid values are between 2400 mV and 4500 mV.
+  - interrupts: IRQ line for the ADC. If not used the driver will use
+    polling.
+
+Example:
+adc2: nau7802@2a {
+	compatible = "nuvoton,nau7802";
+	reg = <0x2a>;
+	nuvoton,vldo = <3000>;
+};
+
+/*
+
+* Nuvoton NAU7802 아날로그 - 디지털 컨버터 (ADC)
+
+필수 속성 :
+   - 호환 가능 : "nuvoton, nau7802"여야합니다.
+   - reg : ADC I2C 주소를 포함해야한다.
+
+선택 속성 :
+   - nuvoton, vldo : 구성 할 내부 기준 전압 (밀리 볼트)은 유효 값이 2400mV와 4500mV 사이입니다.
+   - 인터럽트 : ADC의 IRQ 라인. 사용하지 않으면 드라이버가 폴링을 사용합니다.
+
+
+Example:
+adc2: nau7802@2a {
+	compatible = "nuvoton,nau7802";
+	reg = <0x2a>;
+	nuvoton,vldo = <3000>;
+};
+
+*/

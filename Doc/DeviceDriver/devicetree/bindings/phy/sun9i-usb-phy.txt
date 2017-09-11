@@ -1,0 +1,61 @@
+Allwinner sun9i USB PHY
+-----------------------
+
+Required properties:
+- compatible : should be one of
+  * allwinner,sun9i-a80-usb-phy
+- reg : a list of offset + length pairs
+- #phy-cells : from the generic phy bindings, must be 0
+- phy_type : "hsic" for HSIC usage;
+	     other values or absence of this property indicates normal USB
+- clocks : phandle + clock specifier for the phy clocks
+- clock-names : depending on the "phy_type" property,
+  * "phy" for normal USB
+  * "hsic_480M", "hsic_12M" for HSIC
+- resets : a list of phandle + reset specifier pairs
+- reset-names : depending on the "phy_type" property,
+  * "phy" for normal USB
+  * "hsic" for HSIC
+
+필수 속성 :
+- compatible : * allwinner, sun9i-a80-usb-phy 중 하나 여야합니다.
+- reg : offset + length 쌍의 목록
+- # phy-cells : generic phy 바인딩에서 0이어야합니다.
+- phy_type : HSIC 사용을위한 "hsic";
+이 속성의 다른 값 또는 absence(부재)는 generic USB를 나타냅니다.
+- clocks : phy clock에 대한 phandle + clock 지정자
+- clock-names : "phy_type"속성에 따라,
+   * generic USB 용 "phy"
+   * HSIC 용 "hsic_480M", "hsic_12M"
+- 재설정 : phandle + 재설정 지정자 쌍 목록
+- 재설정 - 이름 : "phy_type"속성에 따라,
+   * generic USB 용 "phy"
+   HSIC를위한 "hsic"
+
+
+Optional Properties:
+- phy-supply : from the generic phy bindings, a phandle to a regulator that
+	       provides power to VBUS.
+
+It is recommended to list all clocks and resets available.
+The driver will only use those matching the phy_type.
+
+선택적 속성 :
+- phy-supply : generic phy bindings에서 VBUS에 전원을 공급하는 regulator에 대한 phandle.
+
+사용 가능한 모든 clocks 및 재설정을 나열하는 것이 좋습니다.
+드라이버는 phy_type과 일치하는 드라이버 만 사용합니다.
+
+
+Example:
+	usbphy1: phy@00a01800 {
+		compatible = "allwinner,sun9i-a80-usb-phy";
+		reg = <0x00a01800 0x4>;
+		clocks = <&usb_phy_clk 2>, <&usb_phy_clk 10>,
+		       <&usb_phy_clk 3>;
+		clock-names = "hsic_480M", "hsic_12M", "phy";
+		resets = <&usb_phy_clk 18>, <&usb_phy_clk 19>;
+		reset-names = "hsic", "phy";
+		status = "disabled";
+		#phy-cells = <0>;
+	};

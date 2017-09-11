@@ -1,0 +1,1484 @@
+Overview of the V4L2 driver framework
+=====================================
+V4L2 드라이버 프레임 워크 개요
+
+This text documents the various structures provided by the V4L2 framework and
+their relationships.
+이 텍스트는 V4L2 프레임 워크가 제공하는 다양한 구조와 관계를 설명합니다.
+
+
+Introduction
+------------
+소개
+
+The V4L2 drivers tend to be very complex due to the complexity of the
+hardware: most devices have multiple ICs, export multiple device nodes in
+/dev, and create also non-V4L2 devices such as DVB, ALSA, FB, I2C and input
+(IR) devices.
+V4L2 드라이버는 하드웨어의 복잡성으로 인해 매우 복잡합니다 : 대부분의 장치에는 다중 IC가 있으며 
+/ dev에 여러 장치 노드를 내보내고 DVB, ALSA, FB, I2C 및 입력 (IR ) 장치와 같은 V4L2가 아닌 장치를 만듭니다 .
+
+
+Especially the fact that V4L2 drivers have to setup supporting ICs to
+do audio/video muxing/encoding/decoding makes it more complex than most.
+Usually these ICs are connected to the main bridge driver through one or
+more I2C busses, but other busses can also be used. Such devices are
+called 'sub-devices'.
+특히 V4L2 드라이버가 오디오 / 비디오 muxing / 인코딩 / 디코딩을 지원하는 IC를 설정해야한다는 사실은 대부분의 경우보다 더 복잡합니다. 
+일반적으로이 IC는 하나 이상의 I2C 버스를 통해 주 브리지 드라이버에 연결되지만 다른 버스도 사용할 수 있습니다. 
+이러한 장치를 '하위 장치'라고합니다.
+
+For a long time the framework was limited to the video_device struct for
+creating V4L device nodes and video_buf for handling the video buffers
+(note that this document does not discuss the video_buf framework).
+오래 동안 프레임 워크는 V4L 장치 노드를 생성하기위한 video_device 구조체와 비디오 버퍼를 처리하기위한 video_buf로 제한되었습니다 
+(이 문서에서는 video_buf 프레임 워크에 대해 설명하지 않음).
+
+This meant that all drivers had to do the setup of device instances and
+connecting to sub-devices themselves. Some of this is quite complicated
+to do right and many drivers never did do it correctly.
+이것은 모든 드라이버가 장치 인스턴스의 설정을 수행하고 하위 장치 자체에 연결해야한다는 것을 의미했습니다. 
+이 중 일부는 똑바로 일을하기에는 상당히 복잡하고 많은 드라이버는 제대로하지 않았습니다.
+
+There is also a lot of common code that could never be refactored due to
+the lack of a framework.
+프레임 워크가 없어서 결코 리팩토링 될 수없는 많은 공통 코드가 있습니다.
+
+So this framework sets up the basic building blocks that all drivers
+need and this same framework should make it much easier to refactor
+common code into utility functions shared by all drivers.
+따라서 이 프레임 워크는 모든 드라이버가 필요로하는 기본 빌딩 블록을 설정하고 이 동일한 프레임 워크는 
+공통 코드를 모든 드라이버가 공유하는 유틸리티 기능으로 리팩토링하는 것을 훨씬 쉽게 만들어야합니다.
+
+A good example to look at as a reference is the v4l2-pci-skeleton.c
+source that is available in this directory. It is a skeleton driver for
+a PCI capture card, and demonstrates how to use the V4L2 driver
+framework. It can be used as a template for real PCI video capture driver.
+참조로 보는 좋은 예는 이 디렉토리에서 사용할 수있는 v4l2-pci-skeleton.c 소스입니다. 
+PCI 캡처 카드의 뼈대 드라이버이며 V4L2 드라이버 프레임 워크를 사용하는 방법을 보여줍니다. 
+실제 PCI 비디오 캡처 드라이버의 템플릿으로 사용할 수 있습니다.
+
+Structure of a driver
+---------------------
+드라이버 구조
+
+All drivers have the following structure:
+모든 드라이버의 구조는 다음과 같습니다.
+
+1) A struct for each device instance containing the device state.
+장치 상태를 포함하는 각 장치 인스턴스의 구조체입니다.
+
+2) A way of initializing and commanding sub-devices (if any).
+하위 장치를 초기화하고 명령하는 방법 (있는 경우).
+
+3) Creating V4L2 device nodes (/dev/videoX, /dev/vbiX and /dev/radioX)
+   and keeping track of device-node specific data.
+V4L2 장치 노드 (/ dev / videoX, / dev / vboX 및 / dev / radio X)를 만들고 장치 노드 특정 데이터를 추적합니다.
+
+4) Filehandle-specific structs containing per-filehandle data;
+파일 핸들 당 데이터를 포함하는 파일 핸들 관련 구조체.
+
+5) video buffer handling.
+비디오 버퍼 처리.
+
+This is a rough schematic of how it all relates:
+이 모든 것이 어떻게 관련되는지 대략적인 개요입니다.
+
+    device instances
+      |
+      +-sub-device instances
+      |
+      \-V4L2 device nodes
+	  |
+	  \-filehandle instances
+
+
+Structure of the framework
+--------------------------
+프레임 워크의 구조
+
+The framework closely resembles the driver structure: it has a v4l2_device
+struct for the device instance data, a v4l2_subdev struct to refer to
+sub-device instances, the video_device struct stores V4L2 device node data
+and the v4l2_fh struct keeps track of filehandle instances.
+프레임 워크는 드라이버 구조와 매우 유사합니다. 
+장치 인스턴스 데이터 용 v4l2_device 구조체, 하위 장치 인스턴스를 참조하는 v4l2_subdev 구조체, 
+video_device 구조체는 V4L2 장치 노드 데이터를 저장하며 v4l2_fh 구조체는 파일 핸들 인스턴스를 추적합니다.
+
+The V4L2 framework also optionally integrates with the media framework. If a
+driver sets the struct v4l2_device mdev field, sub-devices and video nodes
+will automatically appear in the media framework as entities.
+또한 V4L2 프레임 워크는 선택적으로 미디어 프레임 워크와 통합됩니다. 
+드라이버가 구조체 v4l2_device mdev 필드를 설정하면 하위 장치 및 비디오 노드가 미디어 프레임 워크에 엔티티로 자동 표시됩니다.
+
+
+
+struct v4l2_device
+------------------
+
+Each device instance is represented by a struct v4l2_device (v4l2-device.h).
+Very simple devices can just allocate this struct, but most of the time you
+would embed this struct inside a larger struct.
+각 장치 인스턴스는 struct v4l2 장치 (v4l2-device.h)로 표시됩니다.
+아주 간단한 장치는이 구조체를 할당 할 수 있지만 대부분의 경우이 구조체를 더 큰 구조체에 포함합니다.
+
+You must register the device instance:
+장치 인스턴스를 등록해야합니다.
+
+	v4l2_device_register(struct device *dev, struct v4l2_device *v4l2_dev);
+
+Registration will initialize the v4l2_device struct. If the dev->driver_data
+field is NULL, it will be linked to v4l2_dev.
+등록은 v4l2 장치 구조를 초기화합니다. ev-> driver_data 필드가 NULL이면 v4l2 dev에 링크됩니다.
+
+Drivers that want integration with the media device framework need to set
+dev->driver_data manually to point to the driver-specific device structure
+that embed the struct v4l2_device instance. This is achieved by a
+dev_set_drvdata() call before registering the V4L2 device instance. They must
+also set the struct v4l2_device mdev field to point to a properly initialized
+and registered media_device instance.
+미디어 장치 프레임 워크와의 통합을 원하는 드라이버는 구조체 v4l2_device 인스턴스를 
+포함하는 드라이버 관련 장치 구조를 가리 키도록 dev-> driver_data를 수동으로 설정해야합니다. 
+이는 V4L2 디바이스 인스턴스를 등록하기 전에 dev_set_drvdata () 호출에 의해 수행됩니다. 
+또한 올바르게 초기화되고 등록 된 media_device 인스턴스를 가리 키도록 구조체 v4l2_device mdev 필드를 설정해야합니다.
+
+If v4l2_dev->name is empty then it will be set to a value derived from dev
+(driver name followed by the bus_id, to be precise). If you set it up before
+calling v4l2_device_register then it will be untouched. If dev is NULL, then
+you *must* setup v4l2_dev->name before calling v4l2_device_register.
+v4l2_dev-> name이 비어 있으면 dev (드라이버 이름과 bus_id가 정확히 일치 함)에서 파생 된 값으로 설정됩니다. 
+v4l2_device_register를 호출하기 전에 설정하면 변경되지 않습니다. dev가 NULL이면 v4l2_device_register를 호출하기 전에 v4l2_dev-> name을 설정해야합니다.
+
+You can use v4l2_device_set_name() to set the name based on a driver name and
+a driver-global atomic_t instance. This will generate names like ivtv0, ivtv1,
+etc. If the name ends with a digit, then it will insert a dash: cx18-0,
+cx18-1, etc. This function returns the instance number.
+v4l2_device_set_name ()을 사용하여 드라이버 이름과 driver-global atomic_t 인스턴스를 기반으로 이름을 설정할 수 있습니다. ivtv0, ivtv1 등과 같은 이름을 생성합니다. 
+이름이 숫자로 끝나면 대시가 삽입됩니다 (cx18-0, cx18-1 등).이 함수는 인스턴스 번호를 반환합니다.
+
+The first 'dev' argument is normally the struct device pointer of a pci_dev,
+usb_interface or platform_device. It is rare for dev to be NULL, but it happens
+with ISA devices or when one device creates multiple PCI devices, thus making
+it impossible to associate v4l2_dev with a particular parent.
+첫 번째 'dev'인수는 일반적으로 pci_dev, usb_interface 또는 platform_device의 struct 장치 포인터입니다. 
+dev가 NULL이되는 경우는 거의 없지만 ISA 장치 나 한 장치가 여러 PCI 장치를 생성 할 때 발생하므로 v4l2_dev를 특정 부모와 연결할 수 없습니다.
+
+You can also supply a notify() callback that can be called by sub-devices to
+notify you of events. Whether you need to set this depends on the sub-device.
+Any notifications a sub-device supports must be defined in a header in
+include/media/<subdevice>.h.
+이벤트를 알리기 위해 하위 장치에서 호출 할 수있는 notify () 콜백을 제공 할 수도 있습니다. 이 설정이 필요한지 여부는 하위 장치에 따라 다릅니다.
+하위 장치가 지원하는 모든 알림은 include / media / <subdevice> .h의 헤더에 정의되어야합니다.
+
+You unregister with:
+등록 취소 :
+
+	v4l2_device_unregister(struct v4l2_device *v4l2_dev);
+
+If the dev->driver_data field points to v4l2_dev, it will be reset to NULL.
+Unregistering will also automatically unregister all subdevs from the device.
+dev-> driver_data 필드가 v4l2_dev를 가리키면 NULL로 재설정됩니다.
+등록을 취소하면 장치의 모든 하위 항목도 자동으로 등록 취소됩니다.
+
+If you have a hotpluggable device (e.g. a USB device), then when a disconnect
+happens the parent device becomes invalid. Since v4l2_device has a pointer to
+that parent device it has to be cleared as well to mark that the parent is
+gone. To do this call:
+핫 플러그 가능한 기기 (예 : USB 기기)가있는 경우 연결이 끊어지면 상위 기기가 무효화됩니다. 
+v4l2_device는 그 부모 장치에 대한 포인터를 가지고 있기 때문에 부모가 없어 졌음을 표시하기 위해서도 지워 져야합니다. 
+이 호출을 하려면 :
+
+	v4l2_device_disconnect(struct v4l2_device *v4l2_dev);
+
+This does *not* unregister the subdevs, so you still need to call the
+v4l2_device_unregister() function for that. If your driver is not hotpluggable,
+then there is no need to call v4l2_device_disconnect().
+하위 버전의 등록을 취소하지 않으므로 v4l2_device_unregister () 함수를 호출해야합니다. 드라이버를 핫 플러그 할 수없는 경우 v4l2_device_disconnect ()를 호출 할 필요가 없습니다.
+
+Sometimes you need to iterate over all devices registered by a specific
+driver. This is usually the case if multiple device drivers use the same
+hardware. E.g. the ivtvfb driver is a framebuffer driver that uses the ivtv
+hardware. The same is true for alsa drivers for example.
+때로는 특정 드라이버에 의해 등록 된 모든 장치를 반복해야합니다. 일반적으로 여러 장치 드라이버가 동일한 하드웨어를 사용하는 경우입니다. 
+예 : ivtvfb 드라이버는 ivtv 하드웨어를 사용하는 프레임 버퍼 드라이버입니다. 예를 들어 alsa 드라이버에서도 마찬가지입니다.
+
+You can iterate over all registered devices as follows:
+다음과 같이 등록 된 모든 장치를 반복 할 수 있습니다.
+
+static int callback(struct device *dev, void *p)
+{
+	struct v4l2_device *v4l2_dev = dev_get_drvdata(dev);
+
+	/* test if this device was inited */
+	if (v4l2_dev == NULL)
+		return 0;
+	...
+	return 0;
+}
+
+int iterate(void *p)
+{
+	struct device_driver *drv;
+	int err;
+
+	/* Find driver 'ivtv' on the PCI bus.
+	   pci_bus_type is a global. For USB busses use usb_bus_type. */
+	drv = driver_find("ivtv", &pci_bus_type);
+	/* iterate over all ivtv device instances */
+	err = driver_for_each_device(drv, NULL, p, callback);
+	put_driver(drv);
+	return err;
+}
+
+Sometimes you need to keep a running counter of the device instance. This is
+commonly used to map a device instance to an index of a module option array.
+때로는 장치 인스턴스의 실행중인 카운터를 유지해야합니다. 이것은 일반적으로 장치 인스턴스를 모듈 옵션 배열의 인덱스에 매핑하는 데 사용됩니다.
+
+The recommended approach is as follows:
+권장되는 접근 방식은 다음과 같습니다.
+
+static atomic_t drv_instance = ATOMIC_INIT(0);
+
+static int drv_probe(struct pci_dev *pdev, const struct pci_device_id *pci_id)
+{
+	...
+	state->instance = atomic_inc_return(&drv_instance) - 1;
+}
+
+If you have multiple device nodes then it can be difficult to know when it is
+safe to unregister v4l2_device for hotpluggable devices. For this purpose
+v4l2_device has refcounting support. The refcount is increased whenever
+video_register_device is called and it is decreased whenever that device node
+is released. When the refcount reaches zero, then the v4l2_device release()
+callback is called. You can do your final cleanup there.
+여러 개의 장치 노드가있는 경우 핫 플러그 가능한 장치에 대해 v4l2_device를 등록 해제해도 안전한지 알기가 어려울 수 있습니다. 
+이를 위해 v4l2_device는 refcounting을 지원합니다. refcount는 video_register_device가 호출 될 때마다 증가하며 해당 장치 노드가 해제 될 때마다 감소됩니다. 
+refcount가 0에 도달하면 v4l2_device release () 콜백이 호출됩니다. 거기에서 최종 정리를 할 수 있습니다.
+
+If other device nodes (e.g. ALSA) are created, then you can increase and
+decrease the refcount manually as well by calling:
+다른 기기 노드 (예 : ALSA)가 생성 된 경우 다음을 호출하여 수동으로 조회 수를 늘리거나 줄일 수 있습니다.
+
+void v4l2_device_get(struct v4l2_device *v4l2_dev);
+
+or:
+
+int v4l2_device_put(struct v4l2_device *v4l2_dev);
+
+Since the initial refcount is 1 you also need to call v4l2_device_put in the
+disconnect() callback (for USB devices) or in the remove() callback (for e.g.
+PCI devices), otherwise the refcount will never reach 0.
+초기 참조 횟수가 1이므로 disconnect () 콜백 (USB 기기) 또는 remove () 콜백 (예 : PCI 기기)에서 v4l2_device_put을 호출해야합니다. 
+그렇지 않으면 refcount가 0에 도달하지 않습니다.
+
+struct v4l2_subdev
+------------------
+
+Many drivers need to communicate with sub-devices. These devices can do all
+sort of tasks, but most commonly they handle audio and/or video muxing,
+encoding or decoding. For webcams common sub-devices are sensors and camera
+controllers.
+많은 드라이버가 하위 장치와 통신해야합니다. 이러한 장치는 모든 종류의 작업을 수행 할 수 있지만 일반적으로 오디오 및 / 또는 비디오 muxing, 인코딩 또는 디코딩을 처리합니다.
+웹캠의 경우 일반적인 하위 장치는 센서 및 카메라 컨트롤러입니다.
+
+Usually these are I2C devices, but not necessarily. In order to provide the
+driver with a consistent interface to these sub-devices the v4l2_subdev struct
+(v4l2-subdev.h) was created.
+일반적으로 이들은 I2C 장치이지만 반드시 그런 것은 아닙니다. 
+드라이버에 이러한 하위 장치에 대한 일관된 인터페이스를 제공하기 위해 v4l2_subdev struct (v4l2-subdev.h)가 생성되었습니다.
+
+Each sub-device driver must have a v4l2_subdev struct. This struct can be
+stand-alone for simple sub-devices or it might be embedded in a larger struct
+if more state information needs to be stored. Usually there is a low-level
+device struct (e.g. i2c_client) that contains the device data as setup
+by the kernel. It is recommended to store that pointer in the private
+data of v4l2_subdev using v4l2_set_subdevdata(). That makes it easy to go
+from a v4l2_subdev to the actual low-level bus-specific device data.
+각 하위 장치 드라이버에는 v4l2_subdev 구조체가 있어야합니다. 이 구조체는 간단한 하위 장치에 대해 독립형이 될 수도 있고 더 많은 상태 정보가 저장되어야하는 경우 
+더 큰 구조체에 포함될 수도 있습니다. 일반적으로 커널에서 설정 한대로 장치 데이터를 포함하는 저수준 장치 구조체 (예 : i2c_client)가 있습니다. 
+v4l2_set_subdevdata ()를 사용하여 v4l2_subdev의 개인 데이터에 해당 포인터를 저장하는 것이 좋습니다. 따라서 v4l2_subdev에서 실제 저수준 버스 특정 장치 데이터로 쉽게 이동할 수 있습니다.
+
+You also need a way to go from the low-level struct to v4l2_subdev. For the
+common i2c_client struct the i2c_set_clientdata() call is used to store a
+v4l2_subdev pointer, for other busses you may have to use other methods.
+또한 하위 수준 구조체에서 v4l2_subdev로 이동하는 방법이 필요합니다. 일반적인 i2c_client 구조체의 경우 i2c_set_clientdata () 호출이 v4l2_subdev 포인터를 저장하는 데 사용되고 
+다른 버스의 경우 다른 방법을 사용해야 할 수도 있습니다.
+
+Bridges might also need to store per-subdev private data, such as a pointer to
+bridge-specific per-subdev private data. The v4l2_subdev structure provides
+host private data for that purpose that can be accessed with
+v4l2_get_subdev_hostdata() and v4l2_set_subdev_hostdata().
+브리지는 또한 브리지 별 개인 하위 데이터에 대한 포인터와 같이 subdev 별 개인 데이터를 저장해야 할 수도 있습니다. 
+v4l2_subdev 구조체는 v4l2_get_subdev_hostdata () 및 v4l2_set_subdev_hostdata ()를 사용하여 액세스 할 수있는 호스트 개인 데이터를 제공합니다.
+
+From the bridge driver perspective you load the sub-device module and somehow
+obtain the v4l2_subdev pointer. For i2c devices this is easy: you call
+i2c_get_clientdata(). For other busses something similar needs to be done.
+Helper functions exists for sub-devices on an I2C bus that do most of this
+tricky work for you.
+브리지 드라이버 관점에서 하위 장치 모듈을로드하고 어떻게 든 v4l2_subdev 포인터를 얻습니다. i2c 장치의 경우 이것은 쉽습니다. i2c_get_clientdata ()를 호출합니다. 
+다른 버스들에 대해서도 비슷한 것이 필요합니다.
+이 까다로운 작업을 대부분 수행하는 I2C 버스의 하위 장치에 대한 도우미 기능이 있습니다.
+
+Each v4l2_subdev contains function pointers that sub-device drivers can
+implement (or leave NULL if it is not applicable). Since sub-devices can do
+so many different things and you do not want to end up with a huge ops struct
+of which only a handful of ops are commonly implemented, the function pointers
+are sorted according to category and each category has its own ops struct.
+각 v4l2_subdev에는 하위 장치 드라이버가 구현할 수있는 함수 포인터가 포함되어 있습니다 (적용 할 수없는 경우 NULL을 남겨 둡니다). 하위 장치는 여러 가지 일을 할 수 있고 
+많은 연산 작업 만 수행하는 거대한 연산 구조체로 끝내기를 원하지 않으므로 함수 포인터는 범주에 따라 정렬되며 각 범주에는 자체 ops 구조체가 있습니다 .
+
+The top-level ops struct contains pointers to the category ops structs, which
+may be NULL if the subdev driver does not support anything from that category.
+최상위 ops 구조체에는 카테고리 ops 구조체에 대한 포인터가 포함되어 있습니다. subdev 드라이버가 해당 범주의 항목을 지원하지 않으면 NULL이 될 수 있습니다.
+
+It looks like this:
+다음과 같이 보입니다.
+
+struct v4l2_subdev_core_ops {
+	int (*log_status)(struct v4l2_subdev *sd);
+	int (*init)(struct v4l2_subdev *sd, u32 val);
+	...
+};
+
+struct v4l2_subdev_tuner_ops {
+	...
+};
+
+struct v4l2_subdev_audio_ops {
+	...
+};
+
+struct v4l2_subdev_video_ops {
+	...
+};
+
+struct v4l2_subdev_pad_ops {
+	...
+};
+
+struct v4l2_subdev_ops {
+	const struct v4l2_subdev_core_ops  *core;
+	const struct v4l2_subdev_tuner_ops *tuner;
+	const struct v4l2_subdev_audio_ops *audio;
+	const struct v4l2_subdev_video_ops *video;
+	const struct v4l2_subdev_pad_ops *video;
+};
+
+The core ops are common to all subdevs, the other categories are implemented
+depending on the sub-device. E.g. a video device is unlikely to support the
+audio ops and vice versa.
+핵심 작업은 모든 하위 작업에 공통적이며 다른 작업은 하위 작업에 따라 구현됩니다. 예 : 비디오 장치는 오디오 장치를 지원하지 않을 것이며 반대의 경우도 마찬가지입니다.
+
+This setup limits the number of function pointers while still making it easy
+to add new ops and categories.
+이 설정은 함수 포인터의 수를 제한하면서도 새로운 함수 및 범주를 쉽게 추가 할 수있게합니다.
+
+A sub-device driver initializes the v4l2_subdev struct using:
+
+	v4l2_subdev_init(sd, &ops);
+
+Afterwards you need to initialize subdev->name with a unique name and set the
+module owner. This is done for you if you use the i2c helper functions.
+이후 subdev-> name을 고유 한 이름으로 초기화하고 모듈 소유자를 설정해야합니다. i2c 도우미 기능을 사용하면이 작업이 완료됩니다.
+
+If integration with the media framework is needed, you must initialize the
+media_entity struct embedded in the v4l2_subdev struct (entity field) by
+calling media_entity_init():
+미디어 프레임 워크와의 통합이 필요한 경우 media_entity_init ()를 호출하여 v4l2 subdev struct (엔터티 필드)에 포함 된 media_entity struct를 초기화해야합니다.
+
+	struct media_pad *pads = &my_sd->pads;
+	int err;
+
+	err = media_entity_init(&sd->entity, npads, pads, 0);
+
+The pads array must have been previously initialized. There is no need to
+manually set the struct media_entity type and name fields, but the revision
+field must be initialized if needed.
+패드 배열은 이전에 초기화되어 있어야합니다. struct media_entity 유형 및 이름 필드를 수동으로 설정할 필요는 없지만 필요한 경우 개정 필드를 초기화해야합니다.
+
+A reference to the entity will be automatically acquired/released when the
+subdev device node (if any) is opened/closed.
+엔티티에 대한 참조는 하위 노드 장치 노드 (있는 경우)가 열리거나 닫힐 때 자동으로 획득 / 해제됩니다.
+
+Don't forget to cleanup the media entity before the sub-device is destroyed:
+하위 장치가 파괴되기 전에 미디어 엔티티를 정리하는 것을 잊지 마십시오.
+
+	media_entity_cleanup(&sd->entity);
+
+If the subdev driver intends to process video and integrate with the media
+framework, it must implement format related functionality using
+v4l2_subdev_pad_ops instead of v4l2_subdev_video_ops.
+하위 드라이버가 비디오를 처리하고 미디어 프레임 워크와 통합하려는 경우 v4l2_subdev_video_ops 대신 v4l2_subdev_pad_ops를 사용하여 형식 관련 기능을 구현해야합니다.
+
+In that case, the subdev driver may set the link_validate field to provide
+its own link validation function. The link validation function is called for
+every link in the pipeline where both of the ends of the links are V4L2
+sub-devices. The driver is still responsible for validating the correctness
+of the format configuration between sub-devices and video nodes.
+이 경우 subdev 드라이버는 link_validate 필드를 설정하여 자체 링크 유효성 검사 기능을 제공 할 수 있습니다. 
+링크 유효성 확인 기능은 링크의 양쪽 끝이 V4L2 부속 장치 인 파이프 라인의 모든 링크에 대해 호출됩니다. 
+드라이버는 하위 장치와 비디오 노드 간의 형식 구성이 올바른지 여부를 확인해야합니다.
+
+If link_validate op is not set, the default function
+v4l2_subdev_link_validate_default() is used instead. This function ensures
+that width, height and the media bus pixel code are equal on both source and
+sink of the link. Subdev drivers are also free to use this function to
+perform the checks mentioned above in addition to their own checks.
+link_validate op가 설정되지 않은 경우 기본 함수 인 v4l2_subdev_link_validate_default ()가 대신 사용됩니다. 
+이 기능은 너비, 높이 및 미디어 버스 픽셀 코드가 링크의 원본과 싱크에서 동일하게 유지되도록합니다. Subdev 드라이버는이 기능을 사용하여 자체 점검 외에 위에서 언급 한 점검을 수행 할 수 있습니다.
+
+There are currently two ways to register subdevices with the V4L2 core. The
+first (traditional) possibility is to have subdevices registered by bridge
+drivers. This can be done when the bridge driver has the complete information
+about subdevices connected to it and knows exactly when to register them. This
+is typically the case for internal subdevices, like video data processing units
+within SoCs or complex PCI(e) boards, camera sensors in USB cameras or connected
+to SoCs, which pass information about them to bridge drivers, usually in their
+platform data.
+현재 V4L2 코어에 하위 장치를 등록하는 두 가지 방법이 있습니다. 
+첫 번째 (기존) 가능성은 브리지 드라이버가 등록한 하위 장치를 갖는 것입니다. 이것은 브리지 드라이버가 연결된 브랜치에 대한 완전한 정보를 갖고 있고 언제 등록 할 것인지 정확하게 알고있을 때 수행 할 수 있습니다. 
+SoC 또는 복잡한 PCI (e) 보드의 비디오 데이터 처리 장치, USB 카메라의 카메라 센서 또는 SoC에 연결된 카메라와 같은 내부 하위 장치의 경우 일반적으로 플랫폼 데이터에서 드라이버를 연결하는 데 필요한 정보를 전달합니다.
+
+There are however also situations where subdevices have to be registered
+asynchronously to bridge devices. An example of such a configuration is a Device
+Tree based system where information about subdevices is made available to the
+system independently from the bridge devices, e.g. when subdevices are defined
+in DT as I2C device nodes. The API used in this second case is described further
+below.
+그러나 하위 장치를 브리지 장치에 비동기 적으로 등록해야하는 상황도 있습니다. 그러한 구성의 일례는 서브 장치에 관한 정보가 브리지 장치와 독립적으로 시스템에 이용 가능하게되는 장치 트리 기반 시스템이다. 
+하위 장치가 DT에서 I2C 장치 노드로 정의되는 경우 두 번째 경우에 사용되는 API는 아래에서 자세히 설명합니다.
+
+Using one or the other registration method only affects the probing process, the
+run-time bridge-subdevice interaction is in both cases the same.
+하나 또는 다른 등록 메소드를 사용하는 것은 프로빙 프로세스에만 영향을 미치며, 런타임 브리지 - 하위 장치 상호 작용은 두 경우 모두 동일합니다.
+
+In the synchronous case a device (bridge) driver needs to register the
+v4l2_subdev with the v4l2_device:
+동기식 경우 장치 (브리지) 드라이버는 v4l2_subdev를 v4l2_device에 등록해야합니다.
+
+	int err = v4l2_device_register_subdev(v4l2_dev, sd);
+
+This can fail if the subdev module disappeared before it could be registered.
+After this function was called successfully the subdev->dev field points to
+the v4l2_device.
+subdev 모듈이 등록되기 전에 사라진 경우 실패 할 수 있습니다.
+이 함수가 성공적으로 호출 된 후 subdev-> dev 필드는 v4l2_device를 가리 킵니다.
+
+If the v4l2_device parent device has a non-NULL mdev field, the sub-device
+entity will be automatically registered with the media device.
+v4l2_device 상위 장치에 NULL이 아닌 mdev 필드가 있으면 하위 장치 엔티티가 자동으로 미디어 장치에 등록됩니다.
+
+You can unregister a sub-device using:
+다음을 사용하여 하위 장치의 등록을 취소 할 수 있습니다.
+
+	v4l2_device_unregister_subdev(sd);
+
+Afterwards the subdev module can be unloaded and sd->dev == NULL.
+그 후에 하위 모듈은 언로드되고 sd-> dev == NULL이 될 수 있습니다.
+
+You can call an ops function either directly:
+ops 함수를 직접 호출 할 수 있습니다.
+
+	err = sd->ops->core->g_std(sd, &norm);
+
+but it is better and easier to use this macro:
+하지만이 매크로를 사용하는 것이 더 쉽고 더 좋습니다.
+
+	err = v4l2_subdev_call(sd, core, g_std, &norm);
+
+The macro will to the right NULL pointer checks and returns -ENODEV if subdev
+is NULL, -ENOIOCTLCMD if either subdev->core or subdev->core->g_std is
+NULL, or the actual result of the subdev->ops->core->g_std ops.
+매크로는 오른쪽 NULL 포인터를 검사하여 subdev가 NULL이면 -ENODEV를 반환하고, subdev-> core 또는 subdev-> core-> g_std가 NULL 또는 subdev-> ops-> core -> g_std ops의 실제 결과이면 -ENOIOCTLCMD를 반환합니다. 
+
+It is also possible to call all or a subset of the sub-devices:
+하위 장치의 전체 또는 일부를 호출 할 수도 있습니다.
+
+	v4l2_device_call_all(v4l2_dev, 0, core, g_std, &norm);
+
+Any subdev that does not support this ops is skipped and error results are
+ignored. If you want to check for errors use this:
+이 작업을 지원하지 않는 하위 작업은 건너 뛰고 오류 결과는 무시됩니다. 오류를 확인하려면 다음을 사용하십시오.
+
+	err = v4l2_device_call_until_err(v4l2_dev, 0, core, g_std, &norm);
+
+Any error except -ENOIOCTLCMD will exit the loop with that error. If no
+errors (except -ENOIOCTLCMD) occurred, then 0 is returned.
+-ENOIOCTLCMD를 제외한 모든 오류는 해당 오류로 인해 루프를 종료합니다. 오류 (-ENOIOCTLCMD 제외)가 발생하지 않으면 0이 리턴됩니다.
+
+The second argument to both calls is a group ID. If 0, then all subdevs are
+called. If non-zero, then only those whose group ID match that value will
+be called. Before a bridge driver registers a subdev it can set sd->grp_id
+to whatever value it wants (it's 0 by default). This value is owned by the
+bridge driver and the sub-device driver will never modify or use it.
+두 호출의 두 번째 인수는 그룹 ID입니다. 0이면 모든 subdev가 호출됩니다. 0이 아니면 그룹 ID가 해당 값과 일치하는 사용자 만 호출됩니다. 
+브리지 드라이버가 하위 디렉토리를 등록하기 전에 sd-> grp_id를 원하는 값으로 설정할 수 있습니다 (기본적으로 0입니다). 이 값은 브리지 드라이버가 소유하며 하위 장치 드라이버는 결코 수정하거나 사용하지 않습니다.
+
+The group ID gives the bridge driver more control how callbacks are called.
+For example, there may be multiple audio chips on a board, each capable of
+changing the volume. But usually only one will actually be used when the
+user want to change the volume. You can set the group ID for that subdev to
+e.g. AUDIO_CONTROLLER and specify that as the group ID value when calling
+v4l2_device_call_all(). That ensures that it will only go to the subdev
+that needs it.
+그룹 ID를 통해 브리지 드라이버는 콜백 호출 방법을보다 잘 제어 할 수 있습니다.
+예를 들어 보드에 여러 개의 오디오 칩이있을 수 있으며 각 볼륨은 볼륨을 변경할 수 있습니다. 그러나 일반적으로 사용자가 볼륨을 변경하려고 할 때 실제로는 하나만 사용됩니다. 
+하위dev의 그룹 ID를 예 : AUDIO_CONTROLLER를 호출하고 v4l2_device_call_all ()을 호출 할 때이를 그룹 ID 값으로 지정하십시오. 그것은 그것을 필요로하는 하부 조직에게만 갈 것이라는 것을 보증합니다.
+
+If the sub-device needs to notify its v4l2_device parent of an event, then
+it can call v4l2_subdev_notify(sd, notification, arg). This macro checks
+whether there is a notify() callback defined and returns -ENODEV if not.
+Otherwise the result of the notify() call is returned.
+하위 장치가 v4l2_device 부모에게 이벤트를 알릴 필요가 있으면 v4l2_subdev_notify (sd, notification, arg)를 호출 할 수 있습니다. 
+이 매크로는 notify () 콜백이 정의되어 있는지 확인하고 그렇지 않으면 -ENODEV를 반환합니다. 그렇지 않으면 notify () 호출의 결과가 리턴됩니다.
+
+The advantage of using v4l2_subdev is that it is a generic struct and does
+not contain any knowledge about the underlying hardware. So a driver might
+contain several subdevs that use an I2C bus, but also a subdev that is
+controlled through GPIO pins. This distinction is only relevant when setting
+up the device, but once the subdev is registered it is completely transparent.
+v4l2_subdev를 사용할 때의 장점은 기본 구조체이며 기본 하드웨어에 대한 지식이 전혀 없다는 것입니다. 
+따라서 드라이버에는 I2C 버스를 사용하는 여러 하위 구성 요소가 포함될 수 있지만 GPIO 핀을 통해 제어되는 하위 구성 요소도 포함될 수 있습니다. 
+이 구별은 장치를 설정할 때만 관련이 있지만, 일단 하위 정의가 등록되면 완전히 투명합니다.
+
+
+In the asynchronous case subdevice probing can be invoked independently of the
+bridge driver availability. The subdevice driver then has to verify whether all
+the requirements for a successful probing are satisfied. This can include a
+check for a master clock availability. If any of the conditions aren't satisfied
+the driver might decide to return -EPROBE_DEFER to request further reprobing
+attempts. Once all conditions are met the subdevice shall be registered using
+the v4l2_async_register_subdev() function. Unregistration is performed using
+the v4l2_async_unregister_subdev() call. Subdevices registered this way are
+stored in a global list of subdevices, ready to be picked up by bridge drivers.
+비동기적인 경우 서브 장치 프로브는 브리지 드라이버 가용성과는 독립적으로 호출 될 수 있습니다. 
+그러면 하위 장치 드라이버는 성공적인 검사를위한 모든 요구 사항이 충족되는지 확인해야합니다. 
+여기에는 마스터 클럭 가용성에 대한 확인이 포함될 수 있습니다. 조건 중 하나라도 만족스럽지 않으면 드라이버는 다시 탐색 시도를 요청하기 위해 -EPROBE_DEFER를 반환하기로 결정할 수 있습니다. 
+모든 조건이 충족되면 하위 장치는 v4l2_async_register_subdev () 함수를 사용하여 등록해야합니다. 등록 해제는 v4l2_async_unregister_subdev () 호출을 사용하여 수행됩니다. 
+이 방법으로 등록 된 하위 장치는 전체 하위 장치 목록에 저장되어 브리지 드라이버가 준비합니다.
+
+Bridge drivers in turn have to register a notifier object with an array of
+subdevice descriptors that the bridge device needs for its operation. This is
+performed using the v4l2_async_notifier_register() call. To unregister the
+notifier the driver has to call v4l2_async_notifier_unregister(). The former of
+the two functions takes two arguments: a pointer to struct v4l2_device and a
+pointer to struct v4l2_async_notifier. The latter contains a pointer to an array
+of pointers to subdevice descriptors of type struct v4l2_async_subdev type. The
+V4L2 core will then use these descriptors to match asynchronously registered
+subdevices to them. If a match is detected the .bound() notifier callback is
+called. After all subdevices have been located the .complete() callback is
+called. When a subdevice is removed from the system the .unbind() method is
+called. All three callbacks are optional.
+브릿지 드라이버는 알리미 객체를 브리 지 디바이스가 동작을 위해 필요로하는 서브 디바이스 디스크립터 배열로 등록해야한다. 
+이 작업은 v4l2_async_notifier_register () 호출을 사용하여 수행됩니다. 알리미 등록을 취소하려면 드라이버가 v4l2_async_notifier_unregister ()를 호출해야합니다. 
+앞의 두 함수는 struct v4l2_device에 대한 포인터와 struct v4l2_async_notifier에 대한 포인터라는 두 개의 인수를 사용합니다. 
+후자에는 struct v4l2_async_subdev 유형의 하위 장치 설명자에 대한 포인터 배열에 대한 포인터가 있습니다. 그런 다음 V4L2 코어는 이러한 설명자를 사용하여 비동기 적으로 등록 된 하위 장치를 일치시킵니다. 
+일치하는 것이 발견되면 .bound () 통지 자 콜백이 호출됩니다. 모든 하위 장치를 찾은 후 .complete () 콜백이 호출됩니다. 하위 장치가 시스템에서 제거되면 .unbind () 메서드가 호출됩니다. 세 가지 콜백은 모두 선택 사항입니다.
+
+
+V4L2 sub-device userspace API
+-----------------------------
+
+Beside exposing a kernel API through the v4l2_subdev_ops structure, V4L2
+sub-devices can also be controlled directly by userspace applications.
+v4l2_subdev_ops 구조를 통해 커널 API를 표시하는 것 외에도 V4L2 하위 장치는 사용자 공간 응용 프로그램에서 직접 제어 할 수도 있습니다.
+
+Device nodes named v4l-subdevX can be created in /dev to access sub-devices
+directly. If a sub-device supports direct userspace configuration it must set
+the V4L2_SUBDEV_FL_HAS_DEVNODE flag before being registered.
+v4l-subdevX라는 장치 노드를 / dev에 만들어 하위 장치에 직접 액세스 할 수 있습니다. 하위 장치가 직접 사용자 공간 구성을 지원하면 등록되기 전에 V4L2_SUBDEV_FL_HAS_DEVNODE 플래그를 설정해야합니다.
+
+After registering sub-devices, the v4l2_device driver can create device nodes
+for all registered sub-devices marked with V4L2_SUBDEV_FL_HAS_DEVNODE by calling
+v4l2_device_register_subdev_nodes(). Those device nodes will be automatically
+removed when sub-devices are unregistered.
+하위 장치를 등록한 후 v4l2_device 드라이버는 v4l2_device_register_subdev_nodes ()를 호출하여 V4L2_SUBDEV_FL_HAS_DEVNODE로 표시된 모든 등록 된 하위 장치에 대한 장치 노드를 만들 수 있습니다. 
+이러한 장치 노드는 하위 장치가 등록 해제 될 때 자동으로 제거됩니다.
+
+The device node handles a subset of the V4L2 API.
+디바이스 노드는 V4L2 API의 서브 세트를 처리합니다.
+
+VIDIOC_QUERYCTRL
+VIDIOC_QUERYMENU
+VIDIOC_G_CTRL
+VIDIOC_S_CTRL
+VIDIOC_G_EXT_CTRLS
+VIDIOC_S_EXT_CTRLS
+VIDIOC_TRY_EXT_CTRLS
+
+	The controls ioctls are identical to the ones defined in V4L2. They
+	behave identically, with the only exception that they deal only with
+	controls implemented in the sub-device. Depending on the driver, those
+	controls can be also be accessed through one (or several) V4L2 device
+	nodes.
+컨트롤 ioctls는 V4L2에 정의 된 것과 동일합니다. 유일한 동작은 하위 장치에 구현 된 컨트롤 만 처리한다는 점만 제외하면 동일하게 작동합니다. 드라이버에 따라 하나 또는 여러 개의 V4L2 장치 노드를 통해 이러한 컨트롤에 액세스 할 수도 있습니다.
+
+VIDIOC_DQEVENT
+VIDIOC_SUBSCRIBE_EVENT
+VIDIOC_UNSUBSCRIBE_EVENT
+
+	The events ioctls are identical to the ones defined in V4L2. They
+	behave identically, with the only exception that they deal only with
+	events generated by the sub-device. Depending on the driver, those
+	events can also be reported by one (or several) V4L2 device nodes.
+이벤트 ioctls는 V4L2에 정의 된 것과 동일합니다. 그들은 하위 장치에서 생성 된 이벤트 만 처리한다는 유일한 예외를 제외하고 동일하게 작동합니다. 드라이버에 따라 하나 또는 여러 개의 V4L2 장치 노드에서 이러한 이벤트를보고 할 수도 있습니다.
+
+	Sub-device drivers that want to use events need to set the
+	V4L2_SUBDEV_USES_EVENTS v4l2_subdev::flags and initialize
+	v4l2_subdev::nevents to events queue depth before registering the
+	sub-device. After registration events can be queued as usual on the
+	v4l2_subdev::devnode device node.
+이벤트를 사용하려는 서브 디바이스 드라이버는 서브 디바이스를 등록하기 전에 V4L2_SUBDEV_USES_EVENTS v4l2_subdev :: flags를 설정하고 v4l2_subdev :: nevents를 이벤트 대기열 깊이로 초기화해야합니다. 
+등록 이벤트는 v4l2_subdev :: devnode 장치 노드에서 평소와 같이 대기 할 수 있습니다.
+
+	To properly support events, the poll() file operation is also
+	implemented.
+이벤트를 적절히 지원하기 위해 poll () 파일 작업도 구현됩니다.
+
+Private ioctls
+
+	All ioctls not in the above list are passed directly to the sub-device
+	driver through the core::ioctl operation.
+위의 목록에없는 모든 ioctls는 core :: ioctl 연산을 통해 하위 장치 드라이버로 직접 전달됩니다.
+
+
+I2C sub-device drivers
+----------------------
+
+Since these drivers are so common, special helper functions are available to
+ease the use of these drivers (v4l2-common.h).
+이 드라이버들은 매우 일반적이므로 특별한 도우미 기능이 이 드라이버의 사용을 쉽게 하는데에 사용가능하다 (v4l2-common.h).
+
+The recommended method of adding v4l2_subdev support to an I2C driver is to
+embed the v4l2_subdev struct into the state struct that is created for each
+I2C device instance. Very simple devices have no state struct and in that case
+you can just create a v4l2_subdev directly.
+v4l2_subdev 지원을 I2C 드라이버에 추가하는 권장 방법은 v4l2_subdev 구조체를 각 I2C 장치 인스턴스에 대해 생성 된 상태 구조체에 포함시키는 것입니다. 
+아주 간단한 장치에는 상태 구조체가 없으므로이 경우에는 v4l2_subdev를 직접 만들면됩니다.
+
+A typical state struct would look like this (where 'chipname' is replaced by
+the name of the chip):
+전형적인 state struct는 다음과 같이 보일 것입니다 ( 'chipname'은 칩의 이름으로 대체됩니다) :
+
+struct chipname_state {
+	struct v4l2_subdev sd;
+	...  /* additional state fields */
+};
+
+Initialize the v4l2_subdev struct as follows:
+
+	v4l2_i2c_subdev_init(&state->sd, client, subdev_ops);
+
+This function will fill in all the fields of v4l2_subdev and ensure that the
+v4l2_subdev and i2c_client both point to one another.
+이 함수는 v4l2_subdev의 모든 필드를 채우고 v4l2_subdev와 i2c_client가 모두 서로를 가리키는 지 확인합니다.
+
+You should also add a helper inline function to go from a v4l2_subdev pointer
+to a chipname_state struct:
+또한 v4l2_subdev 포인터에서 chipname_state 구조체로 이동하는 도우미 인라인 함수를 추가해야합니다.
+
+static inline struct chipname_state *to_state(struct v4l2_subdev *sd)
+{
+	return container_of(sd, struct chipname_state, sd);
+}
+
+Use this to go from the v4l2_subdev struct to the i2c_client struct:
+이것을 사용하여 v4l2_subdev 구조체에서 i2c_client 구조체로 이동합니다.
+
+	struct i2c_client *client = v4l2_get_subdevdata(sd);
+
+And this to go from an i2c_client to a v4l2_subdev struct:
+그리고 이것은 i2c_client에서 v4l2_subdev 구조체로 이동합니다 :
+
+	struct v4l2_subdev *sd = i2c_get_clientdata(client);
+
+Make sure to call v4l2_device_unregister_subdev(sd) when the remove() callback
+is called. This will unregister the sub-device from the bridge driver. It is
+safe to call this even if the sub-device was never registered.
+remove () 콜백이 호출 될 때 v4l2_device_unregister_subdev (sd)를 호출해야합니다. 그러면 브리지 드라이버에서 하위 장치의 등록이 취소됩니다. 
+하위 장치가 등록되지 않은 경우에도이를 호출하는 것이 안전합니다.
+
+You need to do this because when the bridge driver destroys the i2c adapter
+the remove() callbacks are called of the i2c devices on that adapter.
+After that the corresponding v4l2_subdev structures are invalid, so they
+have to be unregistered first. Calling v4l2_device_unregister_subdev(sd)
+from the remove() callback ensures that this is always done correctly.
+브리지 드라이버가 i2c 어댑터를 파괴 할 때 remove () 콜백이 해당 어댑터의 i2c 장치로 호출되기 때문에 이렇게해야합니다.
+그런 다음 해당 v4l2_subdev 구조가 유효하지 않으므로 먼저 등록 해제해야합니다. remove () 콜백에서 v4l2_device_unregister_subdev (sd)를 호출하면 이 작업이 항상 올바르게 수행됩니다.
+
+
+The bridge driver also has some helper functions it can use:
+브리지 드라이버에는 사용할 수있는 몇 가지 도우미 기능이 있습니다.
+
+struct v4l2_subdev *sd = v4l2_i2c_new_subdev(v4l2_dev, adapter,
+	       "module_foo", "chipid", 0x36, NULL);
+
+This loads the given module (can be NULL if no module needs to be loaded) and
+calls i2c_new_device() with the given i2c_adapter and chip/address arguments.
+If all goes well, then it registers the subdev with the v4l2_device.
+주어진 모듈을로드하고 (모듈을로드 할 필요가 없으면 NULL이 될 수 있음) 주어진 i2c_adapter 및 칩 / 주소 인수로 i2c_new_device ()를 호출합니다.
+모두 잘되면, subdev를 v4l2_device에 등록합니다.
+
+You can also use the last argument of v4l2_i2c_new_subdev() to pass an array
+of possible I2C addresses that it should probe. These probe addresses are
+only used if the previous argument is 0. A non-zero argument means that you
+know the exact i2c address so in that case no probing will take place.
+v4l2_i2c_new_subdev ()의 마지막 인수를 사용하여 프로브해야하는 가능한 I2C 주소의 배열을 전달할 수도 있습니다. 이러한 프로브 주소는 이전 인수가 0 인 경우에만 사용됩니다. 
+0이 아닌 인수는 정확한 i2c 주소를 알고 있으므로이 경우 프로빙이 수행되지 않습니다.
+
+Both functions return NULL if something went wrong.
+뭔가 잘못되었을 경우 두 함수 모두 NULL을 반환합니다.
+
+Note that the chipid you pass to v4l2_i2c_new_subdev() is usually
+the same as the module name. It allows you to specify a chip variant, e.g.
+"saa7114" or "saa7115". In general though the i2c driver autodetects this.
+The use of chipid is something that needs to be looked at more closely at a
+later date. It differs between i2c drivers and as such can be confusing.
+To see which chip variants are supported you can look in the i2c driver code
+for the i2c_device_id table. This lists all the possibilities.
+v4l2_i2c_new_subdev ()에 전달하는 chipid는 일반적으로 모듈 이름과 같습니다. 칩 변형을 지정할 수 있습니다 
+(예 : "saa7114"또는 "saa7115". 일반적으로 i2c 드라이버가 자동 감지합니다. chipid의 사용은 나중에 더 자세히보아야 할 것입니다. 그것은 i2c 드라이버마다 다르므로 혼동을 줄 수 있습니다. 
+지원되는 칩 변형을 보려면 i2c 드라이버 코드에서 i2c_device_id 테이블을 찾아 볼 수 있습니다. 여기에는 모든 가능성이 나열되어 있습니다.
+
+There are two more helper functions:
+도우미(헬퍼) 함수가 두 가지 더 있습니다.
+
+v4l2_i2c_new_subdev_cfg: this function adds new irq and platform_data
+arguments and has both 'addr' and 'probed_addrs' arguments: if addr is not
+0 then that will be used (non-probing variant), otherwise the probed_addrs
+are probed.
+v4l2_i2c_new_subdev_cfg :이 함수는 새로운 irq 및 platform_data 인수를 추가하고 'addr'및 'probed_addrs'인수를 모두 갖습니다. addr이 0이 아닌 경우 (probing이 아닌 변형) 사용됩니다. 그렇지 않으면 probed_addrs가 조사됩니다.
+
+For example: this will probe for address 0x10:
+
+struct v4l2_subdev *sd = v4l2_i2c_new_subdev_cfg(v4l2_dev, adapter,
+	       "module_foo", "chipid", 0, NULL, 0, I2C_ADDRS(0x10));
+
+v4l2_i2c_new_subdev_board uses an i2c_board_info struct which is passed
+to the i2c driver and replaces the irq, platform_data and addr arguments.
+v4l2_i2c_new_subdev_board는 i2c 드라이버에 전달되는 i2c_board_info 구조체를 사용하고 irq, platform_data 및 addr 인수를 대체합니다.
+
+If the subdev supports the s_config core ops, then that op is called with
+the irq and platform_data arguments after the subdev was setup. The older
+v4l2_i2c_new_(probed_)subdev functions will call s_config as well, but with
+irq set to 0 and platform_data set to NULL.
+subdev가 s_config core ops를 지원하면 subdev가 설정된 후 해당 op가 irq 및 platform_data 인수와 함께 호출됩니다. 이전 버전의 v4l2_i2c_new_ (probed_) 하위 함수는 s_config도 호출하지만 irq는 0으로 설정되고 platform_data는 NULL로 설정됩니다.
+
+struct video_device
+-------------------
+
+The actual device nodes in the /dev directory are created using the
+video_device struct (v4l2-dev.h). This struct can either be allocated
+dynamically or embedded in a larger struct.
+/ dev 디렉토리의 실제 디바이스 노드는 video_device 구조체 (v4l2-dev.h)를 사용하여 작성됩니다. 이 구조체는 동적으로 할당되거나 더 큰 구조체에 포함될 수 있습니다.
+
+To allocate it dynamically use:
+동적으로 할당하려면 다음을 사용하십시오.
+
+	struct video_device *vdev = video_device_alloc();
+
+	if (vdev == NULL)
+		return -ENOMEM;
+
+	vdev->release = video_device_release;
+
+If you embed it in a larger struct, then you must set the release()
+callback to your own function:
+더 큰 구조체에 그것을 포함하는 경우 release () 콜백을 자신의 함수로 설정해야합니다.
+
+	struct video_device *vdev = &my_vdev->vdev;
+
+	vdev->release = my_vdev_release;
+
+The release callback must be set and it is called when the last user
+of the video device exits.
+해제 콜백은 설정되어야하며 비디오 장치의 마지막 사용자가 종료 될 때 호출됩니다.
+
+The default video_device_release() callback just calls kfree to free the
+allocated memory.
+기본 video_device_release () 콜백은 kfree를 호출하여 할당 된 메모리를 해제합니다.
+
+There is also a video_device_release_empty() function that does nothing
+(is empty) and can be used if the struct is embedded and there is nothing
+to do when it is released.
+아무 것도하지 않는 (비어있는) video_device_release_empty () 함수가 있으며 구조체가 포함되어 있고 릴리즈 될 때 아무 것도 할 수없는 경우 사용할 수 있습니다.
+
+You should also set these fields:
+다음 필드도 설정해야합니다.
+
+- v4l2_dev: must be set to the v4l2_device parent device.
+- v4l2_dev : v4l2_device 상위 장치로 설정해야합니다.
+
+- name: set to something descriptive and unique.
+- 이름 : 설명적이고 고유 한 것으로 설정됩니다.
+
+- vfl_dir: set this to VFL_DIR_RX for capture devices (VFL_DIR_RX has value 0,
+  so this is normally already the default), set to VFL_DIR_TX for output
+  devices and VFL_DIR_M2M for mem2mem (codec) devices.
+- vfl_dir : 캡처 장치의 경우 VFL_DIR_RX로 설정합니다 (VFL_DIR_RX의 값이 0이므로 일반적으로 이미 기본값 임). 출력 장치의 경우 VFL_DIR_TX로 설정되고 mem2mem (코덱) 장치의 경우 VFL_DIR_M2M으로 설정합니다.
+
+- fops: set to the v4l2_file_operations struct.
+- fops : v4l2_file_operations 구조체로 설정합니다.
+
+- ioctl_ops: if you use the v4l2_ioctl_ops to simplify ioctl maintenance
+  (highly recommended to use this and it might become compulsory in the
+  future!), then set this to your v4l2_ioctl_ops struct. The vfl_type and
+  vfl_dir fields are used to disable ops that do not match the type/dir
+  combination. E.g. VBI ops are disabled for non-VBI nodes, and output ops
+  are disabled for a capture device. This makes it possible to provide
+  just one v4l2_ioctl_ops struct for both vbi and video nodes.
+- ioctl_ops : v4l2_ioctl_ops를 사용하여 ioctl 유지 관리를 간소화하면 (이 기능을 사용하는 것이 좋으며 나중에 필수가 될 수도 있습니다!),이 값을 v4l2_ioctl_ops 구조체로 설정하십시오. 
+vfl_type 및 vfl_dir 필드는 유형 / 디렉토리 조합과 일치하지 않는 작업을 비활성화하는 데 사용됩니다. 예 : VBI 노드는 VBI가 아닌 노드에서는 사용할 수 없으며 캡처 장치에서는 출력 작업이 비활성화됩니다. 
+이를 통해 vbi 및 비디오 노드 모두에 하나의 v4l2_ioctl_ops 구조체 만 제공 할 수 있습니다.
+
+- lock: leave to NULL if you want to do all the locking in the driver.
+  Otherwise you give it a pointer to a struct mutex_lock and before the
+  unlocked_ioctl file operation is called this lock will be taken by the
+  core and released afterwards. See the next section for more details.
+- lock : 드라이버에서 모든 잠금을 원할 경우 NULL로 남겨 둡니다.
+??그렇지 않으면 struct mutex_lock에 대한 포인터를주고 locked_ioctl 파일 연산이 호출되기 전에이 잠금은 코어에 의해 취해지고 나중에 해제된다. 자세한 내용은 다음 섹션을 참조하십시오.
+
+- queue: a pointer to the struct vb2_queue associated with this device node.
+  If queue is non-NULL, and queue->lock is non-NULL, then queue->lock is
+  used for the queuing ioctls (VIDIOC_REQBUFS, CREATE_BUFS, QBUF, DQBUF,
+  QUERYBUF, PREPARE_BUF, STREAMON and STREAMOFF) instead of the lock above.
+  That way the vb2 queuing framework does not have to wait for other ioctls.
+  This queue pointer is also used by the vb2 helper functions to check for
+  queuing ownership (i.e. is the filehandle calling it allowed to do the
+  operation).
+- 큐 :이 장치 노드와 관련된 구조체 vb2_queue에 대한 포인터. 큐 queue가 non-NULL이고 queue-> lock이 NULL이 아닌 경우 queue-> lock은 상기 잠금 대신에 queuing ioctls 
+(VIDIOC_REQBUFS, CREATE_BUFS, QBUF, DQBUF, QUERYBUF, PREPARE_BUF, STREAMON 및 STREAMOFF)를 사용하십시오. 그렇게하면 vb2 queuing 프레임 워크는 다른 ioctl을 기다릴 필요가 없습니다. 
+이 큐 포인터는 vb2 도우미 함수에 의해 소유권을 대기열에 넣음 (queuing ownership, 즉 그 동작을 허용하는 파일핸들 호출임)을 위한 확인을 하기 위해 사용된다.
+
+- prio: keeps track of the priorities. Used to implement VIDIOC_G/S_PRIORITY.
+  If left to NULL, then it will use the struct v4l2_prio_state in v4l2_device.
+  If you want to have a separate priority state per (group of) device node(s),
+  then you can point it to your own struct v4l2_prio_state.
+- prio : 우선 순위를 추적합니다. VIDIOC_G / S_PRIORITY를 구현하는 데 사용됩니다.
+?? NULL로 남겨두면 v4l2_device에서 struct v4l2_prio_state가 사용됩니다.
+?? 장치 노드 (그룹)별로 별도의 우선 순위 상태를 원할 경우 자신의 struct v4l2_prio_state를 가리킬 수 있습니다.
+
+- dev_parent: you only set this if v4l2_device was registered with NULL as
+  the parent device struct. This only happens in cases where one hardware
+  device has multiple PCI devices that all share the same v4l2_device core.
+- dev_parent : v4l2_device가 부모 장치 구조체로 NULL로 등록 된 경우에만 설정합니다. 이는 하나의 하드웨어 장치에 모두 동일한 v4l2_device 코어를 공유하는 여러 PCI 장치가있는 경우에만 발생합니다.
+
+  The cx88 driver is an example of this: one core v4l2_device struct, but
+  it is used by both a raw video PCI device (cx8800) and a MPEG PCI device
+  (cx8802). Since the v4l2_device cannot be associated with two PCI devices
+  at the same time it is setup without a parent device. But when the struct
+  video_device is initialized you *do* know which parent PCI device to use and
+  so you set dev_device to the correct PCI device.
+cx88 드라이버는 하나의 코어 v4l2_device 구조체이지만이를 원시 비디오 PCI 장치 (cx8800)와 MPEG PCI 장치 (cx8802)에서 모두 사용합니다. 
+v4l2_device는 두 개의 PCI 장치와 동시에 연결할 수 없으므로 상위 장치없이 설치됩니다. 그러나 struct video_device가 초기화 될 때 사용할 부모 PCI 장치를 알기 때문에 dev_device를 올바른 PCI 장치로 설정하십시오.
+
+If you use v4l2_ioctl_ops, then you should set .unlocked_ioctl to video_ioctl2
+in your v4l2_file_operations struct.
+v4l2_ioctl_ops를 사용하는 경우 v4l2_file_operations 구조체에서 .unlocked_ioctl을 video_ioctl2로 설정해야합니다.
+
+Do not use .ioctl! This is deprecated and will go away in the future.
+.ioctl을 사용하지 마십시오! 이것은 더 이상 사용되지 않으며 앞으로 사라질 것입니다.
+
+In some cases you want to tell the core that a function you had specified in
+your v4l2_ioctl_ops should be ignored. You can mark such ioctls by calling this
+function before video_device_register is called:
+어떤 경우에는 v4l2_ioctl_ops에서 지정한 기능이 무시되어야한다는 사실을 코어에 알리고 싶을 수도 있습니다. video_device_register가 호출되기 전에이 함수를 호출하여 이러한 ioctl을 표시 할 수 있습니다.
+
+void v4l2_disable_ioctl(struct video_device *vdev, unsigned int cmd);
+
+This tends to be needed if based on external factors (e.g. which card is
+being used) you want to turns off certain features in v4l2_ioctl_ops without
+having to make a new struct.
+이것은 새로운 구조체를 만들지 않고도 v4l2_ioctl_ops에서 특정 기능을 해제하려는 외부 요인 (예 : 어떤 카드가 사용 중인지)을 기반으로하는 경우에 필요합니다.
+
+The v4l2_file_operations struct is a subset of file_operations. The main
+difference is that the inode argument is omitted since it is never used.
+v4l2_file_operations 구조체는 file_operations의 하위 집합입니다. 가장 큰 차이점은 inode 인수는 사용되지 않으므로 생략된다는 것입니다.
+
+If integration with the media framework is needed, you must initialize the
+media_entity struct embedded in the video_device struct (entity field) by
+calling media_entity_init():
+미디어 프레임 워크와의 통합이 필요한 경우 media_entity_init ()를 호출하여 video_device 구조체 (엔터티 필드)에 포함 된 media_entity struct를 초기화해야합니다.
+
+	struct media_pad *pad = &my_vdev->pad;
+	int err;
+
+	err = media_entity_init(&vdev->entity, 1, pad, 0);
+
+The pads array must have been previously initialized. There is no need to
+manually set the struct media_entity type and name fields.
+패드 배열은 이전에 초기화되어 있어야합니다. struct media_entity 유형 및 이름 필드를 수동으로 설정할 필요가 없습니다.
+
+A reference to the entity will be automatically acquired/released when the
+video device is opened/closed.
+엔티티에 대한 참조는 비디오 장치가 열리거나 닫힐 때 자동으로 획득 / 해제됩니다.
+
+ioctls and locking
+------------------
+
+The V4L core provides optional locking services. The main service is the
+lock field in struct video_device, which is a pointer to a mutex. If you set
+this pointer, then that will be used by unlocked_ioctl to serialize all ioctls.
+V4L 코어는 선택적 잠금 서비스를 제공합니다. 주 서비스는 mutex에 대한 포인터 인 struct video_device의 잠금 필드입니다. 이 포인터를 설정하면 unlocked_ioctl이이를 사용하여 모든 ioctl을 직렬화합니다.
+
+If you are using the videobuf2 framework, then there is a second lock that you
+can set: video_device->queue->lock. If set, then this lock will be used instead
+of video_device->lock to serialize all queuing ioctls (see the previous section
+for the full list of those ioctls).
+videobuf2 프레임 워크를 사용하고 있다면 설정할 수있는 두 번째 잠금 장치가 있습니다 : video_device-> queue-> lock. 설정된 경우,이 잠금은 video_device-> lock 대신에 사용되어 모든 대기열 ioctl을 직렬화합니다 
+(이전 절에서는 해당 ioctl의 전체 목록을 참조하십시오).
+
+The advantage of using a different lock for the queuing ioctls is that for some
+drivers (particularly USB drivers) certain commands such as setting controls
+can take a long time, so you want to use a separate lock for the buffer queuing
+ioctls. That way your VIDIOC_DQBUF doesn't stall because the driver is busy
+changing the e.g. exposure of the webcam.
+대기열 ioctls에 다른 잠금을 사용하는 이점은 어떤 드라이버 (특히 USB 드라이버)에게는 제어 설정과 같은 특정 명령에 시간이 오래 걸릴 수 있으므로 버퍼 대기열 ioctls에 별도의 잠금을 사용하려고합니다. 
+그런 방식으로 VIDIOC_DQBUF가 웹캠 노출 처럼 바쁘게 변화하기 때문에 지연되지 않는다.
+
+Of course, you can always do all the locking yourself by leaving both lock
+pointers at NULL.
+물론 양쪽 잠금 포인터를 NULL로두면 항상 모든 잠금을 수행 할 수 있습니다.
+
+If you use the old videobuf then you must pass the video_device lock to the
+videobuf queue initialize function: if videobuf has to wait for a frame to
+arrive, then it will temporarily unlock the lock and relock it afterwards. If
+your driver also waits in the code, then you should do the same to allow other
+processes to access the device node while the first process is waiting for
+something.
+이전 videobuf를 사용하는 경우 video_device 잠금을 videobuf 대기열 초기화 함수에 전달해야합니다. videobuf가 프레임이 도착하기를 기다려야하는 경우 일시적으로 잠금을 해제하고 다시 잠금을 해제합니다. 
+드라이버가 코드를 기다리는 경우 첫 번째 프로세스가 무언가를 기다리는 동안 다른 프로세스가 장치 노드에 액세스 할 수 있도록 동일한 작업을 수행해야합니다.
+
+In the case of videobuf2 you will need to implement the wait_prepare and
+wait_finish callbacks to unlock/lock if applicable. If you use the queue->lock
+pointer, then you can use the helper functions vb2_ops_wait_prepare/finish.
+videobuf2의 경우에는 적용 가능한 경우 잠금 해제 / 잠 그기 위해 wait_prepare 및 wait_finish 콜백을 구현해야합니다. 대기열 -> 잠금 포인터를 사용하는 경우 vb2_ops_wait_prepare / finish 도우미 함수를 사용할 수 있습니다.
+
+The implementation of a hotplug disconnect should also take the lock from
+video_device before calling v4l2_device_disconnect. If you are also using
+video_device->queue->lock, then you have to first lock video_device->queue->lock
+followed by video_device->lock. That way you can be sure no ioctl is running
+when you call v4l2_device_disconnect.
+핫 플러그 연결 해제 구현은 v4l2_device_disconnect를 호출하기 전에 video_device에서 잠금을 가져와야합니다. video_device-> queue-> lock도 사용하고 있다면 먼저 video_device-> queue-> lock을 잠 가야합니다그 뒤에는 video_device-> lock이 있습니다. 
+그렇게하면 v4l2_device_disconnect를 호출 할 때 확실하게 ioctl이 실행되지 않습니다.
+
+video_device registration
+-------------------------
+video_device 등록
+
+Next you register the video device: this will create the character device
+for you.
+다음으로 비디오 장치를 등록하십시오. 그러면 문자 장치가 생성됩니다.
+
+	err = video_register_device(vdev, VFL_TYPE_GRABBER, -1);
+	if (err) {
+		video_device_release(vdev); /* or kfree(my_vdev); */
+		return err;
+	}
+
+If the v4l2_device parent device has a non-NULL mdev field, the video device
+entity will be automatically registered with the media device.
+v4l2_device 상위 장치에 NULL이 아닌 mdev 필드가 있으면 비디오 장치 엔티티가 미디어 장치에 자동으로 등록됩니다.
+
+Which device is registered depends on the type argument. The following
+types exist:
+등록 된 장치는 유형 인수에 따라 다릅니다. 다음과 같은 유형이 있습니다.
+
+VFL_TYPE_GRABBER: videoX for video input/output devices
+VFL_TYPE_VBI: vbiX for vertical blank data (i.e. closed captions, teletext)
+VFL_TYPE_RADIO: radioX for radio tuners
+VFL_TYPE_SDR: swradioX for Software Defined Radio tuners
+
+The last argument gives you a certain amount of control over the device
+device node number used (i.e. the X in videoX). Normally you will pass -1
+to let the v4l2 framework pick the first free number. But sometimes users
+want to select a specific node number. It is common that drivers allow
+the user to select a specific device node number through a driver module
+option. That number is then passed to this function and video_register_device
+will attempt to select that device node number. If that number was already
+in use, then the next free device node number will be selected and it
+will send a warning to the kernel log.
+마지막 인수는 사용 된 기기 노드 번호 (즉, videoX의 X)에 대해 특정 양의 제어를 제공합니다. 일반적으로 -1을 전달하면 v4l2 프레임 워크가 첫 번째 비어있는 번호를 선택합니다. 
+그러나 때로는 사용자가 특정 노드 번호를 선택하려고합니다. 일반적으로 드라이버는 사용자가 드라이버 모듈 옵션을 통해 특정 장치 노드 번호를 선택할 수 있도록합니다. 
+이 번호는이 함수에 전달되고 video_register_device는 해당 장치 노드 번호를 선택하려고 시도합니다. 해당 번호가 이미 사용 중이면 다음 사용 가능 장치 노드 번호가 선택되고 커널 로그에 경고가 전송됩니다.
+
+Another use-case is if a driver creates many devices. In that case it can
+be useful to place different video devices in separate ranges. For example,
+video capture devices start at 0, video output devices start at 16.
+So you can use the last argument to specify a minimum device node number
+and the v4l2 framework will try to pick the first free number that is equal
+or higher to what you passed. If that fails, then it will just pick the
+first free number.
+또 하나의 유스 케이스는 드라이버가 많은 디바이스를 생성하는 경우이다. 이 경우 다른 비디오 장치를 별도의 범위에 배치하는 것이 유용 할 수 있습니다. 예를 들어 비디오 캡처 장치는 0에서 시작하고 비디오 출력 장치는 16에서 시작합니다. 
+따라서 마지막 인수를 사용하여 최소 장치 노드 번호를 지정할 수 있으며 v4l2 프레임 워크는 당신이 넘겨준 것과 같거나 더 높은 첫 번째 자유 번호를 선택하려 시도한다. 실패하면 첫 번째 자유로운 번호를 선택합니다.
+
+Since in this case you do not care about a warning about not being able
+to select the specified device node number, you can call the function
+video_register_device_no_warn() instead.
+이 경우 지정된 장치 노드 번호를 선택할 수 없다는 경고가 표시되지 않으므로 대신 video_register_device_no_warn () 함수를 호출 할 수 있습니다.
+
+Whenever a device node is created some attributes are also created for you.
+If you look in /sys/class/video4linux you see the devices. Go into e.g.
+video0 and you will see 'name', 'dev_debug' and 'index' attributes. The 'name'
+attribute is the 'name' field of the video_device struct. The 'dev_debug' attribute
+can be used to enable core debugging. See the next section for more detailed
+information on this.
+디바이스 노드가 생성 될 때마다 어떤 속성도 생성됩니다.
+/ sys / class / video4linux를 보면 장치를 볼 수 있습니다. 예 : video0을 입력하면 'name', 'dev_debug'및 'index'속성이 표시됩니다. 
+'name'속성은 video_device 구조체의 'name'필드입니다. 'dev_debug'속성은 핵심 디버깅을 활성화하는 데 사용할 수 있습니다. 자세한 내용은 다음 섹션을 참조하십시오.
+
+The 'index' attribute is the index of the device node: for each call to
+video_register_device() the index is just increased by 1. The first video
+device node you register always starts with index 0.
+'index'속성은 장치 노드의 인덱스입니다. video_register_device ()를 호출 할 때마다 인덱스가 1 씩 증가합니다. 등록한 첫 번째 비디오 장치 노드는 항상 인덱스 0으로 시작합니다.
+
+Users can setup udev rules that utilize the index attribute to make fancy
+device names (e.g. 'mpegX' for MPEG video capture device nodes).
+사용자는 멋진 장치 이름 (예 : MPEG 비디오 캡처 장치 노드의 경우 'mpegX')을 만들기 위해 색인 속성을 사용하는 udev 규칙을 설정할 수 있습니다.
+
+After the device was successfully registered, then you can use these fields:
+장치가 성공적으로 등록되면 다음 필드를 사용할 수 있습니다.
+
+- vfl_type: the device type passed to video_register_device.
+- minor: the assigned device minor number.
+- num: the device node number (i.e. the X in videoX).
+- index: the device index number.
+
+If the registration failed, then you need to call video_device_release()
+to free the allocated video_device struct, or free your own struct if the
+video_device was embedded in it. The vdev->release() callback will never
+be called if the registration failed, nor should you ever attempt to
+unregister the device if the registration failed.
+등록에 실패하면 video_device_release ()를 호출하여 할당 된 video_device 구조체를 해제하거나 video_device가 포함 된 구조체를 해제해야합니다. 
+등록에 실패하면 vdev-> release () 콜백이 호출되지 않으며 등록이 실패한 경우 장치를 등록 취소하려고 시도해서도 안됩니다.
+
+video device debugging
+----------------------
+
+The 'dev_debug' attribute that is created for each video, vbi, radio or swradio
+device in /sys/class/video4linux/<devX>/ allows you to enable logging of
+file operations.
+/ sys / class / video4linux / <devX> /의 각 비디오, vbi, 라디오 또는 swradio 장치에 대해 생성되는 'dev_debug'속성은 파일 작업의 로깅을 활성화 할 수 있습니다.
+
+It is a bitmask and the following bits can be set:
+이것은 비트 마스크이며 다음과 같은 비트를 설정할 수 있습니다.
+
+0x01: Log the ioctl name and error code. VIDIOC_(D)QBUF ioctls are only logged
+      if bit 0x08 is also set.
+0x01 : ioctl 이름과 오류 코드를 기록하십시오. VIDIOC_ (D) QBUF ioctls는 비트 0x08도 설정되어있는 경우에만 기록됩니다.
+
+0x02: Log the ioctl name arguments and error code. VIDIOC_(D)QBUF ioctls are
+      only logged if bit 0x08 is also set.
+0x02 : ioctl 이름 인수와 오류 코드를 기록하십시오. VIDIOC_ (D) QBUF ioctls는 비트 0x08도 설정되어있는 경우에만 기록됩니다.
+
+0x04: Log the file operations open, release, read, write, mmap and
+      get_unmapped_area. The read and write operations are only logged if
+      bit 0x08 is also set.
+0x04 : 파일 작업을 열기, 해제, 읽기, 쓰기, mmap 및 get_unmapped_area 로깅합니다. 비트 0x08도 설정되어 있으면 읽기 및 쓰기 작업 만 기록됩니다.
+
+0x08: Log the read and write file operations and the VIDIOC_QBUF and
+      VIDIOC_DQBUF ioctls.
+0x08 : 읽기 및 쓰기 파일 작업과 VIDIOC_QBUF 및 VIDIOC_DQBUF ioctls를 로깅합니다.
+
+0x10: Log the poll file operation.
+0x10 : 폴 파일 작업을 기록합니다.
+
+video_device cleanup
+--------------------
+
+When the video device nodes have to be removed, either during the unload
+of the driver or because the USB device was disconnected, then you should
+unregister them:
+드라이버 언로드 또는 USB 장치 분리로 인해 비디오 장치 노드를 제거해야 할 경우 다음과 같이 등록을 취소해야합니다.
+
+	video_unregister_device(vdev);
+
+This will remove the device nodes from sysfs (causing udev to remove them
+from /dev).
+그러면 sysfs에서 장치 노드가 제거되어 udev가 / dev에서 장치 노드를 제거합니다.
+
+After video_unregister_device() returns no new opens can be done. However,
+in the case of USB devices some application might still have one of these
+device nodes open. So after the unregister all file operations (except
+release, of course) will return an error as well.
+video_unregister_device ()가 반환 한 후에는 새로 열리지 않습니다. 그러나 USB 장치의 경우 일부 응용 프로그램은 이러한 장치 노드 중 하나를 열어 둘 수 있습니다. 
+따라서 모든 파일 작업 등록을 취소 한 후에 (물론 릴리스 제외) 오류도 반환됩니다.
+
+When the last user of the video device node exits, then the vdev->release()
+callback is called and you can do the final cleanup there.
+비디오 장치 노드의 마지막 사용자가 종료되면 vdev-> release () 콜백이 호출되고 여기서 최종 정리를 수행 할 수 있습니다.
+
+Don't forget to cleanup the media entity associated with the video device if
+it has been initialized:
+비디오 장치가 초기화 된 경우 해당 비디오 장치와 관련된 미디어 엔터티를 정리하는 것을 잊지 마십시오.
+
+	media_entity_cleanup(&vdev->entity);
+
+This can be done from the release callback.
+이는 릴리스 콜백에서 수행 할 수 있습니다.
+
+
+video_device helper functions
+-----------------------------
+
+There are a few useful helper functions:
+다음과 같은 몇 가지 유용한 도우미 기능이 있습니다.
+
+- file/video_device private data
+
+You can set/get driver private data in the video_device struct using:
+다음을 사용하여 video_device 구조체에서 드라이버 개인 데이터를 설정하거나 가져올 수 있습니다.
+
+void *video_get_drvdata(struct video_device *vdev);
+void video_set_drvdata(struct video_device *vdev, void *data);
+
+Note that you can safely call video_set_drvdata() before calling
+video_register_device().
+video_register_device ()를 호출하기 전에 안전하게 video_set_drvdata ()를 호출 할 수 있습니다.
+
+And this function:
+
+struct video_device *video_devdata(struct file *file);
+
+returns the video_device belonging to the file struct.
+그리고이 함수는 파일 구조체에 속한 video_device를 반환합니다.
+
+The video_drvdata function combines video_get_drvdata with video_devdata:
+video_drvdata 함수는 video_get_drvdata와 video_devdata를 결합합니다.
+
+void *video_drvdata(struct file *file);
+
+You can go from a video_device struct to the v4l2_device struct using:
+다음을 사용하여 video_device 구조체에서 v4l2_device 구조체로 이동할 수 있습니다.
+
+struct v4l2_device *v4l2_dev = vdev->v4l2_dev;
+
+- Device node name
+
+The video_device node kernel name can be retrieved using
+video_device 노드 커널 이름은 다음을 사용하여 검색 할 수 있습니다.
+
+const char *video_device_node_name(struct video_device *vdev);
+
+The name is used as a hint by userspace tools such as udev. The function
+should be used where possible instead of accessing the video_device::num and
+video_device::minor fields.
+이 이름은 udev와 같은 사용자 공간 도구의 힌트로 사용됩니다. video_device :: num 및 video_device :: minor 필드에 액세스하는 대신 가능하면 함수를 사용해야합니다.
+
+
+video buffer helper functions
+-----------------------------
+
+The v4l2 core API provides a set of standard methods (called "videobuf")
+for dealing with video buffers. Those methods allow a driver to implement
+read(), mmap() and overlay() in a consistent way.  There are currently
+methods for using video buffers on devices that supports DMA with
+scatter/gather method (videobuf-dma-sg), DMA with linear access
+(videobuf-dma-contig), and vmalloced buffers, mostly used on USB drivers
+(videobuf-vmalloc).
+v4l2 코어 API는 비디오 버퍼 처리를위한 일련의 표준 메소드 ( "videobuf"라고 함)를 제공합니다. 
+이러한 메서드를 사용하면 드라이버가 일관된 방식으로 read (), mmap () 및 overlay ()를 구현할 수 있습니다. 
+현재 분산 / 수집 방법 (videobuf-dma-sg), 선형 액세스 (videobuf-dma-contig)가있는 DMA 및 USB 드라이버 (videobuf-vmalloc)를 주로 사용하는 vmalloced 버퍼를 지원하는 장치에서 비디오 버퍼를 사용하는 방법이 있습니다. 
+
+Please see Documentation/video4linux/videobuf for more information on how
+to use the videobuf layer.
+videobuf 레이어를 사용하는 방법에 대한 자세한 내용은 Documentation / video4linux / videobuf를 참조하십시오.
+
+struct v4l2_fh
+--------------
+
+struct v4l2_fh provides a way to easily keep file handle specific data
+that is used by the V4L2 framework. New drivers must use struct v4l2_fh
+since it is also used to implement priority handling (VIDIOC_G/S_PRIORITY).
+struct v4l2_fh는 V4L2 프레임 워크에서 사용되는 특정 데이터를 파일 핸들링을 쉽게 유지할 수있는 방법을 제공합니다. 
+새 드라이버는 구조체 v4l2_fh를 사용해야합니다.이 드라이버는 우선 순위 처리 (VIDIOC_G / S_PRIORITY)를 구현하는데도 사용되기 때문입니다.
+
+The users of v4l2_fh (in the V4L2 framework, not the driver) know
+whether a driver uses v4l2_fh as its file->private_data pointer by
+testing the V4L2_FL_USES_V4L2_FH bit in video_device->flags. This bit is
+set whenever v4l2_fh_init() is called.
+v4l2_fh 사용자 (드라이버가 아닌 V4L2 프레임 워크에서)는 video_device-> 플래그에서 V4L2_FL_USES_V4L2_FH 비트를 테스트하여 드라이버가 파일 -> 개인 데이터 포인터로 v4l2_fh를 사용하는지 여부를 알 수 있습니다. 
+이 비트는 v4l2_fh_init ()가 호출 될 때마다 설정됩니다.
+
+struct v4l2_fh is allocated as a part of the driver's own file handle
+structure and file->private_data is set to it in the driver's open
+function by the driver.
+struct v4l2_fh는 드라이버 자신의 파일 핸들 구조의 일부로 할당되며 file-> private_data는 드라이버에 의해 드라이버의 열린 함수에서 설정됩니다.
+
+In many cases the struct v4l2_fh will be embedded in a larger structure.
+In that case you should call v4l2_fh_init+v4l2_fh_add in open() and
+v4l2_fh_del+v4l2_fh_exit in release().
+대부분의 경우 구조체 v4l2_fh는 더 큰 구조에 포함됩니다.
+이 경우 open ()에서는 v4l2_fh_init + v4l2_fh_add를 호출하고 release ()에서는 v4l2_fh_del + v4l2_fh_exit을 호출해야합니다.
+
+Drivers can extract their own file handle structure by using the container_of
+macro. Example:
+드라이버는 매크로의 container_of를 사용하여 자신의 파일 핸들 구조를 추출 할 수 있습니다. 예:
+
+struct my_fh {
+	int blah;
+	struct v4l2_fh fh;
+};
+
+...
+
+int my_open(struct file *file)
+{
+	struct my_fh *my_fh;
+	struct video_device *vfd;
+	int ret;
+
+	...
+
+	my_fh = kzalloc(sizeof(*my_fh), GFP_KERNEL);
+
+	...
+
+	v4l2_fh_init(&my_fh->fh, vfd);
+
+	...
+
+	file->private_data = &my_fh->fh;
+	v4l2_fh_add(&my_fh->fh);
+	return 0;
+}
+
+int my_release(struct file *file)
+{
+	struct v4l2_fh *fh = file->private_data;
+	struct my_fh *my_fh = container_of(fh, struct my_fh, fh);
+
+	...
+	v4l2_fh_del(&my_fh->fh);
+	v4l2_fh_exit(&my_fh->fh);
+	kfree(my_fh);
+	return 0;
+}
+
+Below is a short description of the v4l2_fh functions used:
+다음은 사용 된 v4l2_fh 기능에 대한 간략한 설명입니다.
+
+void v4l2_fh_init(struct v4l2_fh *fh, struct video_device *vdev)
+
+  Initialise the file handle. This *MUST* be performed in the driver's
+  v4l2_file_operations->open() handler.
+파일 핸들을 초기화하십시오. 이것은 * 드라이버의 v4l2_file_operations-> open () 핸들러에서 수행되어야합니다.
+
+void v4l2_fh_add(struct v4l2_fh *fh)
+
+  Add a v4l2_fh to video_device file handle list. Must be called once the
+  file handle is completely initialized.
+video_device 파일 핸들 목록에 v4l2_fh를 추가하십시오. 파일 핸들이 완전히 초기화되면 호출되어야합니다.
+
+void v4l2_fh_del(struct v4l2_fh *fh)
+
+  Unassociate the file handle from video_device(). The file handle
+  exit function may now be called.
+video_device ()에서 파일 핸들의 연결을 끊습니다. 이제 파일 핸들 종료 함수를 호출 할 수 있습니다.
+
+void v4l2_fh_exit(struct v4l2_fh *fh)
+
+  Uninitialise the file handle. After uninitialisation the v4l2_fh
+  memory can be freed.
+파일 핸들을 초기화 해제하십시오. 초기화되지 않으면 v4l2_fh 메모리를 비울 수 있습니다.
+
+
+If struct v4l2_fh is not embedded, then you can use these helper functions:
+struct v4l2_fh가 내장되어 있지 않으면 다음과 같은 도우미 함수를 사용할 수 있습니다.
+
+int v4l2_fh_open(struct file *filp)
+
+  This allocates a struct v4l2_fh, initializes it and adds it to the struct
+  video_device associated with the file struct.
+이 구조체는 v4l2_fh 구조체를 할당하고이를 초기화하고 파일 구조체와 연관된 struct video_device에 추가합니다.
+
+int v4l2_fh_release(struct file *filp)
+
+  This deletes it from the struct video_device associated with the file
+  struct, uninitialised the v4l2_fh and frees it.
+이렇게하면 파일 구조체와 연관된 struct video_device에서 삭제되고 v4l2_fh가 초기화되지 않고 해제됩니다.
+
+These two functions can be plugged into the v4l2_file_operation's open() and
+release() ops.
+이 두 함수는 v4l2_file_operation의 open () 및 release () 작업에 연결할 수 있습니다.
+
+
+Several drivers need to do something when the first file handle is opened and
+when the last file handle closes. Two helper functions were added to check
+whether the v4l2_fh struct is the only open filehandle of the associated
+device node:
+여러 드라이버가 첫 번째 파일 핸들을 열 때 및 마지막 파일 핸들을 닫을 때 뭔가를해야합니다. 
+v4l2_fh 구조체가 관련 장치 노드의 유일한 열린 파일 핸들인지 확인하기 위해 두 가지 도우미 함수가 추가되었습니다.
+
+int v4l2_fh_is_singular(struct v4l2_fh *fh)
+
+  Returns 1 if the file handle is the only open file handle, else 0.
+파일 핸들이 열려있는 파일 핸들 만이면 1을 반환하고 그렇지 않으면 0을 반환합니다.
+
+int v4l2_fh_is_singular_file(struct file *filp)
+
+  Same, but it calls v4l2_fh_is_singular with filp->private_data.
+동일하지만, filp-> private_data로 v4l2_fh_is_singular를 호출합니다.
+
+
+V4L2 events
+-----------
+
+The V4L2 events provide a generic way to pass events to user space.
+The driver must use v4l2_fh to be able to support V4L2 events.
+V4L2 이벤트는 이벤트를 사용자 공간에 전달하는 일반적인 방법을 제공합니다.
+드라이버는 V4L2 이벤트를 지원할 수 있도록 v4l2_fh를 사용해야합니다.
+
+Events are defined by a type and an optional ID. The ID may refer to a V4L2
+object such as a control ID. If unused, then the ID is 0.
+이벤트는 유형 및 선택적 ID로 정의됩니다. ID는 제어 ID와 같은 V4L2 오브젝트를 참조 할 수 있습니다. 사용하지 않으면 ID는 0입니다.
+
+When the user subscribes to an event the driver will allocate a number of
+kevent structs for that event. So every (type, ID) event tuple will have
+its own set of kevent structs. This guarantees that if a driver is generating
+lots of events of one type in a short time, then that will not overwrite
+events of another type.
+사용자가 이벤트에 가입하면 드라이버는 해당 이벤트에 대한 여러 kevent 구조체를 할당합니다. 따라서 모든 (type, ID) 이벤트 튜플에는 자체 kevent 구조체 집합이 있습니다. 
+이렇게하면 드라이버가 짧은 시간에 한 가지 유형의 이벤트를 많이 생성하는 경우 다른 유형의 이벤트를 덮어 쓰지 않습니다.
+
+But if you get more events of one type than the number of kevents that were
+reserved, then the oldest event will be dropped and the new one added.
+그러나 예약 된 이벤트 수보다 한 가지 유형의 이벤트가 더 많이 발생하면 가장 오래된 이벤트가 삭제되고 새 이벤트가 추가됩니다.
+
+Furthermore, the internal struct v4l2_subscribed_event has merge() and
+replace() callbacks which drivers can set. These callbacks are called when
+a new event is raised and there is no more room. The replace() callback
+allows you to replace the payload of the old event with that of the new event,
+merging any relevant data from the old payload into the new payload that
+replaces it. It is called when this event type has only one kevent struct
+allocated. The merge() callback allows you to merge the oldest event payload
+into that of the second-oldest event payload. It is called when there are two
+or more kevent structs allocated.
+또한 내부 구조체 인 v4l2_subscribed_event는 드라이버가 설정할 수있는 콜백을 merge () 및 replace ()합니다. 
+이러한 콜백은 새 이벤트가 발생하고 더 이상 공간이 없을 때 호출됩니다. replace () 콜백을 사용하면 이전 이벤트의 페이로드를 새 이벤트의 페이로드로 대체하고 이전 페이로드의 관련 데이터를이를 대체하는 새 페이로드로 병합 할 수 있습니다. 
+이 이벤트 타입이 하나의 kevent 구조체 만 할당되었을 때 호출됩니다. merge () 콜백을 사용하면 가장 오래된 이벤트 페이로드를 두 번째 가장 오래된 이벤트 페이로드의 병합 이벤트로 병합 할 수 있습니다. 두 개 이상의 kevent 구조체가 할당 될 때 호출됩니다.
+
+This way no status information is lost, just the intermediate steps leading
+up to that state.
+이렇게하면 상태 정보가 손실되지 않고 그 상태로 이어지는 중간 단계 만 손실됩니다.
+
+A good example of these replace/merge callbacks is in v4l2-event.c:
+ctrls_replace() and ctrls_merge() callbacks for the control event.
+이러한 대체 / 병합 콜백의 좋은 예는 v4l2-event.c에 있습니다.
+컨트롤 이벤트에 대한 ctrls_replace () 및 ctrls_merge () 콜백
+
+Note: these callbacks can be called from interrupt context, so they must be
+fast.
+참고 : 이러한 콜백은 인터럽트 컨텍스트에서 호출 될 수 있으므로 빨라야 합니다.
+
+Useful functions:
+
+void v4l2_event_queue(struct video_device *vdev, const struct v4l2_event *ev)
+
+  Queue events to video device. The driver's only responsibility is to fill
+  in the type and the data fields. The other fields will be filled in by
+  V4L2.
+이벤트를 비디오 장치에 대기시킵니다. 드라이버의 유일한 책임은 유형 및 데이터 필드를 채우는 것입니다. 다른 필드는 V4L2로 채워집니다.
+
+int v4l2_event_subscribe(struct v4l2_fh *fh,
+			 struct v4l2_event_subscription *sub, unsigned elems,
+			 const struct v4l2_subscribed_event_ops *ops)
+
+  The video_device->ioctl_ops->vidioc_subscribe_event must check the driver
+  is able to produce events with specified event id. Then it calls
+  v4l2_event_subscribe() to subscribe the event.
+video_device-> ioctl_ops-> vidioc_subscribe_event는 드라이버가 지정된 이벤트 ID로 이벤트를 생성 할 수 있는지 확인해야합니다. 
+그런 다음 v4l2_event_subscribe ()를 호출하여 이벤트를 구독합니다.
+
+  The elems argument is the size of the event queue for this event. If it is 0,
+  then the framework will fill in a default value (this depends on the event
+  type).
+elems 인수는이 이벤트에 대한 이벤트 대기열의 크기입니다. 값이 0이면 프레임 워크가 기본값 (이벤트 유형에 따라 다름)을 채 웁니다.
+
+  The ops argument allows the driver to specify a number of callbacks:
+ops 인수를 사용하면 드라이버가 여러 콜백을 지정할 수 있습니다.
+  * add:     called when a new listener gets added (subscribing to the same
+             event twice will only cause this callback to get called once)
+* add : 새 리스너가 추가되면 호출됩니다 (동일한 이벤트를 두 번 구독하면이 콜백이 한 번 호출됩니다)
+
+  * del:     called when a listener stops listening
+* del : 리스너가 청취를 중단 할 때 호출됩니다.
+
+  * replace: replace event 'old' with event 'new'.
+  * merge:   merge event 'old' into event 'new'.
+  All 4 callbacks are optional, if you don't want to specify any callbacks
+  the ops argument itself maybe NULL.
+모든 콜백은 선택적입니다. 콜백을 지정하지 않으려면 ops 인수 자체가 NULL 일 수 있습니다.
+
+int v4l2_event_unsubscribe(struct v4l2_fh *fh,
+			   struct v4l2_event_subscription *sub)
+
+  vidioc_unsubscribe_event in struct v4l2_ioctl_ops. A driver may use
+  v4l2_event_unsubscribe() directly unless it wants to be involved in
+  unsubscription process.
+struct v4l2_ioctl_ops의 vidioc_unsubscribe_event. 드라이버는 가입 취소 프로세스에 참여하기를 원치 않는 한 v4l2_event_unsubscribe ()를 직접 사용할 수 있습니다.
+
+  The special type V4L2_EVENT_ALL may be used to unsubscribe all events. The
+  drivers may want to handle this in a special way.
+특수 유형 V4L2_EVENT_ALL은 모든 이벤트의 등록을 취소하는 데 사용될 수 있습니다. 드라이버는 특별한 방법으로이를 처리하기를 원할 수 있습니다.
+
+int v4l2_event_pending(struct v4l2_fh *fh)
+
+  Returns the number of pending events. Useful when implementing poll.
+보류 중의 이벤트의 수를 돌려줍니다. poll(설문 조사)를 시행 할 때 유용합니다.
+
+Events are delivered to user space through the poll system call. The driver
+can use v4l2_fh->wait (a wait_queue_head_t) as the argument for poll_wait().
+이벤트는 폴링 시스템 호출을 통해 사용자 공간에 전달됩니다. 드라이버는 poll_wait ()에 대한 인수로 v4l2_fh-> wait (wait_queue_head_t)를 사용할 수 있습니다.
+
+There are standard and private events. New standard events must use the
+smallest available event type. The drivers must allocate their events from
+their own class starting from class base. Class base is
+V4L2_EVENT_PRIVATE_START + n * 1000 where n is the lowest available number.
+The first event type in the class is reserved for future use, so the first
+available event type is 'class base + 1'.
+표준 및 사적인 이벤트가 있습니다. 새 표준 이벤트는 사용 가능한 가장 작은 이벤트 유형을 사용해야합니다. 드라이버는 클래스베이스에서 시작하여 자신의 클래스에서 이벤트를 할당해야합니다. 
+클래스 기본은 V4L2_EVENT_PRIVATE_START + n * 1000입니다. 여기서 n은 사용 가능한 가장 낮은 번호입니다. 클래스의 첫 번째 이벤트 유형은 나중에 사용하도록 예약되어 있으므로 사용 가능한 첫 번째 이벤트 유형은 'class base + 1'입니다.
+
+An example on how the V4L2 events may be used can be found in the OMAP
+3 ISP driver (drivers/media/platform/omap3isp).
+V4L2 이벤트를 사용하는 방법에 대한 예제는 OMAP 3 ISP 드라이버 (drivers / media / platform / omap3isp)에서 찾을 수 있습니다.
+
+A subdev can directly send an event to the v4l2_device notify function with
+V4L2_DEVICE_NOTIFY_EVENT. This allows the bridge to map the subdev that sends
+the event to the video node(s) associated with the subdev that need to be
+informed about such an event.
+하위 노드는 V4L2_DEVICE_NOTIFY_EVENT를 사용하여 이벤트를 v4l2_device 통지 함수에 직접 보낼 수 있습니다. 이를 통해 브리지는 이벤트를 보내는 하위 노드를 하위 이벤트와 관련된 비디오 노드에 매핑 할 수 있습니다.
+
+V4L2 clocks
+-----------
+
+Many subdevices, like camera sensors, TV decoders and encoders, need a clock
+signal to be supplied by the system. Often this clock is supplied by the
+respective bridge device. The Linux kernel provides a Common Clock Framework for
+this purpose. However, it is not (yet) available on all architectures. Besides,
+the nature of the multi-functional (clock, data + synchronisation, I2C control)
+connection of subdevices to the system might impose special requirements on the
+clock API usage. E.g. V4L2 has to support clock provider driver unregistration
+while a subdevice driver is holding a reference to the clock. For these reasons
+a V4L2 clock helper API has been developed and is provided to bridge and
+subdevice drivers.
+카메라 센서, TV 디코더 및 인코더와 같은 많은 하위 장치는 시스템에서 제공하는 클럭 신호가 필요합니다. 
+종종이 클록은 각 브리지 장치에 의해 공급됩니다. Linux 커널은 이러한 목적을 위해 Common Clock Framework를 제공합니다. 
+그러나 모든 아키텍처에서 사용할 수있는 것은 아닙니다. 게다가, 시스템에 대한 하위 장치의 다기능 (클록, 데이터 + 동기화, I2C 제어) 연결 특성은 클럭 API 사용에 특별한 요구 사항을 부과 할 수 있습니다. 
+예 : 하위 장치 드라이버가 클럭에 대한 참조를 보유하고있는 동안 V4L2는 클럭 공급자 드라이버 등록 해제를 지원해야합니다. 이러한 이유로 V4L2 클럭 도우미 API가 개발되어 브리지 및 하위 장치 드라이버에 제공됩니다.
+
+The API consists of two parts: two functions to register and unregister a V4L2
+clock source: v4l2_clk_register() and v4l2_clk_unregister() and calls to control
+a clock object, similar to the respective generic clock API calls:
+v4l2_clk_get(), v4l2_clk_put(), v4l2_clk_enable(), v4l2_clk_disable(),
+v4l2_clk_get_rate(), and v4l2_clk_set_rate(). Clock suppliers have to provide
+clock operations that will be called when clock users invoke respective API
+methods.
+API는 두 부분으로 구성됩니다. v4l2_clk_register () 및 v4l2_clk_unregister () 및 각각의 일반 클록 API 호출과 유사한 시계 객체를 제어하기위한 호출 : v4l2_clk_get (), v4l2_clk_put (), v4l2_clk_enable (), v4l2_clk_disable (), v4l2_clk_get_rate () 및 v4l2_clk_set_rate (). 
+클록 공급자는 클록 사용자가 각 API 메소드를 호출 할 때 호출되는 클록 동작을 제공해야합니다.
+
+It is expected that once the CCF becomes available on all relevant
+architectures this API will be removed.
+모든 관련 아키텍처에서 CCF를 사용할 수있게되면이 API가 제거 될 것으로 예상됩니다.

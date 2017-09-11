@@ -1,0 +1,107 @@
+﻿* Atmel Extensible Direct Memory Access Controller (XDMAC)
+
+* XDMA Controller
+Required properties:
+- compatible: Should be "atmel,<chip>-dma".
+  <chip> compatible description:
+  - sama5d4: first SoC adding the XDMAC
+- reg: Should contain DMA registers location and length.
+- interrupts: Should contain DMA interrupt.
+- #dma-cells: Must be <1>, used to represent the number of integer cells in
+the dmas property of client devices.
+  - The 1st cell specifies the channel configuration register:
+    - bit 13: SIF, source interface identifier, used to get the memory
+    interface identifier,
+    - bit 14: DIF, destination interface identifier, used to get the peripheral
+    interface identifier,
+    - bit 30-24: PERID, peripheral identifier.
+
+Example:
+
+dma1: dma-controller@f0004000 {
+	compatible = "atmel,sama5d4-dma";
+	reg = <0xf0004000 0x200>;
+	interrupts = <50 4 0>;
+	#dma-cells = <1>;
+};
+
+
+* DMA clients
+DMA clients connected to the Atmel XDMA controller must use the format
+described in the dma.txt file, using a one-cell specifier for each channel.
+The two cells in order are:
+1. A phandle pointing to the DMA controller.
+2. Channel configuration register. Configurable fields are:
+    - bit 13: SIF, source interface identifier, used to get the memory
+    interface identifier,
+    - bit 14: DIF, destination interface identifier, used to get the peripheral
+    interface identifier,
+  - bit 30-24: PERID, peripheral identifier.
+
+Example:
+
+i2c2: i2c@f8024000 {
+	compatible = "atmel,at91sam9x5-i2c";
+	reg = <0xf8024000 0x4000>;
+	interrupts = <34 4 6>;
+	dmas = <&dma1
+		(AT91_XDMAC_DT_MEM_IF(0) | AT91_XDMAC_DT_PER_IF(1)
+		 | AT91_XDMAC_DT_PERID(6))>,
+	       <&dma1
+		(AT91_XDMAC_DT_MEM_IF(0) | AT91_XDMAC_DT_PER_IF(1)
+		| AT91_XDMAC_DT_PERID(7))>;
+	dma-names = "tx", "rx";
+};
+
+/*
+Atmel XDMAC (Extensible Direct Memory Access Controller)
+
+* XDMA 컨트롤러
+필수 속성 :
+- 호환 : "atmel, <chip> -dma"여야합니다.
+  <chip> 호환 설명 :
+  - sama5d4 : 최초의 SoC, XDMAC 추가
+- reg : DMA 레지스터 위치와 길이를 포함해야합니다.
+- interrupts : DMA 인터럽트를 포함해야합니다.
+- # dma-cells : <1>이어야하며 클라이언트 장치의 dmas 등록 정보에있는 정수 셀 수를 나타냅니다.
+  - 첫 번째 셀은 채널 구성 레지스터를 지정합니다.
+    - 비트 13 : SIF, 메모리 인터페이스 식별자를 얻기 위해 사용되는 소스 인터페이스 식별자,
+    - 비트 14 : 주변 인터페이스 식별자를 얻기 위해 사용되는 DIF, 목적지 인터페이스 식별자,
+    - 비트 30-24 : PERID, 주변 장치 식별자.
+
+
+Example:
+
+dma1: dma-controller@f0004000 {
+	compatible = "atmel,sama5d4-dma";
+	reg = <0xf0004000 0x200>;
+	interrupts = <50 4 0>;
+	#dma-cells = <1>;
+};
+
+
+* DMA 클라이언트
+Atmel XDMA 컨트롤러에 연결된 DMA 클라이언트는 각 채널에 대해 1 셀 지정자를 사용하여 dma.txt 파일에 설명 된 형식을 사용해야합니다.
+두 개의 셀은 순서대로 있습니다.
+1. DMA 컨트롤러를 가리키는 phandle.
+2. 채널 구성 레지스터. 구성 가능한 필드는 다음과 같습니다.
+    - 비트 13 : SIF, 메모리 인터페이스 식별자를 얻기 위해 사용되는 소스 인터페이스 식별자,
+    - 비트 14 : 주변 인터페이스 식별자를 얻기 위해 사용되는 DIF, 목적지 인터페이스 식별자,
+  - 비트 30-24 : PERID, 주변 장치 식별자.
+
+Example:
+
+i2c2: i2c@f8024000 {
+	compatible = "atmel,at91sam9x5-i2c";
+	reg = <0xf8024000 0x4000>;
+	interrupts = <34 4 6>;
+	dmas = <&dma1
+		(AT91_XDMAC_DT_MEM_IF(0) | AT91_XDMAC_DT_PER_IF(1)
+		 | AT91_XDMAC_DT_PERID(6))>,
+	       <&dma1
+		(AT91_XDMAC_DT_MEM_IF(0) | AT91_XDMAC_DT_PER_IF(1)
+		| AT91_XDMAC_DT_PERID(7))>;
+	dma-names = "tx", "rx";
+};
+
+*/

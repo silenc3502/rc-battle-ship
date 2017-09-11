@@ -1,0 +1,67 @@
+USB NOP PHY
+
+Required properties:
+- compatible: should be usb-nop-xceiv
+
+Optional properties:
+- clocks: phandle to the PHY clock. Use as per Documentation/devicetree
+  /bindings/clock/clock-bindings.txt
+  This property is required if clock-frequency is specified.
+
+- clock-names: Should be "main_clk"
+
+- clock-frequency: the clock frequency (in Hz) that the PHY clock must
+  be configured to.
+
+- vcc-supply: phandle to the regulator that provides power to the PHY.
+
+- reset-gpios: Should specify the GPIO for reset.
+
+- vbus-detect-gpio: should specify the GPIO detecting a VBus insertion
+                    (see Documentation/devicetree/bindings/gpio/gpio.txt)
+- vbus-regulator : should specifiy the regulator supplying current drawn from
+  the VBus line (see Documentation/devicetree/bindings/regulator/regulator.txt).
+
+
+필수 속성 :
+- 호환 가능 : usb-nop-xceiv 여야합니다.
+
+선택적 속성 :
+- 클럭 : PHY 클럭에 연결합니다. Documentation / devicetree /bindings/clock/clock-bindings.txt에 따라 사용하십시오.
+   이 속성은 clock-frequency가 지정된 경우 필요합니다.
+
+- clock-names : "main_clk"이어야합니다.
+
+- 클럭 주파수 : PHY 클럭을 구성해야하는 클럭 주파수 (Hz)입니다.
+
+- vcc-supply : PHY에 전력을 공급하는 regulator에 위약하십시오.
+
+- reset-gpios : 재설정을 위해 GPIO를 지정해야합니다.
+
+- vbus-detect-gpio : VBus 삽입을 감지하는 GPIO를 지정해야합니다.
+                     (Documentation / devicetree / bindings / gpio / gpio.txt 참조)
+- vbus-regulator : VBus 라인에서 끌어온 전류를 공급하는 regulator를 지정해야합니다 (Documentation / devicetree / bindings / regulator / regulator.txt 참조).
+
+
+
+Example:
+
+	hsusb1_phy {
+		compatible = "usb-nop-xceiv";
+		clock-frequency = <19200000>;
+		clocks = <&osc 0>;
+		clock-names = "main_clk";
+		vcc-supply = <&hsusb1_vcc_regulator>;
+		reset-gpios = <&gpio1 7 GPIO_ACTIVE_LOW>;
+		vbus-detect-gpio = <&gpio2 13 GPIO_ACTIVE_HIGH>;
+		vbus-regulator = <&vbus_regulator>;
+	};
+
+hsusb1_phy is a NOP USB PHY device that gets its clock from an oscillator
+and expects that clock to be configured to 19.2MHz by the NOP PHY driver.
+hsusb1_vcc_regulator provides power to the PHY and GPIO 7 controls RESET.
+GPIO 13 detects VBus insertion, and accordingly notifies the vbus-regulator.
+
+hsusb1_phy는 NOP USB PHY 디바이스로, 발진기에서 클록을 가져오고 NOP PHY 드라이버가 클럭을 19.2MHz로 구성 할 것을 기대합니다.
+hsusb1_vcc_regulator는 PHY에 전력을 공급하고 GPIO 7은 RESET을 제어합니다.
+GPIO (13)는 VBus 삽입을 검출하고, 그에 따라 vbus- regulator에 통지한다.

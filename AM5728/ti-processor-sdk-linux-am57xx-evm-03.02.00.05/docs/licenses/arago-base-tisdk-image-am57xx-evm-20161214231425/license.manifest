@@ -1,0 +1,3215 @@
+PACKAGE NAME: alsa-conf
+PACKAGE VERSION: 1.1.0
+RECIPE NAME: alsa-lib
+LICENSE: LGPLv2.1 & GPLv2+
+
+PACKAGE NAME: alsa-conf-base
+PACKAGE VERSION: 1.1.0
+RECIPE NAME: alsa-lib
+LICENSE: LGPLv2.1 & GPLv2+
+
+PACKAGE NAME: alsa-lib
+PACKAGE VERSION: 1.1.0
+RECIPE NAME: alsa-lib
+LICENSE: LGPLv2.1 & GPLv2+
+
+PACKAGE NAME: alsa-server
+PACKAGE VERSION: 1.1.0
+RECIPE NAME: alsa-lib
+LICENSE: LGPLv2.1 & GPLv2+
+
+PACKAGE NAME: alsa-state
+PACKAGE VERSION: 0.2.0
+RECIPE NAME: alsa-state
+LICENSE: MIT
+
+PACKAGE NAME: alsa-states
+PACKAGE VERSION: 0.2.0
+RECIPE NAME: alsa-state
+LICENSE: MIT
+
+PACKAGE NAME: alsa-utils
+PACKAGE VERSION: 1.1.0
+RECIPE NAME: alsa-utils
+LICENSE: GPLv2+
+
+PACKAGE NAME: alsa-utils-aconnect
+PACKAGE VERSION: 1.1.0
+RECIPE NAME: alsa-utils
+LICENSE: GPLv2+
+
+PACKAGE NAME: alsa-utils-alsactl
+PACKAGE VERSION: 1.1.0
+RECIPE NAME: alsa-utils
+LICENSE: GPLv2+
+
+PACKAGE NAME: alsa-utils-alsaloop
+PACKAGE VERSION: 1.1.0
+RECIPE NAME: alsa-utils
+LICENSE: GPLv2+
+
+PACKAGE NAME: alsa-utils-alsamixer
+PACKAGE VERSION: 1.1.0
+RECIPE NAME: alsa-utils
+LICENSE: GPLv2+
+
+PACKAGE NAME: alsa-utils-alsatplg
+PACKAGE VERSION: 1.1.0
+RECIPE NAME: alsa-utils
+LICENSE: GPLv2+
+
+PACKAGE NAME: alsa-utils-alsaucm
+PACKAGE VERSION: 1.1.0
+RECIPE NAME: alsa-utils
+LICENSE: GPLv2+
+
+PACKAGE NAME: alsa-utils-amixer
+PACKAGE VERSION: 1.1.0
+RECIPE NAME: alsa-utils
+LICENSE: GPLv2+
+
+PACKAGE NAME: alsa-utils-aplay
+PACKAGE VERSION: 1.1.0
+RECIPE NAME: alsa-utils
+LICENSE: GPLv2+
+
+PACKAGE NAME: alsa-utils-aseqdump
+PACKAGE VERSION: 1.1.0
+RECIPE NAME: alsa-utils
+LICENSE: GPLv2+
+
+PACKAGE NAME: alsa-utils-aseqnet
+PACKAGE VERSION: 1.1.0
+RECIPE NAME: alsa-utils
+LICENSE: GPLv2+
+
+PACKAGE NAME: alsa-utils-iecset
+PACKAGE VERSION: 1.1.0
+RECIPE NAME: alsa-utils
+LICENSE: GPLv2+
+
+PACKAGE NAME: alsa-utils-midi
+PACKAGE VERSION: 1.1.0
+RECIPE NAME: alsa-utils
+LICENSE: GPLv2+
+
+PACKAGE NAME: alsa-utils-scripts
+PACKAGE VERSION: 1.1.0
+RECIPE NAME: alsa-utils-scripts
+LICENSE: GPLv2+
+
+PACKAGE NAME: alsa-utils-speakertest
+PACKAGE VERSION: 1.1.0
+RECIPE NAME: alsa-utils
+LICENSE: GPLv2+
+
+PACKAGE NAME: arago-feed-config
+PACKAGE VERSION: 1.0
+RECIPE NAME: arago-feed-config
+LICENSE: MIT
+
+PACKAGE NAME: arago-gpl-notice
+PACKAGE VERSION: 1.0
+RECIPE NAME: arago-gpl-notice
+LICENSE: MIT
+
+PACKAGE NAME: base-files
+PACKAGE VERSION: 3.0.14
+RECIPE NAME: base-files
+LICENSE: GPLv2
+
+PACKAGE NAME: base-passwd
+PACKAGE VERSION: 3.5.29
+RECIPE NAME: base-passwd
+LICENSE: GPLv2+
+
+PACKAGE NAME: bash
+PACKAGE VERSION: 3.2.48
+RECIPE NAME: bash
+LICENSE: GPLv2+
+
+PACKAGE NAME: bc
+PACKAGE VERSION: 1.06
+RECIPE NAME: bc
+LICENSE: GPLv2+ & LGPLv2.1
+
+PACKAGE NAME: binutils
+PACKAGE VERSION: linaro-2.25
+RECIPE NAME: binutils
+LICENSE: GPLv3
+
+PACKAGE NAME: bonnie++
+PACKAGE VERSION: 1.03e
+RECIPE NAME: bonnie++
+LICENSE: GPLv2
+
+PACKAGE NAME: busybox
+PACKAGE VERSION: 1.24.1
+RECIPE NAME: busybox
+LICENSE: GPLv2 & bzip2
+
+PACKAGE NAME: busybox-hwclock
+PACKAGE VERSION: 1.24.1
+RECIPE NAME: busybox
+LICENSE: GPLv2 & bzip2
+
+PACKAGE NAME: busybox-syslog
+PACKAGE VERSION: 1.24.1
+RECIPE NAME: busybox
+LICENSE: GPLv2 & bzip2
+
+PACKAGE NAME: busybox-udhcpc
+PACKAGE VERSION: 1.24.1
+RECIPE NAME: busybox
+LICENSE: GPLv2 & bzip2
+
+PACKAGE NAME: ca-certificates
+PACKAGE VERSION: 20160104
+RECIPE NAME: ca-certificates
+LICENSE: GPL-2.0+ & MPL-2.0
+
+PACKAGE NAME: cpuburn-neon
+PACKAGE VERSION: 20140626
+RECIPE NAME: cpuburn-neon
+LICENSE: MIT
+
+PACKAGE NAME: cpuloadgen
+PACKAGE VERSION: 0.93
+RECIPE NAME: cpuloadgen
+LICENSE: BSD
+
+PACKAGE NAME: cpuset
+PACKAGE VERSION: 1.5.7
+RECIPE NAME: cpuset
+LICENSE: GPLv2
+
+PACKAGE NAME: curl
+PACKAGE VERSION: 7.47.1
+RECIPE NAME: curl
+LICENSE: MIT
+
+PACKAGE NAME: dbus
+PACKAGE VERSION: 1.10.6
+RECIPE NAME: dbus
+LICENSE: GPLv2+
+
+PACKAGE NAME: dbus-lib
+PACKAGE VERSION: 1.10.6
+RECIPE NAME: dbus
+LICENSE: GPLv2+
+
+PACKAGE NAME: devmem2
+PACKAGE VERSION: 1.0
+RECIPE NAME: devmem2
+LICENSE: GPLv2+
+
+PACKAGE NAME: dosfstools
+PACKAGE VERSION: 3.0.28
+RECIPE NAME: dosfstools
+LICENSE: GPLv3
+
+PACKAGE NAME: e2fsprogs
+PACKAGE VERSION: 1.42.99+1.43+gitAUTOINC+0f26747167
+RECIPE NAME: e2fsprogs
+LICENSE: GPLv2 & LGPLv2 & BSD & MIT
+
+PACKAGE NAME: e2fsprogs-badblocks
+PACKAGE VERSION: 1.42.99+1.43+gitAUTOINC+0f26747167
+RECIPE NAME: e2fsprogs
+LICENSE: GPLv2
+
+PACKAGE NAME: e2fsprogs-e2fsck
+PACKAGE VERSION: 1.42.99+1.43+gitAUTOINC+0f26747167
+RECIPE NAME: e2fsprogs
+LICENSE: GPLv2
+
+PACKAGE NAME: e2fsprogs-mke2fs
+PACKAGE VERSION: 1.42.99+1.43+gitAUTOINC+0f26747167
+RECIPE NAME: e2fsprogs
+LICENSE: GPLv2
+
+PACKAGE NAME: e2fsprogs-tune2fs
+PACKAGE VERSION: 1.42.99+1.43+gitAUTOINC+0f26747167
+RECIPE NAME: e2fsprogs
+LICENSE: GPLv2
+
+PACKAGE NAME: elfutils
+PACKAGE VERSION: 0.148
+RECIPE NAME: elfutils
+LICENSE: (GPL-2+ & Elfutils-Exception)
+
+PACKAGE NAME: ethtool
+PACKAGE VERSION: 4.2
+RECIPE NAME: ethtool
+LICENSE: GPLv2+
+
+PACKAGE NAME: evtest
+PACKAGE VERSION: 1.32+AUTOINC+b8343ec112
+RECIPE NAME: evtest
+LICENSE: GPLv2
+
+PACKAGE NAME: expat
+PACKAGE VERSION: 2.1.0
+RECIPE NAME: expat
+LICENSE: MIT
+
+PACKAGE NAME: external-linaro-toolchain
+PACKAGE VERSION: 2016.02
+RECIPE NAME: external-linaro-toolchain
+LICENSE: LGPLv2.1+
+
+PACKAGE NAME: fbset
+PACKAGE VERSION: 2.1
+RECIPE NAME: fbset
+LICENSE: GPLv2
+
+PACKAGE NAME: fbset-modes
+PACKAGE VERSION: 0.1.0
+RECIPE NAME: fbset-modes
+LICENSE: MIT
+
+PACKAGE NAME: flex
+PACKAGE VERSION: 2.6.0
+RECIPE NAME: flex
+LICENSE: BSD
+
+PACKAGE NAME: freetype
+PACKAGE VERSION: 2.6.3
+RECIPE NAME: freetype
+LICENSE: GPLv2+
+
+PACKAGE NAME: glib-2.0
+PACKAGE VERSION: 2.46.2
+RECIPE NAME: glib-2.0
+LICENSE: LGPLv2+ & BSD & PD
+
+PACKAGE NAME: hdparm
+PACKAGE VERSION: 9.48
+RECIPE NAME: hdparm
+LICENSE: BSD
+
+PACKAGE NAME: i2c-tools
+PACKAGE VERSION: 3.1.2
+RECIPE NAME: i2c-tools
+LICENSE: GPLv2+
+
+PACKAGE NAME: init-ifupdown
+PACKAGE VERSION: 1.0
+RECIPE NAME: init-ifupdown
+LICENSE: GPLv2
+
+PACKAGE NAME: initscript-telnetd
+PACKAGE VERSION: 1.0
+RECIPE NAME: initscript-telnetd
+LICENSE: MIT
+
+PACKAGE NAME: initscripts-functions
+PACKAGE VERSION: 1.0
+RECIPE NAME: initscripts
+LICENSE: GPLv2
+
+PACKAGE NAME: input-utils
+PACKAGE VERSION: 1.0
+RECIPE NAME: input-utils
+LICENSE: GPLv2
+
+PACKAGE NAME: iozone3
+PACKAGE VERSION: 414
+RECIPE NAME: iozone3
+LICENSE: iozone3
+
+PACKAGE NAME: iperf
+PACKAGE VERSION: 2.0.5
+RECIPE NAME: iperf
+LICENSE: BSD-3-Clause
+
+PACKAGE NAME: iptables
+PACKAGE VERSION: 1.6.0
+RECIPE NAME: iptables
+LICENSE: GPLv2+
+
+PACKAGE NAME: jpeg-tools
+PACKAGE VERSION: 8d+1.4.2
+RECIPE NAME: libjpeg-turbo
+LICENSE: BSD-3-Clause
+
+PACKAGE NAME: json-c
+PACKAGE VERSION: 0.12
+RECIPE NAME: json-c
+LICENSE: MIT
+
+PACKAGE NAME: kbd
+PACKAGE VERSION: 2.0.3
+RECIPE NAME: kbd
+LICENSE: GPLv2+
+
+PACKAGE NAME: kbd-consolefonts
+PACKAGE VERSION: 2.0.3
+RECIPE NAME: kbd
+LICENSE: GPLv2+
+
+PACKAGE NAME: kbd-keymaps
+PACKAGE VERSION: 2.0.3
+RECIPE NAME: kbd
+LICENSE: GPLv2+
+
+PACKAGE NAME: kernel-base
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-devicetree
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-image
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-8021q
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ablk-helper
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-act-csum
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-act-gact
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-act-ipt
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-act-mirred
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-act-nat
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-act-pedit
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-act-police
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-act-simple
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-act-skbedit
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-adv7180
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-adxl34x
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-adxl34x-i2c
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-adxl34x-spi
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-aes-arm
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-aes-arm-bs
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-aes-arm-ce
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-af-alg
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-af-key
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ah4
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ah6
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ahci
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ahci-platform
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-algif-hash
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-algif-skcipher
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-am35x
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-am437x-pruss-wrapper
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-arc4
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-arp-tables
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-arpt-mangle
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-arptable-filter
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-asix
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-authenc
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-authencesn
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ax88179-178a
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-bluetooth
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-br-netfilter
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-brcmfmac
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-brcmutil
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-bridge
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-btmrvl
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-btmrvl-sdio
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-c-can
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-c-can-platform
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-can
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-can-bcm
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-can-dev
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-can-gw
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-can-raw
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-cbc
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ccm
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-cdc-acm
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-cdc-ether
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-cdc-ncm
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-cdc-subset
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-cdrom
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-cfg80211
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-cls-basic
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-cls-flow
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-cls-fw
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-cls-route
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-cls-rsvp
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-cls-rsvp6
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-cls-tcindex
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-cls-u32
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-cmac
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-configfs
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-crc-ccitt
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-crc-itu-t
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-crc7
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-cryptd
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ctr
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-cyapatp
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-des-generic
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-drbg
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-dwc3
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-dwc3-omap
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-e1000
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-e1000e
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ebt-802-3
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ebt-among
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ebt-arp
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ebt-arpreply
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ebt-dnat
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ebt-ip
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ebt-ip6
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ebt-limit
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ebt-log
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ebt-mark
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ebt-mark-m
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ebt-nflog
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ebt-pkttype
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ebt-redirect
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ebt-snat
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ebt-stp
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ebt-vlan
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ebtable-broute
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ebtable-filter
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ebtable-nat
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ebtables
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ecb
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-echainiv
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-edt-ft5x06
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ehci-hcd
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ehci-omap
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ehci-pci
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ehci-platform
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-em-cmp
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-em-meta
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-em-nbyte
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-em-text
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-em-u32
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-esp4
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-esp6
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-extcon
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-extcon-palmas
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-extcon-usb-gpio
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-g-acm-ms
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-g-audio
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-g-cdc
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-g-dbgp
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-g-ether
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-g-ffs
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-g-hid
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-g-mass-storage
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-g-midi
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-g-multi
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-g-ncm
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-g-printer
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-g-serial
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-g-webcam
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-g-zero
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-gadgetfs
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-gcm
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-gf128mul
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ghash-arm-ce
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ghash-generic
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-goodix
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-gpio-pca953x
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-gpio-pisosr
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-gpio-tpic2810
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-gspca-main
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-hmac
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-input-polldev
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ip-tables
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ip6-tunnel
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ipcomp
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ipcomp6
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ipt-masquerade
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-iptable-filter
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-iptable-nat
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-isp1760
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-iwldvm
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-iwlwifi
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-jitterentropy-rng
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-kfifo-buf
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-libahci
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-libahci-platform
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-libata
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-libcomposite
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-libcrc32c
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-llc
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-mac80211
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-matrix-keymap
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-matrix-keypad
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-max17040-battery
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-max17042-battery
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-mcp251x
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-md5
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-mip6
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ml86v7667
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-mt9t11x
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-mtd-nandbiterrs
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-mtd-nandecctest
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-mtd-oobtest
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-mtd-pagetest
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-mtd-readtest
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-mtd-speedtest
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-mtd-stresstest
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-mtd-subpagetest
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-mtd-torturetest
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-musb-am335x
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-musb-dsps
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-musb-hdrc
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-mwifiex
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-mwifiex-sdio
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-net1080
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-nf-conntrack
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-nf-conntrack-ipv4
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-nf-conntrack-proto-sctp
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-nf-defrag-ipv4
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-nf-nat
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-nf-nat-ipv4
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-nf-nat-masquerade-ipv4
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-nf-nat-proto-sctp
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ntc-thermistor
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ohci-hcd
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ohci-pci
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ohci-platform
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-omap-aes-driver
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-omap-des
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-omap-hdq
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-omap-remoteproc
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-omap-rng
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-omap-sham
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-omap-wdt
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-omap2430
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ov1063x
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ov2659
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ov490
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-p8022
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-pegasus
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-phy-isp1301
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-pixcir-i2c-ts
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-pru-rproc
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-prueth
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-pruss
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-pruss-intc
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-psnap
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-qt1070
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-r8152
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-r8a66597-hcd
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-remoteproc
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-rng-core
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-rotary-encoder
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-rpmsg-proto
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-rpmsg-pru
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-rpmsg-rpc
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-rt2800lib
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-rt2800usb
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-rt2x00lib
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-rt2x00usb
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-rtc-ds1307
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-rtc-omap
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-rtc-palmas
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-rtc-tps6586x
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-rtc-tps65910
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-sata-mv
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-sch-cbq
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-sch-choke
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-sch-codel
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-sch-drr
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-sch-dsmark
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-sch-fq-codel
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-sch-gred
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-sch-hfsc
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-sch-htb
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-sch-ingress
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-sch-mqprio
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-sch-multiq
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-sch-netem
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-sch-prio
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-sch-qfq
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-sch-red
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-sch-sfb
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-sch-sfq
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-sch-tbf
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-sch-teql
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-scsi-mod
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-sctp
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-sd-mod
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-seqiv
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-sha1-arm
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-sha1-arm-ce
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-sha1-arm-neon
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-sha1-generic
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-sha2-arm-ce
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-sha256-arm
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-sha256-generic
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-sha512-arm
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-sha512-generic
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-skge
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-smsc75xx
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-smsc95xx
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-snd-hwdep
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-snd-rawmidi
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-snd-soc-ak4642
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-snd-soc-omap-hdmi-audio
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-snd-soc-simple-card
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-snd-soc-tlv320aic31xx
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-snd-soc-tlv320aic3x
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-snd-soc-wm8978
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-snd-usb-audio
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-snd-usbmidi-lib
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-soc-camera
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-soc-camera-platform
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-soc-mediabus
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-sr-mod
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-st1232
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-stp
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-tcrypt
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-tg3
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ti-am335x-adc
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ti-am335x-tsc
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ti-am335x-tscadc
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ti-cal
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ti-csc
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ti-sc
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ti-vip
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ti-vpdma
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ti-vpe
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ts-bm
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ts-fsm
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-ts-kmp
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-tunnel6
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-u-ether
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-u-serial
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-udc-core
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-uio
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-usb-f-acm
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-usb-f-ecm
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-usb-f-ecm-subset
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-usb-f-fs
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-usb-f-hid
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-usb-f-mass-storage
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-usb-f-midi
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-usb-f-ncm
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-usb-f-obex
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-usb-f-printer
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-usb-f-rndis
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-usb-f-serial
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-usb-f-ss-lb
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-usb-f-uac2
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-usb-f-uvc
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-usb-storage
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-usbcore
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-usbhid
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-usbnet
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-usbserial
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-usbtest
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-uvcvideo
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-videobuf-core
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-videobuf2-vmalloc
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-virtio
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-virtio-ring
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-virtio-rpmsg-bus
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-wire
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-wl18xx
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-wlcore
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-wlcore-sdio
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-wlcore-spi
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-x-tables
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-xfrm-algo
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-xfrm-ipcomp
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-xfrm-user
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-xfrm4-mode-beet
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-xfrm4-mode-transport
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-xfrm4-mode-tunnel
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-xfrm4-tunnel
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-xfrm6-tunnel
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-xhci-hcd
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-xhci-pci
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-xhci-plat-hcd
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-xt-classify
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-xt-comment
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-xt-cpu
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-xt-idletimer
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-xt-iprange
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-xt-length
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-xt-limit
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-xt-mac
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-xt-mark
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-xt-multiport
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-xt-nat
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-xt-pkttype
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-xt-policy
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-xt-sctp
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-xt-tcpudp
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-module-zaurus
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kernel-modules
+PACKAGE VERSION: 4.4.32+gitAUTOINC+adde2ca9f8
+RECIPE NAME: linux-processor-sdk
+LICENSE: GPLv2
+
+PACKAGE NAME: kmod
+PACKAGE VERSION: 22+gitAUTOINC+42f32b8ae4
+RECIPE NAME: kmod
+LICENSE: GPL-2.0+ & LGPL-2.1+
+
+PACKAGE NAME: kselftests
+PACKAGE VERSION: 4.4
+RECIPE NAME: kselftests
+LICENSE: GPLv2
+
+PACKAGE NAME: kselftests-cpu-hotplug
+PACKAGE VERSION: 4.4
+RECIPE NAME: kselftests
+LICENSE: GPLv2
+
+PACKAGE NAME: kselftests-efivarfs
+PACKAGE VERSION: 4.4
+RECIPE NAME: kselftests
+LICENSE: GPLv2
+
+PACKAGE NAME: kselftests-exec
+PACKAGE VERSION: 4.4
+RECIPE NAME: kselftests
+LICENSE: GPLv2
+
+PACKAGE NAME: kselftests-firmware
+PACKAGE VERSION: 4.4
+RECIPE NAME: kselftests
+LICENSE: GPLv2
+
+PACKAGE NAME: kselftests-ftrace
+PACKAGE VERSION: 4.4
+RECIPE NAME: kselftests
+LICENSE: GPLv2
+
+PACKAGE NAME: kselftests-kcmp
+PACKAGE VERSION: 4.4
+RECIPE NAME: kselftests
+LICENSE: GPLv2
+
+PACKAGE NAME: kselftests-memfd
+PACKAGE VERSION: 4.4
+RECIPE NAME: kselftests
+LICENSE: GPLv2
+
+PACKAGE NAME: kselftests-memory-hotplug
+PACKAGE VERSION: 4.4
+RECIPE NAME: kselftests
+LICENSE: GPLv2
+
+PACKAGE NAME: kselftests-mount
+PACKAGE VERSION: 4.4
+RECIPE NAME: kselftests
+LICENSE: GPLv2
+
+PACKAGE NAME: kselftests-mqueue
+PACKAGE VERSION: 4.4
+RECIPE NAME: kselftests
+LICENSE: GPLv2
+
+PACKAGE NAME: kselftests-net
+PACKAGE VERSION: 4.4
+RECIPE NAME: kselftests
+LICENSE: GPLv2
+
+PACKAGE NAME: kselftests-ptrace
+PACKAGE VERSION: 4.4
+RECIPE NAME: kselftests
+LICENSE: GPLv2
+
+PACKAGE NAME: kselftests-size
+PACKAGE VERSION: 4.4
+RECIPE NAME: kselftests
+LICENSE: GPLv2
+
+PACKAGE NAME: kselftests-sysctl
+PACKAGE VERSION: 4.4
+RECIPE NAME: kselftests
+LICENSE: GPLv2
+
+PACKAGE NAME: kselftests-timers
+PACKAGE VERSION: 4.4
+RECIPE NAME: kselftests
+LICENSE: GPLv2
+
+PACKAGE NAME: kselftests-user
+PACKAGE VERSION: 4.4
+RECIPE NAME: kselftests
+LICENSE: GPLv2
+
+PACKAGE NAME: kselftests-vm
+PACKAGE VERSION: 4.4
+RECIPE NAME: kselftests
+LICENSE: GPLv2
+
+PACKAGE NAME: libacl
+PACKAGE VERSION: 2.2.52
+RECIPE NAME: acl
+LICENSE: LGPLv2.1+
+
+PACKAGE NAME: libaio
+PACKAGE VERSION: 0.3.110
+RECIPE NAME: libaio
+LICENSE: LGPLv2.1+
+
+PACKAGE NAME: libarchive
+PACKAGE VERSION: 3.1.2
+RECIPE NAME: libarchive
+LICENSE: BSD
+
+PACKAGE NAME: libasm
+PACKAGE VERSION: 0.148
+RECIPE NAME: elfutils
+LICENSE: (GPL-2+ & Elfutils-Exception)
+
+PACKAGE NAME: libasound
+PACKAGE VERSION: 1.1.0
+RECIPE NAME: alsa-lib
+LICENSE: LGPLv2.1 & GPLv2+
+
+PACKAGE NAME: libattr
+PACKAGE VERSION: 2.4.47
+RECIPE NAME: attr
+LICENSE: LGPLv2.1+
+
+PACKAGE NAME: libbz2
+PACKAGE VERSION: 1.0.6
+RECIPE NAME: bzip2
+LICENSE: bzip2
+
+PACKAGE NAME: libcap
+PACKAGE VERSION: 2.24
+RECIPE NAME: libcap
+LICENSE: BSD | GPLv2
+
+PACKAGE NAME: libcomerr
+PACKAGE VERSION: 1.42.99+1.43+gitAUTOINC+0f26747167
+RECIPE NAME: e2fsprogs
+LICENSE: GPLv2 & LGPLv2 & BSD & MIT
+
+PACKAGE NAME: libcrypto
+PACKAGE VERSION: 1.0.2h
+RECIPE NAME: openssl
+LICENSE: openssl
+
+PACKAGE NAME: libcurl
+PACKAGE VERSION: 7.47.1
+RECIPE NAME: curl
+LICENSE: MIT
+
+PACKAGE NAME: libdrm
+PACKAGE VERSION: 2.4.67
+RECIPE NAME: libdrm
+LICENSE: MIT
+
+PACKAGE NAME: libdrm-kms
+PACKAGE VERSION: 2.4.67
+RECIPE NAME: libdrm
+LICENSE: MIT
+
+PACKAGE NAME: libdrm-tests
+PACKAGE VERSION: 2.4.67
+RECIPE NAME: libdrm
+LICENSE: MIT
+
+PACKAGE NAME: libdw
+PACKAGE VERSION: 0.148
+RECIPE NAME: elfutils
+LICENSE: (GPL-2+ & Elfutils-Exception)
+
+PACKAGE NAME: libe2p
+PACKAGE VERSION: 1.42.99+1.43+gitAUTOINC+0f26747167
+RECIPE NAME: e2fsprogs
+LICENSE: GPLv2 & LGPLv2 & BSD & MIT
+
+PACKAGE NAME: libelf
+PACKAGE VERSION: 0.148
+RECIPE NAME: elfutils
+LICENSE: (GPL-2+ & Elfutils-Exception)
+
+PACKAGE NAME: libevent
+PACKAGE VERSION: 2.0.22
+RECIPE NAME: libevent
+LICENSE: BSD
+
+PACKAGE NAME: libext2fs
+PACKAGE VERSION: 1.42.99+1.43+gitAUTOINC+0f26747167
+RECIPE NAME: e2fsprogs
+LICENSE: GPLv2 & LGPLv2 & BSD & MIT
+
+PACKAGE NAME: libffi
+PACKAGE VERSION: 3.2.1
+RECIPE NAME: libffi
+LICENSE: MIT
+
+PACKAGE NAME: libflac
+PACKAGE VERSION: 1.3.1
+RECIPE NAME: flac
+LICENSE: GFDL-1.2 & GPLv2+ & LGPLv2.1+ & BSD
+
+PACKAGE NAME: libgcc
+PACKAGE VERSION: 2016.02
+RECIPE NAME: external-linaro-toolchain
+LICENSE: GPLv3+ with GCC RLE
+
+PACKAGE NAME: libgcrypt
+PACKAGE VERSION: 1.6.5
+RECIPE NAME: libgcrypt
+LICENSE: LGPLv2.1+
+
+PACKAGE NAME: libgpg-error
+PACKAGE VERSION: 1.21
+RECIPE NAME: libgpg-error
+LICENSE: GPLv2+ & LGPLv2.1+
+
+PACKAGE NAME: libjpeg-turbo
+PACKAGE VERSION: 8d+1.4.2
+RECIPE NAME: libjpeg-turbo
+LICENSE: BSD-3-Clause
+
+PACKAGE NAME: libkmod
+PACKAGE VERSION: 22+gitAUTOINC+42f32b8ae4
+RECIPE NAME: kmod
+LICENSE: LGPL-2.1+
+
+PACKAGE NAME: libltdl
+PACKAGE VERSION: 2.4.6
+RECIPE NAME: libtool
+LICENSE: GPLv2 & LGPLv2.1
+
+PACKAGE NAME: liblzma
+PACKAGE VERSION: 5.2.2
+RECIPE NAME: xz
+LICENSE: PD
+
+PACKAGE NAME: libnfsidmap
+PACKAGE VERSION: 0.25
+RECIPE NAME: libnfsidmap
+LICENSE: BSD
+
+PACKAGE NAME: libnl
+PACKAGE VERSION: 3.2.25
+RECIPE NAME: libnl
+LICENSE: LGPLv2.1
+
+PACKAGE NAME: libnl-cli
+PACKAGE VERSION: 3.2.25
+RECIPE NAME: libnl
+LICENSE: LGPLv2.1
+
+PACKAGE NAME: libnl-genl
+PACKAGE VERSION: 3.2.25
+RECIPE NAME: libnl
+LICENSE: LGPLv2.1
+
+PACKAGE NAME: libnl-idiag
+PACKAGE VERSION: 3.2.25
+RECIPE NAME: libnl
+LICENSE: LGPLv2.1
+
+PACKAGE NAME: libnl-nf
+PACKAGE VERSION: 3.2.25
+RECIPE NAME: libnl
+LICENSE: LGPLv2.1
+
+PACKAGE NAME: libnl-route
+PACKAGE VERSION: 3.2.25
+RECIPE NAME: libnl
+LICENSE: LGPLv2.1
+
+PACKAGE NAME: libogg
+PACKAGE VERSION: 1.3.2
+RECIPE NAME: libogg
+LICENSE: BSD
+
+PACKAGE NAME: libopkg
+PACKAGE VERSION: 0.3.1
+RECIPE NAME: opkg
+LICENSE: GPLv2+
+
+PACKAGE NAME: libpam
+PACKAGE VERSION: 1.2.1
+RECIPE NAME: libpam
+LICENSE: GPLv2+ | BSD
+
+PACKAGE NAME: libpam-runtime
+PACKAGE VERSION: 1.2.1
+RECIPE NAME: libpam
+LICENSE: GPLv2+ | BSD
+
+PACKAGE NAME: libpcap
+PACKAGE VERSION: 1.7.4
+RECIPE NAME: libpcap
+LICENSE: BSD
+
+PACKAGE NAME: libpci
+PACKAGE VERSION: 3.4.1
+RECIPE NAME: pciutils
+LICENSE: GPLv2+
+
+PACKAGE NAME: libpcre
+PACKAGE VERSION: 8.38
+RECIPE NAME: libpcre
+LICENSE: BSD
+
+PACKAGE NAME: libpng12
+PACKAGE VERSION: 1.2.56
+RECIPE NAME: libpng12
+LICENSE: Libpng
+
+PACKAGE NAME: libpulse
+PACKAGE VERSION: 8.0
+RECIPE NAME: pulseaudio
+LICENSE: GPLv2+ & LGPLv2.1
+
+PACKAGE NAME: libpulsecommon
+PACKAGE VERSION: 8.0
+RECIPE NAME: pulseaudio
+LICENSE: GPLv2+ & LGPLv2.1
+
+PACKAGE NAME: libpulsecore
+PACKAGE VERSION: 8.0
+RECIPE NAME: pulseaudio
+LICENSE: GPLv2+ & LGPLv2.1
+
+PACKAGE NAME: libpython2
+PACKAGE VERSION: 2.7.11
+RECIPE NAME: python
+LICENSE: PSFv2
+
+PACKAGE NAME: libsamplerate0
+PACKAGE VERSION: 0.1.8
+RECIPE NAME: libsamplerate0
+LICENSE: GPLv2+
+
+PACKAGE NAME: libsndfile1
+PACKAGE VERSION: 1.0.26
+RECIPE NAME: libsndfile1
+LICENSE: LGPLv2.1
+
+PACKAGE NAME: libss
+PACKAGE VERSION: 1.42.99+1.43+gitAUTOINC+0f26747167
+RECIPE NAME: e2fsprogs
+LICENSE: GPLv2 & LGPLv2 & BSD & MIT
+
+PACKAGE NAME: libssl
+PACKAGE VERSION: 1.0.2h
+RECIPE NAME: openssl
+LICENSE: openssl
+
+PACKAGE NAME: libstdc++
+PACKAGE VERSION: 2016.02
+RECIPE NAME: external-linaro-toolchain
+LICENSE: GPLv3+ with GCC RLE
+
+PACKAGE NAME: libsystemd
+PACKAGE VERSION: 229+gitAUTOINC+714c62b463
+RECIPE NAME: systemd
+LICENSE: GPLv2 & LGPLv2.1
+
+PACKAGE NAME: libtirpc
+PACKAGE VERSION: 1.0.1
+RECIPE NAME: libtirpc
+LICENSE: BSD
+
+PACKAGE NAME: libturbojpeg
+PACKAGE VERSION: 8d+1.4.2
+RECIPE NAME: libjpeg-turbo
+LICENSE: BSD-3-Clause
+
+PACKAGE NAME: libudev
+PACKAGE VERSION: 229+gitAUTOINC+714c62b463
+RECIPE NAME: systemd
+LICENSE: GPLv2 & LGPLv2.1
+
+PACKAGE NAME: libusb1
+PACKAGE VERSION: 1.0.20
+RECIPE NAME: libusb1
+LICENSE: LGPLv2.1+
+
+PACKAGE NAME: libv4l
+PACKAGE VERSION: 1.10.1
+RECIPE NAME: v4l-utils
+LICENSE: GPLv2 & LGPLv2.1
+
+PACKAGE NAME: libvorbis
+PACKAGE VERSION: 1.3.5
+RECIPE NAME: libvorbis
+LICENSE: BSD
+
+PACKAGE NAME: libwrap
+PACKAGE VERSION: 7.6
+RECIPE NAME: tcp-wrappers
+LICENSE: BSD
+
+PACKAGE NAME: libxml2
+PACKAGE VERSION: 2.9.4
+RECIPE NAME: libxml2
+LICENSE: MIT
+
+PACKAGE NAME: lmbench
+PACKAGE VERSION: 3.0-a9
+RECIPE NAME: lmbench
+LICENSE: GPLv2 & GPL-2.0-with-lmbench-restriction
+
+PACKAGE NAME: ltp-ddt
+PACKAGE VERSION: 20160510+gitAUTOINC+47734bc63a
+RECIPE NAME: ltp-ddt
+LICENSE: GPLv2
+
+PACKAGE NAME: lzo
+PACKAGE VERSION: 2.09
+RECIPE NAME: lzo
+LICENSE: GPLv2+
+
+PACKAGE NAME: m4
+PACKAGE VERSION: 1.4.17
+RECIPE NAME: m4
+LICENSE: GPLv3
+
+PACKAGE NAME: media-ctl
+PACKAGE VERSION: 1.10.1
+RECIPE NAME: v4l-utils
+LICENSE: GPLv2 & LGPLv2.1
+
+PACKAGE NAME: memtester
+PACKAGE VERSION: 4.3.0
+RECIPE NAME: memtester
+LICENSE: GPLv2
+
+PACKAGE NAME: modutils-initscripts
+PACKAGE VERSION: 1.0
+RECIPE NAME: modutils-initscripts
+LICENSE: PD
+
+PACKAGE NAME: mtd-utils
+PACKAGE VERSION: 1.5.2
+RECIPE NAME: mtd-utils
+LICENSE: GPLv2+
+
+PACKAGE NAME: mtd-utils-ubifs
+PACKAGE VERSION: 1.5.2
+RECIPE NAME: mtd-utils
+LICENSE: GPLv2+
+
+PACKAGE NAME: mtd-utils-ubifs-tests
+PACKAGE VERSION: 1.5.2
+RECIPE NAME: mtd-utils
+LICENSE: GPLv2+
+
+PACKAGE NAME: ncurses
+PACKAGE VERSION: 6.0+20160213
+RECIPE NAME: ncurses
+LICENSE: MIT
+
+PACKAGE NAME: ncurses-libform
+PACKAGE VERSION: 6.0+20160213
+RECIPE NAME: ncurses
+LICENSE: MIT
+
+PACKAGE NAME: ncurses-libmenu
+PACKAGE VERSION: 6.0+20160213
+RECIPE NAME: ncurses
+LICENSE: MIT
+
+PACKAGE NAME: ncurses-libncurses
+PACKAGE VERSION: 6.0+20160213
+RECIPE NAME: ncurses
+LICENSE: MIT
+
+PACKAGE NAME: ncurses-libncursesw
+PACKAGE VERSION: 6.0+20160213
+RECIPE NAME: ncurses
+LICENSE: MIT
+
+PACKAGE NAME: ncurses-libpanel
+PACKAGE VERSION: 6.0+20160213
+RECIPE NAME: ncurses
+LICENSE: MIT
+
+PACKAGE NAME: ncurses-libtic
+PACKAGE VERSION: 6.0+20160213
+RECIPE NAME: ncurses
+LICENSE: MIT
+
+PACKAGE NAME: ncurses-libtinfo
+PACKAGE VERSION: 6.0+20160213
+RECIPE NAME: ncurses
+LICENSE: MIT
+
+PACKAGE NAME: ncurses-terminfo
+PACKAGE VERSION: 6.0+20160213
+RECIPE NAME: ncurses
+LICENSE: MIT
+
+PACKAGE NAME: ncurses-terminfo-base
+PACKAGE VERSION: 6.0+20160213
+RECIPE NAME: ncurses
+LICENSE: MIT
+
+PACKAGE NAME: ncurses-tools
+PACKAGE VERSION: 6.0+20160213
+RECIPE NAME: ncurses
+LICENSE: MIT
+
+PACKAGE NAME: netbase
+PACKAGE VERSION: 5.3
+RECIPE NAME: netbase
+LICENSE: GPLv2
+
+PACKAGE NAME: nfs-utils-client
+PACKAGE VERSION: 1.3.3
+RECIPE NAME: nfs-utils
+LICENSE: MIT & GPLv2+ & BSD
+
+PACKAGE NAME: omapconf
+PACKAGE VERSION: 1.73
+RECIPE NAME: omapconf
+LICENSE: GPLv2 | BSD
+
+PACKAGE NAME: openssl-conf
+PACKAGE VERSION: 1.0.2h
+RECIPE NAME: openssl
+LICENSE: openssl
+
+PACKAGE NAME: opkg
+PACKAGE VERSION: 0.3.1
+RECIPE NAME: opkg
+LICENSE: GPLv2+
+
+PACKAGE NAME: opkg-arch-config
+PACKAGE VERSION: 1.0
+RECIPE NAME: opkg-arch-config
+LICENSE: MIT
+
+PACKAGE NAME: os-release
+PACKAGE VERSION: 1.0
+RECIPE NAME: os-release
+LICENSE: MIT
+
+PACKAGE NAME: packagegroup-arago-base
+PACKAGE VERSION: 1.0
+RECIPE NAME: packagegroup-arago-base
+LICENSE: MIT
+
+PACKAGE NAME: packagegroup-arago-base-tisdk
+PACKAGE VERSION: 1.0
+RECIPE NAME: packagegroup-arago-base-tisdk
+LICENSE: MIT
+
+PACKAGE NAME: packagegroup-arago-console
+PACKAGE VERSION: 1.0
+RECIPE NAME: packagegroup-arago-console
+LICENSE: MIT
+
+PACKAGE NAME: packagegroup-arago-test
+PACKAGE VERSION: 1.0
+RECIPE NAME: packagegroup-arago-test
+LICENSE: MIT
+
+PACKAGE NAME: packagegroup-core-boot
+PACKAGE VERSION: 1.0
+RECIPE NAME: packagegroup-core-boot
+LICENSE: MIT
+
+PACKAGE NAME: pam-plugin-deny
+PACKAGE VERSION: 1.2.1
+RECIPE NAME: libpam
+LICENSE: GPLv2+ | BSD
+
+PACKAGE NAME: pam-plugin-env
+PACKAGE VERSION: 1.2.1
+RECIPE NAME: libpam
+LICENSE: GPLv2+ | BSD
+
+PACKAGE NAME: pam-plugin-faildelay
+PACKAGE VERSION: 1.2.1
+RECIPE NAME: libpam
+LICENSE: GPLv2+ | BSD
+
+PACKAGE NAME: pam-plugin-group
+PACKAGE VERSION: 1.2.1
+RECIPE NAME: libpam
+LICENSE: GPLv2+ | BSD
+
+PACKAGE NAME: pam-plugin-lastlog
+PACKAGE VERSION: 1.2.1
+RECIPE NAME: libpam
+LICENSE: GPLv2+ | BSD
+
+PACKAGE NAME: pam-plugin-limits
+PACKAGE VERSION: 1.2.1
+RECIPE NAME: libpam
+LICENSE: GPLv2+ | BSD
+
+PACKAGE NAME: pam-plugin-mail
+PACKAGE VERSION: 1.2.1
+RECIPE NAME: libpam
+LICENSE: GPLv2+ | BSD
+
+PACKAGE NAME: pam-plugin-motd
+PACKAGE VERSION: 1.2.1
+RECIPE NAME: libpam
+LICENSE: GPLv2+ | BSD
+
+PACKAGE NAME: pam-plugin-nologin
+PACKAGE VERSION: 1.2.1
+RECIPE NAME: libpam
+LICENSE: GPLv2+ | BSD
+
+PACKAGE NAME: pam-plugin-permit
+PACKAGE VERSION: 1.2.1
+RECIPE NAME: libpam
+LICENSE: GPLv2+ | BSD
+
+PACKAGE NAME: pam-plugin-rootok
+PACKAGE VERSION: 1.2.1
+RECIPE NAME: libpam
+LICENSE: GPLv2+ | BSD
+
+PACKAGE NAME: pam-plugin-securetty
+PACKAGE VERSION: 1.2.1
+RECIPE NAME: libpam
+LICENSE: GPLv2+ | BSD
+
+PACKAGE NAME: pam-plugin-shells
+PACKAGE VERSION: 1.2.1
+RECIPE NAME: libpam
+LICENSE: GPLv2+ | BSD
+
+PACKAGE NAME: pam-plugin-unix
+PACKAGE VERSION: 1.2.1
+RECIPE NAME: libpam
+LICENSE: GPLv2+ | BSD
+
+PACKAGE NAME: pam-plugin-warn
+PACKAGE VERSION: 1.2.1
+RECIPE NAME: libpam
+LICENSE: GPLv2+ | BSD
+
+PACKAGE NAME: pciutils
+PACKAGE VERSION: 3.4.1
+RECIPE NAME: pciutils
+LICENSE: GPLv2+
+
+PACKAGE NAME: pciutils-ids
+PACKAGE VERSION: 3.4.1
+RECIPE NAME: pciutils
+LICENSE: GPLv2+
+
+PACKAGE NAME: perf
+PACKAGE VERSION: 1.0
+RECIPE NAME: perf
+LICENSE: GPLv2
+
+PACKAGE NAME: perl
+PACKAGE VERSION: 5.22.1
+RECIPE NAME: perl
+LICENSE: Artistic-1.0 | GPL-1.0+
+
+PACKAGE NAME: perl-lib
+PACKAGE VERSION: 5.22.1
+RECIPE NAME: perl
+LICENSE: Artistic-1.0 | GPL-1.0+
+
+PACKAGE NAME: pm-qa
+PACKAGE VERSION: 0.4.14
+RECIPE NAME: pm-qa
+LICENSE: GPLv2
+
+PACKAGE NAME: popt
+PACKAGE VERSION: 1.16
+RECIPE NAME: popt
+LICENSE: MIT
+
+PACKAGE NAME: powertop
+PACKAGE VERSION: 2.8
+RECIPE NAME: powertop
+LICENSE: GPLv2
+
+PACKAGE NAME: procps
+PACKAGE VERSION: 3.3.11
+RECIPE NAME: procps
+LICENSE: GPLv2+ & LGPLv2+
+
+PACKAGE NAME: prueth-fw
+PACKAGE VERSION: 3.1.4
+RECIPE NAME: prueth-fw
+LICENSE: TI-TFL
+
+PACKAGE NAME: psplash
+PACKAGE VERSION: 0.1+gitAUTOINC+de9979aefb
+RECIPE NAME: psplash
+LICENSE: GPLv2+
+
+PACKAGE NAME: psplash-default
+PACKAGE VERSION: 0.1+gitAUTOINC+de9979aefb
+RECIPE NAME: psplash
+LICENSE: GPLv2+
+
+PACKAGE NAME: pulseaudio-lib-cli
+PACKAGE VERSION: 8.0
+RECIPE NAME: pulseaudio
+LICENSE: GPLv2+ & LGPLv2.1
+
+PACKAGE NAME: pulseaudio-lib-protocol-cli
+PACKAGE VERSION: 8.0
+RECIPE NAME: pulseaudio
+LICENSE: GPLv2+ & LGPLv2.1
+
+PACKAGE NAME: pulseaudio-misc
+PACKAGE VERSION: 8.0
+RECIPE NAME: pulseaudio
+LICENSE: GPLv2+ & LGPLv2.1
+
+PACKAGE NAME: pulseaudio-module-cli-protocol-unix
+PACKAGE VERSION: 8.0
+RECIPE NAME: pulseaudio
+LICENSE: GPLv2+ & LGPLv2.1
+
+PACKAGE NAME: python-core
+PACKAGE VERSION: 2.7.11
+RECIPE NAME: python
+LICENSE: PSFv2
+
+PACKAGE NAME: python-lang
+PACKAGE VERSION: 2.7.11
+RECIPE NAME: python
+LICENSE: PSFv2
+
+PACKAGE NAME: python-re
+PACKAGE VERSION: 2.7.11
+RECIPE NAME: python
+LICENSE: PSFv2
+
+PACKAGE NAME: python-readline
+PACKAGE VERSION: 2.7.11
+RECIPE NAME: python
+LICENSE: PSFv2
+
+PACKAGE NAME: readline
+PACKAGE VERSION: 5.2
+RECIPE NAME: readline
+LICENSE: GPLv2+
+
+PACKAGE NAME: rng-tools
+PACKAGE VERSION: 5
+RECIPE NAME: rng-tools
+LICENSE: GPLv2
+
+PACKAGE NAME: rpcbind
+PACKAGE VERSION: 0.2.3
+RECIPE NAME: rpcbind
+LICENSE: BSD
+
+PACKAGE NAME: rt-tests
+PACKAGE VERSION: 0.96
+RECIPE NAME: rt-tests
+LICENSE: GPLv2 & GPLv2+
+
+PACKAGE NAME: run-postinsts
+PACKAGE VERSION: 1.0
+RECIPE NAME: run-postinsts
+LICENSE: MIT
+
+PACKAGE NAME: rwmem
+PACKAGE VERSION: 1.1
+RECIPE NAME: rwmem
+LICENSE: GPLv2+
+
+PACKAGE NAME: serialcheck
+PACKAGE VERSION: 1.0.0
+RECIPE NAME: serialcheck
+LICENSE: GPLv2
+
+PACKAGE NAME: shadow
+PACKAGE VERSION: 4.2.1
+RECIPE NAME: shadow
+LICENSE: BSD | Artistic-1.0
+
+PACKAGE NAME: shadow-base
+PACKAGE VERSION: 4.2.1
+RECIPE NAME: shadow
+LICENSE: BSD | Artistic-1.0
+
+PACKAGE NAME: shadow-securetty
+PACKAGE VERSION: 4.2.1
+RECIPE NAME: shadow-securetty
+LICENSE: MIT
+
+PACKAGE NAME: slang
+PACKAGE VERSION: 2.2.4
+RECIPE NAME: slang
+LICENSE: GPLv2
+
+PACKAGE NAME: smcroute
+PACKAGE VERSION: 2.0.0
+RECIPE NAME: smcroute
+LICENSE: GPLv2+
+
+PACKAGE NAME: speexdsp
+PACKAGE VERSION: 1.2rc3
+RECIPE NAME: speexdsp
+LICENSE: BSD
+
+PACKAGE NAME: strace
+PACKAGE VERSION: 4.11
+RECIPE NAME: strace
+LICENSE: BSD
+
+PACKAGE NAME: stress
+PACKAGE VERSION: 1.0.4
+RECIPE NAME: stress
+LICENSE: GPLv2
+
+PACKAGE NAME: systemd
+PACKAGE VERSION: 229+gitAUTOINC+714c62b463
+RECIPE NAME: systemd
+LICENSE: GPLv2 & LGPLv2.1
+
+PACKAGE NAME: systemd-compat-units
+PACKAGE VERSION: 1.0
+RECIPE NAME: systemd-compat-units
+LICENSE: MIT
+
+PACKAGE NAME: systemd-extra-utils
+PACKAGE VERSION: 229+gitAUTOINC+714c62b463
+RECIPE NAME: systemd
+LICENSE: GPLv2 & LGPLv2.1
+
+PACKAGE NAME: systemd-initramfs
+PACKAGE VERSION: 229+gitAUTOINC+714c62b463
+RECIPE NAME: systemd
+LICENSE: GPLv2 & LGPLv2.1
+
+PACKAGE NAME: systemd-serialgetty
+PACKAGE VERSION: 1.0
+RECIPE NAME: systemd-serialgetty
+LICENSE: GPLv2+
+
+PACKAGE NAME: systemd-vconsole-setup
+PACKAGE VERSION: 229+gitAUTOINC+714c62b463
+RECIPE NAME: systemd
+LICENSE: GPLv2 & LGPLv2.1
+
+PACKAGE NAME: tcpdump
+PACKAGE VERSION: 4.7.4
+RECIPE NAME: tcpdump
+LICENSE: BSD
+
+PACKAGE NAME: thermal-init
+PACKAGE VERSION: 1.0
+RECIPE NAME: thermal-init
+LICENSE: MIT
+
+PACKAGE NAME: thttpd
+PACKAGE VERSION: 2.25b
+RECIPE NAME: thttpd
+LICENSE: BSD
+
+PACKAGE NAME: ti-ipc
+PACKAGE VERSION: 3.44.00.00
+RECIPE NAME: ti-ipc
+LICENSE: BSD
+
+PACKAGE NAME: ti-ipc-test
+PACKAGE VERSION: 3.44.00.00
+RECIPE NAME: ti-ipc
+LICENSE: BSD
+
+PACKAGE NAME: timestamping
+PACKAGE VERSION: 4.1
+RECIPE NAME: timestamping
+LICENSE: GPLv2
+
+PACKAGE NAME: udev
+PACKAGE VERSION: 229+gitAUTOINC+714c62b463
+RECIPE NAME: systemd
+LICENSE: GPLv2 & LGPLv2.1
+
+PACKAGE NAME: udev-extraconf
+PACKAGE VERSION: 1.1
+RECIPE NAME: udev-extraconf
+LICENSE: MIT
+
+PACKAGE NAME: udev-hwdb
+PACKAGE VERSION: 229+gitAUTOINC+714c62b463
+RECIPE NAME: systemd
+LICENSE: GPLv2 & LGPLv2.1
+
+PACKAGE NAME: update-alternatives-opkg
+PACKAGE VERSION: 0.1.8+gitAUTOINC+53274f0875
+RECIPE NAME: opkg-utils
+LICENSE: GPLv2+
+
+PACKAGE NAME: update-rc.d
+PACKAGE VERSION: 0.7
+RECIPE NAME: update-rc.d
+LICENSE: GPLv2+
+
+PACKAGE NAME: usbutils
+PACKAGE VERSION: 008
+RECIPE NAME: usbutils
+LICENSE: GPLv2+
+
+PACKAGE NAME: util-linux-agetty
+PACKAGE VERSION: 2.27.1
+RECIPE NAME: util-linux
+LICENSE: GPLv2+ & LGPLv2.1+ & BSD
+
+PACKAGE NAME: util-linux-fdisk
+PACKAGE VERSION: 2.27.1
+RECIPE NAME: util-linux
+LICENSE: GPLv2+ & LGPLv2.1+ & BSD
+
+PACKAGE NAME: util-linux-fsck
+PACKAGE VERSION: 2.27.1
+RECIPE NAME: util-linux
+LICENSE: GPLv2+ & LGPLv2.1+ & BSD
+
+PACKAGE NAME: util-linux-libblkid
+PACKAGE VERSION: 2.27.1
+RECIPE NAME: util-linux
+LICENSE: GPLv2+ & LGPLv2.1+ & BSD
+
+PACKAGE NAME: util-linux-libfdisk
+PACKAGE VERSION: 2.27.1
+RECIPE NAME: util-linux
+LICENSE: GPLv2+ & LGPLv2.1+ & BSD
+
+PACKAGE NAME: util-linux-libmount
+PACKAGE VERSION: 2.27.1
+RECIPE NAME: util-linux
+LICENSE: GPLv2+ & LGPLv2.1+ & BSD
+
+PACKAGE NAME: util-linux-libsmartcols
+PACKAGE VERSION: 2.27.1
+RECIPE NAME: util-linux
+LICENSE: GPLv2+ & LGPLv2.1+ & BSD
+
+PACKAGE NAME: util-linux-libuuid
+PACKAGE VERSION: 2.27.1
+RECIPE NAME: util-linux
+LICENSE: GPLv2+ & LGPLv2.1+ & BSD
+
+PACKAGE NAME: util-linux-mkfs
+PACKAGE VERSION: 2.27.1
+RECIPE NAME: util-linux
+LICENSE: GPLv2+ & LGPLv2.1+ & BSD
+
+PACKAGE NAME: util-linux-mount
+PACKAGE VERSION: 2.27.1
+RECIPE NAME: util-linux
+LICENSE: GPLv2+ & LGPLv2.1+ & BSD
+
+PACKAGE NAME: util-linux-sfdisk
+PACKAGE VERSION: 2.27.1
+RECIPE NAME: util-linux
+LICENSE: GPLv2+ & LGPLv2.1+ & BSD
+
+PACKAGE NAME: util-linux-sulogin
+PACKAGE VERSION: 2.27.1
+RECIPE NAME: util-linux
+LICENSE: GPLv2+ & LGPLv2.1+ & BSD
+
+PACKAGE NAME: v4l-utils
+PACKAGE VERSION: 1.10.1
+RECIPE NAME: v4l-utils
+LICENSE: GPLv2 & LGPLv2.1
+
+PACKAGE NAME: volatile-binds
+PACKAGE VERSION: 1.0
+RECIPE NAME: volatile-binds
+LICENSE: MIT
+
+PACKAGE NAME: vpdma-fw
+PACKAGE VERSION: 03-2012
+RECIPE NAME: vpdma-fw
+LICENSE: TI-TSPA
+
+PACKAGE NAME: yavta
+PACKAGE VERSION: 0.0
+RECIPE NAME: yavta
+LICENSE: GPLv2
+
+PACKAGE NAME: zlib
+PACKAGE VERSION: 1.2.8
+RECIPE NAME: zlib
+LICENSE: Zlib
+

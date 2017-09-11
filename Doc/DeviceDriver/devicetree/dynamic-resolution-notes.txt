@@ -1,0 +1,39 @@
+Device Tree Dynamic Resolver Notes
+----------------------------------
+
+This document describes the implementation of the in-kernel
+Device Tree resolver, residing in drivers/of/resolver.c and is a
+companion document to Documentation/devicetree/dt-object-internal.txt[1]
+이 문서는 drivers / of / resolver.c에 상주하는 커널 내부 장치 트리 분석기의 
+구현을 설명하며 Documentation / devicetree / dt-object-internal.txt [1]에 대한 companion document 입니다.
+
+How the resolver works
+----------------------
+
+The resolver is given as an input an arbitrary tree compiled with the
+proper dtc option and having a /plugin/ tag. This generates the
+appropriate __fixups__ & __local_fixups__ nodes as described in [1].
+
+In sequence the resolver works by the following steps:
+
+1. Get the maximum device tree phandle value from the live tree + 1.
+2. Adjust all the local phandles of the tree to resolve by that amount.
+3. Using the __local__fixups__ node information adjust all local references
+   by the same amount.
+4. For each property in the __fixups__ node locate the node it references
+   in the live tree. This is the label used to tag the node.
+5. Retrieve the phandle of the target of the fixup.
+6. For each fixup in the property locate the node:property:offset location
+   and replace it with the phandle value.
+
+   resolver 는 적절한 dtc 옵션으로 컴파일되고 / plugin / 태그가있는 임의의 트리를 
+   입력으로받습니다. 이것은 [1]에서 설명한대로 적절한 __fixups__ 및 __local_fixups__ 노드를 생성합니다.
+
+순차적으로 resolver는 다음 단계에 따라 작동합니다.
+
+1. 라이브 트리 + 1에서 최대 장치 트리 phandle 값을 가져옵니다.
+2. 트리의 모든 로컬 펜들을 조정하여 그 양으로 해결하십시오.
+3. __local__fixups__ 노드 정보를 사용하여 모든 로컬 참조를 동일한 양으로 조정합니다.
+4. __fixups__ 노드의 각 속성에 대해 활성 트리에서 참조하는 노드를 찾습니다. 이것은 노드에 태그하는 데 사용되는 레이블입니다.
+5. Fixup 대상의 phandle 을 가져옵니다.
+6. 속성의 각 픽업에 대해 node : property : offset 위치를 찾고 phandle 값으로 바꿉니다.

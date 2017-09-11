@@ -1,0 +1,235 @@
+Device-Tree bindings for Samsung SoC display controller (FIMD)
+
+FIMD (Fully Interactive Mobile Display) is the Display Controller for the
+Samsung series of SoCs which transfers the image data from a video memory
+buffer to an external LCD interface.
+
+Required properties:
+- compatible: value should be one of the following
+		"samsung,s3c2443-fimd"; /* for S3C24XX SoCs */
+		"samsung,s3c6400-fimd"; /* for S3C64XX SoCs */
+		"samsung,s5pv210-fimd"; /* for S5PV210 SoC */
+		"samsung,exynos3250-fimd"; /* for Exynos3250/3472 SoCs */
+		"samsung,exynos4210-fimd"; /* for Exynos4 SoCs */
+		"samsung,exynos4415-fimd"; /* for Exynos4415 SoC */
+		"samsung,exynos5250-fimd"; /* for Exynos5 SoCs */
+
+- reg: physical base address and length of the FIMD registers set.
+
+- interrupt-parent: should be the phandle of the fimd controller's
+		parent interrupt controller.
+
+- interrupts: should contain a list of all FIMD IP block interrupts in the
+		 order: FIFO Level, VSYNC, LCD_SYSTEM. The interrupt specifier
+		 format depends on the interrupt controller used.
+
+- interrupt-names: should contain the interrupt names: "fifo", "vsync",
+	"lcd_sys", in the same order as they were listed in the interrupts
+        property.
+
+- pinctrl-0: pin control group to be used for this controller.
+
+- pinctrl-names: must contain a "default" entry.
+
+- clocks: must include clock specifiers corresponding to entries in the
+         clock-names property.
+
+- clock-names: list of clock names sorted in the same order as the clocks
+               property. Must contain "sclk_fimd" and "fimd".
+
+Optional Properties:
+- power-domains: a phandle to FIMD power domain node.
+- samsung,invert-vden: video enable signal is inverted
+- samsung,invert-vclk: video clock signal is inverted
+- display-timings: timing settings for FIMD, as described in document [1].
+		Can be used in case timings cannot be provided otherwise
+		or to override timings provided by the panel.
+- samsung,sysreg: handle to syscon used to control the system registers
+- i80-if-timings: timing configuration for lcd i80 interface support.
+  - cs-setup: clock cycles for the active period of address signal is enabled
+              until chip select is enabled.
+              If not specified, the default value(0) will be used.
+  - wr-setup: clock cycles for the active period of CS signal is enabled until
+              write signal is enabled.
+              If not specified, the default value(0) will be used.
+  - wr-active: clock cycles for the active period of CS is enabled.
+               If not specified, the default value(1) will be used.
+  - wr-hold: clock cycles for the active period of CS is disabled until write
+             signal is disabled.
+             If not specified, the default value(0) will be used.
+
+  The parameters are defined as:
+
+    VCLK(internal)  __|??????|_____|??????|_____|??????|_____|??????|_____|??
+                      :            :            :            :            :
+    Address Output  --:<XXXXXXXXXXX:XXXXXXXXXXXX:XXXXXXXXXXXX:XXXXXXXXXXXX:XX
+                      | cs-setup+1 |            :            :            :
+                      |<---------->|            :            :            :
+    Chip Select     ???????????????|____________:____________:____________|??
+                                   | wr-setup+1 |            | wr-hold+1  |
+                                   |<---------->|            |<---------->|
+    Write Enable    ????????????????????????????|____________|???????????????
+                                                | wr-active+1|
+                                                |<---------->|
+    Video Data      ----------------------------<XXXXXXXXXXXXXXXXXXXXXXXXX>--
+
+The device node can contain 'port' child nodes according to the bindings defined
+in [2]. The following are properties specific to those nodes:
+- reg: (required) port index, can be:
+		0 - for CAMIF0 input,
+		1 - for CAMIF1 input,
+		2 - for CAMIF2 input,
+		3 - for parallel output,
+		4 - for write-back interface
+
+[1]: Documentation/devicetree/bindings/display/display-timing.txt
+[2]: Documentation/devicetree/bindings/media/video-interfaces.txt
+
+Example:
+
+SoC specific DT entry:
+
+	fimd@11c00000 {
+		compatible = "samsung,exynos4210-fimd";
+		interrupt-parent = <&combiner>;
+		reg = <0x11c00000 0x20000>;
+		interrupt-names = "fifo", "vsync", "lcd_sys";
+		interrupts = <11 0>, <11 1>, <11 2>;
+		clocks = <&clock 140>, <&clock 283>;
+		clock-names = "sclk_fimd", "fimd";
+		power-domains = <&pd_lcd0>;
+		status = "disabled";
+	};
+
+Board specific DT entry:
+
+	fimd@11c00000 {
+		pinctrl-0 = <&lcd_clk &lcd_data24 &pwm1_out>;
+		pinctrl-names = "default";
+		status = "okay";
+	};
+
+
+/*
+삼성 SoC 디스플레이 컨트롤러 (FIMD) 용 디바이스 트리 바인딩
+
+FIMD (Fully Interactive Mobile Display)는 비디오 메모리에서 이미지 데이터를 전송하는 SoC 시리즈의 디스플레이 컨트롤러입니다
+버퍼를 외부 LCD 인터페이스에 연결합니다.
+
+필수 속성 :
+- compatible : value는 다음 중 하나 여야합니다.
+"samsung, s3c2443-fimd"; / * S3C24XX SoC 용 * /
+"samsung, s3c6400-fimd"; / * S3C64XX SoC 용 * /
+"삼성, s5pv210-fimd"; / * S5PV210 SoC * /
+"samsung, exynos3250-fimd"; / * Exynos3250 / 3472 SoC 용 * /
+"samsung, exynos4210-fimd"; / * Exynos4 SoC 용 * /
+"samsung, exynos4415-fimd"; / * Exynos4415 SoC * /
+"samsung, exynos5250-fimd"; / * Exynos5 SoC 용 * /
+
+- reg : FIMD 레지스터 세트의 물리적 기본 주소 및 길이입니다.
+
+- interrupt-parent : fimd 컨트롤러의 상위 인터럽트 컨트롤러의 phandle이어야합니다.
+
+- 인터럽트 : FIFO 레벨, VSYNC, LCD_SYSTEM 순서로 모든 FIMD IP 블록 인터럽트 목록을 포함해야합니다. 
+
+인터럽트 지정자 형식은 사용 된 인터럽트 컨트롤러에 따라 다릅니다.
+
+- interrupt-names : interrupts 속성에 나열된 순서대로 "fifo", "vsync", "lcd_sys"와 같은 인터럽트 이름을 포함해야합니다.
+
+- pinctrl-0 :이 컨트롤러에 사용할 핀 컨트롤 그룹.
+
+- pinctrl-names : "기본"항목을 포함해야합니다.
+
+- clocks : clock-names 속성의 항목에 해당하는 클럭 지정자를 포함해야합니다.
+
+- clock-names : 클럭 이름과 같은 순서로 정렬 된 클럭 이름 목록. "sclk_fimd"및 "fimd"를 포함해야합니다.
+
+선택적 속성 :
+
+- 전력 도메인 : FIMD 전력 도메인 노드에 대한 phandle입니다.
+
+- samsung, invert-vden : 비디오 인 에이블 신호가 반전 됨
+
+- samsung, invert-vclk : 비디오 클럭 신호가 반전 됨
+
+- 디스플레이 타이밍 : 문서 [1]에서 설명한 FIMD의 타이밍 설정.
+
+타이밍을 달리 제공하거나 패널에서 제공하는 타이밍을 무시할 수없는 경우 사용할 수 있습니다.
+
+- samsung, sysreg : 시스템 레지스터를 제어하는 데 사용되는 syscon 핸들
+
+- i80-if-timing : lcd i80 인터페이스 지원을위한 타이밍 구성.
+
+- cs-setup : 칩 선택이 활성화 될 때까지 주소 신호의 활성 기간에 대한 클록 사이클이 활성화됩니다.
+
+지정하지 않으면 기본값 (0)이 사용됩니다.
+
+- wr-setup : 쓰기 신호가 활성화 될 때까지 CS 신호의 활성 기간에 대한 클럭 사이클이 활성화됩니다.
+
+지정하지 않으면 기본값 (0)이 사용됩니다.
+
+- wr-active : CS의 활성 기간에 대한 클럭 사이클이 활성화됩니다.
+
+지정하지 않으면 기본값 (1)이 사용됩니다.
+
+- wr-hold : 쓰기 신호가 비활성화 될 때까지 CS의 활성 기간에 대한 클럭 사이클이 비활성화됩니다.
+
+지정하지 않으면 기본값 (0)이 사용됩니다.
+
+매개 변수는 다음과 같이 정의됩니다.
+
+????VCLK (내부) __ | ?????? | _____ | ?????? | _____ | ?????? | _____ | ?????? | _____ | ??
+??????????????????????: : : : :
+????주소 출력 - : <XXXXXXXXXXX : XXXXXXXXXXXX : XXXXXXXXXXXX : XXXXXXXXXXXX : XX
+??????????????????????| CS 설치 + 1 | : : :
+??????????????????????| <----------> | : : :
+????칩 선택 ????????????? | | ____________ : ____________ : ____________ | ??
+???????????????????????????????????| wr-setup + 1 | | wr-hold + 1 |
+???????????????????????????????????| <----------> | | <----------> |
+????쓰기 가능 ?????????????????????????????? | | ____________ | ?????????????
+????????????????????????????????????????????????| wr 활성 + 1 |
+????????????????????????????????????????????????| <----------> |
+????비디오 데이터 ---------------------------- <XXXXXXXXXXXXXXXXXXXXXXXXX> -
+
+
+장치 노드는 [2]에서 정의 된 바인딩에 따라 '포트'자식 노드를 포함 할 수 있습니다. 
+
+다음은 해당 노드에 특정한 등록 정보입니다.
+
+- reg : (필수) 포트 인덱스는 다음과 같습니다.
+
+0 - CAMIF0 입력의 경우,
+1 - CAMIF1 입력의 경우,
+2 - CAMIF2 입력의 경우,
+3 - 병렬 출력의 경우,
+4 - write-back 인터페이스
+
+[1] : Documentation / devicetree / bindings / display / display-timing.txt
+[2] : Documentation / devicetree / bindings / media / video-interfaces.txt
+
+
+Example:
+
+SoC specific DT entry:
+
+	fimd@11c00000 {
+		compatible = "samsung,exynos4210-fimd";
+		interrupt-parent = <&combiner>;
+		reg = <0x11c00000 0x20000>;
+		interrupt-names = "fifo", "vsync", "lcd_sys";
+		interrupts = <11 0>, <11 1>, <11 2>;
+		clocks = <&clock 140>, <&clock 283>;
+		clock-names = "sclk_fimd", "fimd";
+		power-domains = <&pd_lcd0>;
+		status = "disabled";
+	};
+
+Board specific DT entry:
+
+	fimd@11c00000 {
+		pinctrl-0 = <&lcd_clk &lcd_data24 &pwm1_out>;
+		pinctrl-names = "default";
+		status = "okay";
+	};
+
+*/

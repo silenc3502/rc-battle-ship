@@ -1,0 +1,49 @@
+* Honeywell HMC5843 magnetometer sensor
+
+Required properties:
+
+  - compatible : should be "honeywell,hmc5843"
+  Other models which are supported with driver are:
+	"honeywell,hmc5883"
+	"honeywell,hmc5883l"
+	"honeywell,hmc5983"
+  - reg : the I2C address of the magnetometer - typically 0x1e
+
+Optional properties:
+
+  - gpios : should be device tree identifier of the magnetometer DRDY pin
+
+Example:
+
+hmc5843@1e {
+        compatible = "honeywell,hmc5843"
+        reg = <0x1e>;
+};
+
+
+
+/*
+
+* Honeywell HMC5843 자력계 센서
+
+필수 속성 :
+
+   - 호환 가능 : "honeywell, hmc5843"이어야합니다.
+   드라이버로 지원되는 다른 모델은 다음과 같습니다.
+"하니웰, hmc5883"
+"하니웰, hmc5883l"
+"하니웰, hmc5983"
+   - reg : 자력계의 I2C 주소 - 일반적으로 0x1e
+
+선택 속성 :
+
+   - gpios : 자력계 DRDY 핀의 장치 트리 식별자 여야합니다.
+
+Example:
+
+hmc5843@1e {
+        compatible = "honeywell,hmc5843"
+        reg = <0x1e>;
+};
+
+*/

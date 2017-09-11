@@ -1,0 +1,96 @@
+Netdev private dataroom for 6lowpan interfaces:
+
+All 6lowpan able net devices, means all interfaces with ARPHRD_6LOWPAN,
+must have "struct lowpan_priv" placed at beginning of netdev_priv.
+
+The priv_size of each interface should be calculate by:
+
+ dev->priv_size = LOWPAN_PRIV_SIZE(LL_6LOWPAN_PRIV_DATA);
+
+Where LL_PRIV_6LOWPAN_DATA is sizeof linklayer 6lowpan private data struct.
+To access the LL_PRIV_6LOWPAN_DATA structure you can cast:
+
+ lowpan_priv(dev)-priv;
+
+to your LL_6LOWPAN_PRIV_DATA structure.
+
+Before registering the lowpan netdev interface you must run:
+
+ lowpan_netdev_setup(dev, LOWPAN_LLTYPE_FOOBAR);
+
+wheres LOWPAN_LLTYPE_FOOBAR is a define for your 6LoWPAN linklayer type of
+enum lowpan_lltypes.
+
+Example to evaluate the private usually you can do:
+
+static inline sturct lowpan_priv_foobar *
+lowpan_foobar_priv(struct net_device *dev)
+{
+	return (sturct lowpan_priv_foobar *)lowpan_priv(dev)->priv;
+}
+
+switch (dev->type) {
+case ARPHRD_6LOWPAN:
+	lowpan_priv = lowpan_priv(dev);
+	/* do great stuff which is ARPHRD_6LOWPAN related */
+	switch (lowpan_priv->lltype) {
+	case LOWPAN_LLTYPE_FOOBAR:
+		/* do 802.15.4 6LoWPAN handling here */
+		lowpan_foobar_priv(dev)->bar = foo;
+		break;
+	...
+	}
+	break;
+...
+}
+
+In case of generic 6lowpan branch ("net/6lowpan") you can remove the check
+on ARPHRD_6LOWPAN, because you can be sure that these function are called
+by ARPHRD_6LOWPAN interfaces.
+
+
+6lowpan 인터페이스 용 Netdev 전용 데이터 룸 :
+
+6 개의 로우 패스 가능 네트 디바이스 모두는 ARPHRD_6LOWPAN이있는 모든 인터페이스가 netdev_priv의 맨 앞에 "struct lowpan_priv"를 가져야 함을 의미합니다.
+
+각 인터페이스의 priv_size는 다음과 같이 계산해야합니다.
+
+  dev-> priv_size = LOWPAN_PRIV_SIZE (LL_6LOWPAN_PRIV_DATA);
+
+여기서 LL_PRIV_6LOWPAN_DATA는 sizeof linklayer 6lowpan 개인 데이터 구조체입니다.
+LL_PRIV_6LOWPAN_DATA 구조에 액세스하려면 다음을 캐스팅 할 수 있습니다.
+
+lowpan_priv (dev) -priv;
+
+LL_6LOWPAN_PRIV_DATA 구조체에 추가하십시오.
+
+lowpan netdev 인터페이스를 등록하기 전에 다음을 실행해야합니다.
+
+  lowpan_netdev_setup (dev, LOWPAN_LLTYPE_FOOBAR);
+
+wheres LOWPAN_LLTYPE_FOOBAR는 열거 형 lowpan_lltypes의 6LoWPAN 링크 계층 유형에 대한 정의입니다.	
+
+
+private usually 을 평가하는 예는 다음과 같습니다.
+
+lowpan_foobar_priv(struct net_device *dev)
+{
+	return (sturct lowpan_priv_foobar *)lowpan_priv(dev)->priv;
+}
+
+switch (dev->type) {
+case ARPHRD_6LOWPAN:
+	lowpan_priv = lowpan_priv(dev);
+	/* do great stuff which is ARPHRD_6LOWPAN related */
+	switch (lowpan_priv->lltype) {
+	case LOWPAN_LLTYPE_FOOBAR:
+		/* do 802.15.4 6LoWPAN handling here */
+		lowpan_foobar_priv(dev)->bar = foo;
+		break;
+	...
+	}
+	break;
+...
+}
+
+generic 6lowpan branch ( "net / 6lowpan")의 경우 ARPHRD_6LOWPAN의 검사를 제거 할 수 있습니다. ARPHRD_6LOWPAN 인터페이스가 이 기능을 호출했는지 확인할 수 있기 때문입니다.

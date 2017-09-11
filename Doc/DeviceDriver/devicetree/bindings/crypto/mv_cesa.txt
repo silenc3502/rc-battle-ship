@@ -1,0 +1,51 @@
+Marvell Cryptographic Engines And Security Accelerator
+
+Required properties:
+- compatible: should be one of the following string
+	      "marvell,orion-crypto"
+	      "marvell,kirkwood-crypto"
+	      "marvell,dove-crypto"
+- reg: base physical address of the engine and length of memory mapped
+       region. Can also contain an entry for the SRAM attached to the CESA,
+       but this representation is deprecated and marvell,crypto-srams should
+       be used instead
+- reg-names: "regs". Can contain an "sram" entry, but this representation
+	     is deprecated and marvell,crypto-srams should be used instead
+- interrupts: interrupt number
+- clocks: reference to the crypto engines clocks. This property is only
+	  required for Dove platforms
+- marvell,crypto-srams: phandle to crypto SRAM definitions
+
+Optional properties:
+- marvell,crypto-sram-size: SRAM size reserved for crypto operations, if not
+			    specified the whole SRAM is used (2KB)
+
+
+필수 속성 :
+- compatible : 다음 문자열 중 하나 여야합니다.
+		  "marvell,orion-crypto"
+	      "marvell,kirkwood-crypto"
+	      "marvell,dove-crypto"
+
+- reg : 엔진의 기본 물리적 주소와 메모리 매핑 된 영역의 길이. CESA에 부착 된 SRAM에 대한 항목을 포함 할 수도 있지만이 표현은 더 이상 사용되지 않으며 marvell 대신 crypto-srams를 사용해야합니다.
+
+- reg-names : "regs". "sram"항목을 포함 할 수 있지만이 표현은 더 이상 사용되지 않으며 marvell 대신 crypto-srams를 사용해야합니다 
+- interrupts : interrupt number
+- clocks : 암호 엔진 클럭에 대한 참조입니다. 이 속성은 Dove platforms에서만 필요합니다.
+- marvell, crypto-srams : phandle에서 crypto SRAM 정의
+
+선택적 속성 :
+- marvell, crypto-sram-size : 암호화 연산을 위해 예약 된 SRAM 크기, 지정되지 않은 경우 전체 SRAM이 사용됨 (2KB)
+
+
+Examples:
+
+	crypto@30000 {
+		compatible = "marvell,orion-crypto";
+		reg = <0x30000 0x10000>;
+		reg-names = "regs";
+		interrupts = <22>;
+		marvell,crypto-srams = <&crypto_sram>;
+		marvell,crypto-sram-size = <0x600>;
+		status = "okay";
+	};

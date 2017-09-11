@@ -1,0 +1,215 @@
+This is the 6pack-mini-HOWTO, written by
+
+Andreas Könsgen DG3KQ
+Internet: ajk@comnets.uni-bremen.de
+AMPR-net: dg3kq@db0pra.ampr.org
+AX.25:    dg3kq@db0ach.#nrw.deu.eu
+
+Last update: April 7, 1998
+
+1. What is 6pack, and what are the advantages to KISS?
+1. 6pack은 무엇이며 KISS의 장점은 무엇입니까?
+
+6pack is a transmission protocol for data exchange between the PC and
+the TNC over a serial line. It can be used as an alternative to KISS.
+6pack은 직렬 회선을 통해 PC와 TNC 간의 데이터 교환을위한 전송 프로토콜입니다. KISS의 대안으로 사용할 수 있습니다.
+
+6pack has two major advantages:
+- The PC is given full control over the radio
+  channel. Special control data is exchanged between the PC and the TNC so
+  that the PC knows at any time if the TNC is receiving data, if a TNC
+  buffer underrun or overrun has occurred, if the PTT is
+  set and so on. This control data is processed at a higher priority than
+  normal data, so a data stream can be interrupted at any time to issue an
+  important event. This helps to improve the channel access and timing 
+  algorithms as everything is computed in the PC. It would even be possible 
+  to experiment with something completely different from the known CSMA and 
+  DAMA channel access methods.
+  This kind of real-time control is especially important to supply several
+  TNCs that are connected between each other and the PC by a daisy chain
+  (however, this feature is not supported yet by the Linux 6pack driver).
+6pack에는 두 가지 주요 이점이 있습니다.
+- PC는 무선 채널을 완전히 제어 할 수 있습니다. PC와 TNC간에 특수 제어 데이터가 교환되므로 TNC가 데이터를 수신하고 있는지, TNC 버퍼 언더런 또는 오버런이 발생했는지, PTT가 설정되어 있는지 등을 언제든지 알 수 있습니다. 이 제어 데이터는 일반 데이터보다 높은 우선 순위에서 처리되므로 중요한 이벤트를 발행하기 위해 언제든지 데이터 스트림을 중단시킬 수 있습니다. 이렇게하면 PC에서 모든 것이 계산되므로 채널 액세스 및 타이밍 알고리즘을 개선하는 데 도움이됩니다. 알려진 CSMA 및 DAMA 채널 액세스 방법과 완전히 다른 것을 실험해볼 수도 있습니다.
+   이러한 종류의 실시간 제어는 데이지 체인 (daisy chain)으로 PC와 PC간에 연결되는 여러 개의 TNC를 제공하는 데 특히 중요합니다 (그러나 이 기능은 아직 Linux 6pack 드라이버에서 지원되지 않습니다).
+
+- Each packet transferred over the serial line is supplied with a checksum,
+  so it is easy to detect errors due to problems on the serial line.
+  Received packets that are corrupt are not passed on to the AX.25 layer.
+  Damaged packets that the TNC has received from the PC are not transmitted.
+- 직렬 회선을 통해 전송 된 각 패킷에는 checksum이 제공되므로 직렬 회선의 문제로 인한 오류를 쉽게 감지 할 수 있습니다. 손상된 수신 패킷은 AX.25 계층으로 전달되지 않습니다. TNC가 PC에서 수신 한 손상된 패킷은 전송되지 않습니다.
+
+More details about 6pack are described in the file 6pack.ps that is located
+in the doc directory of the AX.25 utilities package.
+6pack에 대한 자세한 내용은 AX.25 유틸리티 패키지의 doc 디렉토리에있는 6pack.ps 파일에 설명되어 있습니다.
+
+2. Who has developed the 6pack protocol?
+2. 누가 6pack 프로토콜을 개발 했습니까?
+
+The 6pack protocol has been developed by Ekki Plicht DF4OR, Henning Rech
+DF9IC and Gunter Jost DK7WJ. A driver for 6pack, written by Gunter Jost and
+Matthias Welwarsky DG2FEF, comes along with the PC version of FlexNet.
+They have also written a firmware for TNCs to perform the 6pack
+protocol (see section 4 below).
+6pack 프로토콜은 Ekki Plicht DF4OR, Henning Rech DF9IC 및 Gunter Jost DK7WJ에 의해 개발되었습니다. Gunter Jost와 Matthias Welwarsky DG2FEF가 작성한 6pack 용 드라이버가 FlexNet의 PC 버전과 함께 제공됩니다. 그들은 TNC가 6pack 프로토콜을 수행하기위한 펌웨어도 작성했습니다 (아래 4 절 참조).
+
+3. Where can I get the latest version of 6pack for LinuX?
+3. LinuX의 6pack 최신 버전을 어디서 구할 수 있습니까?
+
+At the moment, the 6pack stuff can obtained via anonymous ftp from
+db0bm.automation.fh-aachen.de. In the directory /incoming/dg3kq,
+there is a file named 6pack.tgz.
+현재 6pack은 db0bm.automation.fh-aachen.de에서 anonymous ftp를 통해 얻을 수 있습니다. / incoming / dg3kq 디렉토리에는 6pack.tgz라는 파일이 있습니다.
+
+4. Preparing the TNC for 6pack operation
+4. 6 팩 작동을위한 TNC 준비
+
+To be able to use 6pack, a special firmware for the TNC is needed. The EPROM
+of a newly bought TNC does not contain 6pack, so you will have to
+program an EPROM yourself. The image file for 6pack EPROMs should be
+available on any packet radio box where PC/FlexNet can be found. The name of
+the file is 6pack.bin. This file is copyrighted and maintained by the FlexNet
+team. It can be used under the terms of the license that comes along
+with PC/FlexNet. Please do not ask me about the internals of this file as I
+don't know anything about it. I used a textual description of the 6pack
+protocol to program the Linux driver.
+6pack을 사용하려면 TNC 전용 펌웨어가 필요합니다. 새로 구입 한 TNC의 EPROM에는 6pack이 없으므로 EPROM을 직접 프로그래밍해야합니다. 6pack EPROM의 이미지 파일은 PC / FlexNet을 찾을 수있는 모든 패킷 라디오 박스에서 사용할 수 있어야합니다. 파일의 이름은 6pack.bin입니다. 이 파일은 FlexNet 팀에 저작권이 있으며 유지 관리됩니다. PC / FlexNet과 함께 제공되는 라이센스 조건에 따라 사용할 수 있습니다. 이 파일의 내부에 대해 아무 것도 모르기 때문에 저에게 묻지 마십시오. 필자는 6pack 프로토콜에 대한 텍스트 설명을 사용하여 Linux 드라이버를 프로그래밍했습니다.
+
+TNCs contain a 64kByte EPROM, the lower half of which is used for
+the firmware/KISS. The upper half is either empty or is sometimes
+programmed with software called TAPR. In the latter case, the TNC
+is supplied with a DIP switch so you can easily change between the
+two systems. When programming a new EPROM, one of the systems is replaced
+by 6pack. It is useful to replace TAPR, as this software is rarely used
+nowadays. If your TNC is not equipped with the switch mentioned above, you
+can build in one yourself that switches over the highest address pin
+of the EPROM between HIGH and LOW level. After having inserted the new EPROM
+and switched to 6pack, apply power to the TNC for a first test. The connect
+and the status LED are lit for about a second if the firmware initialises
+the TNC correctly.
+TNC는 64kByte EPROM을 포함하며, 그 하위 절반은 펌웨어 / KISS 용으로 사용됩니다. 상반부는 비어 있거나 TAPR이라는 소프트웨어로 프로그래밍됩니다. 후자의 경우 TNC에는 DIP 스위치가 제공되므로 두 시스템간에 쉽게 변경할 수 있습니다. 새 EPROM을 프로그래밍 할 때 시스템 중 하나가 6pack으로 대체됩니다. 이 소프트웨어는 요즘 거의 사용되지 않으므로 TAPR을 대체하는 것이 좋습니다. TNC는 위에 언급 된 스위치가 장착되어 있지 않으면 EPROM의 최상위 주소 핀을 HIGH와 LOW 사이에서 전환 할 수 있습니다. 새 EPROM을 삽입하고 6pack으로 전환 한 후 첫 번째 테스트를 위해 TNC에 전원을 공급하십시오. 펌웨어가 TNC를 올바르게 초기화하면 연결 및 상태 LED가 약 1 초 동안 켜집니다.
+
+5. Building and installing the 6pack driver
+5. 6pack 드라이버 빌드 및 설치
+
+The driver has been tested with kernel version 2.1.90. Use with older
+kernels may lead to a compilation error because the interface to a kernel
+function has been changed in the 2.1.8x kernels.
+이 드라이버는 커널 버전 2.1.90에서 테스트되었습니다. 커널 기능에 대한 인터페이스가 2.1.8x 커널에서 변경되었으므로 구형 커널과 함께 사용하면 컴파일 오류가 발생할 수 있습니다.
+
+How to turn on 6pack support:
+6pack support을 켜는 방법 :
+
+- In the linux kernel configuration program, select the code maturity level
+  options menu and turn on the prompting for development drivers.
+- Linux 커널 구성 프로그램에서 코드 완성도 옵션 메뉴를 선택하고 개발 드라이버에 대한 prompting를 켜십시오.
+
+
+- Select the amateur radio support menu and turn on the serial port 6pack
+  driver.
+- 아마추어 무선 지원 메뉴를 선택하고 직렬 포트 6pack 드라이버를 켭니다.
+
+- Compile and install the kernel and the modules.
+- 커널과 모듈을 컴파일하고 설치하십시오.
+
+To use the driver, the kissattach program delivered with the AX.25 utilities
+has to be modified.
+드라이버를 사용하려면 AX.25 유틸리티와 함께 제공되는 kissattach 프로그램을 수정해야합니다.
+
+- Do a cd to the directory that holds the kissattach sources. Edit the
+  kissattach.c file. At the top, insert the following lines:
+- kissattach 소스가있는 디렉토리로 cd를하십시오. kissattach.c 파일을 편집하십시오. 맨 위에 다음 행을 삽입하십시오.
+
+  #ifndef N_6PACK
+  #define N_6PACK (N_AX25+1)
+  #endif
+
+  Then find the line
+  그런 다음 라인을 찾으십시오.
+
+  int disc = N_AX25;
+
+  and replace N_AX25 by N_6PACK.
+  N_AX25를 N_6PACK로 대체하십시오.
+
+- Recompile kissattach. Rename it to spattach to avoid confusions.
+- kissattach를 다시 컴파일하십시오. 혼동을 피하기 위해 spattach로 이름을 변경하십시오.
+
+Installing the driver:
+드라이버 설치 :
+
+- Do an insmod 6pack. Look at your /var/log/messages file to check if the 
+  module has printed its initialization message.
+- insmod 6pack을하십시오. / var / log / messages 파일을보고 모듈이 초기화 메시지를 인쇄했는지 확인하십시오.
+
+- Do a spattach as you would launch kissattach when starting a KISS port.
+  Check if the kernel prints the message '6pack: TNC found'. 
+- KISSport를 시작할 때 kissattach를 시작하도록 spattach를하십시오.
+   커널이 '6pack : TNC found'메시지를 출력하는지 확인하십시오
+
+- From here, everything should work as if you were setting up a KISS port.
+  The only difference is that the network device that represents
+  the 6pack port is called sp instead of sl or ax. So, sp0 would be the
+  first 6pack port.
+  여기에서는 KISS 포트를 설정하고있는 것처럼 모든 기능 할 것입니다.
+  유일한 차이점은 6pack 포트를 나타내는 네트워크 장치를 sl 또는 ax 대신 sp라고합니다. 따라서 sp0은 첫 번째 6pack 포트가됩니다.
+
+Although the driver has been tested on various platforms, I still declare it
+ALPHA. BE CAREFUL! Sync your disks before insmoding the 6pack module
+and spattaching. Watch out if your computer behaves strangely. Read section
+6 of this file about known problems.
+드라이버가 다양한 플랫폼에서 테스트되었지만 여전히 알파라고 선언합니다. 조심해! 6pack 모듈을 insmoding하고 spattaching하기 전에 디스크를 동기화하십시오. 컴퓨터가 이상하게 작동하는지 조심하십시오. 알려진 문제에 대해서는이 파일의 6 절을 읽으십시오.
+
+Note that the connect and status LEDs of the TNC are controlled in a
+different way than they are when the TNC is used with PC/FlexNet. When using
+FlexNet, the connect LED is on if there is a connection; the status LED is
+on if there is data in the buffer of the PC's AX.25 engine that has to be
+transmitted. Under Linux, the 6pack layer is beyond the AX.25 layer,
+so the 6pack driver doesn't know anything about connects or data that
+has not yet been transmitted. Therefore the LEDs are controlled
+as they are in KISS mode: The connect LED is turned on if data is transferred
+from the PC to the TNC over the serial line, the status LED if data is
+sent to the PC.
+TNC의 연결 및 상태 LED는 TNC가 PC / FlexNet과 함께 사용되는 경우와 다른 방법으로 제어됩니다. FlexNet을 사용할 때, 연결이 있으면 연결 LED가 켜집니다. PC의 AX.25 엔진 버퍼에 전송해야하는 데이터가 있으면 상태 LED가 켜집니다. Linux에서는 6pack 레이어가 AX.25 레이어를 벗어나므로 6pack 드라이버는 아직 전송되지 않은 데이터 나 연결에 대해 알지 못합니다. 따라서 LED는 KISS 모드에서와 같이 제어됩니다. 데이터가 PC로 전송되면 직렬 LED를 통해 TNC로 연결 LED가 켜지고 데이터가 PC로 전송되면 상태 LED가 켜집니다.
+
+6. Known problems
+
+When testing the driver with 2.0.3x kernels and
+operating with data rates on the radio channel of 9600 Baud or higher,
+the driver may, on certain systems, sometimes print the message '6pack:
+bad checksum', which is due to data loss if the other station sends two
+or more subsequent packets. I have been told that this is due to a problem
+with the serial driver of 2.0.3x kernels. I don't know yet if the problem
+still exists with 2.1.x kernels, as I have heard that the serial driver
+code has been changed with 2.1.x.
+2.0.3x 커널로 드라이버를 테스트하고 9600 Baud 이상의 라디오 채널에서 데이터 속도로 작동 할 때 드라이버는 특정 시스템에서 '6pack : bad checksum'메시지를 인쇄 할 수 있습니다. 이는 데이터 유실로 인한 것입니다. 다른 스테이션은 두 개 이상의 후속 패킷을 보냅니다. 이 문제는 2.0.3x 커널의 직렬 드라이버 문제로 인한 것이라고 들었습니다. 직렬 드라이버 코드가 2.1.x로 변경되었다는 소식을 들었으므로 2.1.x 커널에서 문제가 계속 발생하는지 아직 모르겠습니다.
+
+When shutting down the sp interface with ifconfig, the kernel crashes if
+there is still an AX.25 connection left over which an IP connection was
+running, even if that IP connection is already closed. The problem does not
+occur when there is a bare AX.25 connection still running. I don't know if
+this is a problem of the 6pack driver or something else in the kernel.
+ifconfig를 사용하여 sp 인터페이스를 종료 할 때 해당 IP 연결이 이미 닫혀 있어도 IP 연결이 실행 중이던 AX.25 연결이 남아 있으면 커널이 충돌합니다. 맨 처음 AX.25 연결이 실행 중일 때 문제가 발생하지 않습니다. 이것이 6pack 드라이버 나 커널의 다른 문제인지 아닌지는 잘 모르겠습니다.
+
+The driver has been tested as a module, not yet as a kernel-builtin driver.
+드라이버는 모듈로 테스트되었지만 커널 내장 드라이버는 아닙니다.
+
+The 6pack protocol supports daisy-chaining of TNCs in a token ring, which is
+connected to one serial port of the PC. This feature is not implemented
+and at least at the moment I won't be able to do it because I do not have
+the opportunity to build a TNC daisy-chain and test it.
+6pack 프로토콜은 PC의 하나의 직렬 포트에 연결된 토큰 링에서 TNC의 daisy-chaining을 지원합니다. 이 기능은 구현되지 않았으며 적어도 현재는 TNC 데이지 체인을 구축하고 테스트 할 기회가 없으므로이를 수행 할 수 없습니다.
+
+Some of the comments in the source code are inaccurate. They are left from
+the SLIP/KISS driver, from which the 6pack driver has been derived.
+I haven't modified or removed them yet -- sorry! The code itself needs
+some cleaning and optimizing. This will be done in a later release.
+소스 코드의 일부 주석이 부정확합니다. 6pack 드라이버가 파생 된 SLIP / KISS 드라이버에서 남겨 둡니다. 아직 수정하거나 제거하지 않았습니다. - 죄송합니다! 코드 자체는 약간의 청소와 최적화가 필요합니다. 이것은 이후 릴리스에서 수행됩니다.
+
+If you encounter a bug or if you have a question or suggestion concerning the
+driver, feel free to mail me, using the addresses given at the beginning of
+this file.
+버그가 발생하거나 드라이버에 관한 질문이나 제안 사항이 있으면이 파일의 시작 부분에있는 주소를 사용하여 저에게 메일을 보내주십시오.
+
+Have fun!
+
+Andreas

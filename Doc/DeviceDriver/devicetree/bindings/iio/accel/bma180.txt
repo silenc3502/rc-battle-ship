@@ -1,0 +1,65 @@
+* Bosch BMA180 / BMA250 triaxial acceleration sensor
+
+http://omapworld.com/BMA180_111_1002839.pdf
+http://ae-bst.resource.bosch.com/media/products/dokumente/bma250/bst-bma250-ds002-05.pdf
+
+Required properties:
+
+  - compatible : should be "bosch,bma180" or "bosch,bma250"
+  - reg : the I2C address of the sensor
+
+Optional properties:
+
+  - interrupt-parent : should be the phandle for the interrupt controller
+
+  - interrupts : interrupt mapping for GPIO IRQ, it should by configured with
+		flags IRQ_TYPE_LEVEL_HIGH | IRQ_TYPE_EDGE_RISING
+		For the bma250 the first interrupt listed must be the one
+		connected to the INT1 pin, the second (optional) interrupt
+		listed must be the one connected to the INT2 pin.
+
+Example:
+
+bma180@40 {
+	compatible = "bosch,bma180";
+	reg = <0x40>;
+	interrupt-parent = <&gpio6>;
+	interrupts = <18 (IRQ_TYPE_LEVEL_HIGH | IRQ_TYPE_EDGE_RISING)>;
+};
+
+
+
+/*
+
+* Bosch BMA180 / BMA250 3 축 가속도 센서
+
+http://omapworld.com/BMA180_111_1002839.pdf
+http://ae-bst.resource.bosch.com/media/products/dokumente/bma250/bst-bma250-ds002-05.pdf
+
+필수 속성 :
+
+   - 호환 가능 : "bosch, bma180"또는 "bosch, bma250"이어야합니다.
+   - reg : 센서의 I2C 주소
+
+선택 속성 :
+
+   - interrupt-parent : 인터럽트 컨트롤러의 phandle이어야합니다.
+
+   - 인터럽트 : GPIO IRQ의 인터럽트 매핑, 플래그 IRQ_TYPE_LEVEL_HIGH로 구성해야합니다. 
+
+	IRQ_TYPE_EDGE_RISING bma250의 경우 나열된 첫 번째 인터럽트는 INT1 핀에 연결된 인터럽트이어야하며 
+
+	두 번째 (선택 사항) 인터럽트는 INT2 핀에 연결된 인터럽트이어야합니다.
+
+
+Example:
+
+bma180@40 {
+	compatible = "bosch,bma180";
+	reg = <0x40>;
+	interrupt-parent = <&gpio6>;
+	interrupts = <18 (IRQ_TYPE_LEVEL_HIGH | IRQ_TYPE_EDGE_RISING)>;
+};
+
+*/
+

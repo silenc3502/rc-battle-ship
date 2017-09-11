@@ -1,0 +1,269 @@
+			Soc-Camera Subsystem
+			====================
+
+용어 정의
+Terminology
+-----------
+
+The following terms are used in this document:
+ - camera / camera device / camera sensor - a video-camera sensor chip, capable
+   of connecting to a variety of systems and interfaces, typically uses i2c for
+   control and configuration, and a parallel or a serial bus for data.
+   카메라 / 카메라 장치 / 카메라 센서 - 비디오 카메라 센서 칩, 다양한 시스템과 인터페이스
+   연결 가능한, 전형적으로는 제어 및 환경 설정을 위해 i2c 사용하고 데이터를 위해서는
+   패럴렐 또는 시리얼 버스 사용한다.
+
+ - camera host - an interface, to which a camera is connected. Typically a
+   specialised interface, present on many SoCs, e.g. PXA27x and PXA3xx, SuperH,
+   AVR32, i.MX27, i.MX31.
+   카메라 호스트 - 인터페이스, 카메라와 연결된. 전형적으로는 특수한 인터페이스, 많은
+   SoC 위에 존재하는, 예를 들면, PXA27x와 PXA3xx, SuperH, AVR32, i.MX27, i.MX31.
+
+ - camera host bus - a connection between a camera host and a camera. Can be
+   parallel or serial, consists of data and control lines, e.g. clock, vertical
+   and horizontal synchronization signals.
+   카메라 호스트 버스 - 카메라와 카메라 호스트 사이의 연결. 데이터 전송하는 패럴렐 또는 
+   시리얼 버스 그리고 예를 들면, 클락, 버티컬과 호리젠탈 싱크로나이제이션 시그널 같은
+   제어 라인. 
+
+
+Purpose of the soc-camera subsystem
+-----------------------------------
+SoC 카메라 서브시스템 목적(용도)
+
+The soc-camera subsystem initially provided a unified API between camera host
+drivers and camera sensor drivers. Later the soc-camera sensor API has been
+replaced with the V4L2 standard subdev API. This also made camera driver re-use
+with non-soc-camera hosts possible. The camera host API to the soc-camera core
+has been preserved.
+SoC 카메라 서브시스템은 카메라 호스트 드라이버와 카메라 센서 드라이버 사이에 통합된 API 공급.
+나중에는 SoC 카메라 센서 API는 V4L2 스탠다드 subdev API로 대체됨. 또한, 이것이 카메라 드라이버로 하여금
+non-soc 카메라 호스트를 가지고 다시 사용가능하게 했음(?). 
+soc-camera core 용 카메라 호스트 API는 그대로 있음.
+
+Soc-camera implements a V4L2 interface to the user, currently only the "mmap"
+method is supported by host drivers. However, the soc-camera core also provides
+support for the "read" method.
+Soc 카메라는 사용자에게 V4L2 인터페이스를 구현하는데, 현재는 오직 "mmap" 방식만이 호스트 드라이버가 지원.
+그러나, soc 카메라 core는 "read" method 지원.
+
+The subsystem has been designed to support multiple camera host interfaces and
+multiple cameras per interface, although most applications have only one camera
+sensor.
+서브시스템은 여러 카메라 호스트 인터페이스 그리고 인터페이스 당 다수 카메라를 지원하도록 설계됨,
+비록 대다수 어플리케이션은 오직 하나의 카메라 센서만을 가짐.
+
+Existing drivers
+----------------
+기존 드라이버
+
+As of 3.7 there are seven host drivers in the mainline: atmel-isi.c,
+mx1_camera.c (broken, scheduled for removal), mx2_camera.c, mx3_camera.c,
+omap1_camera.c, pxa_camera.c, sh_mobile_ceu_camera.c, and multiple sensor
+drivers under drivers/media/i2c/soc_camera/.
+3.7에 관해 mainline에 7개 호스트 드라이버가 있음: 7개 호스트 드라이버 이름 나열,
+그리고 drivers/media/i2c/soc_camera/에 다수 센서 드라이버들.
+
+Camera host API
+---------------
+카메라 호스트 API
+
+A host camera driver is registered using the
+
+soc_camera_host_register(struct soc_camera_host *);
+
+function. The host object can be initialized as follows:
+호스트 카메라 드라이버는 soc_camera_host_register(struct soc_camera_host *);function
+기능을 사용하여 레지스터됨. 호스트 오브젝트는 아래와 같이 이니셜라이즈될 수 있음:
+
+	struct soc_camera_host	*ici;
+	ici->drv_name		= DRV_NAME;
+	ici->ops		= &camera_host_ops;
+	ici->priv		= pcdev;
+	ici->v4l2_dev.dev	= &pdev->dev;
+	ici->nr			= pdev->id;
+
+All camera host methods are passed in a struct soc_camera_host_ops:
+모든 카메라 호스트 방식들은 struct soc_camera_host_ops에서 통과됨:
+
+static struct soc_camera_host_ops camera_host_ops = {
+	.owner		= THIS_MODULE,
+	.add		= camera_add_device,
+	.remove		= camera_remove_device,
+	.set_fmt	= camera_set_fmt_cap,
+	.try_fmt	= camera_try_fmt_cap,
+	.init_videobuf2	= camera_init_videobuf2,
+	.poll		= camera_poll,
+	.querycap	= camera_querycap,
+	.set_bus_param	= camera_set_bus_param,
+	/* The rest of host operations are optional */
+};
+
+.add and .remove methods are called when a sensor is attached to or detached
+from the host. .set_bus_param is used to configure physical connection
+parameters between the host and the sensor. .init_videobuf2 is called by
+soc-camera core when a video-device is opened, the host driver would typically
+call vb2_queue_init() in this method. Further video-buffer management is
+implemented completely by the specific camera host driver. If the host driver
+supports non-standard pixel format conversion, it should implement a
+.get_formats and, possibly, a .put_formats operations. See below for more
+details about format conversion. The rest of the methods are called from
+respective V4L2 operations.
+.add 그리고 .remove는 호스트에 부착 또는 탈착될 때 호출됨.
+.set_bus_parm은 호스트와 센서 사이의 물리적 연결 파라메터를 설정하는데 사용됨.
+.init_videobuf2는 video-device가 open되서, 호스트 드라이버가 이 방식에서 vb2_queue_init()을 호출할 때,
+soc-camera core에 의해 호출됨.
+video-buffer management는 특정 카메라 호스트 드라이버에 의해 완전하게 구현됨.
+만약 호스트 드라이버가 비표준 픽셀 포맷 컨버젼을 지원한다면, 그것은 .get_formats 그리고, 가능한한,
+.put_furmats 동작을 구현해야 함.
+포맷 컨버젼에 관한 더 상세한 내용은 아래를 보라. 나머지 방식은 각각의 V4L2 동작으로부터 호출됨.
+
+Camera API
+----------
+카메라 API
+
+Sensor drivers can use struct soc_camera_link, typically provided by the
+platform, and used to specify to which camera host bus the sensor is connected,
+and optionally provide platform .power and .reset methods for the camera. This
+struct is provided to the camera driver via the I2C client device platform data
+and can be obtained, using the soc_camera_i2c_to_link() macro. Care should be
+taken, when using soc_camera_vdev_to_subdev() and when accessing struct
+soc_camera_device, using v4l2_get_subdev_hostdata(): both only work, when
+running on an soc-camera host. The actual camera driver operation is implemented
+using the V4L2 subdev API. Additionally soc-camera camera drivers can use
+auxiliary soc-camera helper functions like soc_camera_power_on() and
+soc_camera_power_off(), which switch regulators, provided by the platform and call
+board-specific power switching methods. soc_camera_apply_board_flags() takes
+camera bus configuration capability flags and applies any board transformations,
+e.g. signal polarity inversion. soc_mbus_get_fmtdesc() can be used to obtain a
+pixel format descriptor, corresponding to a certain media-bus pixel format code.
+soc_camera_limit_side() can be used to restrict beginning and length of a frame
+side, based on camera capabilities.
+센서 드라이버는 플랫폼에 의해 공급되어져서 어느 카메라 호스트 버스에 그 센서가 연결되는지 지정하기 위해 사용되어지는,
+struct soc_camera_link를 사용할 수 있고 옵션으로 플랫폼에 그 카메라를 위한 .power 그리고 .reset 방식을 공급할 수 있다.
+이 struct는 I2C 클라이언트 디바이스 플랫폼 데이터를 경유해서 카메라 드라이버에 공급되어지고, soc_camera_i2c_to_link() macro를
+
+사용해서 취득되어진다. v4l2_get_subdev_hostdata()를 사용해, soc_camera_vdev_to_subdev()를 사용할 때와 struct soc_camera_device에 접근할 때에는
+
+주의해야 합니다 : an soc-camera host 위에서 동작할 때, 양쪽 모두 움직인다. V4L2 subdev API를 사용해서 실제 카메라 드라이버 동작은 구현된다.
+
+추가적으로 soc-camera camera drivers는 soc_camera_power_on()과 soc_camera_power_off()와 같은 보조 soc-camera helper 기능을 사용할 수 있는데, 
+
+그것들은 레귤레이터를 스위치하고, 플렛폼에 의해 공급되어져 board-specific power switching methods(보드-지정 전원 스위칭 방식)을 호출한다.
+
+soc_camera_apply_board_flags()는 camera bus configuration capability flags(카메라 버스 구성 기능 플래그)를 취해서 
+
+signal polarity inversion(신호 극성 반전)과 같은 board transformations(보드 변환)를 적용합니다. 특정 media-bus pixel format code(미디어-버스 픽셀 포맷 코드)에
+
+상응해서, soc_mbus_get_fmtdesc()는 pixel format descriptor(픽셀 포맷 설명자)를 구하기 위해서 사용될 수 있다. 
+
+카메라 기능에 기반해, soc_camera_limit_side()는 frame side의 시작과 길이를 제한하는데 사용될 수 있다.
+
+
+VIDIOC_S_CROP and VIDIOC_S_FMT behaviour
+----------------------------------------
+VIDIOC_S_CROP and VIDIOC_S_FMT 동작
+
+Above user ioctls modify image geometry as follows:
+상기 사용자 ioctls는 다음과 같은 image geometry(이미지 기하학)를 수정한다 :
+
+
+VIDIOC_S_CROP: sets location and sizes of the sensor window. Unit is one sensor
+pixel. Changing sensor window sizes preserves any scaling factors, therefore
+user window sizes change as well.
+VIDIOC_S_CROP: sensor window의 위치와 크기를 설정한다. 단위는 one sensor pixel이다.
+sensor window 크기 변경은 scaling factor(스케일링 계수)를 보호(저장)하므로, user window sizes(사용자 윈도우 크기) 역시 변한다.
+
+VIDIOC_S_FMT: sets user window. Should preserve previously set sensor window as
+much as possible by modifying scaling factors. If the sensor window cannot be
+preserved precisely, it may be changed too.
+VIDIOC_S_FMT: user window(사용자 윈도우)를 설정한다. scaling factor(스케일링 계수)를 수정함으로써 가능한 많이 이전에 설정된 sensor window(센서 윈도우)를 
+
+보호(저장)해야 한다. 만약 센서 윈도우가 정확하게 보호(저장)될 수 없다면, 그것 역시 변경될 수 있다.
+
+In soc-camera there are two locations, where scaling and cropping can take
+place: in the camera driver and in the host driver. User ioctls are first passed
+to the host driver, which then generally passes them down to the camera driver.
+It is more efficient to perform scaling and cropping in the camera driver to
+save camera bus bandwidth and maximise the framerate. However, if the camera
+driver failed to set the required parameters with sufficient precision, the host
+driver may decide to also use its own scaling and cropping to fulfill the user's
+request.
+soc-camera에는 두 개 위치가 있는데, 그 위치에서 scaling과 cropping이 일어날 수 있다 : 카메라 드라이버와 호스트 드라이버 안에서.
+
+User ioctls들은 처음 호스트 드라이버로 전달되고, 그리고 나서 일반적으로 카메라 드라이버로 그것들을 아래로 전달한다.
+
+camera bus bandwidth( 카메라 버스 대역폭 )을 절약하고 프레임 레이트를 최대화 하기 위해서는 카메라 드라이버 안에서 scaling과 cropping을
+
+수행하는 것이 더욱 효과적이다.
+
+Camera drivers are interfaced to the soc-camera core and to host drivers over
+the v4l2-subdev API, which is completely functional, it doesn't pass any data.
+Therefore all camera drivers shall reply to .g_fmt() requests with their current
+output geometry. This is necessary to correctly configure the camera bus.
+.s_fmt() and .try_fmt() have to be implemented too. Sensor window and scaling
+factors have to be maintained by camera drivers internally. According to the
+V4L2 API all capture drivers must support the VIDIOC_CROPCAP ioctl, hence we
+rely on camera drivers implementing .cropcap(). If the camera driver does not
+support cropping, it may choose to not implement .s_crop(), but to enable
+cropping support by the camera host driver at least the .g_crop method must be
+implemented.
+카메라 드라이버는 v4l2-subdev API를 가로질러 soc-camera core와 host drivers로 인터페이스되어지는데,
+
+그 API는 완전히 기능적이고, 어떤 데이터도 전달하지 않는다. 따라서, 모든 카메라 드라이버들은 그들의 현재 output geometry로 .g_fmt() requests(요청)에 응답할 것이다.
+
+이것은 카메라 버스를 정확하게 설정하는데 필요하다. .s_fmt() 와 .try_fmt() 역시 구현되어야 한다. 센서 윈도우와 스케일링 계수는 내부적으로 카메라 드라이버에 의해 유지되어야 한다.
+
+V4L2 API에 따라서 모드 capture drivers는 VIDIOC_CROPCAP ioctl를 지원해야만 하고, 그래서 우리는 카메라 드라이버가 .cropcap()를 구현하는 것을 신뢰할 수 있다.  
+
+만약 카메라 드라이버가 cropping을 지원하지 않는다면, .s_crop()을 구현하지 않는 것을 선택할 수 있지만, 카메라 호스트 드라이버에 의해 cropping 지원을 활성화하기 위해서는 적어도
+
+.g_crop 방식을 구현해야 한다.
+
+User window geometry is kept in .user_width and .user_height fields in struct
+soc_camera_device and used by the soc-camera core and host drivers. The core
+updates these fields upon successful completion of a .s_fmt() call, but if these
+fields change elsewhere, e.g. during .s_crop() processing, the host driver is
+responsible for updating them.
+
+struct soc_camera_device 안에 .user_width와 .user_height fields 안에 User window geometry가 담겨져 있으며 soc-camera 코어와 호스트 드라이버에 의해 사용된다.
+
+.s_fmt() 호출이 성공적으로 완료되면 커어는 이 필드들을 업데이트하지만, 만약 다른 곳 예를 들면 .s_crop() 프로세싱 동안에 이 필드들이 변하면, 호스트 드라이버는 그것을 업데이트하는 책임이 있다.
+
+Format conversion
+-----------------
+포맷 변환
+
+V4L2 distinguishes between pixel formats, as they are stored in memory, and as
+they are transferred over a media bus. Soc-camera provides support to
+conveniently manage these formats. A table of standard transformations is
+maintained by soc-camera core, which describes, what FOURCC pixel format will
+be obtained, if a media-bus pixel format is stored in memory according to
+certain rules. E.g. if MEDIA_BUS_FMT_YUYV8_2X8 data is sampled with 8 bits per
+sample and stored in memory in the little-endian order with no gaps between
+bytes, data in memory will represent the V4L2_PIX_FMT_YUYV FOURCC format. These
+standard transformations will be used by soc-camera or by camera host drivers to
+configure camera drivers to produce the FOURCC format, requested by the user,
+using the VIDIOC_S_FMT ioctl(). Apart from those standard format conversions,
+host drivers can also provide their own conversion rules by implementing a
+.get_formats and, if required, a .put_formats methods.
+
+V4L2는 픽셀 포맷이 메모리에 저장되면서, 그리고 그것들이 미디어 버스를 통해 전송되면서, 픽셀 포맷 사이를 구분한다.
+
+Soc-camera는 이런 포맷을 편리하게 관리하기 위한 지원을 한다. 표준 변환 테이블은 soc-camera 코어에 의해 유지되는데, 
+
+만약 미디어 버스 픽셀 포맷이 특정 규칙에 따라서 메모리에 저장된다면, 무슨 FOURCC(4CC) 픽셀 포맷이 구해지는지를 기술한다.
+
+예를 들자면, 만약 MEDIA_BUS_FMT_YUYV8_2X8 data가 샘플 당 8 비트로 샘플링되서 바이트 사이에 gap(빈 곳) 없이 
+
+little-endian order(작은 단위가 앞에 나오는 순서)로 메모리에 저장된다면, 메모리 안 데이터는 V4L2_PIX_FMT_YUYV FOURCC format를
+
+표현한다. 이 표준 변환은 사용자 요청에 의해, VIDIOC_S_FMT ioctl()을 사용해서, FOURCC(4CC) 포맷을 생산하는 카메라 드라이버를 설정하기 위해
+
+카메라 호스트 드라이버에 의해 soc-camera에 의해 사용될 것이다. 그런 표준 포맷 변환과는 별개로, 호스트 드라이버는 .get_formats 그리고, 요구가 있다면,
+
+.put_formats 방식을 구현함으로써 그들 자신의 변환 규칙을 제공할 수도 있다.
+
+
+--
+Author: Guennadi Liakhovetski <g.liakhovetski@gmx.de>

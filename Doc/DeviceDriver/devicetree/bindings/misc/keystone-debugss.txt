@@ -1,0 +1,48 @@
+Texas Instruments Debug Sub-System (DebugSS) module for Keystone devices
+
+Required properties:
+- compatible : Should be "ti,keystone-debugss"
+
+Optional properties:
+- clocks : the clocks feeding the Debug sub-system.
+	   As an exception, the mainpllclk and
+	   armpllclk are not directly feeding
+	   the debugss, instead they are used
+	   by the debugss module to expose the
+	   mainpll and armpll clock rates as
+	   sysfs entries readable from userspace
+	   applications.
+	   Needed if platform uses clocks.
+	   See clock-bindings.txt
+- clocks-names : clock name strings correspond to the clocks
+		 defined above. These strings are used inside
+		 module source code to identify the respective clocks
+
+키스톤 장치 용 Texas Instruments 디버그 서브 시스템 (DebugSS) 모듈
+
+필수 속성 :
+- compatible : "ti, keystone-debugss"여야합니다.
+
+선택적 속성 :
+- clocks : Debug 서브 시스템에 공급되는 clocks.
+예외적으로 mainpllclk와 armpllclk는 debugss를 직접 공급하지 않고 대신 debugss 모듈에서 mainpll 및 armpll 클럭 속도를 userspace 응용 프로그램에서 읽을 수있는 sysfs 항목으로 사용합니다.
+
+플랫폼에서 clocks를 사용하는 경우 필요합니다.
+
+clock-bindings.txt를 참조하십시오.
+
+- clocks-names : clocks-names 문자열은 위에 정의 된 clocks에 해당합니다. 이 문자열은 모듈 소스 코드 내에서 각각의 clocks을 식별하는 데 사용됩니다
+
+
+
+Documentation:
+http://www.ti.com/lit/ug/spruhm4/spruhm4.pdf
+http://www.ti.com/lit/ds/symlink/tci6636k2h.pdf
+
+Examples:
+
+debugss: debugss {
+        compatible = "ti,keystone-debugss";
+        clocks = <&mainpllclk>, <&armpllclk>, <&clkdebugsstrc>, <&gemtraceclk>, <&clktetbtrc>;
+        clock-names = "mainpllclock", "armpllclock", "debugssclock", "gemtraceclock", "tetbclock";
+};

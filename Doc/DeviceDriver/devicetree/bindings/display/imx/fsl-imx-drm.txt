@@ -1,0 +1,207 @@
+Freescale i.MX DRM master device
+================================
+
+The freescale i.MX DRM master device is a virtual device needed to list all
+IPU or other display interface nodes that comprise the graphics subsystem.
+
+Required properties:
+- compatible: Should be "fsl,imx-display-subsystem"
+- ports: Should contain a list of phandles pointing to display interface ports
+  of IPU devices
+
+example:
+
+display-subsystem {
+	compatible = "fsl,display-subsystem";
+	ports = <&ipu_di0>;
+};
+
+
+Freescale i.MX IPUv3
+====================
+
+Required properties:
+- compatible: Should be "fsl,<chip>-ipu"
+- reg: should be register base and length as documented in the
+  datasheet
+- interrupts: Should contain sync interrupt and error interrupt,
+  in this order.
+- resets: phandle pointing to the system reset controller and
+          reset line index, see reset/fsl,imx-src.txt for details
+Optional properties:
+- port@[0-3]: Port nodes with endpoint definitions as defined in
+  Documentation/devicetree/bindings/media/video-interfaces.txt.
+  Ports 0 and 1 should correspond to CSI0 and CSI1,
+  ports 2 and 3 should correspond to DI0 and DI1, respectively.
+
+example:
+
+ipu: ipu@18000000 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	compatible = "fsl,imx53-ipu";
+	reg = <0x18000000 0x080000000>;
+	interrupts = <11 10>;
+	resets = <&src 2>;
+
+	ipu_di0: port@2 {
+		reg = <2>;
+
+		ipu_di0_disp0: endpoint {
+			remote-endpoint = <&display_in>;
+		};
+	};
+};
+
+Parallel display support
+========================
+
+Required properties:
+- compatible: Should be "fsl,imx-parallel-display"
+Optional properties:
+- interface_pix_fmt: How this display is connected to the
+  display interface. Currently supported types: "rgb24", "rgb565", "bgr666"
+  and "lvds666".
+- edid: verbatim EDID data block describing attached display.
+- ddc: phandle describing the i2c bus handling the display data
+  channel
+- port@[0-1]: Port nodes with endpoint definitions as defined in
+  Documentation/devicetree/bindings/media/video-interfaces.txt.
+  Port 0 is the input port connected to the IPU display interface,
+  port 1 is the output port connected to a panel.
+
+example:
+
+display@di0 {
+	compatible = "fsl,imx-parallel-display";
+	edid = [edid-data];
+	interface-pix-fmt = "rgb24";
+
+	port@0 {
+		reg = <0>;
+
+		display_in: endpoint {
+			remote-endpoint = <&ipu_di0_disp0>;
+		};
+	};
+
+	port@1 {
+		reg = <1>;
+
+		display_out: endpoint {
+			remote-endpoint = <&panel_in>;
+		};
+	};
+};
+
+panel {
+	...
+
+	port {
+		panel_in: endpoint {
+			remote-endpoint = <&display_out>;
+		};
+	};
+};
+
+
+
+/*
+프리 스케일 i.MX DRM 마스터 디바이스
+==================
+
+프리 스케일 i.MX DRM 마스터 디바이스는 그래픽 서브 시스템을 구성하는 모든 IPU 또는 기타 디스플레이 인터페이스 노드를 나열하는 데 필요한 가상 디바이스입니다.
+
+필수 속성 :
+- compatible : "fsl, imx-display-subsystem"이어야합니다.
+- 포트 : IPU 장치의 디스플레이 인터페이스 포트를 가리키는 phandles 목록을 포함해야합니다.
+
+example:
+
+display-subsystem {
+	compatible = "fsl,display-subsystem";
+	ports = <&ipu_di0>;
+};
+
+
+프리 스케일 i.MX IPUv3
+================
+
+필수 속성 :
+- 호환 가능 : "fsl, <chip> -ipu"여야합니다.
+- reg : 데이터 시트에 문서화 된대로 레지스터 기본 및 길이 여야합니다.
+- 인터럽트 : 동기화 인터럽트 및 오류 인터럽트를이 순서로 포함해야합니다.
+- reset : 시스템 리셋 컨트롤러를 가리키는 phandle과 라인 인덱스 재설정, 자세한 내용은 reset / fsl, imx-src.txt를 참조하십시오.
+선택적 속성 :
+- port @ [0-3] : Documentation / devicetree / bindings / media / video-interfaces.txt에 정의 된 엔드포인트 정의가있는 포트 노드.
+포트 0과 1은 CSI0과 CSI1에 대응해야하며,
+포트 2 및 3은 각각 DI0 및 DI1에 해당해야합니다.
+
+example:
+
+ipu: ipu@18000000 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	compatible = "fsl,imx53-ipu";
+	reg = <0x18000000 0x080000000>;
+	interrupts = <11 10>;
+	resets = <&src 2>;
+
+	ipu_di0: port@2 {
+		reg = <2>;
+
+		ipu_di0_disp0: endpoint {
+			remote-endpoint = <&display_in>;
+		};
+	};
+};
+
+병렬 디스플레이 지원
+============
+
+필수 속성 :
+- 호환 : "fsl, imx-parallel-display"여야합니다.
+선택적 속성 :
+- interface_pix_fmt :이 디스플레이가 디스플레이 인터페이스에 연결되는 방법. 현재 지원되는 유형 : "rgb24", "rgb565", "bgr666"및 "lvds666".
+- edid : 연결된 디스플레이를 설명하는 축약 EDID 데이터 블록.
+- ddc : 디스플레이 데이터 채널을 처리하는 i2c 버스를 설명하는 phandle
+- port @ [0-1] : Documentation / devicetree / bindings / media / video-interfaces.txt에 정의 된 엔드포인트 정의가있는 포트 노드.
+포트 0은 IPU 디스플레이 인터페이스에 연결된 입력 포트이며,
+포트 1은 패널에 연결된 출력 포트입니다.
+
+example:
+
+display@di0 {
+	compatible = "fsl,imx-parallel-display";
+	edid = [edid-data];
+	interface-pix-fmt = "rgb24";
+
+	port@0 {
+		reg = <0>;
+
+		display_in: endpoint {
+			remote-endpoint = <&ipu_di0_disp0>;
+		};
+	};
+
+	port@1 {
+		reg = <1>;
+
+		display_out: endpoint {
+			remote-endpoint = <&panel_in>;
+		};
+	};
+};
+
+panel {
+	...
+
+	port {
+		panel_in: endpoint {
+			remote-endpoint = <&display_out>;
+		};
+	};
+};
+
+
+*/

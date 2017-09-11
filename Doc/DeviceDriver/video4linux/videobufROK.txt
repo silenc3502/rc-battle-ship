@@ -1,0 +1,412 @@
+An introduction to the videobuf layer
+Jonathan Corbet <corbet@lwn.net>
+Current as of 2.6.33
+ 
+The videobuf layer functions as a sort of glue layer between a V4L2 driver
+and user space.  It handles the allocation and management of buffers for
+the storage of video frames.  There is a set of functions which can be used
+to implement many of the standard POSIX I/O system calls, including read(),
+poll(), and, happily, mmap().  Another set of functions can be used to
+implement the bulk of the V4L2 ioctl() calls related to streaming I/O,
+including buffer allocation, queueing and dequeueing, and streaming
+control.  Using videobuf imposes a few design decisions on the driver
+author, but the payback comes in the form of reduced code in the driver and
+a consistent implementation of the V4L2 user-space API.
+videobuf 레이어는 V4L2 드라이버와 사용자 공간 사이의 일종의 접착제 레이어 역할을합니다. 비디오 프레임의 저장을위한 버퍼 할당 및 관리를 처리합니다. read (), poll (), 그리고 행복하게 mmap ()을 포함하여 표준 POSIX I / O 시스템 호출을 구현하는 데 사용할 수있는 함수 집합이 있습니다. 버퍼 할당, 큐 및 큐 제거 및 스트리밍 제어를 포함한 스트리밍 I / O와 관련된 V4L2 ioctl () 호출의 대량 구현을 위해 또 다른 기능 세트를 사용할 수 있습니다. videobuf를 사용하면 드라이버 작성자에 대해 몇 가지 디자인 결정을 내 리지 만 드라이버의 코드 감소와 V4L2 사용자 공간 API의 일관된 구현의 형태로 비용 회수가 이루어집니다.
+ 
+Buffer types
+ 
+Not all video devices use the same kind of buffers.  In fact, there are (at
+least) three common variations:
+모든 비디오 장치가 같은 종류의 버퍼를 사용하는 것은 아닙니다. 실제로 적어도 세 가지 공통적 인 변형이 있습니다.
+ 
+ - Buffers which are scattered in both the physical and (kernel) virtual
+   address spaces.  (Almost) all user-space buffers are like this, but it
+   makes great sense to allocate kernel-space buffers this way as well when
+   it is possible.  Unfortunately, it is not always possible; working with
+   this kind of buffer normally requires hardware which can do
+   scatter/gather DMA operations.
+- 물리적 및 (커널) 가상 주소 공간에 분산되어있는 버퍼. (거의 모든) 사용자 공간 버퍼는 이와 같지만 가능할 때 커널 공간 버퍼를이 방법으로 할당하는 것이 좋습니다. 불행하게도 항상 가능한 것은 아닙니다. 이러한 종류의 버퍼로 작업하는 것은 일반적으로 분산 / 수집 DMA 작업을 수행 할 수있는 하드웨어가 필요합니다.
+ 
+ - Buffers which are physically scattered, but which are virtually
+   contiguous; buffers allocated with vmalloc(), in other words.  These
+   buffers are just as hard to use for DMA operations, but they can be
+   useful in situations where DMA is not available but virtually-contiguous
+   buffers are convenient.
+- 물리적으로 분산되어 있지만 사실상 인접한 버퍼; vmalloc ()으로 할당 된 버퍼, 다른 말로하면. 이러한 버퍼는 DMA 작업과 마찬가지로 사용하기가 어렵지만 DMA를 사용할 수 없지만 사실상 인접한 버퍼가 편리한 상황에서 유용 할 수 있습니다.
+ 
+ 
+ - Buffers which are physically contiguous.  Allocation of this kind of
+   buffer can be unreliable on fragmented systems, but simpler DMA
+   controllers cannot deal with anything else.
+- 물리적으로 인접한 버퍼. 이러한 종류의 버퍼 할당은 조각화 된 시스템에서는 신뢰할 수 없지만 더 간단한 DMA 컨트롤러는 다른 것을 처리 할 수 없습니다.
+ 
+Videobuf can work with all three types of buffers, but the driver author
+must pick one at the outset and design the driver around that decision.
+Videobuf는 세 가지 유형의 버퍼 모두를 사용할 수 있지만 드라이버 작성자는 처음에 하나를 선택하여 해당 결정을 바탕으로 드라이버를 설계해야합니다.
+ 
+[It's worth noting that there's a fourth kind of buffer: "overlay" buffers
+which are located within the system's video memory.  The overlay
+functionality is considered to be deprecated for most use, but it still
+shows up occasionally in system-on-chip drivers where the performance
+benefits merit the use of this technique.  Overlay buffers can be handled
+as a form of scattered buffer, but there are very few implementations in
+the kernel and a description of this technique is currently beyond the
+scope of this document.][네 번째 종류의 버퍼 : 시스템의 비디오 메모리 내에 위치하는 "오버레이"버퍼가 있음을 주목할 필요가 있습니다. 오버레이 기능은 대부분의 사용에서 더 이상 사용되지 않는 것으로 간주되지만, 성능상의 이점이이 기술의 사용에 유리한 시스템 온칩 드라이버에는 여전히 가끔 나타납니다. 오버레이 버퍼는 흩어져있는 버퍼 형태로 처리 될 수 있지만, 커널에는 구현이 거의없고이 기술에 대한 설명은 현재이 문서의 범위를 벗어납니다.]
+ 
+ 
+Data structures, callbacks, and initialization
+ 
+Depending on which type of buffers are being used, the driver should
+include one of the following files:
+어떤 종류의 버퍼가 사용되는지에 따라 드라이버는 다음 파일 중 하나를 포함해야합니다 :
+ 
+    <media/videobuf-dma-sg.h>		/* Physically scattered */
+    <media/videobuf-vmalloc.h>		/* vmalloc() buffers	*/
+    <media/videobuf-dma-contig.h>	/* Physically contiguous */
+ 
+The driver's data structure describing a V4L2 device should include a
+struct videobuf_queue instance for the management of the buffer queue,
+along with a list_head for the queue of available buffers.  There will also
+need to be an interrupt-safe spinlock which is used to protect (at least)
+the queue.
+V4L2 장치를 설명하는 드라이버의 데이터 구조에는 사용 가능한 버퍼 대기열에 대한 list_head와 함께 버퍼 대기열을 관리하기위한 struct videobuf_queue 인스턴스가 포함되어야합니다. 큐를 (적어도) 보호하기 위해 사용되는 인터럽트 안전 스핀 록이 필요합니다.
+ 
+ 
+The next step is to write four simple callbacks to help videobuf deal with
+the management of buffers:
+다음 단계는 videobuf가 버퍼 관리를 처리 할 수 있도록 네 가지 간단한 콜백을 작성하는 것입니다.
+ 
+    struct videobuf_queue_ops {
+	int (*buf_setup)(struct videobuf_queue *q,
+			 unsigned int *count, unsigned int *size);
+	int (*buf_prepare)(struct videobuf_queue *q,
+			   struct videobuf_buffer *vb,
+			   enum v4l2_field field);
+	void (*buf_queue)(struct videobuf_queue *q,
+			  struct videobuf_buffer *vb);
+	void (*buf_release)(struct videobuf_queue *q,
+			    struct videobuf_buffer *vb);
+    };
+ 
+buf_setup() is called early in the I/O process, when streaming is being
+initiated; its purpose is to tell videobuf about the I/O stream.  The count
+parameter will be a suggested number of buffers to use; the driver should
+check it for rationality and adjust it if need be.  As a practical rule, a
+minimum of two buffers are needed for proper streaming, and there is
+usually a maximum (which cannot exceed 32) which makes sense for each
+device.  The size parameter should be set to the expected (maximum) size
+for each frame of data.
+buf_setup ()은 스트리밍이 시작될 때 I / O 프로세스 초기에 호출됩니다. 그 목적은 videobuf에게 I / O 스트림에 대해 알려주는 것입니다. count 매개 변수는 사용할 버퍼 수로 제안됩니다. 드라이버는 합리성을 점검하고 필요한 경우 조정해야합니다. 실제로 스트리밍을 위해서는 최소한 두 개의 버퍼가 필요하며 일반적으로 각 장치에 적합한 최대 값 (32를 초과 할 수 없음)이 있습니다. size 매개 변수는 데이터의 각 프레임에 대해 예상 된 (최대) 크기로 설정되어야합니다.
+ 
+Each buffer (in the form of a struct videobuf_buffer pointer) will be
+passed to buf_prepare(), which should set the buffer's size, width, height,
+and field fields properly.  If the buffer's state field is
+VIDEOBUF_NEEDS_INIT, the driver should pass it to:
+struct videobuf_buffer 포인터 형태의 각 버퍼는 버퍼의 크기, 너비, 높이 및 필드 필드를 올바르게 설정해야하는 buf_prepare ()로 전달됩니다. 버퍼의 상태 필드가 VIDEOBUF_NEEDS_INIT의 경우, 드라이버는 다음에 건네 줄 필요가 있습니다.
+    int videobuf_iolock(struct videobuf_queue* q, struct videobuf_buffer *vb,
+			struct v4l2_framebuffer *fbuf);
+ 
+Among other things, this call will usually allocate memory for the buffer.
+Finally, the buf_prepare() function should set the buffer's state to
+VIDEOBUF_PREPARED.
+무엇보다도이 호출은 일반적으로 버퍼에 메모리를 할당합니다. 마지막으로 buf_prepare () 함수는 버퍼의 상태를 VIDEOBUF_PREPARED로 설정해야합니다.
+ 
+When a buffer is queued for I/O, it is passed to buf_queue(), which should
+put it onto the driver's list of available buffers and set its state to
+VIDEOBUF_QUEUED.  Note that this function is called with the queue spinlock
+held; if it tries to acquire it as well things will come to a screeching
+halt.  Yes, this is the voice of experience.  Note also that videobuf may
+wait on the first buffer in the queue; placing other buffers in front of it
+could again gum up the works.  So use list_add_tail() to enqueue buffers.
+버퍼가 입출력을 위해 대기하면 buf_queue ()가 전달되어 드라이버의 사용 가능한 버퍼 목록에 놓고 상태를 VIDEOBUF_QUEUED로 설정해야합니다. 이 함수는 대기열 스핀 록을 보유한 상태에서 호출됩니다. 그것도 얻으려고하면 일들이 막히게 될 것입니다. 예, 이것은 경험의 목소리입니다. videobuf는 대기열의 첫 번째 버퍼에서 대기 할 수 있습니다. 다른 버퍼를 앞에 놓으면 다시 작업을 할 수 있습니다. 따라서 list_add_tail ()을 사용하여 버퍼를 큐에 넣으십시오.
+ 
+ 
+Finally, buf_release() is called when a buffer is no longer intended to be
+used.  The driver should ensure that there is no I/O active on the buffer,
+then pass it to the appropriate free routine(s):
+마지막으로 버퍼가 더 이상 사용되지 않을 때 buf_release ()가 호출됩니다. 드라이버는 버퍼에 I / O가 활성화되어 있지 않은지 확인한 다음 적절한 자유 루틴에 전달해야합니다.
+ 
+    /* Scatter/gather drivers */
+    int videobuf_dma_unmap(struct videobuf_queue *q,
+			   struct videobuf_dmabuf *dma);
+    int videobuf_dma_free(struct videobuf_dmabuf *dma);
+ 
+    /* vmalloc drivers */
+    void videobuf_vmalloc_free (struct videobuf_buffer *buf);
+ 
+    /* Contiguous drivers */
+    void videobuf_dma_contig_free(struct videobuf_queue *q,
+				  struct videobuf_buffer *buf);
+ 
+One way to ensure that a buffer is no longer under I/O is to pass it to:
+버퍼가 I / O 아래에 있지 않게하는 한 가지 방법은 다음과 같이 전달하는 것입니다.
+ 
+    int videobuf_waiton(struct videobuf_buffer *vb, int non_blocking, int intr);
+ 
+Here, vb is the buffer, non_blocking indicates whether non-blocking I/O
+should be used (it should be zero in the buf_release() case), and intr
+controls whether an interruptible wait is used.
+여기에서 vb는 버퍼이고 non_blocking은 비 블로킹 I / O가 사용되어야하는지 (buf_release ()의 경우 0이어야 함) 나타냅니다. intr은 인터럽트 가능한 대기가 사용되는지 여부를 제어합니다.
+ 
+File operations
+ 
+At this point, much of the work is done; much of the rest is slipping
+videobuf calls into the implementation of the other driver callbacks.  The
+first step is in the open() function, which must initialize the
+videobuf queue.  The function to use depends on the type of buffer used:
+이 시점에서 많은 작업이 완료됩니다. 나머지 대부분은 videobuf 호출을 다른 드라이버 콜백 구현으로 밀어 넣는 것입니다. 첫 번째 단계는 videobuf 대기열을 초기화해야하는 open () 함수에 있습니다. 사용할 함수는 사용 된 버퍼 유형에 따라 다릅니다.
+ 
+    void videobuf_queue_sg_init(struct videobuf_queue *q,
+				struct videobuf_queue_ops *ops,
+				struct device *dev,
+				spinlock_t *irqlock,
+				enum v4l2_buf_type type,
+				enum v4l2_field field,
+				unsigned int msize,
+				void *priv);
+ 
+    void videobuf_queue_vmalloc_init(struct videobuf_queue *q,
+				struct videobuf_queue_ops *ops,
+				struct device *dev,
+				spinlock_t *irqlock,
+				enum v4l2_buf_type type,
+				enum v4l2_field field,
+				unsigned int msize,
+				void *priv);
+ 
+    void videobuf_queue_dma_contig_init(struct videobuf_queue *q,
+				       struct videobuf_queue_ops *ops,
+				       struct device *dev,
+				       spinlock_t *irqlock,
+				       enum v4l2_buf_type type,
+				       enum v4l2_field field,
+				       unsigned int msize,
+				       void *priv);
+ 
+In each case, the parameters are the same: q is the queue structure for the
+device, ops is the set of callbacks as described above, dev is the device
+structure for this video device, irqlock is an interrupt-safe spinlock to
+protect access to the data structures, type is the buffer type used by the
+device (cameras will use V4L2_BUF_TYPE_VIDEO_CAPTURE, for example), field
+describes which field is being captured (often V4L2_FIELD_NONE for
+progressive devices), msize is the size of any containing structure used
+around struct videobuf_buffer, and priv is a private data pointer which
+shows up in the priv_data field of struct videobuf_queue.  Note that these
+are void functions which, evidently, are immune to failure.
+각각의 경우 매개 변수는 동일합니다. q는 장치의 대기열 구조이고, ops는 위에서 설명한 콜백 세트이고, dev는이 비디오 장치의 장치 구조이며, irqlock은 데이터 구조 접근방지를 위한 인터럽트 방지 스핀 록입니다. type은 디바이스에서 사용하는 버퍼 유형 (카메라는 V4L2_BUF_TYPE_VIDEO_CAPTURE를 사용합니다), 필드는 캡처되는 필드 (프로그레시브 디바이스의 경우 V4L2_FIELD_NONE), msize는 struct videobuf_buffer 관련 사용되는 함유된 구조의 크기, priv는 struct videobuf_queue의 priv_data 필드에 나타나는 private 데이터 포인터입니다. 이것은 분명히 실패에 면역이되는 void 함수입니다.
+ 
+ 
+V4L2 capture drivers can be written to support either of two APIs: the
+read() system call and the rather more complicated streaming mechanism.  As
+a general rule, it is necessary to support both to ensure that all
+applications have a chance of working with the device.  Videobuf makes it
+easy to do that with the same code.  To implement read(), the driver need
+only make a call to one of:
+V4L2 캡처 드라이버는 read () 시스템 호출과 다소 복잡한 스트리밍 메커니즘의 두 가지 API 중 하나를 지원하도록 작성 될 수 있습니다. 일반적으로 모든 응용 프로그램이 장치로 작업 할 수있는 기회를 보장하려면 두 가지를 모두 지원해야합니다. Videobuf를 사용하면 동일한 코드로 쉽게 처리 할 수 있습니다. read ()를 구현하려면 드라이버는 다음 중 하나만 호출하면됩니다.
+ 
+    ssize_t videobuf_read_one(struct videobuf_queue *q,
+			      char __user *data, size_t count,
+			      loff_t *ppos, int nonblocking);
+ 
+    ssize_t videobuf_read_stream(struct videobuf_queue *q,
+				 char __user *data, size_t count,
+				 loff_t *ppos, int vbihack, int nonblocking);
+ 
+Either one of these functions will read frame data into data, returning the
+amount actually read; the difference is that videobuf_read_one() will only
+read a single frame, while videobuf_read_stream() will read multiple frames
+if they are needed to satisfy the count requested by the application.  A
+typical driver read() implementation will start the capture engine, call
+one of the above functions, then stop the engine before returning (though a
+smarter implementation might leave the engine running for a little while in
+anticipation of another read() call happening in the near future).
+이 함수 중 하나는 프레임 데이터를 데이터로 읽어 들여 실제로 읽은 양을 반환합니다. 차이점은 videobuf_read_one ()은 단일 프레임 만 읽는 반면 videobuf_read_stream ()은 응용 프로그램에서 요청한 수를 충족시키는 데 필요한 경우 여러 프레임을 읽습니다. 일반적인 드라이버 read () 구현은 캡처 엔진을 시작하고 위의 함수 중 하나를 호출 한 다음 반환하기 전에 엔진을 중지합니다. (똑똑한 구현으로 인해 가까운 장래에는 다른 read () 호출이 발생할 때 엔진이 잠시 동안 실행될 수 있습니다).
+ 
+The poll() function can usually be implemented with a direct call to:
+poll () 함수는 대개 다음을 직접 호출하여 구현할 수 있습니다.
+ 
+    unsigned int videobuf_poll_stream(struct file *file,
+				      struct videobuf_queue *q,
+				      poll_table *wait);
+ 
+Note that the actual wait queue eventually used will be the one associated
+with the first available buffer.
+결국 실제로 사용되는 대기 대기열은 첫 번째 사용 가능한 버퍼와 관련된 대기열이됩니다.
+ 
+When streaming I/O is done to kernel-space buffers, the driver must support
+the mmap() system call to enable user space to access the data.  In many
+V4L2 drivers, the often-complex mmap() implementation simplifies to a
+single call to:
+커널 공간 버퍼로 스트리밍 I / O를 수행 할 때 드라이버는 사용자 공간에서 데이터에 액세스 할 수 있도록 mmap () 시스템 호출을 지원해야합니다. 많은 V4L2 드라이버에서 종종 복잡한 mmap () 구현은 다음과 같은 단일 호출을 단순화합니다.
+ 
+    int videobuf_mmap_mapper(struct videobuf_queue *q,
+			     struct vm_area_struct *vma);
+ 
+Everything else is handled by the videobuf code.
+다른 모든 것은 videobuf 코드에 의해 처리됩니다.
+ 
+The release() function requires two separate videobuf calls:
+release () 함수는 두 개의 개별 videobuf 호출을 필요로합니다.
+ 
+    void videobuf_stop(struct videobuf_queue *q);
+    int videobuf_mmap_free(struct videobuf_queue *q);
+ 
+The call to videobuf_stop() terminates any I/O in progress - though it is
+still up to the driver to stop the capture engine.  The call to
+videobuf_mmap_free() will ensure that all buffers have been unmapped; if
+so, they will all be passed to the buf_release() callback.  If buffers
+remain mapped, videobuf_mmap_free() returns an error code instead.  The
+purpose is clearly to cause the closing of the file descriptor to fail if
+buffers are still mapped, but every driver in the 2.6.32 kernel cheerfully
+ignores its return value.
+videobuf_stop ()에 대한 호출은 진행중인 모든 I / O를 종료합니다. 캡처 엔진을 중지하는 것은 여전히 드라이버에 달려 있지만 그렇습니다. videobuf_mmap_free ()를 호출하면 모든 버퍼가 매핑 해제 된 것입니다. 그렇다면, 그들은 모두 buf_release () 콜백에 전달 될 것이다. 버퍼가 매핑 된 채로 있으면 videobuf_mmap_free ()가 대신 오류 코드를 반환합니다. 그 목적은 버퍼가 여전히 맵핑되어 있으면 파일 디스크립터가 닫히지 않도록하는 것이 분명하지만 2.6.32 커널의 모든 드라이버는 그 반환 값을 기분 좋게 무시합니다.
+ 
+ioctl() operations
+ 
+The V4L2 API includes a very long list of driver callbacks to respond to
+the many ioctl() commands made available to user space.  A number of these
+- those associated with streaming I/O - turn almost directly into videobuf
+calls.  The relevant helper functions are:
+V4L2 API는 사용자 공간에서 사용 가능한 많은 ioctl () 명령에 응답하는 드라이버 콜백의 매우 긴 목록을 포함합니다. 스트리밍 I / O와 관련된 여러 가지가 거의 직접 videobuf 호출로 바뀝니다. 관련 도우미 함수는 다음과 같습니다.
+ 
+    int videobuf_reqbufs(struct videobuf_queue *q,
+			 struct v4l2_requestbuffers *req);
+    int videobuf_querybuf(struct videobuf_queue *q, struct v4l2_buffer *b);
+    int videobuf_qbuf(struct videobuf_queue *q, struct v4l2_buffer *b);
+    int videobuf_dqbuf(struct videobuf_queue *q, struct v4l2_buffer *b,
+		       int nonblocking);
+    int videobuf_streamon(struct videobuf_queue *q);
+    int videobuf_streamoff(struct videobuf_queue *q);
+ 
+So, for example, a VIDIOC_REQBUFS call turns into a call to the driver's
+vidioc_reqbufs() callback which, in turn, usually only needs to locate the
+proper struct videobuf_queue pointer and pass it to videobuf_reqbufs().
+These support functions can replace a great deal of buffer management
+boilerplate in a lot of V4L2 drivers.
+예를 들어, VIDIOC_REQBUFS 호출은 드라이버의 vidioc_reqbufs () 콜백에 대한 호출로 바뀌며 보통은 올바른 struct videobuf_queue 포인터를 찾고 videobuf_reqbufs ()에 전달하면됩니다. 이러한 지원 기능은 많은 V4L2 드라이버에서 많은 부분을 차지하는 버퍼 관리를 대체 할 수 있습니다.
+ 
+The vidioc_streamon() and vidioc_streamoff() functions will be a bit more
+complex, of course, since they will also need to deal with starting and
+stopping the capture engine.
+물론 vidioc_streamon () 및 vidioc_streamoff () 함수는 캡처 엔진 시작 및 중지를 처리해야하므로 좀 더 복잡합니다.
+ 
+Buffer allocation
+버퍼 할당
+ 
+Thus far, we have talked about buffers, but have not looked at how they are
+allocated.  The scatter/gather case is the most complex on this front.  For
+allocation, the driver can leave buffer allocation entirely up to the
+videobuf layer; in this case, buffers will be allocated as anonymous
+user-space pages and will be very scattered indeed.  If the application is
+using user-space buffers, no allocation is needed; the videobuf layer will
+take care of calling get_user_pages() and filling in the scatterlist array.
+지금까지는 버퍼에 대해 이야기했지만 할당 방법을 살펴 보지 않았습니다. 분산 / 수집 사례는이 전면에서 가장 복잡합니다. 할당을 위해, 드라이버는 버퍼 할당을 전적으로 해당 videobuf 계층까지 남겨 둘 수 있습니다. 이 경우 버퍼는 익명 사용자 공간 페이지로 할당되며 실제로 매우 분산됩니다. 응용 프로그램이 사용자 공간 버퍼를 사용하는 경우에는 할당 할 필요가 없습니다. videobuf 레이어는 get_user_pages ()를 호출하고 scatterlist 배열을 채 웁니다.
+ 
+ 
+If the driver needs to do its own memory allocation, it should be done in
+the vidioc_reqbufs() function, *after* calling videobuf_reqbufs().  The
+first step is a call to:
+드라이버가 자체 메모리 할당을해야하는 경우 videobuf_reqbufs ()를 호출 한 *후* vidioc_reqbufs () 함수에서 수행해야합니다. 첫 번째 단계는 다음을 호출하는 것입니다.
+ 
+ 
+    struct videobuf_dmabuf *videobuf_to_dma(struct videobuf_buffer *buf);
+ 
+The returned videobuf_dmabuf structure (defined in
+<media/videobuf-dma-sg.h>) includes a couple of relevant fields:
+<media / videobuf-dma-sg.h>에 정의 된 반환 된 videobuf_dmabuf 구조에는 몇 가지 관련 필드가 포함됩니다.
+ 
+    struct scatterlist  *sglist;
+    int                 sglen;
+ 
+The driver must allocate an appropriately-sized scatterlist array and
+populate it with pointers to the pieces of the allocated buffer; sglen
+should be set to the length of the array.
+드라이버는 적절한 크기의 scatterlist 배열을 할당하고 할당 된 버퍼 조각에 대한 포인터를 채워야합니다. sglen은 배열의 길이로 설정해야합니다.
+ 
+Drivers using the vmalloc() method need not (and cannot) concern themselves
+with buffer allocation at all; videobuf will handle those details.  The
+same is normally true of contiguous-DMA drivers as well; videobuf will
+allocate the buffers (with dma_alloc_coherent()) when it sees fit.  That
+means that these drivers may be trying to do high-order allocations at any
+time, an operation which is not always guaranteed to work.  Some drivers
+play tricks by allocating DMA space at system boot time; videobuf does not
+currently play well with those drivers.
+vmalloc () 메소드를 사용하는 드라이버는 버퍼 할당에 전혀 신경 쓸 필요가 없습니다. videobuf가 이러한 세부 사항을 처리합니다. 연속 DMA 드라이버에 대해서도 마찬가지입니다. videobuf는 적합하다고 판단되면 버퍼를 할당합니다 (dma_alloc_coherent () 함께). 즉, 이러한 드라이버가 언제든지 고차원 할당을 시도 할 수 있다는 것을 의미합니다. 작동은 항상 작동하지 않을 수 있습니다. 일부 드라이버는 시스템 부팅시 DMA 공간을 할당하여 트릭을 실행합니다. videobuf는 현재 해당 드라이버와 잘 작동하지 않습니다.
+ 
+ 
+As of 2.6.31, contiguous-DMA drivers can work with a user-supplied buffer,
+as long as that buffer is physically contiguous.  Normal user-space
+allocations will not meet that criterion, but buffers obtained from other
+kernel drivers, or those contained within huge pages, will work with these
+drivers.
+2.6.31부터 연속 DMA 드라이버는 버퍼가 물리적으로 인접 해있는 한 사용자가 제공 한 버퍼로 작업 할 수 있습니다. 일반 사용자 공간 할당은이 기준을 충족시키지 않지만 다른 커널 드라이버 또는 거대한 페이지에 포함 된 버퍼는이 드라이버와 함께 작동합니다.
+ 
+Filling the buffers
+ 
+The final part of a videobuf implementation has no direct callback - it's
+the portion of the code which actually puts frame data into the buffers,
+usually in response to interrupts from the device.  For all types of
+drivers, this process works approximately as follows:
+videobuf 구현의 마지막 부분은 직접 콜백이 없습니다. 코드의 일부분으로, 일반적으로 장치의 인터럽트에 응답하여 실제로 프레임 데이터를 버퍼에 넣습니다. 모든 유형의 드라이버에서이 프로세스는 대략 다음과 같이 작동합니다.
+ 
+ - Obtain the next available buffer and make sure that somebody is actually
+   waiting for it.
+- 다음 사용 가능한 버퍼를 확보하고 누군가가 실제로 그것을 기다리고 있는지 확인하십시오.
+ 
+ - Get a pointer to the memory and put video data there.
+- 메모리 포인터를 가져 와서 비디오 데이터를 거기에 놓습니다.
+ 
+ - Mark the buffer as done and wake up the process waiting for it.
+- 버퍼를 완료로 표시하고 대기중인 프로세스를 깨운다.
+ 
+Step (1) above is done by looking at the driver-managed list_head structure
+- the one which is filled in the buf_queue() callback.  Because starting
+the engine and enqueueing buffers are done in separate steps, it's possible
+for the engine to be running without any buffers available - in the
+vmalloc() case especially.  So the driver should be prepared for the list
+to be empty.  It is equally possible that nobody is yet interested in the
+buffer; the driver should not remove it from the list or fill it until a
+process is waiting on it.  That test can be done by examining the buffer's
+done field (a wait_queue_head_t structure) with waitqueue_active().
+위의 단계 (1)은 buf_queue () 콜백에 채워지는 드라이버 관리 list_head 구조를 보면서 수행됩니다. 엔진을 시작하고 버퍼를 큐에 넣는 작업은 별도의 단계로 수행되기 때문에 vmalloc ()의 경우 특히 사용 가능한 버퍼없이 엔진이 실행될 수 있습니다. 따라서 드라이버는 목록이 비어있을 준비를해야합니다. 아무도 아직 버퍼에 관심이 없다는 것도 똑같이 가능합니다; 드라이버는 프로세스가 대기 중일때까지 목록에서 제거하거나 채워서는 안됩니다. 이 테스트는 waitqueue_active ()를 사용하여 버퍼의 done 필드 (wait_queue_head_t 구조체)를 검사하여 수행 할 수 있습니다.
+ 
+A buffer's state should be set to VIDEOBUF_ACTIVE before being mapped for
+DMA; that ensures that the videobuf layer will not try to do anything with
+it while the device is transferring data.
+DMA에 매핑되기 전에 버퍼의 상태를 VIDEOBUF_ACTIVE로 설정해야합니다. 장치가 데이터를 전송하는 동안 videobuf 계층에서 아무 것도 시도하지 않도록합니다.
+ 
+For scatter/gather drivers, the needed memory pointers will be found in the
+scatterlist structure described above.  Drivers using the vmalloc() method
+can get a memory pointer with:
+분산 / 수집 드라이버의 경우 필요한 메모리 포인터는 위에서 설명한 scatterlist 구조에서 찾을 수 있습니다. vmalloc () 메서드를 사용하는 드라이버는 다음을 사용하여 메모리 포인터를 가져올 수 있습니다.
+ 
+    void *videobuf_to_vmalloc(struct videobuf_buffer *buf);
+ 
+For contiguous DMA drivers, the function to use is:
+인접 DMA 드라이버의 경우 사용할 함수는 다음과 같습니다.
+ 
+    dma_addr_t videobuf_to_dma_contig(struct videobuf_buffer *buf);
+ 
+The contiguous DMA API goes out of its way to hide the kernel-space address
+of the DMA buffer from drivers.
+인접 DMA API는 드라이버에서 DMA 버퍼의 커널 공간 주소를 숨기는 방식을 벗어납니다.
+ 
+The final step is to set the size field of the relevant videobuf_buffer
+structure to the actual size of the captured image, set state to
+VIDEOBUF_DONE, then call wake_up() on the done queue.  At this point, the
+buffer is owned by the videobuf layer and the driver should not touch it
+again.
+마지막 단계는 관련 videobuf_buffer 구조체의 크기 필드를 캡처 된 이미지의 실제 크기로 설정하고 상태를 VIDEOBUF_DONE으로 설정 한 다음 완료된 큐에서 wake_up ()을 호출하는 것입니다. 이 시점에서 videobuf 레이어가 버퍼를 소유하고 있으므로 드라이버가 다시이를 만지지 않아야합니다.
+ 
+ 
+Developers who are interested in more information can go into the relevant
+header files; there are a few low-level functions declared there which have
+not been talked about here.  Also worthwhile is the vivi driver
+(drivers/media/platform/vivi.c), which is maintained as an example of how V4L2
+drivers should be written.  Vivi only uses the vmalloc() API, but it's good
+enough to get started with.  Note also that all of these calls are exported
+GPL-only, so they will not be available to non-GPL kernel modules.
+추가 정보에 관심이있는 개발자는 관련 헤더 파일로 이동할 수 있습니다. 여기에 언급되지 않은 저수준 함수가 몇 가지 있습니다. Vivi 드라이버 (drivers / media / platform / vivi.c)도 유용 할 것입니다.이 드라이버는 V4L2 드라이버를 작성하는 방법의 예입니다. Vivi는 vmalloc () API 만 사용하지만 시작하기에 충분합니다. 이 모든 호출은 GPL 전용으로 내보내 지므로 비 GPL 커널 모듈에서는 사용할 수 없습니다.
+ 
+

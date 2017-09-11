@@ -1,0 +1,65 @@
+renesas,bsc.txtRenesas Bus State Controller (BSC)
+==================================
+
+The Renesas Bus State Controller (BSC, sometimes called "LBSC within Bus
+Bridge", or "External Bus Interface") can be found in several Renesas ARM SoCs.
+It provides an external bus for connecting multiple external devices to the
+SoC, driving several chip select lines, for e.g. NOR FLASH, Ethernet and USB.
+
+While the BSC is a fairly simple memory-mapped bus, it may be part of a PM
+domain, and may have a gateable functional clock.
+Before a device connected to the BSC can be accessed, the PM domain
+containing the BSC must be powered on, and the functional clock
+driving the BSC must be enabled.
+
+ Renesas 버스 상태 컨트롤러 (BSC, 때로는 "LBSC 버스 브리지"또는 "외부 버스 인터페이스")는 여러  Renesas ARM SoC에서 찾을 수 있습니다. SoC에 여러 외부 장치를 연결하고, e.g. NOR FLASH, Ethernet 및 USB를 위해 여러 개의 칩 선택 라인을 구동하는 외부 버스를 제공합니다.
+
+
+
+The bindings for the BSC extend the bindings for "simple-pm-bus".
+
+
+Required properties
+  - compatible: Must contain an SoC-specific value, and "renesas,bsc" and
+		"simple-pm-bus" as fallbacks.
+                SoC-specific values can be:
+		"renesas,bsc-r8a73a4" for R-Mobile APE6 (r8a73a4)
+		"renesas,bsc-sh73a0" for SH-Mobile AG5 (sh73a0)
+  - #address-cells, #size-cells, ranges: Must describe the mapping between
+		parent address and child address spaces.
+  - reg: Must contain the base address and length to access the bus controller.
+
+Optional properties:
+  - interrupts: Must contain a reference to the BSC interrupt, if available.
+  - clocks: Must contain a reference to the functional clock, if available.
+  - power-domains: Must contain a reference to the PM domain, if available.
+
+BSC의 바인딩은 "simple-pm-bus"의 바인딩을 확장합니다.
+
+필수 속성
+   - 호환 : SoC 전용 값이 있어야하며 "renesas, bsc"및 "simple-pm-bus"가 폴백이어야합니다.
+                 SoC 특정 값은 다음과 같습니다.
+R-Mobile APE6 용 "renesas, bsc-r8a73a4"(r8a73a4)
+SH-Mobile AG5 (sh73a0) 용 "renesas, bsc-sh73a0"
+
+   - # address-cells, # size-cells, ranges : 상위 주소와 하위 주소 공간 사이의 매핑을 설명해야합니다.
+   - reg : 버스 컨트롤러에 액세스하기위한 기본 주소와 길이를 포함해야합니다.
+
+선택적 속성 :
+   - 인터럽트 : 가능한 경우 BSC 인터럽트에 대한 참조를 포함해야합니다.
+   - 클럭 : 가능한 경우 기능 클럭에 대한 참조를 포함해야합니다.
+   - power-domains : 가능한 경우 PM 도메인에 대한 참조를 포함해야합니다.
+
+Example:
+
+	bsc: bus@fec10000 {
+		compatible = "renesas,bsc-sh73a0", "renesas,bsc",
+			     "simple-pm-bus";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges = <0 0 0x20000000>;
+		reg = <0xfec10000 0x400>;
+		interrupts = <0 39 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&zb_clk>;
+		power-domains = <&pd_a4s>;
+	};

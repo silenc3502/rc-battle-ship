@@ -1,0 +1,27 @@
+NVIDIA Tegra20/Tegra30/Tegr114/Tegra124 apbmisc block
+
+Required properties:
+- compatible : For Tegra20, must be "nvidia,tegra20-apbmisc".  For Tegra30,
+  must be "nvidia,tegra30-apbmisc".  Otherwise, must contain
+  "nvidia,<chip>-apbmisc", plus one of the above, where <chip> is tegra114,
+  tegra124, tegra132.
+- reg: Should contain 2 entries: the first entry gives the physical address
+       and length of the registers which contain revision and debug features.
+       The second entry gives the physical address and length of the
+       registers indicating the strapping options.
+
+Optional properties:
+- nvidia,long-ram-code: If present, the RAM code is long (4 bit). If not, short (2 bit).
+
+
+
+NVIDIA Tegra20 / Tegra30 / Tegr114 / Tegra124 apbmisc 블록
+
+필수 속성 :
+- compatible : Tegra20의 경우 "nvidia, tegra20-apbmisc"여야합니다. Tegra30의 경우 "nvidia, tegra30-apbmisc"여야합니다. 그렇지 않으면 "nvidia, <chip> -apbmisc"와 위의 하나를 포함해야합니다. 여기서 <chip>은 tegra114, tegra124, tegra132입니다.
+
+- reg : 2 개의 엔트리를 포함해야한다 : 첫번째 엔트리는 revision과 ebug 기능을 포함하는 레지스터의 물리적 주소와 길이를 제공한다.
+        두 번째 항목은 스트링 옵션을 나타내는 레지스터의 실제 주소와 길이를 제공합니다.
+
+선택적 속성 :
+- nvidia, long-ram-code :있는 경우 RAM 코드가 길어집니다 (4 비트). 그렇지 않은 경우, short (2 비트).

@@ -1,0 +1,58 @@
+ST SPEAr SoC USB controllers:
+-----------------------------
+
+EHCI:
+-----
+
+Required properties:
+- compatible: "st,spear600-ehci"
+- interrupt-parent: Should be the phandle for the interrupt controller
+  that services interrupts for this device
+- interrupts: Should contain the EHCI interrupt
+
+EHCI :
+-----
+
+필수 속성 :
+- compatible : "st, spear600-ehci"
+- interrupt-parent :이 장치에 대한 인터럽트를 서비스하는 인터럽트 컨트롤러의 phandle이어야합니다.
+- 인터럽트 : EHCI 인터럽트를 포함해야합니다.
+
+
+
+Example:
+
+	ehci@e1800000 {
+		compatible = "st,spear600-ehci", "usb-ehci";
+		reg = <0xe1800000 0x1000>;
+		interrupt-parent = <&vic1>;
+		interrupts = <27>;
+	};
+
+
+OHCI:
+-----
+
+Required properties:
+- compatible: "st,spear600-ohci"
+- interrupt-parent: Should be the phandle for the interrupt controller
+  that services interrupts for this device
+- interrupts: Should contain the OHCI interrupt
+
+OHCI :
+-----
+
+필수 속성 :
+- compatible : "st, spear600-ohci"
+- interrupt-parent :이 장치에 대한 인터럽트를 서비스하는 인터럽트 컨트롤러의 phandle이어야합니다.
+- 인터럽트 : OHCI 인터럽트가 있어야합니다.
+
+
+Example:
+
+	ohci@e1900000 {
+		compatible = "st,spear600-ohci", "usb-ohci";
+		reg = <0xe1800000 0x1000>;
+		interrupt-parent = <&vic1>;
+		interrupts = <26>;
+	};

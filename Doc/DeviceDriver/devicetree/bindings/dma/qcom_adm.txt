@@ -1,0 +1,129 @@
+QCOM ADM DMA Controller
+
+Required properties:
+- compatible: must contain "qcom,adm" for IPQ/APQ8064 and MSM8960
+- reg: Address range for DMA registers
+- interrupts: Should contain one interrupt shared by all channels
+- #dma-cells: must be <2>.  First cell denotes the channel number.  Second cell
+  denotes CRCI (client rate control interface) flow control assignment.
+- clocks: Should contain the core clock and interface clock.
+- clock-names: Must contain "core" for the core clock and "iface" for the
+  interface clock.
+- resets: Must contain an entry for each entry in reset names.
+- reset-names: Must include the following entries:
+  - clk
+  - c0
+  - c1
+  - c2
+- qcom,ee: indicates the security domain identifier used in the secure world.
+
+Example:
+		adm_dma: dma@18300000 {
+			compatible = "qcom,adm";
+			reg = <0x18300000 0x100000>;
+			interrupts = <0 170 0>;
+			#dma-cells = <2>;
+
+			clocks = <&gcc ADM0_CLK>, <&gcc ADM0_PBUS_CLK>;
+			clock-names = "core", "iface";
+
+			resets = <&gcc ADM0_RESET>,
+				<&gcc ADM0_C0_RESET>,
+				<&gcc ADM0_C1_RESET>,
+				<&gcc ADM0_C2_RESET>;
+			reset-names = "clk", "c0", "c1", "c2";
+			qcom,ee = <0>;
+		};
+
+DMA clients must use the format descripted in the dma.txt file, using a three
+cell specifier for each channel.
+
+Each dmas request consists of 3 cells:
+ 1. phandle pointing to the DMA controller
+ 2. channel number
+ 3. CRCI assignment, if applicable.  If no CRCI flow control is required, use 0.
+    The CRCI is used for flow control.  It identifies the peripheral device that
+    is the source/destination for the transferred data.
+
+Example:
+
+	spi4: spi@1a280000 {
+		status = "ok";
+		spi-max-frequency = <50000000>;
+
+		pinctrl-0 = <&spi_pins>;
+		pinctrl-names = "default";
+
+		cs-gpios = <&qcom_pinmux 20 0>;
+
+		dmas = <&adm_dma 6 9>,
+			<&adm_dma 5 10>;
+		dma-names = "rx", "tx";
+	};
+
+
+
+
+/*
+
+QCOM ADM DMA 컨트롤러
+
+필수 속성 :
+- 호환 가능 : IPQ / APQ8064 및 MSM8960의 경우 "qcom, adm"을 포함해야합니다.
+- reg : DMA 레지스터의 주소 범위
+- interrupts : 모든 채널이 공유하는 하나의 인터럽트를 포함해야합니다.
+- # dma-cells : <2> 여야합니다. 첫 번째 셀은 채널 번호를 나타냅니다. 두 번째 셀은 CRCI (클라이언트 속도 제어 인터페이스) 흐름 제어 할당을 나타냅니다.
+- 클럭 : 코어 클럭 및 인터페이스 클럭을 포함해야합니다.
+- clock-names : 코어 클럭의 경우 "core"를, 코어 클럭의 경우 "iface"를 포함해야합니다.
+  인터페이스 클럭.
+- 재설정 : 재설정 이름의 각 항목에 대한 항목을 포함해야합니다.
+- reset-names : 다음 항목을 포함해야합니다.
+  - clk
+  - c0
+  - c1
+  - c2
+- qcom, ee : 보안 세계에서 사용되는 보안 도메인 식별자를 나타냅니다.
+
+Example:
+		adm_dma: dma@18300000 {
+			compatible = "qcom,adm";
+			reg = <0x18300000 0x100000>;
+			interrupts = <0 170 0>;
+			#dma-cells = <2>;
+
+			clocks = <&gcc ADM0_CLK>, <&gcc ADM0_PBUS_CLK>;
+			clock-names = "core", "iface";
+
+			resets = <&gcc ADM0_RESET>,
+				<&gcc ADM0_C0_RESET>,
+				<&gcc ADM0_C1_RESET>,
+				<&gcc ADM0_C2_RESET>;
+			reset-names = "clk", "c0", "c1", "c2";
+			qcom,ee = <0>;
+		};
+
+DMA 클라이언트는 각 채널에 대해 세 개의 셀 지정자를 사용하여 dma.txt 파일에 설명 된 형식을 사용해야합니다.
+
+각 dmas 요청은 세 개의 셀로 구성됩니다.
+ 1. DMA 컨트롤러를 가리키는 phandle
+ 2. 채널 번호
+ 3. 적용 가능한 경우 CRCI 할당. CRCI 흐름 제어가 필요하지 않으면 0을 사용하십시오.
+    CRCI는 흐름 제어에 사용됩니다. 전송 된 데이터의 소스 / 목적지 인 주변 장치를 식별합니다.
+
+Example:
+
+	spi4: spi@1a280000 {
+		status = "ok";
+		spi-max-frequency = <50000000>;
+
+		pinctrl-0 = <&spi_pins>;
+		pinctrl-names = "default";
+
+		cs-gpios = <&qcom_pinmux 20 0>;
+
+		dmas = <&adm_dma 6 9>,
+			<&adm_dma 5 10>;
+		dma-names = "rx", "tx";
+	};
+
+*/

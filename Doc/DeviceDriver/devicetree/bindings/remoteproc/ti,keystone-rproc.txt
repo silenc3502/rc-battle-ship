@@ -1,0 +1,191 @@
+TI Keystone DSP devices
+TI Keystone DSP 디바이스
+=======================
+
+Binding status: Unstable - Subject to changes for using common shared memories
+
+The TI Keystone 2 family of SoCs usually have one or more (upto 8) TI DSP Core
+sub-systems that are used to offload some of the processor-intensive tasks or
+algorithms, for achieving various system level goals.
+
+The processor cores in the sub-system usually contain additional sub-modules
+like L1 and/or L2 caches/SRAMs, an Interrupt Controller, an external memory
+controller, a dedicated local power/sleep controller etc. The DSP processor
+core in Keystone 2 SoCs is usually a TMS320C66x CorePac processor.
+
+
+바인딩 상태 : Unstable - 공통 공유 메모리를 사용하여 변경 될 수 있음
+
+TI Keystone 2 SoC 제품군은 일반적으로 다양한 시스템 레벨 목표를 달성하기 위해 일부 프로세서 집약적 인 작업이나 알고리즘을 오프로드하는 데 사용되는 하나 이상의 (최대 8개까지)  TI DSP 코어 하위 시스템을 갖추고 있습니다.
+
+하위 시스템의 프로세서 코어에는 대개 L1 및 / 또는 L2 캐시 / SRAM, 인터럽트 컨트롤러, 외부 메모리 컨트롤러, dedicated local power / sleep controller etc과 같은 추가 하위 모듈이 포함됩니다. Keystone 2 SoC의 DSP 프로세서 코어 일반적으로 TMS320C66x CorePac 프로세서입니다.
+
+
+DSP Device Node:
+================
+Each DSP Core sub-system is represented as a single DT node. Each node has a
+number of required or optional properties that enable the OS running on the
+host processor (ARM CorePac) to perform the device management of the remote
+processor and to communicate with the remote processor.
+각 DSP 코어 서브 시스템은 단일 DT 노드로 표현됩니다. 각 노드에는 호스트 프로세서 (ARM CorePac)에서 
+실행중인 OS가 원격 프로세서의 장치 관리를 수행하고 원격 프로세서와 통신 할 수있게 해주는 여러 필수 또는 선택 속성이 있습니다.
+
+Required properties:
+필수 속성 :
+--------------------
+
+The following are the mandatory properties:
+필수 속성은 다음과 같습니다.
+
+- compatible:		Should be one of the following,
+					다음 중 하나 여야합니다.
+
+			    "ti,k2hk-dsp" for DSPs on Keystone2 Hawking/Kepler SoCs
+			    "ti,k2l-dsp" for DSPs on Keystone2 Lamarr SoCs
+			    "ti,k2e-dsp" for DSPs on Keystone2 Edison SoCs
+			    "ti,k2g-dsp" for DSPs on Keystone K2G SoCs
+
+- reg:			Should contain an entry for each value in 'reg-names'.
+			Each entry should have the memory region's start address
+			and the size of the region, the representation matching
+			the parent node's '#address-cells' and '#size-cells' values.
+			'reg-names'의 각 값에 대한 항목을 포함해야합니다. 각 엔트리에는
+			 메모리 영역의 시작 주소와 영역의 크기, parent node의 '# address-cells'및
+			  '# size-cells'값과 일치하는 표현이 있어야합니다.
+
+- reg-names:		Should contain strings with the following names, each
+			representing a specific internal memory region, and
+			should be defined in this order,
+			     "l2sram", "l1pram", "l1dram"
+- reg-names : "l2sram", "l1pram", "l1dram"순서대로 정의해야하는 각각의 내부 메모리
+			 영역을 나타내는 문자열을 다음 names로 포함해야합니다.
+
+- clocks: 		Should contain the device's input clock, and should be
+			defined as per the bindings in,
+			Documentation/devicetree/bindings/clock/keystone-gate.txt
+			    for K2HK/K2L/K2E SoCs or,
+			Documentation/devicetree/bindings/clock/ti,sci-clk.txt
+			    for K2G SoC
+- clocks : 장치의 입력 클럭을 포함해야하며, Documentation/devicetree/bindings/clock/keystone-gate.txt for K2HK/K2L/K2E SoCs or,	Documentation/devicetree/bindings/clock/ti,sci-clk.txt for 				K2G SoC 의 바인딩에 따라 정의되어야합니다.
+
+- ti,syscon-dev:	Should be a pair of the phandle to the Keystone Device
+			State Control node, and the register offset of the DSP
+			boot address register within that node's address space.
+- ti, syscon-dev : 키스톤 장치 상태 제어 노드에 대한 phandle과 해당 노드의 주소
+ 공간에있는 DSP 부팅 주소 레지스터의 레지스터 오프셋이어야합니다.
+
+- resets:		Should contain the phandle to the reset controller node
+			managing the resets for this device, and a reset
+			specifier. Please refer to either of the following reset
+			bindings for the reset argument specifier as per SoC,
+			Documentation/devicetree/bindings/reset/reset/syscon-reset.txt
+			    for K2HK/K2L/K2E SoCs or,
+			Documentation/devicetree/bindings/reset/reset/ti,sci-reset.txt
+			    for K2G SoC
+- resets :이 장치에 대한 리셋을 관리하는 resets 컨트롤러 노드에 대한 파들과 resets 지정자를 포함해야합니다. K2HK / K2L / K2E SoC에 대해서는 SoC, 문서 / devicetree / bindings / reset / syscon-reset.txt에 따라 재설정 인수 지정자에 대한 다음 재설정 바인딩 중 하나를 참조하거나 K2G SoC 용 Documentation / devicetree / bindings / reset / reset / ti, K2G SoC 용 sci-reset.txt
+
+- interrupt-parent:	Should contain a phandle to the Keystone 2 IRQ controller
+			IP node that is used by the ARM CorePac processor to
+			receive interrupts from the DSP remote processors. See
+			Documentation/devicetree/bindings/interrupt-controller/ti,keystone-irq.txt
+			for details.
+- interrupt-parent : DSP 코어 프로세서에서 인터럽트를 수신하기 위해 ARM CorePac 프로세서에서 사용하는 키스톤 2 IRQ 컨트롤러 IP 노드에 대한 phandle을 포함해야합니다. 자세한 내용은 Documentation / devicetree / bindings / interrupt-controller / ti, keystone-irq.txt를 참조하십시오.
+
+- interrupts: 		Should contain an entry for each value in 'interrupt-names'.
+			Each entry should have the interrupt source number used by
+			the remote processor to the host processor. The values should
+			follow the interrupt-specifier format as dictated by the
+			'interrupt-parent' node. The purpose of each is as per the
+			description in the 'interrupt-names' property.
+- interrupts : 'interrupt-names'의 각 값에 대한 항목을 포함해야합니다.
+ 각 엔트리는 원격 프로세서가 호스트 프로세서에 사용하는 인터럽트 소스 번호를 가져야합니다. 
+ 값은 'interrupt-parent'노드에 의해 지정된 인터럽트 지정자 형식을 따라야합니다.
+  각각의 목적은 'interrupt-names'속성의 설명에 따른 것입니다.
+
+- interrupt-names:	Should contain strings with the following names, each
+			representing a specific interrupt,
+			    "vring" - interrupt for virtio based IPC
+			    "exception" - interrupt for exception notification
+- interrupt-names : 각각이 특정한 인터럽트를 나타내는 다음과 같은 names의 문자열을 포함해야한다.
+
+"vring"- virtio 기반 IPC를위한 인터럽트
+
+"exception"- exception 통지를위한 인터럽트
+
+- kick-gpio: 		Should specify the gpio device needed for the virtio IPC
+			stack. This will be used to interrupt the remote processor,
+			and should be defined as per the bindings in,
+			Documentation/devicetree/bindings/gpio/gpio.txt
+- kick-gpio : virtio IPC 스택에 필요한 gpio 디바이스를 지정해야합니다. 
+이것은 원격 프로세서를 인터럽트하는 데 사용되며, Documentation / devicetree / bindings / gpio / gpio.txt의 바인딩에 따라 정의해야합니다.
+
+Optional properties:
+선택적 속성 :
+--------------------
+
+- power-domains:	_required_ property only for K2G SoCs. Should contain a
+			phandle to a PM domain provider node, and a PM domain
+			specifier as defined by the binding,
+			Documentation/devicetree/bindings/soc/ti/sci-pm-domain.txt
+- power-domains : _required_ 속성은 K2G SoC에만 해당됩니다. PM 도메인 제공자 노드에 대한 phandle과 바인딩에 의해 정의 된 PM 도메인 지정자를 포함해야합니다. Documentation / devicetree / bindings / soc / ti / sci-pm-domain.txt
+
+- memory-region:	phandle to the reserved memory node to be associated
+			with the remoteproc device. The reserved memory node
+			can be a CMA memory node, and should be defined as
+			per the bindings in
+			Documentation/devicetree/bindings/reserved-memory/reserved-memory.txt
+- memory-region : remoteproc 장치와 관련된 예약 된 메모리 노드로 향하게합니다. 예약 된 메모리 노드는 CMA 메모리 노드 일 수 있으며 Documentation / devicetree / bindings / reserved-memory / reserved-memory.txt의 바인딩에 따라 정의해야합니다.
+
+Examples:
+---------
+
+1.
+	/* K2HK DSP node in SoC DTS file */
+	soc {
+		dsp0: dsp0 {
+			compatible = "ti,k2hk-dsp";
+			reg = <0x10800000 0x00100000>,
+			      <0x10e00000 0x00008000>,
+			      <0x10f00000 0x00008000>;
+			reg-names = "l2sram", "l1pram", "l1dram";
+			clocks = <&clkgem0>;
+			ti,syscon-dev = <&devctrl 0x40>;
+			resets = <&pscrst 0>;
+			interrupt-parent = <&kirq0>;
+			interrupts = <0 8>;
+			interrupt-names = "vring", "exception";
+			kick-gpio = <&dspgpio0 27 0>;
+		};
+
+	};
+
+	/* K2HK EVM Board file */
+	&dsp0 {
+		memory-region = <&dsp_common_cma_pool>;
+	};
+
+2.
+	/* K2G DSP node in SoC DTS file */
+	soc {
+		dsp0: dsp0 {
+			compatible = "ti,k2g-dsp";
+			reg = <0x10800000 0x00100000>,
+			      <0x10e00000 0x00008000>,
+			      <0x10f00000 0x00008000>;
+			reg-names = "l2sram", "l1pram", "l1dram";
+			power-domains = <&k2g_pds K2G_DEV_CGEM0>;
+			clocks = <&k2g_clks K2G_DEV_CGEM0 0>;
+			ti,syscon-dev = <&devctrl 0x40>;
+			resets = <&k2g_reset K2G_DEV_CGEM0 K2G_DEV_CGEM0_DSP0_RESET>;
+			interrupt-parent = <&kirq0>;
+			interrupts = <0 8>;
+			interrupt-names = "vring", "exception";
+			kick-gpio = <&dspgpio0 27 0>;
+		};
+
+	};
+
+	/* K2G EVM Board file */
+	&dsp0 {
+		memory-region = <&dsp_common_cma_pool>;
+	};

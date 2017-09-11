@@ -1,0 +1,27 @@
+ST SPEAr miphy DT details
+=========================
+
+ST Microelectronics SPEAr miphy is a phy controller supporting PCIe and SATA.
+
+Required properties:
+- compatible : should be "st,spear1310-miphy" or "st,spear1340-miphy"
+- reg : offset and length of the PHY register set.
+- misc: phandle for the syscon node to access misc registers
+- #phy-cells : from the generic PHY bindings, must be 1.
+	- cell[1]: 0 if phy used for SATA, 1 for PCIe.
+
+Optional properties:
+- phy-id: Instance id of the phy. Only required when there are multiple phys
+  present on a implementation.
+
+  ST 마이크로 일렉트로닉스 SPEAr miphy는 PCIe와 SATA를 지원하는 phy 컨트롤러입니다.
+
+필수 속성 :
+- 호환 가능 : "st, spear1310-miphy"또는 "st, spear1340-miphy"이어야합니다.
+- reg : PHY 레지스터 세트의 오프셋 및 길이.
+- 기타 : syscon 노드가 기타 레지스터에 액세스 할 수 있도록하는 phandle
+- # phy-cells : 일반 PHY 바인딩에서 1이어야합니다.
+- cell [1] : SATA가 phy이면 0, PCIe는 1입니다.
+
+선택적 속성 :
+- phy-id : phy의 인스턴스 ID. 구현하는데 여러 개의 phys가있는 경우에만 필요합니다.

@@ -1,0 +1,41 @@
+Rockchip DRM master device
+================================
+
+The Rockchip DRM master device is a virtual device needed to list all
+vop devices or other display interface nodes that comprise the
+graphics subsystem.
+
+Required properties:
+- compatible: Should be "rockchip,display-subsystem"
+- ports: Should contain a list of phandles pointing to display interface port
+  of vop devices. vop definitions as defined in
+  Documentation/devicetree/bindings/display/rockchip/rockchip-vop.txt
+
+example:
+
+display-subsystem {
+	compatible = "rockchip,display-subsystem";
+	ports = <&vopl_out>, <&vopb_out>;
+};
+
+/*
+Rockchip DRM 마스터 장치
+==================
+
+Rockchip DRM 마스터 장치는 그래픽 장치를 구성하는 모든 vop 장치 또는 기타 디스플레이 인터페이스 노드를 나열하는 데 필요한 가상 장치입니다.
+
+필수 속성 :
+- 호환 : "rockchip, display-subsystem"이어야 함
+- 포트 : vop 장치의 디스플레이 인터페이스 포트를 가리키는 phandles 목록을 포함해야합니다.
+
+vop definitions as defined in
+  Documentation/devicetree/bindings/display/rockchip/rockchip-vop.txt
+
+example:
+
+display-subsystem {
+	compatible = "rockchip,display-subsystem";
+	ports = <&vopl_out>, <&vopb_out>;
+};
+
+*/

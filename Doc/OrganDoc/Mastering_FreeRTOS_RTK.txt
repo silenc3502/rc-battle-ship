@@ -1,0 +1,242 @@
+FreeRTOS V9.0.0 혹은 저전력 Tick-Less 동작을 아직 지원하지 않는 161204 사본이다.
+추가 문서는 http://www.FreeRTOS.org 에서 정기적으로 확인하라.
+FreeRTOS V9.x.x 에 대한 자세한 내용은 http://www.FreeRTOS.org 에서
+정기적으로 추가 설명서 및 이 설명서에 업데이트를 확인하고 
+http://www.FreeRTOS.org/FreeRTOS-V9.html 에서 정보를 참조하라.
+FreeRTOS V9.x.x 를 사용하여 생성된 App 은 모든 Kernel Object 를 할당할 수 있다.
+그리고 컴파일시 정적으로 Heap Memory 관리자를 포함할 필요가 없다.
+
+이 Text 는 무료로 제공된다.
+그 대가로 http://www.FreeRTOS.org/contact 에서
+비즈니스 연락처 전자 메일 링크를 사용하여 의견 및 수정 사항을 제공할 것을 요청한다.
+
+
+
+Multitasking in Small Embedded Systems
+
+* About FreeRTOS
+
+FreeRTOS 는 Real Time Engineers Ltd. 가 전적으로 소유, 개발 및 유지 관리한다.
+Real Time Engineers Ltd. 는 10 년 넘게 상을 수상한 상업용 등급의
+완전 무료 고품질 SW 를 제공하기 위해 세계 유수의 칩 회사와 긴밀한 협력 관계를 유지하고 있다.
+
+FreeRTOS 는 작은 Microprocessor 혹은 Microcontrollers 를 사용하는 Real-Time Application 에 이상적이다.
+이러한 유형의 Application 은 일반적으로 HW 및 SW Real-Time 사항을 모두 포함한다.
+
+SW Real-Time 요구 사항은 마감 시간을 명시하지만
+마감 시간을 위반한다고하여 System 이 쓸모 없어지지는 않는다.
+예로 Keystrokes 에 너무 느리게 응답하면 System 이 응답하지 않을 수 있다.
+
+HW Real-Time 요구 사항은 마감 기한을 명시하며
+요구 사항을 위반하면 System 이 절대적으로 실패하게 된다.
+예로 운전자의 Airbag 은 충돌 감지 센서 입력에 너무 느리게 응답할 경우
+유익함 보다는 많은 안좋은 부분들이 발생할 수 있는 잠재력을 가지고 있다.
+
+FreeRTOS 는 Real-Time Kernel(혹은 Real-Time Scheduler)이며
+위의 Embedded Application 을 구축하여 HW Real-Time 요구사항을 충족시킬 수 있다.
+App 은 Program 이 독립적인 실행 Thread 의 모음으로 구성되도록 한다.
+Core 가 하나 뿐인 Processor 에선 한 번에 하나의 Thread 만 실행할 수 있다.
+Kernel 은 App 설계자가 각 Thread 에 할당한 우선 순위를 검토하여 실행해야 하는 Thread 를 결정한다.
+가장 간단한 경우 App 설계자는 HW Real-Time 요구 사항을 구현하는 Thread 에 우선순위를 높게 할당하고
+SW Real-Time 요구 사항을 구현하는 Thread 에 우선순위를 낮출 수 있다.
+이렇게하면 HW Real-Time Thread 가 항상 SW Real-Time Thread 보다
+먼저 실행되지만 우선순위 할당 결정이 단순하지 않다.
+
+이전 단락의 개념을 아직 완전히 이해하지 못하더라도 걱정하지 말라.
+다음 Chapter 에서 Real-Time Kernel 을 사용하는 방법과
+FreeRTOS 를 사용하는 방법을 이해하는데 도움이 되는 많은 예제와 함께 자세한 설명을 제공한다.
+
+
+
+* Value Proposition
+
+FreeRTOS 의 전례없는 글로벌 성공은 FreeRTOS 가 가지고 있는 매력적인 가치 제안에서 비롯된다.
+FreeRTOS 는 전문적으로 개발되었으며, 엄격하게 품질 관리되고, 견고하며, 여러 플랫폼을 지원하며,
+지적 재산권 소유의 모호성을 포함하지 않으며 상업적 사용에서도 무료다.
+RealRTOS 를 사용하여 Real Time Engineers Ltd 와 이야기를 나누지 않고도 제품을 출시할 수 있다.
+비용을 지불하는 것은 물론, 수천 명이 그렇게 한다.
+추가 백업을 받고 싶거나 법적 팀이 보증 또는 면책을 추가로 요구할 경우
+언제든지 간단한 저비용 상용 업그레이드 경로가 있다.
+언제든지 상업 경로를 택할 수 있다.
+
+
+
+* A Note About Terminology
+
+FreeRTOS 에서 각 실행 스레드는 'Task' 라고 한다.
+Embedded 커뮤니티 내의 용어에 대한 합의는 없지만
+Thread 는 App 의 특정 부분에서 보다 구체적인 의미(수행할 작업)를 가질 수 있으므로 'Thread' 보다 'Task' 를 선호한다.
+
+
+
+* Why Use a Real-Time Kernel ?
+
+Kernel 을 사용하지 않고도 Embedded SW 를 잘 작성하는 기술은 많이 있으며
+개발중인 System 이 단순하다면 이 기술이 가장 적합한 솔루션을 제공할 수 있다.
+더 복잡한 경우에는 Kernel 을 사용하는 것이 좋지만 Crossover Point 가 발생하는 곳은 항상 주관적이다.
+
+이미 설명한 바와 같이 작업 우선 순위 지정은 App 이 처리 기한을 지킬수 있도록
+도와줄 수 있지만 Kernel 은 다른 이점도 가져올 수 있다.
+이들 중 일부는 아래에 간략하게 나열되어 있다.
+
+- 타이밍 정보 추상화
+
+Kernel 은 실행 타임을 담당하고 App 에 시간 관련 API 를 제공한다.
+이를 통해 App 코드의 구조가 보다 단순해지고 전체 코드 크기가 더 작아진다.
+
+- 유지보수성 / 확장성
+
+161204 FreeRTOS V8.x.x 에 대한 시험판
+FreeRTOS V9.x.x 에 대한 정보는 http://www.FreeRTOS.org/FreeRTOS V9.html 을 참조하라.
+http://www.FreeRTOS.org/contact 를 사용하여 Feedback, 수정 사항을 제공하고 업데이트를 확인하라.
+
+타이밍 세부 정보를 추상화하면 Module 간 상호 의존성이 줄어들고
+제어 및 예측 가능한 방식으로 SW 를 발전시킬 수 있다.
+또한 Kernel 은 타이밍을 담당하므로 App 성능이 기본 HW 의 변경에 덜 영향을 받는다.
+
+- 모듈성
+
+작업은 독립적인 모듈이며 각 모듈은 잘 정의된 목적을 가져야 한다.
+
+- 팀 개발
+
+Task 는 잘 정의된 Interface 를 가져야하므로 팀 단위로 쉽게 개발할 수 있다.
+
+- 더 쉬운 테스트
+
+작업이 깨끗한 인터페이스가 있는 잘 정의된 독립적인 모듈인 경우 격리된 상태에서 테스트할 수 있다.
+
+- 코드 재사용
+
+모듈성이 향상되고 상호 종속성이 줄어들면 적은 노력으로 재사용할 수 있는 코드가 생성된다.
+
+- 향상된 효율성
+
+Kernel 을 사용하면 SW 가 완전히 Event 방식(Interrupt)으로 구동될 수 있으므로
+발생하지 않은 Event 를 Polling 하여 처리 시간을 낭비할 필요가 없다.
+코드는 수행해야하는 작업이 있을때만 실행된다.
+
+효율성을 저해하는 것은 RTOS Tick Interrupt 를 처리하고
+한 Task 에서 다른 Task 로 실행을 전환할 필요가 있다는 것이다.
+그러나 RTOS 를 사용하지 않는 App 에는 일반적으로 Tick Interrupt 가 포함된다.
+
+- 유휴 시간
+
+유휴 작업은 Scheduler 가 시작될 때 자동으로 생성된다.
+실행하려는 App Task 가 없을 때마다 실행된다.
+유휴 작업은 예비 처리 용량을 측정하거나, Background 검사를 수행하거나,
+단순히 Processor 를 절전 모드로 전환하는데 사용할 수 있다.
+
+- 전원 관리
+
+RTOS 를 사용하여 얻을 수 있는 효율성 향상으로 Processor 는 저전력 모드에서 더 많은 시간을 구동할 수 있다.
+
+유휴 작업이 실행될 때마다 Processor 를 저전력 상태로 두면 전력 소비를 크게 줄일 수 있다.
+FreeRTOS 는 또한 특별한 tick-less 모드를 가지고 있다.
+tick-less 모드를 사용하면 Processor 가 가능한 한 낮은 전력 모드로 들어갈 수 있다.
+그러므로 더 오랫동안 저전력 모드를 유지한다.
+
+- 유연한 인터럽트 처리
+
+Interrupt Handler 는 App 작성자가 작성한 Task
+혹은 FreeRTOS 데몬 Task 로 처리를 지연하여 매우 짧게 유지될 수 있다.
+
+- 혼합 처리 요구 사항
+
+간단한 Design Pattern 은 App 내에서 주기적, 연속적 및 이벤트 중심의 처리를 합성할 수 있다.
+또한 적절한 작업 및 Interrupt 우선 순위를 선택하여 Hard 및 Soft Real-Time 요구 사항을 충족할 수 있다.
+
+
+
+* FreeRTOS Features
+
+FreeRTOS 는 아래 표준 특징들을 가지고 있다:
+
+- 선점 혹은 협동 동작
+- 매우 유연한 작업 우선 순위 지정
+- 유연하고 신속하며 가벼운 작업 통지 메커니즘
+- 큐
+- 이진 세마포어
+- 카운팅 세마포어
+- 뮤텍스
+- 재귀적 뮤텍스
+- 소프트웨어 타이머
+- 이벤트 그룹
+- 틱 훅 기능
+- 유휴 훅 기능
+- 스택 오버플로우 검사
+- 추적 기록
+- 작업 런타임 통계 수집
+- 상업적 라이센스 및 지원(선택 사항)
+- 전체 인터럽트 중첩 모델(일부 아키텍처의 경우)
+- 극한의 저전력 App 을 위한 Tick(Tick-less) 기능
+- 적절한 시간에 SW 관리 Interrupt Stack(RAM 절약에 도움이 됨)
+
+
+
+* Licensing, and The FreeRTOS, OpenRTOS, and SafeRTOS Family
+
+FreeRTOS Open Source License 는 아래를 보장하도록 설계되었다.
+
+1. FreeRTOS 는 상용 App 에서 사용할 수 있다.
+2. FreeRTOS 자체는 누구나 자유롭게 사용할 수 있다.
+3. FreeRTOS 사용자는 지적 재산권의 소유권을 보유한다.
+
+최신 Open Source License 정보는 http://www.FreeRTOS.org/license 를 참조하라.
+
+OpenRTOS 는 타사에서 Real Time Engineers Ltd. 의 License 하에 제공한 FreeRTOS 의 상업적 License 버전이다.
+
+SafeRTOS 는 FreeRTOS 와 동일한 사용 모델을 공유하지만
+국제적으로 인정된 다양한 안전 관련 표준 준수를 요구하는데 필요한 절차, 작업 및 구현에 따라 개발되었다.
+
+
+
+* Included Source Files and Projects
+
+- 이 책과 함께 제공되는 예제 얻기
+
+이 책에 제시된 모든 예제에 대한 소스 코드, 사전 구성된 프로젝트 파일 및 전체 빌드 지침은 첨부된 zip 파일로 제공된다.
+책과 함께 사본을 받지 못한 경우 http://www.FreeRTOS.org/Documentation/code 에서 zip 파일을 다운로드 할 수 있다.
+zip 파일에는 FreeRTOS 의 최신 버전이 포함되어 있지 않을 수도 있다.
+
+이 책에 포함된 스크린 샷은 FreeRTOS Windows 포팅을 사용하여 Microsoft Windows 환경에서 예제를 실행하는 동안 찍은 것이다.
+FreeRTOS Windows 포팅을 사용하는 Project 는 http://www.microsoft.com/express 에서
+다운로드 할 수 있는 무료 Visual Studio 버전을 사용하여 빌드하도록 미리 구성되어 있다.
+FreeRTOS Windows 포팅은 편리한 평가, 테스트 및 개발 Platform 을 제공하지만
+진정한 Real-Time 동작을 제공하지는 않는다.
+
+
+
+Chapter 1. The FreeRTOS Distribution
+
+1.1. Chapter Introduction and Scope
+
+FreeRTOS 는 모든 공식 FreeRTOS 포팅과 다수의 미리 구성된 데모 App 을 포함하는 단일 zip 파일 아카이브로 배포된다.
+
+- Scope
+
+이 Chapter 는 사용자가 FreeRTOS 파일 및 디렉토리에 대해 아래와 같은 방향으로 나아갈 수 있도록 돕는 것을 목표로 한다:
+
+1. FreeRTOS 디렉토리 구조의 최상위 수준 보기를 제공한다.
+2. 특정 FreeRTOS 프로젝트에서 실제로 필요한 파일을 설명한다.
+3. 데모 App 을 소개한다.
+4. 새 프로젝트를 만드는 방법에 대한 정보 제공
+
+여기에 있는 설명은 공식 FreeRTOS 배포만이 관련되어 있다.
+이 책과 함께 제공되는 예제는 약간 다르다.
+
+
+
+1.2. Understanding the FreeRTOS Distribution
+
+* Definition: FreeRTOS Port
+
+FreeRTOS 는 약 20 개의 서로 다른 Compiler 로 구축될 수 있으며
+30 개 이상의 서로 다른 Processor Architecture 에서 실행될 수 있다.
+지원되는 각 Compiler 와 Processor 의 조합은 별도의 FreeRTOS 포팅으로 간주된다.
+
+
+
+* Building FreeRTOS
+
+

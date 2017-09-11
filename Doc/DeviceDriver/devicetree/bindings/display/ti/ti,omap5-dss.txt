@@ -1,0 +1,193 @@
+Texas Instruments OMAP5 Display Subsystem
+=========================================
+
+See Documentation/devicetree/bindings/display/ti/ti,omap-dss.txt for generic
+description about OMAP Display Subsystem bindings.
+
+DSS Core
+--------
+
+Required properties:
+- compatible: "ti,omap5-dss"
+- reg: address and length of the register space
+- ti,hwmods: "dss_core"
+- clocks: handle to fclk
+- clock-names: "fck"
+
+Required nodes:
+- DISPC
+
+Optional nodes:
+- DSS Submodules: RFBI, DSI, HDMI
+- Video port for DPI output
+
+DPI Endpoint required properties:
+- data-lines: number of lines used
+
+
+DISPC
+-----
+
+Required properties:
+- compatible: "ti,omap5-dispc"
+- reg: address and length of the register space
+- ti,hwmods: "dss_dispc"
+- interrupts: the DISPC interrupt
+- clocks: handle to fclk
+- clock-names: "fck"
+
+
+RFBI
+----
+
+Required properties:
+- compatible: "ti,omap5-rfbi"
+- reg: address and length of the register space
+- ti,hwmods: "dss_rfbi"
+- clocks: handles to fclk and iclk
+- clock-names: "fck", "ick"
+
+Optional nodes:
+- Video port for RFBI output
+- RFBI controlled peripherals
+
+
+DSI
+---
+
+Required properties:
+- compatible: "ti,omap5-dsi"
+- reg: addresses and lengths of the register spaces for 'proto', 'phy' and 'pll'
+- reg-names: "proto", "phy", "pll"
+- interrupts: the DSI interrupt line
+- ti,hwmods: "dss_dsi1" or "dss_dsi2"
+- vdd-supply: power supply for DSI
+- clocks: handles to fclk and pll clock
+- clock-names: "fck", "sys_clk"
+
+Optional nodes:
+- Video port for DSI output
+- DSI controlled peripherals
+
+DSI Endpoint required properties:
+- lanes: list of pin numbers for the DSI lanes: CLK+, CLK-, DATA0+, DATA0-,
+  DATA1+, DATA1-, ...
+
+
+HDMI
+----
+
+Required properties:
+- compatible: "ti,omap5-hdmi"
+- reg: addresses and lengths of the register spaces for 'wp', 'pll', 'phy',
+       'core'
+- reg-names: "wp", "pll", "phy", "core"
+- interrupts: the HDMI interrupt line
+- ti,hwmods: "dss_hdmi"
+- vdda-supply: vdda power supply
+- clocks: handles to fclk and pll clock
+- clock-names: "fck", "sys_clk"
+
+Optional nodes:
+- Video port for HDMI output
+
+HDMI Endpoint optional properties:
+- lanes: list of 8 pin numbers for the HDMI lanes: CLK+, CLK-, D0+, D0-,
+  D1+, D1-, D2+, D2-. (default: 0,1,2,3,4,5,6,7)
+
+/*
+
+Texas Instruments OMAP5 디스플레이 서브 시스템
+=============================
+
+OMAP 디스플레이 서브 시스템 바인딩에 대한 일반적인 설명은 Documentation / devicetree / bindings / display / ti / ti, omap-dss.txt를 참조하십시오.
+
+DSS 코어
+--------
+
+필수 속성 :
+- 호환 : "ti, omap5-dss"
+- reg : 레지스터 공간의 주소와 길이
+- 티, hwmods : "dss_core"
+- clock : fclk 핸들
+- clock 이름 : "fck"
+
+필수 노드 :
+- DISPC
+
+선택적 노드 :
+- DSS 서브 모듈 : RFBI, DSI, HDMI
+- DPI 출력을위한 비디오 포트
+
+DPI endpoint 필수 속성 :
+- data-lines : 사용 된 라인 수
+
+
+DISPC
+-----
+
+필수 속성 :
+- 호환 : "ti, omap5-dispc"
+- reg : 레지스터 공간의 주소와 길이
+- 티, hwmods : "dss_dispc"
+- 인터럽트 : DISPC 인터럽트
+- clock : fclk 핸들
+- clock 이름 : "fck"
+
+
+RFBI
+----
+
+필수 속성 :
+- 호환 : "ti, omap5-rfbi"
+- reg : 레지스터 공간의 주소와 길이
+- 티, hwmods : "dss_rfbi"
+- clock : fclk 및 iclk 핸들
+- clock 이름 : "fck", "ick"
+
+선택적 노드 :
+- RFBI 출력을위한 비디오 포트
+- RFBI 제어 주변 장치
+
+
+DSI
+---
+
+필수 속성 :
+- 호환 : "ti, omap5-dsi"
+- reg : 'proto', 'phy'및 'pll'에 대한 레지스터 공간의 주소와 길이
+- reg-names : "proto", "phy", "pll"
+- 인터럽트 : DSI 인터럽트 라인
+- ti, hwmods : "dss_dsi1"또는 "dss_dsi2"
+- vdd-supply : DSI 용 전원 공급 장치
+- clocks : fclk 및 pll clock를 처리합니다.
+- clock-names : "fck", "sys_clk"
+
+선택적 노드 :
+- DSI 출력을위한 비디오 포트
+- DSI 제어 주변 장치
+
+DSI 엔드 포인트 필수 특성 :
+- 차선 : DSI 레인의 핀 번호 목록 : CLK +, CLK-, DATA0 +, DATA0-, DATA1 +, DATA1-, ...
+
+
+HDMI
+----
+
+필수 속성 :
+- 호환 : "ti, omap5-hdmi"
+- reg : 'wp', 'pll', 'phy', 'core'에 대한 레지스터 공간의 주소와 길이
+- reg-names : "wp", "pll", "phy", "core"
+- 인터럽트 : HDMI 인터럽트 라인
+- 티, hwmods : "dss_hdmi"
+- vdda 공급 : vdda 전원 공급 장치
+- clocks : fclk 및 pll clock를 처리합니다.
+- clock-names : "fck", "sys_clk"
+
+선택적 노드 :
+- HDMI 출력용 비디오 포트
+
+HDMI 엔드 포인트 옵션 속성 :
+- 레인 : CLK +, CLK-, D0 +, D0-, D1 +, D1-, D2 +, D2-의 HDMI 레인에 대한 8 개의 핀 번호 목록. (기본값 : 0,1,2,3,4,5,6,7)
+
+*/

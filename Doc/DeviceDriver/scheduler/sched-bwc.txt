@@ -1,0 +1,211 @@
+CFS Bandwidth Control
+
+CFS 대역폭 제어
+=====================
+
+[ This document only discusses CPU bandwidth control for SCHED_NORMAL.
+  The SCHED_RT case is covered in Documentation/scheduler/sched-rt-group.txt ]
+
+[이 문서는 SCHED_NORMAL에 대한 CPU 대역폭 제어에 대해서만 설명합니다. 
+SCHED_RT 사례는 Documentation / scheduler / sched-rt-group.txt에서 다룹니다.]
+
+CFS bandwidth control is a CONFIG_FAIR_GROUP_SCHED extension which allows the
+specification of the maximum CPU bandwidth available to a group or hierarchy.
+
+CFS 대역폭 제어는 그룹 또는 계층에 사용할 수있는 최대 CPU 대역폭을 지정할 수있는 CONFIG_FAIR_GROUP_SCHED 확장입니다.
+
+The bandwidth allowed for a group is specified using a quota and period. Within
+each given "period" (microseconds), a group is allowed to consume only up to
+"quota" microseconds of CPU time.  When the CPU bandwidth consumption of a
+group exceeds this limit (for that period), the tasks belonging to its
+hierarchy will be throttled and are not allowed to run again until the next
+period.
+
+그룹에 허용 된 대역폭은 할당량 및 기간을 사용하여 지정됩니다. 
+각 주어진 "기간"(마이크로 초) 내에서 그룹은 CPU 시간의 "할당량"마이크로 초까지만 소비 할 수 있습니다. 
+그룹의 CPU 대역폭 소비가이 기간 (이 기간 동안)을 초과하면 해당 계층에 속한 작업이 제한되며 다음 기간까지 다시 실행할 수 없습니다.
+
+A group's unused runtime is globally tracked, being refreshed with quota units
+above at each period boundary.  As threads consume this bandwidth it is
+transferred to cpu-local "silos" on a demand basis.  The amount transferred
+within each of these updates is tunable and described as the "slice".
+
+그룹의 사용되지 않는 런타임은 전역 적으로 추적되어 각 기간 경계에서 할당량 단위로 새로 고쳐집니다. 
+스레드가이 대역폭을 소비함에 따라 CPU 기반 요구 사항에 따라 CPU가 로컬 "사일로"로 전송됩니다. 
+이러한 각 업데이트 내에서 전송되는 양은 조정 가능하며 "슬라이스"로 설명됩니다.
+
+Management
+----------
+Quota and period are managed within the cpu subsystem via cgroupfs.
+
+할당량 및 기간은 cgroupfs를 통해 cpu 하위 시스템에서 관리됩니다.
+
+cpu.cfs_quota_us: the total available run-time within a period (in microseconds)
+cpu.cfs_period_us: the length of a period (in microseconds)
+cpu.stat: exports throttling statistics [explained further below]
+
+cpu.cfs_quota_us : 한주기 내 사용 가능한 총 실행 시간 (마이크로 초)
+cpu.cfs_period_us : 마침표의 길이 (마이크로 초)
+cpu.stat : 스로틀 통계를 내 보냅니다 [아래에서 자세히 설명]
+
+The default values are:
+	cpu.cfs_period_us=100ms
+	cpu.cfs_quota=-1
+
+A value of -1 for cpu.cfs_quota_us indicates that the group does not have any
+bandwidth restriction in place, such a group is described as an unconstrained
+bandwidth group.  This represents the traditional work-conserving behavior for
+CFS.
+
+cpu.cfs_quota_us의 값이 -1이면 그룹에 대역폭 제한이 설정되지 않았 음을 나타내므로 해당 그룹은 제한되지 않은 대역폭 그룹으로 설명됩니다. 
+이것은 CFS의 전통적인 작업 보존 행동을 나타냅니다.
+
+Writing any (valid) positive value(s) will enact the specified bandwidth limit.
+The minimum quota allowed for the quota or period is 1ms.  There is also an
+upper bound on the period length of 1s.  Additional restrictions exist when
+bandwidth limits are used in a hierarchical fashion, these are explained in
+more detail below.
+
+임의의 (유효한) 양수 값을 쓰면 지정된 대역폭 한도가 정해집니다.
+할당량 또는 기간에 허용되는 최소 할당량은 1ms입니다. 1s의 기간 길이에 대한 상한도 있습니다. 
+대역폭 제한이 계층 적 방식으로 사용되는 경우 추가 제한 사항이 있습니다. 자세한 내용은 아래에서 자세히 설명합니다.
+
+Writing any negative value to cpu.cfs_quota_us will remove the bandwidth limit
+and return the group to an unconstrained state once more.
+
+cpu.cfs_quota_us에 음수 값을 쓰면 대역폭 제한이 제거되고 그룹이 다시 제한되지 않은 상태로 돌아갑니다.
+
+Any updates to a group's bandwidth specification will result in it becoming
+unthrottled if it is in a constrained state.
+
+그룹의 대역폭 사양을 업데이트하면 제한된 상태에있을 때 제한되지 않습니다.
+
+System wide settings
+
+시스템 전체 설정
+--------------------
+For efficiency run-time is transferred between the global pool and CPU local
+"silos" in a batch fashion.  This greatly reduces global accounting pressure
+on large systems.  The amount transferred each time such an update is required
+is described as the "slice".
+
+효율성을 위해 실행 시간은 전역 풀과 CPU 로컬 "사일로"사이에서 배치 방식으로 전송됩니다. 
+이것은 대형 시스템에 대한 글로벌 회계 압력을 크게 줄입니다. 이러한 업데이트가 필요할 때마다 전송 된 양은 "슬라이스"로 설명됩니다.
+
+This is tunable via procfs:
+	/proc/sys/kernel/sched_cfs_bandwidth_slice_us (default=5ms)
+
+이것은 procfs를 통해 조정할 수 있습니다 :
+/ proc / sys / kernel / sched_cfs_bandwidth_slice_us (기본값 = 5ms)
+
+Larger slice values will reduce transfer overheads, while smaller values allow
+for more fine-grained consumption.
+
+슬라이스 값이 클수록 전송 오버 헤드가 줄어들고, 값이 작을수록 더 세분화 된 소비가 허용됩니다.
+
+Statistics
+----------
+A group's bandwidth statistics are exported via 3 fields in cpu.stat.
+
+그룹의 대역폭 통계는 cpu.stat의 3 개 필드를 통해 내보내집니다.
+
+cpu.stat:
+- nr_periods: Number of enforcement intervals that have elapsed.
+- nr_throttled: Number of times the group has been throttled/limited.
+- throttled_time: The total time duration (in nanoseconds) for which entities
+  of the group have been throttled.
+
+cpu.stat :
+- nr_periods : 경과 한 시행 간격의 수.
+- nr_throttled : 그룹이 스로틀 / 제한된 횟수.
+- throttled_time : 엔티티의 총 지속 시간 (나노초 단위)
+ 		   의 그룹이 제한되었습니다.
+
+This interface is read-only.
+
+Hierarchical considerations
+
+계층적 고려 사항
+---------------------------
+The interface enforces that an individual entity's bandwidth is always
+attainable, that is: max(c_i) <= C. However, over-subscription in the
+aggregate case is explicitly allowed to enable work-conserving semantics
+within a hierarchy.
+
+인터페이스는 개별 엔티티의 대역폭이 항상 도달 할 수 있도록 강제합니다 (max (c_i) <= C). 
+그러나 집계 케이스의 초과 가입은 명시 적으로 계층 내에서 작업 보존 의미를 사용하도록 허용됩니다.
+
+  e.g. \Sum (c_i) may exceed C
+[ Where C is the parent's bandwidth, and c_i its children ]
+
+예 : \ Sum (c_i)이 C를 초과 할 수 있습니다.
+[C는 부모의 대역폭이고 c_i는 자식이다]
+
+
+There are two ways in which a group may become throttled:
+	a. it fully consumes its own quota within a period
+	b. a parent's quota is fully consumed within its period
+
+그룹이 제한 될 수있는 두 가지 방법이 있습니다.
+	에이. 일정 기간 내에 자체 할당량을 완전히 소비합니다.
+	비. 부모의 할당량은 해당 기간 내에 완전히 소비됩니다.
+
+In case b) above, even though the child may have runtime remaining it will not
+be allowed to until the parent's runtime is refreshed.
+
+위 b)의 경우, 하위에 런타임이 남아 있어도 상위 런타임을 새로 고칠 때까지 허용되지 않습니다.
+
+Examples
+--------
+1. Limit a group to 1 CPU worth of runtime.
+
+	If period is 250ms and quota is also 250ms, the group will get
+	1 CPU worth of runtime every 250ms.
+
+	# echo 250000 > cpu.cfs_quota_us /* quota = 250ms */
+	# echo 250000 > cpu.cfs_period_us /* period = 250ms */
+
+1. 그룹을 1CPU 상당의 런타임으로 제한하십시오.
+
+기간이 250ms이고 할당량이 250ms이면 그룹은 250ms마다 1CPU 상당의 런타임을 갖게됩니다.
+
+	# echo 250000> cpu.cfs_quota_us / * quota = 250ms * /
+	# echo 250000> cpu.cfs_period_us / * 기간 = 250ms * /
+
+2. Limit a group to 2 CPUs worth of runtime on a multi-CPU machine.
+
+	With 500ms period and 1000ms quota, the group can get 2 CPUs worth of
+	runtime every 500ms.
+
+	# echo 1000000 > cpu.cfs_quota_us /* quota = 1000ms */
+	# echo 500000 > cpu.cfs_period_us /* period = 500ms */
+
+	The larger period here allows for increased burst capacity.
+
+2. 멀티 CPU 시스템에서 그룹을 실행 시간 2CPU로 제한하십시오.
+
+500ms주기 및 1000ms 할당량을 사용하면 500ms마다 2 개의 CPU 실행 시간을 확보 할 수 있습니다.
+
+	# echo 1000000> cpu.cfs_quota_us / * quota = 1000ms * /
+	# echo 500000> cpu.cfs_period_us / * 마침표 = 500ms * /
+
+여기서 더 큰 기간은 증가 된 버스트 용량을 허용합니다.
+
+3. Limit a group to 20% of 1 CPU.
+
+	With 50ms period, 10ms quota will be equivalent to 20% of 1 CPU.
+
+	# echo 10000 > cpu.cfs_quota_us /* quota = 10ms */
+	# echo 50000 > cpu.cfs_period_us /* period = 50ms */
+
+	By using a small period here we are ensuring a consistent latency
+	response at the expense of burst capacity.
+
+3. 1 CPU의 20 %로 그룹을 제한하십시오.
+
+50ms 간격으로 10ms 할당량은 1 CPU의 20 %와 같습니다.
+
+	# echo 10000> cpu.cfs_quota_us / * quota = 10ms * /
+	# echo 50000> cpu.cfs_period_us / * 마침표 = 50ms * /
+
+여기서 작은 기간을 사용함으로써 버스트 용량을 희생하면서 일관된 대기 시간 응답을 보장합니다.

@@ -1,0 +1,1162 @@
+Device Tree Usage
+
+Top Device Tree page
+(This page was previously located at htttp://devicetree.org/Device_Tree_Usage)
+
+(이 페이지는 이전에 http://devicetree.org/Device_Tree_Usage 에 있었다)
+
+This page walks through how to write a device tree for a new machine. It is intended to provide an overview of device tree concepts and how they are used to describe a machine.
+
+이 페이지는 새로운 컴퓨터에 대한 Device Tree 를 작성하는 방법을 안내한다.
+이 장에서 Device Tree 개념에 대한 개요와 이 개념을 사용하여 System 을 설명하는 방법에 대해 설명한다.
+
+For a full technical description of device tree data format, refer to the ePAPR v1.1 specification. The ePAPR specification covers a lot more detail than the basic topics covered on this page, please refer to it for more advanced usage that isn't covered by this page. The ePAPR is currently being updated with a new name of Devicetree Specification Documentation.
+
+Device Tree Data Format 에 대한 전체 기술 설명은 ePAPR v1.1 명세를 참조하라.
+ePAPR 명세는 이 페이지에서 다루는 기본 항목보다 훨씬 자세한 내용을 다루며
+여기서 다루지 않는 고급 사용법은 해당 명세를 참조하길 바란다.
+ePAPR 은 현재 Devicetree Specification Documentation 이라는 새로운 이름으로 갱신되고 있다.
+
+
+
+Basic Data Format
+
+The device tree is a simple tree structure of nodes and properties. Properties are key-value pairs, and node may contain both properties and child nodes. For example, the following is a simple tree in the .dts format:
+
+Device Tree 는 Node 및 속성의 간단한 트리 구조이다.
+속성은 키-값 쌍이며 Node 에는 속성과 자식 노드가 모두 포함될 수 있다.
+예로, 다음은 .dts 포맷의 간단한 트리이다:
+
+/dts-v1/;
+
+/ {
+    node1 {
+        a-string-property = "A string";
+        a-string-list-property = "first string", "second string";
+        // hex is implied in byte arrays. no '0x' prefix is required
+        a-byte-data-property = [01 23 34 56];
+        child-node1 {
+            first-child-property;
+            second-child-property = <1>;
+            a-string-property = "Hello, world";
+        };
+        child-node2 {
+        };
+    };
+    node2 {
+        an-empty-property;
+        a-cell-property = <1 2 3 4>; /* each number (cell) is a uint32 */
+        child-node1 {
+        };
+    };
+};
+
+This tree is obviously pretty useless because it doesn't describe anything, but it does show the structure of nodes and properties. There is:
+
+이 트리는 아무것도 기술하지 않기 때문에 분명히 쓸모가 없지만 노드와 속성의 구조를 보여준다.
+여기에는 아래와 같은 것들이 있다:
+
+a single root node: "/"
+a couple of child nodes: "node1" and "node2"
+a couple of children for node1: "child-node1" and "child-node2"
+a bunch of properties scattered through the tree.
+Properties are simple key-value pairs where the value can either be empty or contain an arbitrary byte stream. While data types are not encoded into the data structure, there are a few fundamental data representations that can be expressed in a device tree source file.
+
+* 단일 루트 노드: "/"
+* 두 개의 자식 노드: "node1" 과 "node2"
+* node1 을 위한 몇 개의 자식들: "child-node1" 과 "child-node2"
+* tree 를 통해 흩어져 있는 속성 덩어리들
+
+속성은 값이 비어 있거나 임의의 byte stream 을 포함할 수 있는 간단한 키-값 쌍입니다.
+데이터 유형이 자료구조로 인코딩되지는 않지만 Device Tree 파일에서 표현할 수 있는 몇 가지 기본 데이터 표현이 존재한다.
+
+Text strings (null terminated) are represented with double quotes:
+string-property = "a string";
+'Cells' are 32 bit unsigned integers delimited by angle brackets:
+cell-property = <0xbeef 123 0xabcd1234>;
+Binary data is delimited with square brackets:
+binary-property = [0x01 0x23 0x45 0x67];
+Data of differing representations can be concatenated together using a comma:
+mixed-property = "a string", [0x01 0x23 0x45 0x67], <0x12345678>;
+Commas are also used to create lists of strings:
+string-list = "red fish", "blue fish";
+
+* Text 문자열(NULL 종료)은 큰 따옴표로 표시된다:
+   * string-property = "a string"
+* 'Cells' 는 꺽쇠 괄호로 구분된 32 비트 부호없는 정수이다:
+   * cell-property = <0xbeef 123 0xabcd1234>;
+* 이진 데이터는 대괄호로 구분된다:
+   * binary-property = [0x01 0x23 0x45 0x67]
+* 서로 다른 표현의 데이터는 쉼표를 사용하여 함께 연결할 수 있다:
+   * mixed-property = "a string", [0x01 0x23 0x45 0x67], <0x12345678>;
+* 쉼표는 문자열 목록을 만드는데 사용된다:
+   * string-list = "red fish", "blue fish";
+
+
+
+Basic Concepts
+
+To understand how the device tree is used, we will start with a simple machine and build up a device tree to describe it step by step.
+
+Device Tree 가 어떻게 사용되는지를 이해하기 위해 간단한 머신으로 시작해서
+단계적으로 설명하기 위한 Device Tree 를 Build 할 것이다.
+
+Sample Machine
+
+Consider the following imaginary machine (loosely based on ARM Versatile), manufactured by "Acme" and named "Coyote's Revenge":
+
+"Acme" 이 제조하고 "Coyote's Revenge" 라고 명명된 다음의 가상 머신을 고려해보자(ARM Versatile 기반):
+
+* One 32bit ARM CPU
+* processor local bus attached to memory mapped serial port, spi bus controller, i2c controller, interrupt controller, and external bus bridge
+* 256MB of SDRAM based at 0
+* 2 Serial ports based at 0x101F1000 and 0x101F2000
+* GPIO controller based at 0x101F3000
+* SPI controller based at 0x10170000 with following devices
+   * MMC slot with SS pin attached to GPIO #1
+* External bus bridge with following devices
+   * SMC SMC91111 Ethernet device attached to external bus based at 0x10100000
+   * i2c controller based at 0x10160000 with following devices
+      * Maxim DS1338 real time clock. Responds to slave address 1101000 (0x58)
+   * 64MB of NOR flash based at 0x30000000
+
+* 하나의 32 비트 ARM CPU
+* Memory Mapped Serial Port 에 연결된 Processor Local Bus, SPI Bus Controller,
+   I2C Controller, Interrupt Controller 와 External Bus Bridge
+* 0 이 기준인 256 MB 의 SDRAM
+* 0x101F1000 과 0x101F2000 이 기준인 2 개의 Serial Ports
+* 0x101F3000 이 기준인 GPIO Controller
+* 아래의 장치가 있는 0x10170000 이 기준인 SPI Controller
+  * GPIO #1 에 연결된 SS Pin 이 있는 MMC Slot
+* 아래 장치가 있는 외부 Bus Bridge
+  * 0x10100000 이 기준인 외부 Bus 에 연결된 SMC SMC91111 이더넷 장치
+  * 다음 장치가 있는 0x10160000 이 기준인 I2C Controller
+    * Maxim DS1338 Real Time Clock.
+      Slave 주소 1101000(0x58) 에 응답함
+  * 0x30000000 이 기준인 64 MB NOR Flash
+
+
+
+Initial structure
+
+The first step is to lay down a skeleton structure for the machine. This is the bare minimum structure required for a valid device tree. At this stage you want to uniquely identify the machine.
+
+첫 번째 단계는 머신에 대한 기본 구조를 작성하는 것이다.
+이것은 유효한 Device Tree 에 필요한 최소 구조다.
+이 단계에서 머신을 고유하게 식별하고자 한다.
+
+/dts-v1/;
+
+/ {
+    compatible = "acme,coyotes-revenge";
+};
+
+compatible specifies the name of the system. It contains a string in the form "<manufacturer>,<model>. It is important to specify the exact device, and to include the manufacturer name to avoid namespace collisions. Since the operating system will use the compatible value to make decisions about how to run on the machine, it is very important to put correct data into this property.
+
+compatible 은 system 의 이름을 지정한다.
+<manufacturer>, <model> 형식의 문자열을 포함한다.
+정확한 장치를 지정하고 namespace 충돌을 피하기 위해 제조업체 이름을 포함하는 것이 중요하다.
+운영체제가 compatible 값을 사용하여 머신을 실행하는 방법을 결정할 때 이 속성에 올바른 데이터를 지정하는 것이 매우 중요하다.
+
+Theoretically, compatible is all the data an OS needs to uniquely identify a machine. If all the machine details are hard coded, then the OS could look specifically for "acme,coyotes-revenge" in the top level compatible property.
+
+이론적으로, OS 가 고유한 머신을 식별하는데 필요한 모든 데이터가 호환된다.
+모든 머신 세부 사항이 하드 코딩된 경우 OS 는 최상위 레벨 호환 특성에서 "acme, coyotes-revenge" 를 구체적으로 볼 수 있다.
+
+
+
+CPUs
+
+Next step is to describe for each of the CPUs. A container node named "cpus" is added with a child node for each CPU. In this case the system is a dual-core Cortex A9 system from ARM.
+
+다음 단계는 각 CPU 에 대해 설명하는 것이다.
+"cpus" 라는 컨테이너 노드가 각 CPU 에 대한 하위 노드와 함께 추가된다.
+이 경우 시스템은 ARM 의 Dual-Core Cortex-A9 System 이다.
+
+/dts-v1/;
+
+/ {
+    compatible = "acme,coyotes-revenge";
+
+    cpus {
+        cpu@0 {
+            compatible = "arm,cortex-a9";
+        };
+        cpu@1 {
+            compatible = "arm,cortex-a9";
+        };
+    };
+};
+
+The compatible property in each cpu node is a string that specifies the exact cpu model in the form <manufacturer>,<model>, just like the compatible property at the top level.
+
+각 CPU Node 의 호환 가능한 등록 정보는 최상위 레벨의 호환 가능한 등록 정보와 마찬가지로
+<manufacturer>, <model> 형식으로 정확한 CPU Model 을 지정하는 문자열이다.
+
+More properties will be added to the cpu nodes later, but we first need to talk about more of the basic concepts.
+
+나중에 더 많은 속성이 CPU 노드에 추가될 것이지만 우선 기본 개념에 대해 더 자세히 이야기 한다.
+
+
+
+Node Names
+
+It is worth taking a moment to talk about naming conventions. Every node must have a name in the form <name>[@<unit-address>].
+
+명명 규칙에 대해 알아보도록 하자.
+모든 노드의 이름은 <name>[@<unit-address>] 형식이어야 한다.
+
+<name> is a simple ascii string and can be up to 31 characters in length. In general, nodes are named according to what kind of device it represents. ie. A node for a 3com Ethernet adapter would be use the name ethernet, not 3com509.
+
+<name>은 간단한 ASCII 문자열이며 최대 31 자까지 입력할 수 있다.
+일반적으로 노드는 이것이 나타내는 장치의 종류에 따라 명명된다.
+즉 3com Ethernet Adapter 용 노드는 3com509 가 아닌 ethernet 이라는 이름을 사용한다.
+
+The unit-address is included if the node describes a device with an address. In general, the unit address is the primary address used to access the device, and is listed in the node's reg property. We'll cover the reg property later in this document.
+
+노드가 주소가 있는 장치를 기술할 경우 unit-address 가 포함된다.
+일반적으로 Device 에 접근하는데 사용되는 기본 주소이며 Node 의 reg 속성에 나열된다.
+이 문서의 뒷부분에 나오는 reg 속성에 대해 다룬다.
+
+Sibling nodes must be uniquely named, but it is normal for more than one node to use the same generic name so long as the address is different (ie, serial@101f1000 & serial@101f2000).
+
+형제 노드는 고유하게 명명되어야하지만 주소가 다른 한(예: serial@101f1000 및 serial@101f2000)
+두 개 이상의 노드가 동일한 일반 이름을 사용하는 것이 정상이다.
+
+See section 2.2.1 of the ePAPR spec for full details about node naming.
+
+노드 명명에 대한 자세한 내용은 ePAPR spec 의 섹션 2.2.1 을 참조하라.
+
+
+
+Devices
+
+Every device in the system is represented by a device tree node. The next step is to populate the tree with a node for each of the devices. For now, the new nodes will be left empty until we can talk about how address ranges and irqs are handled.
+
+System 의 모든 장치는 Device Tree Node 로 표시된다.
+다음 단계는 각각의 Device 에 대한 노드를 Tree 에 채우는 것이다.
+주소 범위와 irq 가 어떻게 다루어지는지 알기 전까진 새로운 노드는 공백으로 남아있을 것이다.
+
+/dts-v1/;
+
+/ {
+    compatible = "acme,coyotes-revenge";
+
+    cpus {
+        cpu@0 {
+            compatible = "arm,cortex-a9";
+        };
+        cpu@1 {
+            compatible = "arm,cortex-a9";
+        };
+    };
+
+    serial@101F0000 {
+        compatible = "arm,pl011";
+    };
+
+    serial@101F2000 {
+        compatible = "arm,pl011";
+    };
+
+    gpio@101F3000 {
+        compatible = "arm,pl061";
+    };
+
+    interrupt-controller@10140000 {
+        compatible = "arm,pl190";
+    };
+
+    spi@10115000 {
+        compatible = "arm,pl022";
+    };
+
+    external-bus {
+        ethernet@0,0 {
+            compatible = "smc,smc91c111";
+        };
+
+        i2c@1,0 {
+            compatible = "acme,a1234-i2c-bus";
+            rtc@58 {
+                compatible = "maxim,ds1338";
+            };
+        };
+
+        flash@2,0 {
+            compatible = "samsung,k8f1315ebm", "cfi-flash";
+        };
+    };
+};
+
+In this tree, a node has been added for each device in the system, and the hierarchy reflects the how devices are connected to the system. ie. devices on the extern bus are children of the external bus node, and i2c devices are children of the i2c bus controller node. In general, the hierarchy represents the view of the system from the perspective of the CPU.
+
+이 Tree 에서 System 의 각 장치에 노드가 추가되었으며 계측 구조는 장치가 시스템에 연결되는 방법을 나타낸다.
+즉 extern bus 의 Device 는 외부 버스 노드의 하위 노드이며 I2C Device 는 I2C Bus Controller Node 의 하위 노드다.
+일반적으로 계층 구조는 CPU 관점에서 System 의 뷰를 나타낸다.
+
+This tree isn't valid at this point. It is missing information about connections between devices. That data will be added later.
+
+이 Tree 는 현재 유효하지 않다.
+Device 간의 연결에 대한 정보가 누락되었다.
+해당 Data 는 나중에 추가된다.
+
+Some things to notice in this tree:
+
+이 tree 에서 주목해야할 몇 가지 사항은 아래와 같다:
+
+* Every device node has a compatible property.
+* The flash node has 2 strings in the compatible property. Read on to the next section to learn why.
+* As mentioned earlier, node names reflect the type of device, not the particular model. See section 2.2.2 of the ePAPR spec for a list of defined generic node names that should be used wherever possible.
+
+* 모든 Device Node 에는 compatible 속성이 있다.
+* Flash Node 에는 호환 가능한 속성에 2개의 문자열이 있다. 그 이유를 학습하려면 다음 섹션을 읽어야 한다.
+* 앞서 언급했듯이 노드 이름은 특정 모델이 아닌 장치 유형을 반영한다.
+   사용하는 정의된 일반 노드 이름 목록은 ePAPR 사양 2.2.2 절을 참조하라.
+
+
+
+Understanding the compatible Property
+
+Every node in the tree that represents a device is required to have the compatible property. compatible is the key an operating system uses to decide which device driver to bind to a device.
+
+Device 를 나타나는 Tree 의 모든 Node 에는 compatible 속성이 있어야 한다.
+compatible 은 운영체제가 어떤 장치 드라이버를 장치에 바인딩할지 결정하는데 사용하는 키다.
+
+compatible is a list of strings. The first string in the list specifies the exact device that the node represents in the form "<manufacturer>,<model>". The following strings represent other devices that the device is compatible with.
+
+compatible 은 문자열 목록이다.
+이 목록의 첫 번째 문자열은 노드가 "<manufacturer>,<model>" 형식으로 나타내는 정확한 장치를 지정한다.
+다음 문자열은 Device 가 compatible 인 다른 Device 를 나타낸다.
+
+For example, the Freescale MPC8349 System on Chip (SoC) has a serial device which implements the National Semiconductor ns16550 register interface. The compatible property for the MPC8349 serial device should therefore be: compatible = "fsl,mpc8349-uart", "ns16550". In this case, fsl,mpc8349-uart specifies the exact device, and ns16550 states that it is register-level compatible with a National Semiconductor 16550 UART.
+
+예로, Freescale MPC8349 System on Chip(SoC) 에는
+National Semiconductor ns16550 레지스터 인터페이스를 구현하는 직렬 장치가 있다.
+따라서 MPC8349 시리얼 장치의 compatible 속성은 아래와 같아야한다:
+compatible = "fsl, mpc8349-uart", "ns16550"
+이 경우 fsl, mpc8349-uart 는 정확히 장치를 지정하고
+ns16550 은 National Semiconductor 16550 UART 와 레지스터 차원의 호환이 가능하다고 명시한다.
+
+Note: ns16550 doesn't have a manufacturer prefix purely for historical reasons. All new compatible values should use the manufacturer prefix.
+
+알림: ns16550 은 전적으로 아주 잘 알려졌기 때문에 제조업체 접두사가 없다.
+새로운 모든 compatible 값은 제조업체 접두사를 사용해야 한다.
+
+This practice allows existing device drivers to be bound to a newer device, while still uniquely identifying the exact hardware.
+
+이 방법을 사용하면 기존 Device Driver 를 새로운 장치에 Binding 할 수 있으며 정확하게 고유한 HW 를 식별할 수 있다.
+
+Warning: Don't use wildcard compatible values, like "fsl,mpc83xx-uart" or similar. Silicon vendors will invariably make a change that breaks your wildcard assumptions the moment it is too late to change it. Instead, choose a specific silicon implementations and make all subsequent silicon compatible with it.
+
+경고: wildcard compatible 값(ex: "fsl,mpc83xx-uart" 혹은 유사한 방식)을 사용하지 말라!
+반도체 벤더는 언제든지 같은 기종이라도 wildcard 방식의 가정을 파괴하는 변경 작업을 수행할 수 있다.
+그러므로 특정 반도체 구현을 선택하고 이후의 모든 실리콘을 호환 가능하게 만들도록 한다.
+(쉽게 얘기해서 반도체 구조가 바뀔 수 있으므로 반도체마다 명시해서 쓰라는 소리임)
+
+
+
+How Addressing Works
+
+Devices that are addressable use the following properties to encode address information into the device tree:
+
+주소 지정이 가능한 다음 Device 는 아래 속성을 사용하여 Device Tree 에 주소 정보를 인코딩한다:
+
+* reg
+* #address-cells
+* #size-cells
+
+Each addressable device gets a reg which is a list of tuples in the form reg = <address1 length1 [address2 length2] [address3 length3] ... >. Each tuple represents an address range used by the device. Each address value is a list of one or more 32 bit integers called cells. Similarly, the length value can either be a list of cells, or empty.
+
+각각의 주소지정이 가능한 Device 는 
+reg = <address1 length1 [address2 length2] [address3 length3] ...> 로부터 튜플 리스트인 reg 를 얻는다.
+각 튜플은 Device 에서 사용되는 주소 범위를 나타낸다.
+각 주소 값은 cells 라 하는 1 개 이상의 32 비트 정수 리스트이다.
+마찬가지로 길이 값은 cells 목록이거나 비어있을 수 있다.
+
+Since both the address and length fields are variable of variable size, the #address-cells and #size-cells properties in the parent node are used to state how many cells are in each field. Or in other words, interpreting a reg property correctly requires the parent node's #address-cells and #size-cells values. To see how this all works, lets add the addressing properties to the sample device tree, starting with the CPUs.
+
+address 와 length 필드 모두 변수 크기가 가변적이므로
+#address-cell 과 #size-cells 속성은 각 필드에 몇 개의 cells 가 있는지를 나타내는데 사용된다.
+즉, reg 속성을 해석할 때 부모 노드의 #address-cells 와 #size-cells 값이 적절해야한다.
+이것이 어떻게 작동하는지 보려면 CPU 로 시작하는 Sample Device Tree 에 주소 지정 속성을 추가한다.
+
+
+
+CPU addressing
+
+The CPU nodes represent the simplest case when talking about addressing. Each CPU is assigned a single unique ID, and there is no size associated with CPU ids.
+
+CPU Node 는 주소 지정과 관련하여 가장 간단한 경우를 나타낸다.
+각 CPU 는 하나의 고유 ID 가 할당되며 CPU ID 와 관련된 size 는 없다.
+
+    cpus {
+        #address-cells = <1>;
+        #size-cells = <0>;
+        cpu@0 {
+            compatible = "arm,cortex-a9";
+            reg = <0>;
+        };
+        cpu@1 {
+            compatible = "arm,cortex-a9";
+            reg = <1>;
+        };
+    };
+
+In the cpus node, #address-cells is set to 1, and #size-cells is set to 0. This means that child reg values are a single uint32 that represent the address with no size field. In this case, the two cpus are assigned addresses 0 and 1. #size-cells is 0 for cpu nodes because each cpu is only assigned a single address.
+
+cpus 노드에서, #address-cells 를 1 로 설정하고 #size-cells 는 0 으로 설정한다.
+즉 하위 reg 값은 size 필드가 없는 주소를 나타내는 단일 uint32 타입이다.
+이 경우 2 개의 CPU 에는 주소 0 과 1 이 할당된다.
+각 cpu 는 단일 주소만 할당되므로 #size-cells 는 cpu 노드의 경우 0 이다.
+
+You'll also notice that the reg value matches the value in the node name. By convention, if a node has a reg property, then the node name must include the unit-address, which is the first address value in the reg property.
+
+또한 reg 값이 노드 이름과 일치함을 알 수 있다.
+규약에 따라 노드에 reg 속성이 있으면 노드 이름에 reg 속성의 첫 번째 주소값인 unit-address 가 포함되어야 한다.
+
+
+
+Memory Mapped Devices
+
+Instead of single address values like found in the cpu nodes, a memory mapped device is assigned a range of addresses that it will respond to. #size-cells is used to state how large the length field is in each child reg tuple. In the following example, each address value is 1 cell (32 bits), and each length value is also 1 cell, which is typical on 32 bit systems. 64 bit machines may use a value of 2 for #address-cells and #size-cells to get 64 bit addressing in the device tree.
+
+cpu 노드에 있는 단일 주소값 대신 Memory Mapped Device 는 응답할 주소 범위가 지정된다.
+#size-cells 는 length 필드가 각 하위 reg 튜플에서 얼마나 큰지 상태를 나타내는데 사용된다.
+다음 예에서 각 주소 값은 1 cell(32 비트)이고 각 길이 값은 32 비트 System 에서 일반적인 1 cell 이다.
+64 비트 컴퓨터는 #address-cells 와 #size-cells 에 대해 값 2 를 사용하여 Device Tree 에서 64 비트 주소 지정을 가져올 수 있다.
+
+/dts-v1/;
+
+/ {
+    #address-cells = <1>;
+    #size-cells = <1>;
+
+    ...
+
+    serial@101f0000 {
+        compatible = "arm,pl011";
+        reg = <0x101f0000 0x1000 >;
+    };
+
+    serial@101f2000 {
+        compatible = "arm,pl011";
+        reg = <0x101f2000 0x1000 >;
+    };
+
+    gpio@101f3000 {
+        compatible = "arm,pl061";
+        reg = <0x101f3000 0x1000
+               0x101f4000 0x0010>;
+    };
+
+    interrupt-controller@10140000 {
+        compatible = "arm,pl190";
+        reg = <0x10140000 0x1000 >;
+    };
+
+    spi@10115000 {
+        compatible = "arm,pl022";
+        reg = <0x10115000 0x1000 >;
+    };
+
+    ...
+
+};
+
+Each device is assigned a base address, and the size of the region it is assigned. The GPIO device address in this example is assigned two address ranges; 0x101f3000...0x101f3fff and 0x101f4000..0x101f400f.
+
+각 Device 는 기본 주소와 할당된 영역의 크기가 지정된다.
+여기선 GPIO Device Address 에 2 개의 주소 범위가 할당된다.
+0ㅌ101f3000 ... 0x101f3fff 와 0x101f4000 ... 0x101f400f
+
+Some devices live on a bus with a different addressing scheme. For example, a device can be attached to an external bus with discrete chip select lines. Since each parent node defines the addressing domain for its children, the address mapping can be chosen to best describe the system. The code below show address assignment for devices attached to the external bus with the chip select number encoded into the address.
+
+일부 Device 는 다른 주소 지정 체계가 Bus 에 있다.
+예로 Device 는 개별 Chip Select Lines 를 통해 외부 Bus 에 부착될 수 있다.
+각 부모 노드는 자식에 대한 주소 지정 도메인을 정의하므로 System 을 가장 잘 설명할 수 있도록 주소 매핑을 선택할 수 있다.
+아래 코드는 주소로 인코딩된 Chip Select 번호로 외부 Bus 에 연결된 Device 에 대한 주소 할당을 보여준다.
+
+    external-bus {
+        #address-cells = <2>;
+        #size-cells = <1>;
+
+        ethernet@0,0 {
+            compatible = "smc,smc91c111";
+            reg = <0 0 0x1000>;
+        };
+
+        i2c@1,0 {
+            compatible = "acme,a1234-i2c-bus";
+            reg = <1 0 0x1000>;
+            rtc@58 {
+                compatible = "maxim,ds1338";
+            };
+        };
+
+        flash@2,0 {
+            compatible = "samsung,k8f1315ebm", "cfi-flash";
+            reg = <2 0 0x4000000>;
+        };
+    };
+
+The external-bus uses 2 cells for the address value; one for the chip select number, and one for the offset from the base of the chip select. The length field remains as a single cell since only the offset portion of the address needs to have a range. So, in this example, each reg entry contains 3 cells; the chipselect number, the offset, and the length.
+
+external-bus 는 주소 값으로 2 개의 cells 를 사용한다;
+하나는 Chip Select 번호용이고 다른 하나는 Chip Select 기준으로부터의 Offset 용이다.
+길이 필드는 주소의 오프셋 부분에만 범위가 있어야하므로 단일 cell 로 유지된다.
+따라서 이 예에서 각 reg 항목에는 3 개의 cell 이 포함되어 있다:
+chipselect 번호, offset, length
+
+Since the address domains are contained to a node and its children, parent nodes are free to define whatever addressing scheme makes sense for the bus. Nodes outside of the immediate parent and child nodes do not normally have to care about the local addressing domain, and addresses have to be mapped to get from one domain to another.
+
+주소 도메인은 노드와 그 자식 노드에 포함되기 때문에 부모 노드는 Bus 에 적합한 모든 주소 지정 체계를 자유롭게 정의할 수 있다.
+직접적인 부모 및 자식 노드 외부의 노드는 일반적으로 로컬 주소 지정 도메인을 신경쓸 필요가 없으며
+주소는 어떤 한 도메인에서 다른 도메인으로 맵핑되어야한다.
+
+
+
+Non Memory Mapped Devices
+
+Other devices are not memory mapped on the processor bus. They can have address ranges, but they are not directly accessible by the CPU. Instead the parent device's driver would perform indirect access on behalf of the CPU.
+
+다른 Device 는 Processor Bus 에 Memory Mapping 되지 않는다.
+주소 범위를 가질 수 있지만 CPU 에서 직접 접근할 수는 없다.
+대신 상위 Device Driver 는 CPU 대신 간접 접근을 수행한다.
+
+To take the example of i2c devices, each device is assigned an address, but there is no length or range associated with it. This looks much the same as CPU address assignments.
+
+I2C Device 의 예를 보면 각 Device 에 주소가 할당되었지만 length 나 range 가 연결되어 있지 않다.
+이것은 CPU 주소 지정과 거의 같다.
+
+        i2c@1,0 {
+            compatible = "acme,a1234-i2c-bus";
+            #address-cells = <1>;
+            #size-cells = <0>;
+            reg = <1 0 0x1000>;
+            rtc@58 {
+                compatible = "maxim,ds1338";
+                reg = <58>;
+            };
+        };
+
+
+
+Ranges (Address Translation)
+
+We've talked about how to assign addresses to devices, but at this point those addresses are only local to the device node. It doesn't yet describe how to map from those address to an address that the CPU can use.
+
+Device 에 주소를 할당하는 방법에 대해 이야기했지만 이 시점에서 이 주소는 Device 노드에만 국한된다.
+아직 해당 주소에서 CPU 가 사용할 수 있는 주소 맵핑하는 방법을 설명하지 않았다.
+
+The root node always describes the CPU's view of the address space. Child nodes of the root are already using the CPU's address domain, and so do not need any explicit mapping. For example, the serial@101f0000 device is directly assigned the address 0x101f0000.
+
+루트 노드는 항상 주소 공간에 대한 CPU 의 관점을 설명한다.
+루트의 하위 노드는 이미 CPU 의 주소 도메인을 사용하므로 명시적인 맵핑이 필요하지 않다.
+예로 serial@101f0000 Device 는 주소 0x101f0000 에 직접 할당된다.
+
+Nodes that are not direct children of the root do not use the CPU's address domain. In order to get a memory mapped address the device tree must specify how to translate addresses from one domain to another. The ranges property is used for this purpose.
+
+루트의 하위 노드가 아닌 노드는 CPU 의 주소 도메인을 사용하지 않는다.
+Memory Mapping 된 주소를 얻으려면 Device Tree 에서 주소를
+어떤 한 도메인에서 다른 도메인으로 변환하는 방법을 지정해야 한다.
+ranges 속성은 이 목적으로 사용된다.
+
+Here is the sample device tree with the ranges property added.
+
+ranges 속성이 추가된 샘플 Device Tree 가 여기있다.
+
+/dts-v1/;
+
+/ {
+    compatible = "acme,coyotes-revenge";
+    #address-cells = <1>;
+    #size-cells = <1>;
+    ...
+    external-bus {
+        #address-cells = <2>
+        #size-cells = <1>;
+        ranges = <0 0  0x10100000   0x10000     // Chipselect 1, Ethernet
+                  1 0  0x10160000   0x10000     // Chipselect 2, i2c controller
+                  2 0  0x30000000   0x1000000>; // Chipselect 3, NOR Flash
+
+        ethernet@0,0 {
+            compatible = "smc,smc91c111";
+            reg = <0 0 0x1000>;
+        };
+
+        i2c@1,0 {
+            compatible = "acme,a1234-i2c-bus";
+            #address-cells = <1>;
+            #size-cells = <0>;
+            reg = <1 0 0x1000>;
+            rtc@58 {
+                compatible = "maxim,ds1338";
+                reg = <58>;
+            };
+        };
+
+        flash@2,0 {
+            compatible = "samsung,k8f1315ebm", "cfi-flash";
+            reg = <2 0 0x4000000>;
+        };
+    };
+};
+
+ranges is a list of address translations. Each entry in the ranges table is a tuple containing the child address, the parent address, and the size of the region in the child address space. The size of each field is determined by taking the child's #address-cells value, the parent's #address-cells value, and the child's #size-cells value. For the external bus in our example, the child address is 2 cells, the parent address is 1 cell, and the size is also 1 cell. Three ranges are being translated:
+
+ranges 는 주소 변환 리스트다.
+ranges table 의 각 항목은 하위 주소, 상위 주소 및 하위 주소 공간의 영역 크기를 포함하는 튜플이다.
+각 필드의 size 는 하위의 #address-cells 값, 상위의 #address-cells 값, 그리고 하위의 #size-cells 값을 사용하여 결정된다.
+예로 External Bus 의 경우 하위 주소는 2 cells 이고 상위 주소는 1 cell 이며 size 는 1 cell 이다.
+3 개의 ranges 가 변환된다:
+
+* Offset 0 from chip select 0 is mapped to address range 0x10100000..0x1010ffff
+* Offset 0 from chip select 1 is mapped to address range 0x10160000..0x1016ffff
+* Offset 0 from chip select 2 is mapped to address range 0x30000000..0x30ffffff
+
+* Chip Select 0 은 주소 범위 0x10100000 ... 0x1010ffff 에 맵핑된다.
+* Chip Select 1 은 주소 범위 0x10160000 ... 0x1016ffff 에 맵핑된다.
+* Chip Select 2 는 주소 범위 0x30000000 ... 0x30ffffff 에 맵핑된다.
+
+Alternately, if the parent and child address spaces are identical, then a node can instead add an empty ranges property. The presence of an empty ranges property means addresses in the child address space are mapped 1:1 onto the parent address space.
+
+부모 및 자식 주소 공간이 동일한 경우 노드는 텅비어있는 ranges 속성을 대신 추가할 수 있다.
+텅빈 ranges 속성이 있으면 하위 주소 공간의 주소가 상위 주소 공간에 1:1 로 맵핑된다.
+
+You might ask why address translation is used at all when it could all be written with 1:1 mapping. Some busses (like PCI) have entirely different address spaces whose details need to be exposed to the operating system. Others have DMA engines which need to know the real address on the bus. Sometimes devices need to be grouped together because they all share the same software programmable physical address mapping. Whether or not 1:1 mappings should be used depends a lot on the information needed by the Operating system, and on the hardware design.
+
+주소 변환이 1:1 맵핑으로 모두 작성될 수 있는 경우 왜 사용되는지를 궁금해할 수 있다.
+PCI 와 같은 일부 Bus 는 OS 에 세부 사항을 노출해야하는 전혀 다른 주소 공간을 가지고 있다.
+다른 것들은 Bus 상의 실제 주소를 알아야 하는 DMA 엔진을 가지고 있다.
+때때로 동일한 SW 로 프로그램 가능한 물리적 주소 맵핑을 공유하기 때문에 Device 를 함께 그룹화해야 한다.
+1:1 맵핑의 사용 여부는 OS 및 HW 설계에 필요한 정보에 따라 크게 달라진다.
+
+You should also notice that there is no ranges property in the i2c@1,0 node. The reason for this is that unlike the external bus, devices on the i2c bus are not memory mapped on the CPU's address domain. Instead, the CPU indirectly accesses the rtc@58 device via the i2c@1,0 device. The lack of a ranges property means that a device cannot be directly accessed by any device other than it's parent.
+
+i2c@1,0 노드에는 ranges 속성이 없음에도 유의해야 한다.
+그 이유는 External Bus 와 달리 i2c Bus 의 Device 가 CPU 의 주소 도메인에 Memory Mapping 되지 않기 때문이다.
+대신 CPU 는 i2c@1,0 Device 를 통해 rtc@58 Device 에 간접적으로 접근한다.
+ranges 속성이 없다는 것은 부모가 아닌 다른 Device 가 Device 에 직접 접근할 수 없음을 의미한다.
+
+
+
+How Interrupts Work
+
+Unlike address range translation which follows the natural structure of the tree, Interrupt signals can originate from and terminate on any device in a machine. Unlike device addressing which is naturally expressed in the device tree, interrupt signals are expressed as links between nodes independent of the tree. Four properties are used to describe interrupt connections:
+
+Interrupt 신호는 Tree 의 자연스러운 구조를 따르는 주소 범위 변환과 달리 System 의 모든 Device 에서 시작되어 종료될 수 있다.
+Device Tree 에서 자연스럽게 표현되는 Device 주소 지정과 달리 Interrupt Signal 은 Tree 와 별도로 노드간의 링크로 표현된다.
+Interrupt 연결을 설명하는데 4 가지 속성이 사용된다:
+
+* interrupt-controller - An empty property declaring a node as a device that receives interrupt signals
+* #interrupt-cells - This is a property of the interrupt controller node. It states how many cells are in an interrupt specifier for this interrupt controller (Similar to #address-cells and #size-cells).
+* interrupt-parent - A property of a device node containing a phandle to the interrupt controller that it is attached to. Nodes that do not have an interrupt-parent property can also inherit the property from their parent node.
+* interrupts - A property of a device node containing a list of interrupt specifiers, one for each interrupt output signal on the device.
+
+* interrupt-controller - 노드를 Interrupt Signal 을 받는 장치로 선언하는 텅빈 속성
+
+* #interrupt-cells - Interrupt Controller 노드의 속성이다.
+                               이 Interrupt Controller 에 대한 Interrupt Specifier 가
+                               몇 개의 cells 를 가지고 있는지를 나타낸다(#address-cells 와 #size-cells 와 유사함)
+
+* interrupt-parent - 연결되어있는 Interrupt Controller 에 대한 phandle 을 포함하는 Device 노드의 속성이다.
+                                  interrupt-parent 속성이 없는 노드도 해당 상위 노드에서 속성을 상속받을 수 있다.
+
+* interrupts - Device 의 각 Interrupt Output Signal 에 대한 Interrupt Specifiers 목록을 포함하는 Device 노드 속성이다.
+
+An interrupt specifier is one or more cells of data (as specified by #interrupt-cells) that specifies which interrupt input the device is attached to. Most devices only have a single interrupt output as shown in the example below, but it is possible to have multiple interrupt outputs on a device. The meaning of an interrupt specifier depends entirely on the binding for the interrupt controller device. Each interrupt controller can decide how many cells it need to uniquely define an interrupt input.
+
+Interrupt Specifier 는 Device 가 연결된 Interrupt Input 을 지정하는 하나 이상의 Data Cells(#interrupt-cells 에 의해 지정됨) 이다.
+대부분의 Device 는 아래 예와 같이 하나의 Interrupt Output 만 가지고 있지만 Device 가 여러 개의 Interrupt Outputs 를 가질 수 있다.
+Interrupt Specifier 의 의미는 Interrupt Controller Device 의 Binding 에 전적으로 달려 있다.
+각 Interrupt Controller 는 Interrupt Input 을 고유하게 정의하는데 필요한 cells 의 수를 결정할 수 있다.
+
+The following code adds interrupt connections to our Coyote's Revenge example machine:
+
+아래 코드는 Coyote 의 Revenge 예제 머신에 Interrupt 연결을 추가한다:
+
+/dts-v1/;
+
+/ {
+    compatible = "acme,coyotes-revenge";
+    #address-cells = <1>;
+    #size-cells = <1>;
+    interrupt-parent = <&intc>;
+
+    cpus {
+        #address-cells = <1>;
+        #size-cells = <0>;
+        cpu@0 {
+            compatible = "arm,cortex-a9";
+            reg = <0>;
+        };
+        cpu@1 {
+            compatible = "arm,cortex-a9";
+            reg = <1>;
+        };
+    };
+
+    serial@101f0000 {
+        compatible = "arm,pl011";
+        reg = <0x101f0000 0x1000 >;
+        interrupts = < 1 0 >;
+    };
+
+    serial@101f2000 {
+        compatible = "arm,pl011";
+        reg = <0x101f2000 0x1000 >;
+        interrupts = < 2 0 >;
+    };
+
+    gpio@101f3000 {
+        compatible = "arm,pl061";
+        reg = <0x101f3000 0x1000
+               0x101f4000 0x0010>;
+        interrupts = < 3 0 >;
+    };
+
+    intc: interrupt-controller@10140000 {
+        compatible = "arm,pl190";
+        reg = <0x10140000 0x1000 >;
+        interrupt-controller;
+        #interrupt-cells = <2>;
+    };
+
+    spi@10115000 {
+        compatible = "arm,pl022";
+        reg = <0x10115000 0x1000 >;
+        interrupts = < 4 0 >;
+    };
+
+    external-bus {
+        #address-cells = <2>
+        #size-cells = <1>;
+        ranges = <0 0  0x10100000   0x10000     // Chipselect 1, Ethernet
+                  1 0  0x10160000   0x10000     // Chipselect 2, i2c controller
+                  2 0  0x30000000   0x1000000>; // Chipselect 3, NOR Flash
+
+        ethernet@0,0 {
+            compatible = "smc,smc91c111";
+            reg = <0 0 0x1000>;
+            interrupts = < 5 2 >;
+        };
+
+        i2c@1,0 {
+            compatible = "acme,a1234-i2c-bus";
+            #address-cells = <1>;
+            #size-cells = <0>;
+            reg = <1 0 0x1000>;
+            interrupts = < 6 2 >;
+            rtc@58 {
+                compatible = "maxim,ds1338";
+                reg = <58>;
+                interrupts = < 7 3 >;
+            };
+        };
+
+        flash@2,0 {
+            compatible = "samsung,k8f1315ebm", "cfi-flash";
+            reg = <2 0 0x4000000>;
+        };
+    };
+};
+
+Some things to notice:
+
+주의해야할 사항:
+
+* The machine has a single interrupt controller, interrupt-controller@10140000.
+* The label 'intc:' has been added to the interrupt controller node, and the label was used to assign a phandle to the interrupt-parent property in the root node. This interrupt-parent value becomes the default for the system because all child nodes inherit it unless it is explicitly overridden.
+* Each device uses an interrupt property to specify a different interrupt input line.
+* #interrupt-cells is 2, so each interrupt specifier has 2 cells. This example uses the common pattern of using the first cell to encode the interrupt line number, and the second cell to encode flags such as active high vs. active low, or edge vs. level sensitive. For any given interrupt controller, refer to the controller's binding documentation to learn how the specifier is encoded.
+
+* 이 머신은 하나의 Interrupt Controller, interrupt-controller@10140000 을 가지고 있다.
+
+* 'intc:' 레이블이 Interrupt Controller 노드에 추가되었으며 레이블은
+    root 노드의 interrupt-parent 속성에 phandle 을 할당하는데 사용되었다.
+    interrupt-parent 값은 명시적으로 재정의되지 않는한 모든 자식 노드가 상속하므로 System 의 기본값이 된다.
+
+* 각 Device 는 interrupt 속성을 사용하여 다른 Interrupt Input 선을 지정한다.
+
+* #interrupt-cells 는 2 이므로 각 Interrupt Specifier 는 2 개의 cells 를 가진다.
+
+
+
+Device Specific Data
+
+Beyond the common properties, arbitrary properties and child nodes can be added to nodes. Any data needed by the operating system can be added as long as some rules are followed.
+
+공통 속성 외에도 임의의 속성과 하위 노드를 노드에 추가할 수 있다.
+OS 에 필요한 모든 데이터는 몇 가지 규칙을 준수하는 한 추가할 수 있다.
+
+First, new device-specific property names should use a manufacture prefix so that they don't conflict with existing standard property names.
+
+첫째, 새로운 Device-Specific 속성 이름은 기존 표준 속성 이름과 충돌하지 않도록 제조사 접두어를 사용해야 한다.
+
+Second, the meaning of the properties and child nodes must be documented in a binding so that a device driver author knows how to interpret the data. A binding documents what a particular compatible value means, what properties it should have, what child nodes it might have, and what device it represents. Each unique compatible value should have its own binding (or claim compatibility with another compatible value). Bindings for new devices are documented in this wiki. See the Main Page for a description of the documentation format and review process.
+
+둘째, Device Driver 작성자가 데이터를 해석하는 방법을 알 수 있도록
+속성 및 하위 노드의 의미를 Binding 에 문서화해야 한다.
+Binding 은 특정 compatible 값이 의미하는 것, 가지고 있는 속성,
+가질 수 있는 하위 노드 및 해당 노드가 나타내는 Device 를 문서화한다.
+고유한 각 compatible 값은 고유한 Binding (혹은 호환 가능한 다른 compatible 값) 을 가져야 한다.
+새로운 Device 에 대한 Binding 은 이 위키에 문서화되어 있다.
+문서 형식 및 검토 프로세스에 대한 설명은 주 페이지를 참조하라.
+
+Third, post new bindings for review on the devicetree-discuss@lists.ozlabs.org mailing list. Reviewing new bindings catches a lot of common mistakes that will cause problems in the future.
+
+셋째, devicetree-discuss@lists.ozlabs.org 메일링 리스트에서 검토를 위해 새로운 Bindings 를 게시한다.
+새로운 Binding 을 검토하면 장래에 문제가 발생할 수 있는 일반적인 실수가 많이 발생한다.
+
+
+
+Special Nodes
+
+aliases Node
+
+A specific node is normally referenced by the full path, like /external-bus/ethernet@0,0, but that gets cumbersome when what a user really wants to know is, "which device is eth0?" The aliases node can be used to assign a short alias to a full device path. For example:
+
+특정 노드는 일반적으로 /external-bus/ethernet@0,0 과 같이 전체 경로에 의해 참조되지만,
+사용자가 실제로 알고자 하는 것이 "eth0 인 Device" 라는 것이 다루기 쉽지 않다.
+aliases 노드는 전체 Device 경로에 짧은 별칭을 할당하는데 사용할 수 있다.
+대표적인 예를 살펴본다:
+
+    aliases {
+        ethernet0 = &eth0;
+        serial0 = &serial0;
+    };
+
+The operating system is welcome to use the aliases when assigning an identifier to a device.
+
+OS 는 Device 에 식별자를 할당할 때 별칭(aliases)을 사용할 수 있다.
+
+You'll notice a new syntax used here. The property = &label; syntax assigns the full node path referenced by the label as a string property. This is different from the phandle = < &label >; form used earlier which inserts a phandle value into a cell.
+
+여기서 새로운 구문이 사용된 것을 보게 될 것이다.
+속성 = &label; 구문은 레이블에서 참조하는 전체 노드 경로를 string 속성으로 지정한다.
+이것은 phandle = <&label>; 과 다르다;
+이전에 사용된 form 은 phandle 값을 cell 에 삽입한다.
+
+
+
+chosen Node
+
+The chosen node doesn't represent a real device, but serves as a place for passing data between firmware and the operating system, like boot arguments. Data in the chosen node does not represent the hardware. Typically the chosen node is left empty in .dts source files and populated at boot time.
+
+chosen 노드는 실제 Device 를 나타내지 않지만
+부팅 인자와 같이 FW 와 OS 간에 데이터를 전달하기 위한 공간으로 사용된다.
+chosen 노드의 데이터는 HW 를 나타내지 않는다.
+일반적으로 선택된 노드는 *.dts 소스 파일엔 비어있고 부팅시 채워진다.
+
+In our example system, firmware might add the following to the chosen node:
+
+예제 System 에서 Firmware 는 chosen 노드에 아래를 추가할 수 있다:
+
+    chosen {
+        bootargs = "root=/dev/nfs rw nfsroot=192.168.1.1 console=ttyS0,115200";
+    };
+
+
+
+Advanced Topics
+
+Advanced Sample Machine
+
+Now that we've got the basics defined, let's add some hardware to the sample machine to discuss some of the more complicated use cases.
+
+이제 기본 개념을 정의 했으므로 샘플 머신에 HW 를 추가하여 좀 더 복잡한 사용 사례에 대해 논의해보도록 한다.
+
+The advanced sample machine adds a PCI host bridge with control registers memory mapped to 0x10180000, and BARs programmed to start above the address 0x80000000.
+
+향상된 샘플 머신은 0x10180000 에 맵핑된 제어 레지스터 메모리와
+주소가 0x80000000 이상으로 시작하도록 프로그래밍된 PCI Host Bridge 를 추가한다.
+
+Given what we already know about the device tree, we can start with the addition of the following node to describe the PCI host bridge.
+
+Device Tree 에 대해 이미 알고 있는 것을 감안할 때
+다음 노드를 추가하여 PCI Host Bridge 를 설명할 수 있다.
+
+        pci@10180000 {
+            compatible = "arm,versatile-pci-hostbridge", "pci";
+            reg = <0x10180000 0x1000>;
+            interrupts = <8 0>;
+        };
+
+
+
+PCI Host Bridge
+
+This section describes the Host/PCI bridge node.
+
+여기서 Host/PCI Bridge 노드에 대해 설명한다.
+
+Note, some basic knowledge of PCI is assumed in this section. This is NOT a tutorial about PCI, if you need some more in depth information, please read[1]. You can also refer to either ePAPR v1.1 or the PCI Bus Binding to Open Firmware. A complete working example for a Freescale MPC5200 can be found here.
+
+여기서 PCI 에 대한 몇 가지 기본 지식을 가정한다.
+이것은 PCI 에 관한 튜토리얼이 아니므로 더 자세한 정보가 필요하면 [ 1 ] 을 읽으라.
+ePAPR v1.1 혹은 PCI Bus Binding to Open Firmware 를 참조할 수도 있다.
+Freescale MPC5200 의 완벽한 작동 예는 여기서 찾을 수 있다.
+
+
+
+PCI Bus numbering
+
+Each PCI bus segment is uniquely numbered, and the bus numbering is exposed in the pci node by using the bus-ranges property, which contains two cells. The first cell gives the bus number assigned to this node, and the second cell gives the maximum bus number of any of the subordinate PCI busses.
+
+각 PCI Bus Segment 에는 고유한 번호가 지정되며
+2 개의 cells 를 포함하는 bus-ranges 속성을 사용하여 Bus 번호가 PCI 노드에 표시된다.
+첫 번째 cell 은 이 노드에 할당된 Bus 번호를 제공하고
+두 번째 cell 은 하위 PCI Bus 의 최대 Bus 번호를 제공한다.
+
+The sample machine has a single pci bus, so both cells are 0.
+
+샘플 머신은 단일 PCI Bus 가 있으므로 두 cell 이 모두 0 이다.
+
+        pci@0x10180000 {
+            compatible = "arm,versatile-pci-hostbridge", "pci";
+            reg = <0x10180000 0x1000>;
+            interrupts = <8 0>;
+            bus-ranges = <0 0>;
+        };
+
+
+
+PCI Address Translation
+
+Similar to the local bus described earlier, the PCI address space is completely separate from the CPU address space, so address translation is needed to get from a PCI address to a CPU address. As always, this is done using the range, #address-cells, and #size-cells properties.
+
+앞서 설명한 Local Bus 와 마찬가지로 PCI address Space 는 
+CPU Address Space 와 완전히 별개이므로 PCI 주소에서 CPU 주소로 변환하려면 주소 변환이 필요하다.
+늘 그렇듯이 range, #address-cells, 그리고 #size-cells 로 이 작업을 수행한다.
+
+        pci@0x10180000 {
+            compatible = "arm,versatile-pci-hostbridge", "pci";
+            reg = <0x10180000 0x1000>;
+            interrupts = <8 0>;
+            bus-ranges = <0 0>;
+
+            #address-cells = <3>
+            #size-cells = <2>;
+            ranges = <0x42000000 0 0x80000000 0x80000000 0 0x20000000
+                      0x02000000 0 0xa0000000 0xa0000000 0 0x10000000
+                      0x01000000 0 0x00000000 0xb0000000 0 0x01000000>;
+        };
+
+As you can see, child addresses (PCI addresses) use 3 cells, and PCI ranges are encoded into 2 cells. The first question might be, why do we need three 32 bit cells to specify a PCI address. The three cells are labeled phys.hi, phys.mid and phys.low [2].
+
+보다시피 하위 주소(PCI 주소)는 3 개의 cells 를 사용하고 PCI 범위는 2 개의 cells 로 인코딩 된다.
+첫 번째 의문은 왜 PCI 주소를 지정하기 위해 3 개의 32 비트 cells 가 필요한지다.
+3 개의 cells 에는 phys.hi, phys.mid 및 phys.low [ 2 ] 라는 레이블이 지정된다.
+
+* phys.hi cell: npt000ss bbbbbbbb dddddfff rrrrrrrr
+* phys.mid cell: hhhhhhhh hhhhhhhh hhhhhhhh hhhhhhhh
+* phys.low cell: llllllll llllllll llllllll llllllll
+
+PCI addresses are 64 bits wide, and are encoded into phys.mid and phys.low. However, the really interesting things are in phys.high which is a bit field:
+
+PCI 주소는 64 비트 폭이며 phys.mid 및 phys.low 로 인코딩된다.
+그러나, 정말 흥미로운 것들은 비트 필드인 phys.high 에 있다:
+
+* n: relocatable region flag (doesn't play a role here)
+* p: prefetchable (cacheable) region flag
+* t: aliased address flag (doesn't play a role here)
+* ss: space code
+  * 00: configuration space
+  * 01: I/O space
+  * 10: 32 bit memory space
+  * 11: 64 bit memory space
+* bbbbbbbb: The PCI bus number. PCI may be structured hierarchically. So we may have PCI/PCI bridges which will define sub busses.
+* ddddd: The device number, typically associated with IDSEL signal connections.
+* fff: The function number. Used for multifunction PCI devices.
+* rrrrrrrr: Register number; used for configuration cycles.
+
+* n: 재배치 가능 영역 플래그(여기서 역할 수행 안함)
+* p: 프리페칭(캐시 가능) 영역 플래그
+* t: 엘리어싱된 주소 플래그(여기서 역할 수행 안함)
+* ss: space 코드
+  * 00: 구성 space
+  * 01: I/O space
+  * 10: 32 비트 메모리 space
+  * 11: 64 비트 메모리 space
+* bbbbbbbb: PCI Bus 번호
+               PCI 는 계층적으로 구조화될 수 있다.
+               그래서 우리는 Sub Busses 를 정의할 PCI/PCI Bridge 를 가질 수 있다.
+* ddddd: 일반적으로 IDSEL Signal 연결과 관련된 Device 번호다.
+* fff: 함수 번호
+     다 기능 PCI Device 에서 사용된다.
+* rrrrrrrr: Register 번호
+          configuration cycle 에서 사용된다.
+
+For the purpose of PCI address translation, the important fields are p and ss. The value of p and ss in phys.hi determines which PCI address space is being accessed. So looking onto our ranges property, we have three regions:
+
+PCI 주소 변환을 위해 중요한 필드는 p 와 ss 이다.
+phys.hi 의 p 및 ss 값은 access 중인 PCI 주소 공간을 결정한다.
+따라서 ranges 속성을 살펴보면 3 가지 영역이 있다.
+
+* a 32 bit prefetchable memory region beginning on PCI address 0x80000000 of 512 MByte size which will be mapped onto address 0x80000000 on the host CPU.
+* a 32 bit non-prefetchable memory region beginning on PCI address 0xa0000000 of 256 MByte size which will be mapped onto address 0xa0000000 on the host CPU.
+* an I/O region beginning on PCI address 0x00000000 of 16 MByte size which will be mapped onto address 0xb0000000 on the host CPU.
+
+* Host CPU 의 주소 0x80000000 에 맵핑될 512 MB 크기의
+  PCI 주소 0x80000000 에서 시작하는 32 비트 프리페치 가능한 메모리 영역
+* Host CPU 의 주소 0xa0000000 에 맵핑될 256 MB 크기의
+  PCI 주소 0xa0000000 에서 시작하는 32 비트 프리페치 불가능한 메모리 영역
+* Host CPU 의 주소 0xb0000000 에 맵핑될 16 MB 크기의 PCI 주소 0x00000000 에서 시작하는 I/O 영역
+
+To throw a wrench into the works, the presence of the phys.hi bitfield means that an operating system needs to know that the node represents a PCI bridge so that it can ignore the irrelevant fields for the purpose of translation. An OS will look for the string "pci" in the PCI bus nodes to determine whether it needs to mask of the extra fields.
+
+wrench 를 작동시키려면 phys.hi 비트 필드가 존재해야함을 의미한다.
+OS 는 노드가 PCI Bridge 를 나타내면 변환을 위해 관련이 없는 필드를 무시할 수 있어야 한다.
+OS 는 PCI Bus 노드에서 문자열 "pci" 를 찾아 여분의 필드를 마스크해야하는지 여부를 결정한다.
+
+
+
+Advanced Interrupt Mapping
+
+Now we come to the most interesting part, PCI interrupt mapping. A PCI device can trigger interrupts using the wires #INTA, #INTB, #INTC and #INTD. If we don't have multifunction PCI devices, a device is obligated to use #INTA for interrupts. However, each PCI slot or device is typically wired to different inputs on the interrupt controller. So, the device tree needs a way of mapping each PCI interrupt signal to the inputs of the interrupt controller. The #interrupt-cells, interrupt-map and interrupt-map-mask properties are used to describe the interrupt mapping.
+
+이제 가장 흥미로운 부분인 PCI Interrupt Mapping 을 살펴보자!
+PCI 장치는 #INTA, #INTB, #INTC 와 #INTD 선을 사용하여 Interrupt 를 Trigger 할 수 있다.
+다 기능 PCI Device 가 없다면 Device 는 #INTA 를 Interrupt 에 사용한다.
+그러나 각 PCI Slot 혹은 Device 는 일반적으로 Interrupt Controller 의 다른 입력에 연결된다.
+그러므로 Device Tree 는 각 PCI Interrupt Signal 을 Interrupt Controller 의 Input 에 맵핑하는 방법을 필요로 한다.
+#interrupt-cells, interrupt-map 그리고 interrupt-map-mask 속성은 Interrupt Mapping 을 설명하는데 사용된다.
+
+Actually, the interrupt mapping described here isn't limited to PCI busses, any node can specify complex interrupt maps, but the PCI case is by far the most common.
+
+실제 여기에 설명된 Interrupt Mapping 은 PCI Bus 에만 국한되지 않으며
+모든 노드가 복잡한 Interrupt Map 을 지정할 수 있고 그러나 PCI 의 경우가 가장 많이 사용한다.
+
+        pci@0x10180000 {
+            compatible = "arm,versatile-pci-hostbridge", "pci";
+            reg = <0x10180000 0x1000>;
+            interrupts = <8 0>;
+            bus-ranges = <0 0>;
+
+            #address-cells = <3>
+            #size-cells = <2>;
+            ranges = <0x42000000 0 0x80000000  0x80000000  0 0x20000000
+                      0x02000000 0 0xa0000000  0xa0000000  0 0x10000000
+                      0x01000000 0 0x00000000  0xb0000000  0 0x01000000>;
+
+            #interrupt-cells = <1>;
+            interrupt-map-mask = <0xf800 0 0 7>;
+            interrupt-map = <0xc000 0 0 1 &intc  9 3 // 1st slot
+                             0xc000 0 0 2 &intc 10 3
+                             0xc000 0 0 3 &intc 11 3
+                             0xc000 0 0 4 &intc 12 3
+
+                             0xc800 0 0 1 &intc 10 3 // 2nd slot
+                             0xc800 0 0 2 &intc 11 3
+                             0xc800 0 0 3 &intc 12 3
+                             0xc800 0 0 4 &intc  9 3>;
+        };
+
+First you'll notice that PCI interrupt numbers use only one cell, unlike the system interrupt controller which uses 2 cells; one for the irq number, and one for flags. PCI only needs one cell for interrupts because PCI interrupts are specified to always be level-low sensitive.
+
+먼저 PCI Interrupt 번호는 2 개의 cells 를 사용하는
+System Interrupt Controller 와 달리 하나의 cell 만 사용한다는 것을 알 수 있다.
+하나는 irq 번호 용이고 다른 하나는 flag 용이다.
+PCI Interrupt 는 항상 레벨 낮음 민감성으로 지정되기 때문에 PCI 는 Interrupt 에 대해 하나의 cell 만 필요하다.
+
+In our example board, we have 2 PCI slots with 4 interrupt lines, respectively, so we have to map 8 interrupt lines to the interrupt controller. This is done using the interrupt-map property. The exact procedure for interrupt mapping is described in[3] .
+
+예제 보드에서 각각 4 개의 Interrupt 라인이 있는 2 개의 PCI Slot 이 있으므로
+8 개의 Interrupt 라인을 Interrupt Controller 에 맵핑해야한다.
+이것은 interrupt-map 속성을 사용하여 수행된다.
+Interrupt Mapping 에 대한 정확한 절차는 [ 3 ] 에 설명되어 있다.
+
+Because the interrupt number (#INTA etc.) is not sufficient to distinguish between several PCI devices on a single PCI bus, we also have to denote which PCI device triggered the interrupt line. Fortunately, every PCI device has a unique device number that we can use for. To distinguish between interrupts of several PCI devices we need a tuple consisting of the PCI device number and the PCI interrupt number. Speaking more generally, we construct a unit interrupt specifier which has four cells:
+
+Interrupt 번호(#INTA 등)은 단일 PCI Bus 의 여러 PCI Device 를 구별하기에
+충분하지 않기 때문에 어떤 PCI Device 가 Interrupt 라인을 Trigger 했는지 표시해야 한다.
+다행히도 모든 PCI Device 에는 사용할 수 있는 고유한 Device 번호가 있다.
+여러 PCI Device 의 Interrupt 를 구별하려면 PCI Device 번호와 PCI Interrupt 번호로 구성된 튜플이 필요하다.
+보다 일반적으로 말하자면 우리는 4 개의 cells 를 가진 Unit Interrupt Specifier 를 생성한다:
+
+* three #address-cells consisting of phys.hi, phys.mid, phys.low, and
+* one #interrupt-cell (#INTA, #INTB, #INTC, #INTD).
+
+* phys.hi, phys.mid, phys.low 로 구성된 3 개의 #address-cells
+* 하나의 #interrupt-cell(#INTA, #INTB, #INTC, #INTD)
+
+Because we only need the device number part of the PCI address, the interrupt-map-mask property comes into play. interrupt-map-mask is also a 4-tuple like the unit interrupt specifier. The 1's in the mask denote which part of the unit interrupt specifier should be taken into account. In our example we can see that only the device number part of phys.hi is required and we need 3 bits to distinguish between the four interrupt lines (Counting PCI interrupt lines start at 1, not at 0!).
+
+PCI 주소의 Device 번호 부분만 필요하기 때문에 interrupt-map-mask 속성이 작동한다.
+interrupt-map-mask 는 또한 Unit Interrupt Specifier 와 같은 4-tuple 이다.
+마스크의 1 은 Unit Interrupt Specifier 중 어떤 부분을 고려해야하는지 나타낸다.
+이 예에서 phys.hi 의 Device 번호 부분만 필요하며
+4 개의 Interrupt 라인을 구별하기 위해 3 비트가 필요하다는 것을 알 수 있다.
+(PCI Interrupt 라인 계산은 0 이 아닌 1 에서 시작한다)
+
+Now we can construct the interrupt-map property. This property is a table and each entry in this table consists of a child (PCI bus) unit interrupt specifier, a parent handle (the interrupt controller which is responsible for serving the interrupts) and a parent unit interrupt specifier. So in the first line we can read that the PCI interrupt #INTA is mapped onto IRQ 9, level low sensitive of our interrupt controller. [4].
+
+이제 interrupt-map 속성을 생성할 수 있다.
+이 속성은 Table 이며 이 Table 의 각 항목은 하위(PCI Bus) Device Interrupt Specifier,
+parent handle(Interrupt 처리를 담당하는 Interrupt Controller) 및 parent unit interrupt specifier 로 구성된다.
+그래서 첫 번째 라인에서 우리는 PCI Interrupt #INTA 가 IRQ 9 에 맵핑되어
+우리의 Interrupt Controller 의 레벨이 낮음을 알 수 있다 [ 4 ]
+
+The only missing part for now are the weird numbers int the PCI bus unit interrupt specifier. The important part of the unit interrupt specifier is the device number from the phys.hi bit field. Device number is board specific, and it depends on how each PCI host controller activates the IDSEL pin on each device. In this example, PCI slot 1 is assigned device id 24 (0x18), and PCI slot 2 is assigned device id 25 (0x19). The value of phys.hi for each slot is determined by shifting the device number up by 11 bits into the ddddd section of the bitfield as follows:
+
+유일한 누락 부분은 PCI Bus unit interrupt specifier 에 있는 이상한 숫자다.
+unit interrupt specifier 의 중요한 부분은 phys.hi 비트 필드의 Device 번호다.
+Device 번호는 보드마다 다르며 각 PCI Host Controller 가 각 Device 의 IDSEL pin 을 활성화하는 방법에 따라 다르다.
+이 예에서 PCI Slot 1 에는 Device ID 24(0x18) 이 할당되고 PCI Slot 2 에는 Device ID 25(0x19) 가 할당된다.
+각 Slot 에 대한 phys.hi 의 값은 Device 번호를 아래와 같이 비트 필드의 ddddd Section 으로 11 비트씩 이동하여 결정된다:
+
+* phys.hi for slot 1 is 0xC000, and
+* phys.hi for slot 2 is 0xC800.
+
+* Slot 1 을 위한 phys.hi 는 0xC000
+* Slot 2 를 위한 phys.hi 는 0xC800
+
+Putting it all together the interrupt-map property show:
+
+interrupt-map 속성을 모두 표시하면 아래와 같다:
+
+* #INTA of slot 1 is IRQ9, level low sensitive on the primary interrupt controller
+* #INTB of slot 1 is IRQ10, level low sensitive on the primary interrupt controller
+* #INTC of slot 1 is IRQ11, level low sensitive on the primary interrupt controller
+* #INTD of slot 1 is IRQ12, level low sensitive on the primary interrupt controller
+
+and
+
+* #INTA of slot 2 is IRQ10, level low sensitive on the primary interrupt controller
+* #INTB of slot 2 is IRQ11, level low sensitive on the primary interrupt controller
+* #INTC of slot 2 is IRQ12, level low sensitive on the primary interrupt controller
+* #INTD of slot 2 is IRQ9, level low sensitive on the primary interrupt controller
+
+* Slot 1 의 #INTA 는 IRQ9 이며 주 Interrupt Controller 의 레벨은 낮다.
+* Slot 1 의 #INTB 는 IRQ10 이며 주 Interrupt Controller 의 레벨은 낮다.
+* Slot 1 의 #INTC 는 IRQ11 이며 주 Interrupt Controller 의 레벨은 낮다.
+* Slot 1 의 #INTD 는 IRQ12 이며 주 Interrupt Controller 의 레벨은 낮다.
+
+* Slot 2 의 #INTA 는 IRQ10 이며 주 Interrupt Controller 의 레벨은 낮다.
+* Slot 2 의 #INTB 는 IRQ11 이며 주 Interrupt Controller 의 레벨은 낮다.
+* Slot 2 의 #INTC 는 IRQ12 이며 주 Interrupt Controller 의 레벨은 낮다.
+* Slot 2 의 #INTD 는 IRQ9 이며 주 Interrupt Controller 의 레벨은 낮다.
+
+The interrupts = <8 0>; property describes the interrupts the host/PCI-bridge controller itself may trigger. Don't mix up these interrupts with interrupts PCI devices might trigger (using INTA, INTB, ...).
+
+interrupts = <8 0> 속성은 Host/PCI-Bridge Controller 자체가 Trigger 할 수 있는 Interrupt 를 기술한다.
+이러한 Interrupt 를 PCI Device 가 Trigger 할 수 있는 Interrupt(INTA, INTB, ... ) 와 혼용하지 말라.
+
+One final thing to note. Just like with the interrupt-parent property, the presence of an interrupt-map property on a node will change the default interrupt controller for all child and grandchild nodes. In this PCI example, that means that the PCI host bridge becomes the default interrupt controller. If a device attached via the PCI bus has a direct connection to another interrupt controller, then it also needs to specify its own interrupt-parent property.
+
+마지막으로 한 가지 주의할 점이 있다.
+interrupt-parent 속성과 마찬가지로 노드에 interrupt-map 속성이 있으면
+모든 자식 노드와 손자 노드에 대한 기본 Interrupt Controller 가 변경된다.
+이 PCI 예에서 PCI Host Bridge 가 기본 Interrupt Controller 가 됨을 의미한다.
+PCI Bus 를 통해 연결된 Device 가 다른 Interrupt Controller 에 직접 연결되어 있는 경우
+자체적인 interrupt-parent 속성을 지정해야 한다.
+
+Notes
+
+Jump up ↑ Tom Shanley / Don Anderson: PCI System Architecture. Mindshare Inc.
+Jump up ↑ PCI Bus Bindings to Open Firmware.
+Jump up ↑ Open Firmware Recommended Practice: Interrupt Mapping
+Jump up ↑ PCI interrupts are always level low sensitive.
+
+원문: http://elinux.org/Device_Tree_Usage

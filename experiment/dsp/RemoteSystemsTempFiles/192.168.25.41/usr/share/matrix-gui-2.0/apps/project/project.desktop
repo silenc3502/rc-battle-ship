@@ -1,0 +1,8 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Name=Project
+GenericName=AM5728 Development App
+Icon=/usr/share/matrix-gui-2.0/apps/images/wireless-icon.png
+Type=Directory
+X-MATRIX-CategoryTarget=project
+X-MATRIX-DisplayPriority=5

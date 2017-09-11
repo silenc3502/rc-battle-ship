@@ -1,0 +1,186 @@
+﻿Atmel LCDC Framebuffer
+-----------------------------------------------------
+
+Required properties:
+- compatible :
+	"atmel,at91sam9261-lcdc" , 
+	"atmel,at91sam9263-lcdc" ,
+	"atmel,at91sam9g10-lcdc" ,
+	"atmel,at91sam9g45-lcdc" ,
+	"atmel,at91sam9g45es-lcdc" ,
+	"atmel,at91sam9rl-lcdc" ,
+	"atmel,at32ap-lcdc"
+- reg : Should contain 1 register ranges(address and length).
+	Can contain an additional register range(address and length)
+	for fixed framebuffer memory. Useful for dedicated memories.
+- interrupts : framebuffer controller interrupt
+- display: a phandle pointing to the display node
+
+Required nodes:
+- display: a display node is required to initialize the lcd panel
+	This should be in the board dts.
+- default-mode: a videomode within the display with timing parameters
+	as specified below.
+
+Optional properties:
+- lcd-supply: Regulator for LCD supply voltage.
+
+Example:
+
+	fb0: fb@0x00500000 {
+		compatible = "atmel,at91sam9g45-lcdc";
+		reg = <0x00500000 0x1000>;
+		interrupts = <23 3 0>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_fb>;
+		display = <&display0>;
+		status = "okay";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+	};
+
+Example for fixed framebuffer memory:
+
+	fb0: fb@0x00500000 {
+		compatible = "atmel,at91sam9263-lcdc";
+		reg = <0x00700000 0x1000 0x70000000 0x200000>;
+		[...]
+	};
+
+Atmel LCDC Display
+-----------------------------------------------------
+Required properties (as per of_videomode_helper):
+
+ - atmel,dmacon: dma controller configuration
+ - atmel,lcdcon2: lcd controller configuration
+ - atmel,guard-time: lcd guard time (Delay in frame periods)
+ - bits-per-pixel: lcd panel bit-depth.
+
+Optional properties (as per of_videomode_helper):
+ - atmel,lcdcon-backlight: enable backlight
+ - atmel,lcdcon-backlight-inverted: invert backlight PWM polarity
+ - atmel,lcd-wiring-mode: lcd wiring mode "RGB" or "BRG"
+ - atmel,power-control-gpio: gpio to power on or off the LCD (as many as needed)
+
+Example:
+	display0: display {
+		bits-per-pixel = <32>;
+		atmel,lcdcon-backlight;
+		atmel,dmacon = <0x1>;
+		atmel,lcdcon2 = <0x80008002>;
+		atmel,guard-time = <9>;
+		atmel,lcd-wiring-mode = <1>;
+
+		display-timings {
+			native-mode = <&timing0>;
+			timing0: timing0 {
+				clock-frequency = <9000000>;
+				hactive = <480>;
+				vactive = <272>;
+				hback-porch = <1>;
+				hfront-porch = <1>;
+				vback-porch = <40>;
+				vfront-porch = <1>;
+				hsync-len = <45>;
+				vsync-len = <1>;
+			};
+		};
+	};
+
+/*
+
+Atmel LCDC 프레임 버퍼
+-------------------------------------------------- ---
+
+필수 속성 :
+- 호환 가능 :
+"atmel, at91sam9261-lcdc",
+"atmel, at91sam9263-lcdc",
+"atmel, at91sam9g10-lcdc",
+"atmel, at91sam9g45-lcdc",
+"atmel, at91sam9g45es-lcdc",
+"atmel, at91sam9rl-lcdc",
+"atmel, at32ap-lcdc"
+- reg : 1 개의 레지스터 범위 (주소와 길이)를 포함해야합니다.
+고정 프레임 버퍼 메모리에 대한 추가 레지스터 범위 (주소 및 길이)를 포함 할 수 있습니다. 전용 메모리에 유용합니다.
+- 인터럽트 : 프레임 버퍼 컨트롤러 인터럽트
+- 디스플레이 : 디스플레이 노드를 가리키는 phandle
+
+필수 노드 :
+- 디스플레이 : 디스플레이 노드는 LCD 패널을 초기화하는 데 필요합니다.
+이것은 보드 dts에 있어야합니다.
+- default-mode : 아래 지정된 타이밍 매개 변수와 함께 디스플레이 내의 비디오 모드.
+
+선택적 속성 :
+- LCD 전원 : LCD 전원 전압 레귤레이터.
+
+
+Example:
+
+	fb0: fb@0x00500000 {
+		compatible = "atmel,at91sam9g45-lcdc";
+		reg = <0x00500000 0x1000>;
+		interrupts = <23 3 0>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&pinctrl_fb>;
+		display = <&display0>;
+		status = "okay";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+	};
+
+
+고정 프레임 버퍼 메모리의 예 :
+
+	fb0: fb@0x00500000 {
+		compatible = "atmel,at91sam9263-lcdc";
+		reg = <0x00700000 0x1000 0x70000000 0x200000>;
+		[...]
+	};
+
+Atmel LCDC 디스플레이
+-------------------------------------------------- ---
+필수 속성 (of_videomode_helper에 따라) :
+
+ - atmel, dmacon : dma 컨트롤러 구성
+ - atmel, lcdcon2 : lcd 컨트롤러 구성
+ - atmel, 가드 타임 : 액정 보호 시간 (프레임 기간 지연)
+ - 픽셀 당 비트 수 : LCD 패널 비트 수.
+
+선택적 속성 (of_videomode_helper에 따라) :
+ - atmel, lcdcon-backlight : 백라이트 사용
+ - atmel, lcdcon-backlight- 역전 : 역전 PWM 역 극성
+ - atmel, lcd-wiring-mode : lcd 배선 모드 "RGB"또는 "BRG"
+ - atmel, power-control-gpio : gpio를 사용하여 LCD의 전원을 켜거나 끕니다 (필요한만큼).
+
+
+Example:
+	display0: display {
+		bits-per-pixel = <32>;
+		atmel,lcdcon-backlight;
+		atmel,dmacon = <0x1>;
+		atmel,lcdcon2 = <0x80008002>;
+		atmel,guard-time = <9>;
+		atmel,lcd-wiring-mode = <1>;
+
+		display-timings {
+			native-mode = <&timing0>;
+			timing0: timing0 {
+				clock-frequency = <9000000>;
+				hactive = <480>;
+				vactive = <272>;
+				hback-porch = <1>;
+				hfront-porch = <1>;
+				vback-porch = <40>;
+				vfront-porch = <1>;
+				hsync-len = <45>;
+				vsync-len = <1>;
+			};
+		};
+	};
+
+*/
+
+

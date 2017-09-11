@@ -1,0 +1,252 @@
+Version 15 of schedstats dropped counters for some sched_yield:
+yld_exp_empty, yld_act_empty and yld_both_empty. Otherwise, it is
+identical to version 14.
+
+schedstats 버전 15는 일부 sched_yield에 대한 카운터를 삭제했습니다 : yld_exp_empty, yld_act_empty 및 yld_both_empty. 그렇지 않으면 버전 14와 동일합니다.
+
+Version 14 of schedstats includes support for sched_domains, which hit the
+mainline kernel in 2.6.20 although it is identical to the stats from version
+12 which was in the kernel from 2.6.13-2.6.19 (version 13 never saw a kernel
+release).  Some counters make more sense to be per-runqueue; other to be
+per-domain.  Note that domains (and their associated information) will only
+be pertinent and available on machines utilizing CONFIG_SMP.
+
+schedstats의 버전 14는 커널 2.6.13-2.6.19 (버전 13은 커널 릴리즈를 본 적이없는 버전)의 통계와 동일하지만 2.6.20의 기본 커널에 충돌하는 sched_domains에 대한 지원을 포함합니다. . 일부 카운터는 런 큐당 의미가 있습니다. 도메인 당 기타가 될 수 있습니다. 도메인 (및 관련 정보)은 CONFIG_SMP를 사용하는 시스템에서만 관련이 있으며 사용할 수 있습니다.
+
+In version 14 of schedstat, there is at least one level of domain
+statistics for each cpu listed, and there may well be more than one
+domain.  Domains have no particular names in this implementation, but
+the highest numbered one typically arbitrates balancing across all the
+cpus on the machine, while domain0 is the most tightly focused domain,
+sometimes balancing only between pairs of cpus.  At this time, there
+are no architectures which need more than three domain levels. The first
+field in the domain stats is a bit map indicating which cpus are affected
+by that domain.
+
+schedstat 버전 14에는 나열된 각 CPU에 대해 최소한 하나의 수준의 도메인 통계가 있으며 두 개 이상의 도메인이있을 수 있습니다. 도메인은이 구현에서 특정 이름이 없지만 가장 높은 번호가 지정된 도메인은 일반적으로 시스템의 모든 CPU에서 균형 조정을 중재합니다. 반면 domain0은 가장 밀접하게 초점이 맞춰져있는 도메인이며 때때로 cpus 쌍 사이에서만 균형을 유지합니다. 현재 3 개 이상의 도메인 수준을 필요로하는 아키텍처는 없습니다. 도메인 통계의 첫 번째 필드는 해당 도메인의 영향을받는 cpus를 나타내는 비트 맵입니다.
+
+These fields are counters, and only increment.  Programs which make use
+of these will need to start with a baseline observation and then calculate
+the change in the counters at each subsequent observation.  A perl script
+which does this for many of the fields is available at
+
+    http://eaglet.rain.com/rick/linux/schedstat/
+
+Note that any such script will necessarily be version-specific, as the main
+reason to change versions is changes in the output format.  For those wishing
+to write their own scripts, the fields are described here.
+
+이 필드는 카운터이며 증가 만합니다. 이들을 이용하는 프로그램은 기준선 관찰로 시작하여 이후의 각 관찰에서 카운터의 변화를 계산해야합니다. 많은 분야에서이를 수행하는 perl 스크립트는 http://eaglet.rain.com/rick/linux/schedstat/에서 구할 수 있습니다.
+
+버전을 변경하는 주된 이유는 출력 형식의 변경이기 때문에 이러한 스크립트는 반드시 버전에 따라 달라질 것입니다. 자체 스크립트를 작성하고자하는 경우 여기에 필드를 설명합니다.
+
+CPU statistics
+--------------
+cpu<N> 1 2 3 4 5 6 7 8 9
+
+First field is a sched_yield() statistic:
+     1) # of times sched_yield() was called
+
+Next three are schedule() statistics:
+     2) This field is a legacy array expiration count field used in the O(1)
+	scheduler. We kept it for ABI compatibility, but it is always set to zero.
+     3) # of times schedule() was called
+     4) # of times schedule() left the processor idle
+
+Next two are try_to_wake_up() statistics:
+     5) # of times try_to_wake_up() was called
+     6) # of times try_to_wake_up() was called to wake up the local cpu
+
+Next three are statistics describing scheduling latency:
+     7) sum of all time spent running by tasks on this processor (in jiffies)
+     8) sum of all time spent waiting to run by tasks on this processor (in
+        jiffies)
+     9) # of timeslices run on this cpu
+
+cpu <N> 1 2 3 4 5 6 7 8 9
+
+첫 번째 필드는 sched_yield () 통계입니다.
+      1) sched_yield ()가 호출 된 횟수
+
+다음 세 가지는 schedule () 통계입니다.
+      2)이 필드는 O (1) 스케줄러에서 사용되는 레거시 배열 만료 횟수 필드입니다. 우리는 ABI와의 호환성을 위해 보관했지만 항상 0으로 설정됩니다.
+      3) schedule of ()이 호출되었습니다.
+      4) 시간 일정 () 프로세서 유휴 상태
+
+다음 두 가지는 try_to_wake_up () 통계입니다.
+      5) try_to_wake_up () 호출 횟수
+      6) try_to_wake_up ()이 호출되어 로컬 CPU를 깨 웠습니다
+
+다음은 스케쥴링 대기 시간을 설명하는 통계입니다.
+      7)이 프로세서의 작업으로 실행되는 모든 시간의 합계 (jiffies)
+      8)이 프로세서의 작업으로 실행 대기중인 모든 시간의 합계 (jiffies)
+      9)이 CPU에서 실행되는 timeslices 수
+
+Domain statistics
+-----------------
+One of these is produced per domain for each cpu described. (Note that if
+CONFIG_SMP is not defined, *no* domains are utilized and these lines
+will not appear in the output.)
+
+이들 중 하나는 설명 된 각 CPU에 대해 도메인별로 생성됩니다. CONFIG_SMP가 정의되어 있지 않으면 * no * 도메인이 사용되고 이러한 행은 출력에 나타나지 않습니다.
+
+domain<N> <cpumask> 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36
+
+The first field is a bit mask indicating what cpus this domain operates over.
+
+The next 24 are a variety of load_balance() statistics in grouped into types
+of idleness (idle, busy, and newly idle):
+
+     1) # of times in this domain load_balance() was called when the
+        cpu was idle
+     2) # of times in this domain load_balance() checked but found
+        the load did not require balancing when the cpu was idle
+     3) # of times in this domain load_balance() tried to move one or
+        more tasks and failed, when the cpu was idle
+     4) sum of imbalances discovered (if any) with each call to
+        load_balance() in this domain when the cpu was idle
+     5) # of times in this domain pull_task() was called when the cpu
+        was idle
+     6) # of times in this domain pull_task() was called even though
+        the target task was cache-hot when idle
+     7) # of times in this domain load_balance() was called but did
+        not find a busier queue while the cpu was idle
+     8) # of times in this domain a busier queue was found while the
+        cpu was idle but no busier group was found
+
+     9) # of times in this domain load_balance() was called when the
+        cpu was busy
+    10) # of times in this domain load_balance() checked but found the
+        load did not require balancing when busy
+    11) # of times in this domain load_balance() tried to move one or
+        more tasks and failed, when the cpu was busy
+    12) sum of imbalances discovered (if any) with each call to
+        load_balance() in this domain when the cpu was busy
+    13) # of times in this domain pull_task() was called when busy
+    14) # of times in this domain pull_task() was called even though the
+        target task was cache-hot when busy
+    15) # of times in this domain load_balance() was called but did not
+        find a busier queue while the cpu was busy
+    16) # of times in this domain a busier queue was found while the cpu
+        was busy but no busier group was found
+
+    17) # of times in this domain load_balance() was called when the
+        cpu was just becoming idle
+    18) # of times in this domain load_balance() checked but found the
+        load did not require balancing when the cpu was just becoming idle
+    19) # of times in this domain load_balance() tried to move one or more
+        tasks and failed, when the cpu was just becoming idle
+    20) sum of imbalances discovered (if any) with each call to
+        load_balance() in this domain when the cpu was just becoming idle
+    21) # of times in this domain pull_task() was called when newly idle
+    22) # of times in this domain pull_task() was called even though the
+        target task was cache-hot when just becoming idle
+    23) # of times in this domain load_balance() was called but did not
+        find a busier queue while the cpu was just becoming idle
+    24) # of times in this domain a busier queue was found while the cpu
+        was just becoming idle but no busier group was found
+
+   Next three are active_load_balance() statistics:
+    25) # of times active_load_balance() was called
+    26) # of times active_load_balance() tried to move a task and failed
+    27) # of times active_load_balance() successfully moved a task
+
+   Next three are sched_balance_exec() statistics:
+    28) sbe_cnt is not used
+    29) sbe_balanced is not used
+    30) sbe_pushed is not used
+
+   Next three are sched_balance_fork() statistics:
+    31) sbf_cnt is not used
+    32) sbf_balanced is not used
+    33) sbf_pushed is not used
+
+   Next three are try_to_wake_up() statistics:
+    34) # of times in this domain try_to_wake_up() awoke a task that
+        last ran on a different cpu in this domain
+    35) # of times in this domain try_to_wake_up() moved a task to the
+        waking cpu because it was cache-cold on its own cpu anyway
+    36) # of times in this domain try_to_wake_up() started passive balancing
+
+domain<N> <cpumask> 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36
+
+첫 번째 필드는이 도메인이 작동하는 CPU를 나타내는 비트 마스크입니다.
+
+다음 24는 유휴 (유휴 상태, 통화 중 및 유휴 상태) 유형으로 그룹화 된 다양한 load_balance () 통계입니다.
+
+     1)이 도메인의 횟수 load_balance ()는 CPU가 유휴 상태 일 때 호출되었습니다
+     2)이 도메인에서 시간이 # 번 확인되었지만 CPU가 유휴 상태 일 때로드가 균형을 유지할 필요가 없음을 발견했습니다
+     3)이 도메인에있는 번 # load_balance ()는 하나 이상의 태스크를 이동하려고 시도했지만 CPU가 유휴 상태 일 때 실패했습니다.
+     4) cpu가 유휴 상태 일 때이 도메인에서 load_balance ()를 호출 할 때마다 발견 된 불균형의 합계 (있는 경우)
+     5)이 도메인에서 시간의 수 pull_task ()는 CPU가 유휴 상태 일 때 호출되었습니다
+     6) 유휴 상태 일 때 대상 태스크가 캐시 핫인 경우에도이 도메인에서 pull_task ()가 호출되었습니다
+     7)이 도메인에서 load_balance ()가 호출되었지만 CPU가 유휴 상태 일 때 더 많은 대기열을 찾지 못함
+     8)이 도메인에서 CPU가 유휴 상태이지만 바쁜 그룹이 발견되지 않은 동안 바쁜 대기열이 발견 된 횟수
+     9)이 도메인의 시간 # CPU가 사용 중일 때 load_balance ()가 호출되었습니다.
+    10)이 도메인에있는 번 # load_balance ()가 점검되었지만 사용 중일 때로드가 균형을 유지할 필요가 없음을 발견했습니다
+    11)이 도메인에서 load_balance ()가 하나 이상의 작업을 이동하려고 시도했으나 CPU가 사용 중일 때 실패했습니다.
+    12) cpu가 사용 중일 때이 도메인11)이 도메인에서 load_balance ()가 하나 이상의 작업을 이동하려고 시도했으나 CPU가 사용 중일 때 실패했습니다.
+    12) cpu가 사용 중일 때이 도메인에서 load_balance ()를 호출 할 때마다 발견 된 불균형의 합계 (있는 경우)
+    13)이 도메인에서 시간이 많이 걸렸을 때 pull_task ()가 호출되었습니다.
+    14)이 도메인에서 시간이 많이 걸렸을 때 대상 태스크가 캐시 핫인 경우에도 pull_task ()가 호출되었습니다.
+    15)이 도메인에서 load_balance ()가 호출되었지만 CPU가 사용 중일 때 바쁜 대기열을 찾지 못했습니다.
+    16)이 도메인에서는 CPU가 사용량이 많았지 만 더 바쁜 그룹이 발견되지 않은 동안 바쁜 대기열이 발견되었습니다.
+
+    17)이 도메인에있는 횟수 load_balance ()는 CPU가 유휴 상태가되었을 때 호출되었습니다
+    18)이 도메인에있는 번 # load_balance ()가 확인되었지만 CPU가 유휴 상태가되었을 때로드가 균형을 유지할 필요가 없음을 발견했습니다
+    19)이 도메인에있는 번 # load_balance ()는 하나 이상의 작업을 이동하려고했으나 CPU가 유휴 상태가되었을 때 실패했습니다.
+    20) cpu가 방금 유휴 상태가되었을 때이 도메인에서 load_balance ()를 호출 할 때마다 발견 된 불균형의 합계 (있는 경우)에서 load_balance ()를 호출 할 때마다 발견 된 불균형의 합계 (있는 경우)
+    13)이 도메인에서 시간이 많이 걸렸을 때 pull_task ()가 호출되었습니다.
+    14)이 도메인에서 시간이 많이 걸렸을 때 대상 태스크가 캐시 핫인 경우에도 pull_task ()가 호출되었습니다.
+    15)이 도메인에서 load_balance ()가 호출되었지만 CPU가 사용 중일 때 바쁜 대기열을 찾지 못했습니다.
+    16)이 도메인에서는 CPU가 사용량이 많았지 만 더 바쁜 그룹이 발견되지 않은 동안 바쁜 대기열이 발견되었습니다.
+    17)이 도메인에있는 횟수 load_balance ()는 CPU가 유휴 상태가되었을 때 호출되었습니다
+    18)이 도메인에있는 번 # load_balance ()가 확인되었지만 CPU가 유휴 상태가되었을 때로드가 균형을 유지할 필요가 없음을 발견했습니다
+    19)이 도메인에있는 번 # load_balance ()는 하나 이상의 작업을 이동하려고했으나 CPU가 유휴 상태가되었을 때 실패했습니다.
+    20) cpu가 방금 유휴 상태가되었을 때이 도메인에서 load_balance ()를 호출 할 때마다 발견 된 불균형의 합계 (있는 경우)
+    21)이 도메인에서 시간이 경과했습니다. pull_task ()가 새로 유휴 상태 일 때 호출되었습니다.
+    22)이 도메인에있는 시간은 유휴 상태가 될 때 대상 태스크가 캐시 핫인 경우에도 pull_task ()가 호출되었습니다
+    23)이 도메인에서 load_balance ()가 호출되었지만 CPU가 유휴 상태가되는 동안 바쁜 대기열을 찾지 못함
+    24)이 도메인에서 CPU가 유휴 상태가되었지만 더 바쁜 그룹이 발견되지 않은 동안 바쁜 대기열이 발견 된 횟수
+
+    다음 세 가지는 active_load_balance () 통계입니다.
+     25) # 번 active_load_balance ()가 호출되었습니다
+     26) # 번 active_load_balance ()가 작업을 이동하려고했으나 실패했습니다.
+     27) # 번 active_load_balance () 작업을 성공적으로 이동했습니다
+
+    다음 세 가지는 sched_balance_exec () 통계입니다.
+     28) sbe_cnt가 사용되지 않았습니다.
+     29) sbe_balanced가 사용되지 않습니다.
+     30) sbe_pushed가 사용되지 않았습니다.
+
+    다음 세 가지는 sched_balance_fork () 통계입니다.
+     31) sbf_cnt가 사용되지 않습니다.
+     32) sbf_balanced가 사용되지 않습니다.
+     33) sbf_pushed가 사용되지 않습니다.
+
+    다음 세 가지는 try_to_wake_up () 통계입니다.
+     34)이 도메인에있는 횟수 try_to_wake_up ()이 도메인의 다른 CPU에서 마지막으로 실행 된 작업을 깨 웠습니다.
+     35)이 도메인의 횟수 try_to_wake_up ()은 어쨌든 자신의 CPU에서 캐시 감기 였기 때문에 깨어있는 CPU로 작업을 이동했습니다.
+     36)이 도메인에있는 횟수 try_to_wake_up () 수동 밸런싱 시작됨
+
+/proc/<pid>/schedstat
+----------------
+schedstats also adds a new /proc/<pid>/schedstat file to include some of
+the same information on a per-process level.  There are three fields in
+this file correlating for that process to:
+     1) time spent on the cpu
+     2) time spent waiting on a runqueue
+     3) # of timeslices run on this cpu
+
+A program could be easily written to make use of these extra fields to
+report on how well a particular process or set of processes is faring
+under the scheduler's policies.  A simple version of such a program is
+available at
+    http://eaglet.rain.com/rick/linux/schedstat/v12/latency.c
+
+또한 schedstats는 새로운 / proc / <pid> / schedstat 파일을 추가하여 프로세스 별 수준에서 동일한 정보 중 일부를 포함합니다. 이 파일에는 해당 프로세스와 관련하여 다음 세 가지 필드가 있습니다.
+      1) 시간은 cpu에 썼다.
+      2) runqueue에서 기다리는 시간
+      3)이 CPU에서 실행되는 timeslices 수
+
+이러한 추가 필드를 사용하여 스케줄러의 정책에 따라 특정 프로세스 나 프로세스 집합이 얼마나 잘 수행되고 있는지보고하는 프로그램을 쉽게 작성할 수 있습니다. 이러한 프로그램의 간단한 버전은 http://eaglet.rain.com/rick/linux/schedstat/v12/latency.c에서 다운로드 할 수 있습니다.

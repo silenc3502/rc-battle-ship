@@ -1,0 +1,64 @@
+HDMI Connector
+==============
+
+Required properties:
+- compatible: "hdmi-connector"
+- type: the HDMI connector type: "a", "b", "c", "d" or "e"
+
+Optional properties:
+- label: a symbolic name for the connector
+- hpd-gpios: HPD GPIO number
+
+Required nodes:
+- Video port for HDMI input
+
+Example
+-------
+
+hdmi0: connector@1 {
+	compatible = "hdmi-connector";
+	label = "hdmi";
+
+	type = "a";
+
+	port {
+		hdmi_connector_in: endpoint {
+			remote-endpoint = <&tpd12s015_out>;
+		};
+	};
+};
+
+/*
+HDMI 커넥터
+==============
+
+필수 속성 :
+- 호환 : "hdmi-connector"
+- 유형 : HDMI 커넥터 유형 : "a", "b", "c", "d"또는 "e"
+
+선택적 속성 :
+- label : 커넥터의 기호 이름
+- hpd-gpios : HPD GPIO 번호
+
+필수 노드 :
+- HDMI 입력 용 비디오 포트
+
+
+Example
+-------
+
+hdmi0: connector@1 {
+	compatible = "hdmi-connector";
+	label = "hdmi";
+
+	type = "a";
+
+	port {
+		hdmi_connector_in: endpoint {
+			remote-endpoint = <&tpd12s015_out>;
+		};
+	};
+};
+
+
+*/

@@ -1,0 +1,81 @@
+Nokia modem client bindings
+
+The Nokia modem HSI client follows the common HSI client binding
+and inherits all required properties. The following additional
+properties are needed by the Nokia modem HSI client:
+
+Required properties:
+- compatible:		Should be one of
+      "nokia,n900-modem"
+- hsi-channel-names:	Should contain the following strings
+      "mcsaab-control"
+      "speech-control"
+      "speech-data"
+      "mcsaab-data"
+- gpios:		Should provide a GPIO handler for each GPIO listed in
+                        gpio-names
+- gpio-names:		Should contain the following strings
+      "cmt_apeslpx"
+      "cmt_rst_rq"
+      "cmt_en"
+      "cmt_rst"
+      "cmt_bsi"
+- interrupts:		Should be IRQ handle for modem's reset indication
+
+Nokia 모뎀 클라이언트 바인딩
+
+Nokia 모뎀 HSI 클라이언트는 일반적인 HSI 클라이언트 바인딩을 따르고 모든 필수 속성을 상속합니다. 다음 추가 속성은 Nokia 모뎀 HSI 클라이언트에 필요합니다.
+
+필수 속성 :
+- 호환 : "nokia, n900-modem"중 하나 여야합니다.
+- hsi-channel-names : 다음 문자열을 포함해야합니다.
+       "mcsaab-control"
+       "음성 통제"
+       "음성 데이터"
+       "mcsaab-data"
+- gpios : gpio-names에 나열된 각 GPIO에 대해 GPIO 처리기를 제공해야합니다.
+
+- gpio-names : 다음 문자열을 포함해야합니다.
+       "cmt_apeslpx"
+       "cmt_rst_rq"
+       "cmt_en"
+       "cmt_rst"
+       "cmt_bsi"
+
+- 인터럽트 : 모뎀의 재설정 표시를 위해 IRQ 핸들이 있어야합니다.
+
+
+
+Example:
+
+&ssi_port {
+	modem: hsi-client {
+		compatible = "nokia,n900-modem";
+
+		pinctrl-names = "default";
+		pinctrl-0 = <&modem_pins>;
+
+		hsi-channel-ids = <0>, <1>, <2>, <3>;
+		hsi-channel-names = "mcsaab-control",
+				    "speech-control",
+				    "speech-data",
+				    "mcsaab-data";
+		hsi-speed-kbps = <55000>;
+		hsi-mode = "frame";
+		hsi-flow = "synchronized";
+		hsi-arb-mode = "round-robin";
+
+		interrupts-extended = <&gpio3 8 IRQ_TYPE_EDGE_FALLING>; /* 72 */
+
+		gpios = <&gpio3  6 GPIO_ACTIVE_HIGH>, /* 70 */
+			<&gpio3  9 GPIO_ACTIVE_HIGH>, /* 73 */
+			<&gpio3 10 GPIO_ACTIVE_HIGH>, /* 74 */
+			<&gpio3 11 GPIO_ACTIVE_HIGH>, /* 75 */
+			<&gpio5 29 GPIO_ACTIVE_HIGH>; /* 157 */
+		gpio-names = "cmt_apeslpx",
+			     "cmt_rst_rq",
+			     "cmt_en",
+			     "cmt_rst",
+			     "cmt_bsi";
+	};
+};

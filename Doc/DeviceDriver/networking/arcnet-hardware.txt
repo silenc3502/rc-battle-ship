@@ -1,0 +1,3427 @@
+-----------------------------------------------------------------------------
+1) This file is a supplement to arcnet.txt.  Please read that for general
+   driver configuration help.
+   1)이 파일은 arcnet.txt의 보충 파일입니다. 일반적인 드라이버 구성 도움말을 읽으십시오.
+-----------------------------------------------------------------------------
+2) This file is no longer Linux-specific.  It should probably be moved out of
+   the kernel sources.  Ideas?
+   2)이 파일은 더 이상 Linux와 관련이 없습니다. 아마도 커널 소스 밖으로 이동해야합니다. 아이디어?
+-----------------------------------------------------------------------------
+
+Because so many people (myself included) seem to have obtained ARCnet cards
+without manuals, this file contains a quick introduction to ARCnet hardware,
+some cabling tips, and a listing of all jumper settings I can find. Please
+e-mail apenwarr@worldvisions.ca with any settings for your particular card,
+or any other information you have!
+많은 사람들이 (매뉴얼 포함) ARCnet 카드를 얻지 못했기 때문에이 파일에는 ARCnet 하드웨어에 대한 간략한 소개, 케이블 팁 및 찾을 수있는 모든 점퍼 설정 목록이 있습니다. 귀하의 특정 카드 또는 귀하가 보유한 다른 정보에 대한 설정을 이메일 apenwarr@worldvisions.ca로 보내주십시오!
+
+INTRODUCTION TO ARCNET
+----------------------
+
+ARCnet is a network type which works in a way similar to popular Ethernet
+networks but which is also different in some very important ways.
+ARCnet은 널리 사용되는 이더넷 네트워크와 비슷한 방식으로 작동하지만 매우 중요한 몇 가지 방식으로 다른 네트워크 유형입니다.
+
+First of all, you can get ARCnet cards in at least two speeds: 2.5 Mbps
+(slower than Ethernet) and 100 Mbps (faster than normal Ethernet).  In fact,
+there are others as well, but these are less common.  The different hardware
+types, as far as I'm aware, are not compatible and so you cannot wire a
+100 Mbps card to a 2.5 Mbps card, and so on.  From what I hear, my driver does
+work with 100 Mbps cards, but I haven't been able to verify this myself,
+since I only have the 2.5 Mbps variety.  It is probably not going to saturate
+your 100 Mbps card.  Stop complaining. :)
+우선 ARCnet 카드를 2.5Mbps (이더넷보다 느림)와 100Mbps (일반 이더넷보다 빠른 속도)의 두 가지 속도로 사용할 수 있습니다. 사실, 다른 것들도 있지만, 이들은 덜 일반적입니다. 내가 알고있는 한 다른 하드웨어 유형은 호환되지 않으므로 100Mbps 카드를 2.5Mbps 카드에 연결하는 등의 작업을 할 수 없습니다. 내가 들었을 때, 내 드라이버는 100Mbps 카드로 작동하지만, 나는 단지 2.5Mbps의 다양한 제품을 가지고 있기 때문에 이것을 직접 확인할 수 없었습니다. 아마도 100Mbps 카드를 포화시키지 않을 것입니다. 불평하지 마라. :)
+
+You also cannot connect an ARCnet card to any kind of Ethernet card and
+expect it to work.  
+또한 ARCnet 카드를 모든 종류의 이더넷 카드에 연결할 수 없으며 작동 할 것으로 기대됩니다.
+
+There are two "types" of ARCnet - STAR topology and BUS topology.  This
+refers to how the cards are meant to be wired together.  According to most
+available documentation, you can only connect STAR cards to STAR cards and
+BUS cards to BUS cards.  That makes sense, right?  Well, it's not quite
+true; see below under "Cabling."
+ARCnet-STAR topology와 BUS topology의 두 가지 "유형"이 있습니다. 이것은 카드가 어떻게 연결될 것인지를 나타냅니다. 대부분의 문서에 따르면 STAR 카드와 BUS 카드는 STAR 카드를 BUS 카드에만 연결할 수 있습니다. 그 말이 맞죠? 음, 사실이 아닙니다. 아래의 "케이블 연결"을 참조하십시오.
+
+Once you get past these little stumbling blocks, ARCnet is actually quite a
+well-designed standard.  It uses something called "modified token passing"
+which makes it completely incompatible with so-called "Token Ring" cards,
+but which makes transfers much more reliable than Ethernet does.  In fact,
+ARCnet will guarantee that a packet arrives safely at the destination, and
+even if it can't possibly be delivered properly (ie. because of a cable
+break, or because the destination computer does not exist) it will at least
+tell the sender about it.
+일단 이러한 작은 걸림돌을 지나치게되면, ARCnet은 사실 꽤 잘 디자인 된 표준입니다. "modified token passing"을 사용하여 이른바 "Token Ring"카드와 완전히 호환되지 않지만 이더넷보다 훨씬 안정적인 전송을 가능하게합니다. 실제로, ARCnet은 패킷이 목적지에 안전하게 도착 함을 보장 할 것이며, 케이블이 끊어 지거나 목적지 컴퓨터가 존재하지 않기 때문에 적절히 배달되지 않을지라도 적어도 그것에 대해 보낸 사람.
+
+Because of the carefully defined action of the "token", it will always make
+a pass around the "ring" within a maximum length of time.  This makes it
+useful for realtime networks.
+"token"의 신중하게 정의 된 동작 때문에 항상 최대 시간 내에 "ring"을 통과하게됩니다. 이것은 실시간 네트워크에 유용합니다.
+
+In addition, all known ARCnet cards have an (almost) identical programming
+interface.  This means that with one ARCnet driver you can support any
+card, whereas with Ethernet each manufacturer uses what is sometimes a
+completely different programming interface, leading to a lot of different,
+sometimes very similar, Ethernet drivers.  Of course, always using the same
+programming interface also means that when high-performance hardware
+facilities like PCI bus mastering DMA appear, it's hard to take advantage of
+them.  Let's not go into that.
+또한 모든 알려진 ARCnet 카드는 (거의) 동일한 프로그래밍 인터페이스를 가지고 있습니다. 이것은 하나의 ARCnet 드라이버로 모든 카드를 지원할 수 있다는 것을 의미합니다. 이더넷을 사용하는 경우 각 제조사는 때로 완전히 다른 프로그래밍 인터페이스를 사용하여 서로 다른, 때로는 매우 유사한 이더넷 드라이버를 이끌어냅니다. 물론 동일한 프로그래밍 인터페이스를 항상 사용한다는 것은 PCI 버스 마스터 링 DMA와 같은 고성능 하드웨어 기능이 나타날 때 이를 활용하는 것이 어렵다는 것을 의미합니다. 그걸로 들어 가지 않겠습니다.
+
+One thing that makes ARCnet cards difficult to program for, however, is the
+limit on their packet sizes; standard ARCnet can only send packets that are
+up to 508 bytes in length.  This is smaller than the Internet "bare minimum"
+of 576 bytes, let alone the Ethernet MTU of 1500.  To compensate, an extra
+level of encapsulation is defined by RFC1201, which I call "packet
+splitting," that allows "virtual packets" to grow as large as 64K each,
+although they are generally kept down to the Ethernet-style 1500 bytes.
+ARCnet 카드를 프로그램하기가 어렵게 만드는 한 가지 방법은 패킷 크기의 제한입니다. 표준 ARCnet은 길이가 최대 508 바이트 인 패킷 만 보낼 수 있습니다.
+이것은 이더넷 MTU가 1500이 아니라 "최소값"인 576 바이트보다 작습니다. 이를 보완하기 위해 일반적으로  Ethernet-style 1500 bytes로 유지되지만 "가상 패킷"이 각각 64K로 커질 수있게 해주는 "패킷 분할" RFC1201에 의해 추가 레벨의 캡슐화가 정의됩니다.
+
+
+For more information on the advantages and disadvantages (mostly the
+advantages) of ARCnet networks, you might try the "ARCnet Trade Association"
+WWW page:
+	http://www.arcnet.com
+
+
+CABLING ARCNET NETWORKS
+-----------------------
+
+This section was rewritten by 
+        Vojtech Pavlik     <vojtech@suse.cz>
+using information from several people, including:
+        Avery Pennraun     <apenwarr@worldvisions.ca>
+ 	Stephen A. Wood    <saw@hallc1.cebaf.gov>
+ 	John Paul Morrison <jmorriso@bogomips.ee.ubc.ca>
+ 	Joachim Koenig     <jojo@repas.de>
+and Avery touched it up a bit, at Vojtech's request.
+이 섹션은 다음에 의해 다시 작성되었습니다.
+         Vojtech Pavlik <vojtech@suse.cz>
+여러 사람의 정보를 사용하여 다음을 포함합니다.
+         Avery Pennraun <apenwarr@worldvisions.ca>
+  Stephen A. Wood <saw@hallc1.cebaf.gov>
+  John Paul Morrison <jmorriso@bogomips.ee.ubc.ca>
+  Joachim Koenig <jojo@repas.de>
+Voijtech의 요청에 따라 에이버리 (Avery)가 조금 만져 봤습니다.
+
+ARCnet (the classic 2.5 Mbps version) can be connected by two different
+types of cabling: coax and twisted pair.  The other ARCnet-type networks
+(100 Mbps TCNS and 320 kbps - 32 Mbps ARCnet Plus) use different types of
+cabling (Type1, Fiber, C1, C4, C5).
+ARCnet (클래식 2.5 Mbps 버전)은 두 가지 유형의 케이블 링 (동축 및 꼬임 쌍)으로 연결할 수 있습니다. 다른 ARCnet 유형 네트워크 (100Mbps TCNS 및 320kbps - 32Mbps ARCnet Plus)는 다른 유형의 케이블 (유형 1, 광섬유, C1, C4, C5)을 사용합니다.
+
+For a coax network, you "should" use 93 Ohm RG-62 cable.  But other cables
+also work fine, because ARCnet is a very stable network. I personally use 75
+Ohm TV antenna cable.
+동축 케이블의 경우 93ohm RG-62 케이블을 사용해야합니다. ARCnet은 매우 안정적인 네트워크이므로 다른 케이블도 정상적으로 작동합니다. 나는 개인적으로 75 옴 TV 안테나 케이블을 사용한다.
+
+Cards for coax cabling are shipped in two different variants: for BUS and
+STAR network topologies.  They are mostly the same.  The only difference
+lies in the hybrid chip installed.  BUS cards use high impedance output,
+while STAR use low impedance.  Low impedance card (STAR) is electrically
+equal to a high impedance one with a terminator installed.
+동축 케이블 링을 위한 카드는 BUS 및 STAR 네트워크 토폴로지의 두 가지 변형으로 제공됩니다. 그들은 거의 동일합니다. 유일한 차이점은 설치된 하이브리드 칩에 있습니다. BUS 카드는 높은 임피던스 출력을 사용하는 반면 STAR는 낮은 임피던스를 사용합니다. 저 임피던스 카드 (STAR)는 터미네이터가 설치된 하이 임피던스 카드와 전기적으로 동일합니다.
+
+Usually, the ARCnet networks are built up from STAR cards and hubs.  There
+are two types of hubs - active and passive.  Passive hubs are small boxes
+with four BNC connectors containing four 47 Ohm resistors:
+일반적으로 ARCnet 네트워크는 STAR 카드와 허브로 구성됩니다. 허브에는 능동형과 수동형의 두 가지 유형이 있습니다. 패시브 허브는 4 개의 47 Ohm 저항을 포함하는 4 개의 BNC 커넥터가있는 작은 상자입니다.
+
+   |         | wires
+   R         + junction
+-R-+-R-      R 47 Ohm resistors
+   R
+   |
+
+The shielding is connected together.  Active hubs are much more complicated;
+they are powered and contain electronics to amplify the signal and send it
+to other segments of the net.  They usually have eight connectors.  Active
+hubs come in two variants - dumb and smart.  The dumb variant just
+amplifies, but the smart one decodes to digital and encodes back all packets
+coming through.  This is much better if you have several hubs in the net,
+since many dumb active hubs may worsen the signal quality.
+실드는 함께 연결되어 있습니다. 액티브 허브는 훨씬 더 복잡합니다. 그들은 전원이 공급되고 신호를 증폭하여 net의 다른 부분으로 보내도록 전자 장치를 포함합니다. 그들은 보통 8 개의 커넥터를 가지고 있습니다. 액티브 허브에는 바보와 똑똑한 두 가지 변형이 있습니다. 멍청한 변종은 단지 증폭되지만 똑똑한 하나은 디지털로 해독하고 들어오는 모든 패킷을 다시 인코딩합니다. 많은 벙어리 액티브 허브가 신호 품질을 악화시킬 수 있으므로 여러 개의 허브가있는 경우 훨씬 좋습니다.
+
+And now to the cabling.  What you can connect together:
+그리고 이제 케이블 연결. 함께 연결할 수있는 항목 :
+
+1. A card to a card.  This is the simplest way of creating a 2-computer
+   network.
+1. 카드에 카드. 이것은 2 컴퓨터 네트워크를 만드는 가장 간단한 방법입니다.
+
+2. A card to a passive hub.  Remember that all unused connectors on the hub
+   must be properly terminated with 93 Ohm (or something else if you don't
+   have the right ones) terminators.
+   	(Avery's note: oops, I didn't know that.  Mine (TV cable) works
+	anyway, though.)
+2. 수동 허브에 대한 카드. 허브에있는 사용되지 않는 모든 커넥터는 93 Ohm (또는 올바른 커넥터가없는 경우에는 다른 것) 터미네이터로 올바르게 종결되어야합니다. (Avery 's note : 나는 그것을 몰랐다. (TV 케이블))
+
+3. A card to an active hub.  Here is no need to terminate the unused
+   connectors except some kind of aesthetic feeling.  But, there may not be
+   more than eleven active hubs between any two computers.  That of course
+   doesn't limit the number of active hubs on the network.
+3. 액티브 허브에 카드. 일종의 미적 감각을 제외하고는 사용되지 않는 커넥터를 종결 할 필요가 없습니다. 그러나 두 대의 컴퓨터 사이에는 11 개의 활성 허브가있을 수 없습니다. 물론 이것은 네트워크상의 활성 허브의 수를 제한하지 않습니다.
+
+
+4. An active hub to another.
+4. 다른 허브에 대한 활성 허브.
+
+5. An active hub to passive hub.
+5. 액티브 허브 - 패시브 허브.
+
+Remember that you cannot connect two passive hubs together.  The power loss
+implied by such a connection is too high for the net to operate reliably.
+두 개의 수동 허브를 함께 연결할 수는 없습니다. 이러한 연결에 의해 암시 된 전력 손실은 넷이 안정적으로 작동하기에는 너무 높습니다.
+
+An example of a typical ARCnet network:
+일반적인 ARCnet 네트워크의 예 :
+
+           R                     S - STAR type card              
+    S------H--------A-------S    R - Terminator
+           |        |            H - Hub                         
+           |        |            A - Active hub                  
+           |   S----H----S                                       
+           S        |                                            
+                    |                                            
+                    S                                            
+                                                                          
+The BUS topology is very similar to the one used by Ethernet.  The only
+difference is in cable and terminators: they should be 93 Ohm.  Ethernet
+uses 50 Ohm impedance. You use T connectors to put the computers on a single
+line of cable, the bus. You have to put terminators at both ends of the
+cable. A typical BUS ARCnet network looks like:
+버스 topology는 이더넷에서 사용되는 토폴로지와 매우 유사합니다. 케이블과 terminators의 유일한 차이점은 93ohm이어야합니다. 이더넷은 50 옴 임피던스를 사용합니다. T 커넥터를 사용하여 컴퓨터를 한 줄의 케이블 인 버스에 놓습니다. 케이블의 양쪽 끝에 terminators를 설치해야합니다. 일반적인 BUS ARCnet 네트워크는 다음과 같습니다.
+
+    RT----T------T------T------T------TR
+     B    B      B      B      B      B
+
+  B - BUS type card
+  R - Terminator
+  T - T connector
+
+But that is not all! The two types can be connected together.  According to
+the official documentation the only way of connecting them is using an active
+hub:
+하지만 그건 전부가 아닙니다! 두 종류는 함께 연결될 수 있습니다. 공식 문서에 따르면 이들을 연결하는 유일한 방법은 활성 허브를 사용하는 것입니다.
+
+         A------T------T------TR
+         |      B      B      B
+     S---H---S
+         |
+         S
+
+The official docs also state that you can use STAR cards at the ends of
+BUS network in place of a BUS card and a terminator:
+공식 문서는 BUS 카드와 terminator 대신에 BUS 네트워크의 끝에서 STAR 카드를 사용할 수 있다고 명시하고 있습니다.
+
+
+     S------T------T------S
+            B      B
+
+But, according to my own experiments, you can simply hang a BUS type card
+anywhere in middle of a cable in a STAR topology network.  And more - you
+can use the bus card in place of any star card if you use a terminator. Then
+you can build very complicated networks fulfilling all your needs!  An
+example:
+그러나 제 자신의 실험에 따르면 STAR 토폴로지 네트워크에서 케이블 중간에 BUS 유형 카드를 걸어 둘 수 있습니다. 또한 종단 코드를 사용하는 경우 스타 카드 대신 버스 카드를 사용할 수 있습니다. 그런 다음 모든 필요를 충족시키는 매우 복잡한 네트워크를 구축 할 수 있습니다! 예 :
+
+                                  S
+                                  |
+           RT------T-------T------H------S
+            B      B       B      |
+                                  |       R
+    S------A------T-------T-------A-------H------TR                    
+           |      B       B       |       |      B                         
+           |   S                 BT       |                                 
+           |   |                  |  S----A-----S
+    S------H---A----S             |       | 
+           |   |      S------T----H---S   |
+           S   S             B    R       S  
+                                                               
+A basically different cabling scheme is used with Twisted Pair cabling. Each
+of the TP cards has two RJ (phone-cord style) connectors.  The cards are
+then daisy-chained together using a cable connecting every two neighboring
+cards.  The ends are terminated with RJ 93 Ohm terminators which plug into
+the empty connectors of cards on the ends of the chain.  An example:
+기본적으로 다른 케이블 링 방식이 Twisted Pair 케이블 링과 함께 사용됩니다. 각 TP 카드에는 2 개의 RJ (전화 코드 스타일) 커넥터가 있습니다. 그런 다음 인접한 두 카드를 연결하는 케이블을 사용하여 카드를 데이지 체인 방식으로 연결합니다. 끝단은 RJ 93 옴 터미네이터로 끝나며 체인 끝의 빈 카드 커넥터에 꽂습니다. 예 :
+
+          ___________   ___________
+      _R_|_         _|_|_         _|_R_  
+     |     |       |     |       |     |      
+     |Card |       |Card |       |Card |     
+     |_____|       |_____|       |_____|          
+
+
+There are also hubs for the TP topology.  There is nothing difficult
+involved in using them; you just connect a TP chain to a hub on any end or
+even at both.  This way you can create almost any network configuration. 
+The maximum of 11 hubs between any two computers on the net applies here as
+well.  An example:
+TP 토폴로지의 허브도 있습니다. 그것들을 사용하는 것이 어렵지 않습니다; 당신은 TP 체인을 어느 쪽의 허브에 또는 심지어 양쪽에 연결합니다. 이렇게하면 거의 모든 네트워크 구성을 만들 수 있습니다. net에있는 두 대의 컴퓨터 사이에 최대 11 개의 허브가 여기에 적용됩니다. 예 :
+
+    RP-------P--------P--------H-----P------P-----PR
+                               |
+      RP-----H--------P--------H-----P------PR
+             |                 |
+             PR                PR
+
+    R - RJ Terminator
+    P - TP Card
+    H - TP Hub
+
+Like any network, ARCnet has a limited cable length.  These are the maximum
+cable lengths between two active ends (an active end being an active hub or
+a STAR card).
+모든 네트워크와 마찬가지로 ARCnet은 케이블 길이가 제한되어 있습니다. 이것들은 두 개의 활성 끝 사이의 최대 케이블 길이입니다 (활성 끝이 활성 허브 또는 STAR 카드 임).
+
+		RG-62       93 Ohm up to 650 m
+		RG-59/U     75 Ohm up to 457 m
+		RG-11/U     75 Ohm up to 533 m
+		IBM Type 1 150 Ohm up to 200 m
+		IBM Type 3 100 Ohm up to 100 m
+
+The maximum length of all cables connected to a passive hub is limited to 65
+meters for RG-62 cabling; less for others.  You can see that using passive
+hubs in a large network is a bad idea. The maximum length of a single "BUS
+Trunk" is about 300 meters for RG-62. The maximum distance between the two
+most distant points of the net is limited to 3000 meters. The maximum length
+of a TP cable between two cards/hubs is 650 meters.
+패시브 허브에 연결된 모든 케이블의 최대 길이는 RG-62 케이블 링의 경우 65m로 제한됩니다. 다른 사람들에게는 적다. 대형 네트워크에서 수동 허브를 사용하는 것은 나쁜 생각이라는 것을 알 수 있습니다. 하나의 "버스 트렁크"의 최대 길이는 RG-62의 경우 약 300 미터입니다. 네트의 가장 먼 두 지점 사이의 최대 거리는 3000 미터로 제한됩니다. 두 개의 카드 / 허브 사이의 TP 케이블의 최대 길이는 650m입니다.
+
+
+SETTING THE JUMPERS
+-------------------
+
+All ARCnet cards should have a total of four or five different settings:
+l ARCnet 카드에는 총 네 가지 또는 다섯 가지 설정이 있어야합니다.
+
+  - the I/O address:  this is the "port" your ARCnet card is on.  Probed
+    values in the Linux ARCnet driver are only from 0x200 through 0x3F0. (If
+    your card has additional ones, which is possible, please tell me.) This
+    should not be the same as any other device on your system.  According to
+    a doc I got from Novell, MS Windows prefers values of 0x300 or more,
+    eating net connections on my system (at least) otherwise.  My guess is
+    this may be because, if your card is at 0x2E0, probing for a serial port
+    at 0x2E8 will reset the card and probably mess things up royally.
+    - I / O 주소 : ARCnet 카드가있는 "포트"입니다. Linux ARCnet 드라이버의 프로빙 된 값은 0x200부터 0x3F0까지입니다. (카드에 추가 카드가있는 경우 가능한 경우 알려주십시오.)이 카드는 시스템의 다른 장치와 같을 수 없습니다. Novell에서 얻은 문서에 따르면 MS Windows는 0x300 이상의 값을 선호하며 시스템에서 네트워크 연결을 먹고 있습니다 (적어도). 제 생각에 이것은 카드가 0x2E0에 있다면 0x2E8의 시리얼 포트를 조사하면 카드가 리셋되어 royally에서 엉망이 될 수 있기 때문입니다.
+
+	- Avery's favourite: 0x300.
+  - Avery가 가장 좋아하는 : 0x300.
+
+  - the IRQ: on  8-bit cards, it might be 2 (9), 3, 4, 5, or 7.
+             on 16-bit cards, it might be 2 (9), 3, 4, 5, 7, or 10-15.
+             
+    Make sure this is different from any other card on your system.  Note
+    that IRQ2 is the same as IRQ9, as far as Linux is concerned.  You can
+    "cat /proc/interrupts" for a somewhat complete list of which ones are in
+    use at any given time.  Here is a list of common usages from Vojtech
+    Pavlik <vojtech@suse.cz>:
+    	("Not on bus" means there is no way for a card to generate this
+	interrupt)
+이것이 시스템의 다른 카드와 다른지 확인하십시오. Linux에 관해서 IRQ2는 IRQ9와 같습니다. "cat / proc / interrupts"를 사용하여 주어진 시간에 어떤 것이 사용되는지에 대한 다소 완전한 목록을 얻을 수 있습니다. 다음은 Vojtech Pavlik <vojtech@suse.cz>의 일반적인 사용법 목록입니다.
+     ( "버스에 없음"은 카드가이 인터럽트를 생성 할 수있는 방법이 없음을 의미합니다)
+
+
+	IRQ  0 - Timer 0 (Not on bus)
+	IRQ  1 - Keyboard (Not on bus)
+	IRQ  2 - IRQ Controller 2 (Not on bus, nor does interrupt the CPU)
+	IRQ  3 - COM2
+	IRQ  4 - COM1
+	IRQ  5 - FREE (LPT2 if you have it; sometimes COM3; maybe PLIP)
+	IRQ  6 - Floppy disk controller
+	IRQ  7 - FREE (LPT1 if you don't use the polling driver; PLIP) 
+	IRQ  8 - Realtime Clock Interrupt (Not on bus)
+	IRQ  9 - FREE (VGA vertical sync interrupt if enabled)
+	IRQ 10 - FREE
+	IRQ 11 - FREE
+	IRQ 12 - FREE
+	IRQ 13 - Numeric Coprocessor (Not on bus)
+	IRQ 14 - Fixed Disk Controller
+	IRQ 15 - FREE (Fixed Disk Controller 2 if you have it) 
+	
+	Note: IRQ 9 is used on some video cards for the "vertical retrace"
+	interrupt.  This interrupt would have been handy for things like
+	video games, as it occurs exactly once per screen refresh, but
+	unfortunately IBM cancelled this feature starting with the original
+	VGA and thus many VGA/SVGA cards do not support it.  For this
+	reason, no modern software uses this interrupt and it can almost
+	always be safely disabled, if your video card supports it at all.
+	참고 : IRQ 9는 일부 비디오 카드에서 "vertical retrace"인터럽트를 위해 사용됩니다. 이 인터럽트는 화면 새로 고침 당 정확히 한 번 발생하기 때문에 비디오 게임과 같은 상황에서 유용 할 수 있지만, 불행히도 IBM은 원래의 VGA부터이 기능을 취소했기 때문에 많은 VGA / SVGA 카드가 지원하지 않습니다. 이러한 이유로 현대 소프트웨어는이 인터럽트를 사용하지 않으며 비디오 카드가 전혀 지원하지 않으면 거의 항상 안전하게 사용할 수 있습니다.
+
+	If your card for some reason CANNOT disable this IRQ (usually there
+	is a jumper), one solution would be to clip the printed circuit
+	contact on the board: it's the fourth contact from the left on the
+	back side.  I take no responsibility if you try this.
+어떤 이유로 카드가이 IRQ를 비활성화 할 수 없다면 (일반적으로 점퍼가 있음) 한 가지 해결책은 보드의 인쇄 회로 접점을 클립으로 묶는 것입니다. 후면의 왼쪽에서 네 번째 접점입니다.
+이것을 시도도 나는 책임을지지 않습니다.
+
+	- Avery's favourite: IRQ2 (actually IRQ9).  Watch that VGA, though.
+  - Avery가 좋아하는 : IRQ2 (실제로는 IRQ9). VGA를 보아라.
+
+  - the memory address:  Unlike most cards, ARCnets use "shared memory" for
+    copying buffers around.  Make SURE it doesn't conflict with any other
+    used memory in your system!
+  - 메모리 주소 : 대부분의 카드와 달리 ARCnets는 버퍼를 복사 할 때 "공유 메모리"를 사용합니다. 시스템의 다른 사용 된 메모리와 충돌하지 않는지 확인하십시오!
+
+	A0000		- VGA graphics memory (ok if you don't have VGA)
+          - VGA 그래픽 메모리 (VGA가없는 경우에는 확인)
+
+        B0000		- Monochrome text mode(단색 텍스트 모드)
+        C0000		\  One of these is your VGA BIOS - usually C0000.(이 중 하나는 VGA BIOS입니다 - 일반적으로 C0000.)
+        E0000		/
+        F0000		- System BIOS
+
+    Anything less than 0xA0000 is, well, a BAD idea since it isn't above 640k.
+    0xA0000보다 작은 것은 640k가 넘지 않기 때문에 나쁜 아이디어입니다.
+
+	- Avery's favourite: 0xD0000
+
+  - the station address:  Every ARCnet card has its own "unique" network
+    address from 0 to 255.  Unlike Ethernet, you can set this address
+    yourself with a jumper or switch (or on some cards, with special
+    software).  Since it's only 8 bits, you can only have 254 ARCnet cards
+    on a network.  DON'T use 0 or 255, since these are reserved (although
+    neat stuff will probably happen if you DO use them).  By the way, if you
+    haven't already guessed, don't set this the same as any other ARCnet on
+    your network!
+    - 스테이션 주소 : 모든 ARCnet 카드는 0에서 255 사이의 고유 한 네트워크 주소를가집니다. 이더넷과 달리이 주소는 점퍼 나 스위치 (또는 특수 카드가있는 일부 카드의 경우)를 사용하여 직접 설정할 수 있습니다. 8 비트이기 때문에 네트워크에 254 개의 ARCnet 카드 만있을 수 있습니다. 0 또는 255는 예약되어 있기 때문에 사용하지 마십시오 (사용하는 경우 깔끔한 일이 발생할 수 있습니다). 그런데 이미 짐작하지 않았다면 네트워크상의 다른 ARCnet과 동일하게 설정하지 마십시오!
+
+	- Avery's favourite:  3 and 4.  Not that it matters.
+
+  - There may be ETS1 and ETS2 settings.  These may or may not make a
+    difference on your card (many manuals call them "reserved"), but are
+    used to change the delays used when powering up a computer on the
+    network.  This is only necessary when wiring VERY long range ARCnet
+    networks, on the order of 4km or so; in any case, the only real
+    requirement here is that all cards on the network with ETS1 and ETS2
+    jumpers have them in the same position.  Chris Hindy <chrish@io.org>
+    sent in a chart with actual values for this:
+    - ETS1 및 ETS2 설정이있을 수 있습니다. 이것들은 카드에 차이를 줄 수도 있고하지 않을 수도 있습니다 (많은 매뉴얼들은 그것들을 "reserved"이라고 부릅니다). 그러나 네트워크상에서 컴퓨터의 전원을 켤 때 사용되는 delays을 바꾸는데 사용됩니다. 이것은 4km 정도의 매우 긴 ARCnet 네트워크를 연결할 때만 필요합니다. 어쨌든 여기서 유일한 요구 사항은 ETS1 및 ETS2 점퍼가있는 모든 카드가 동일한 위치에 있어야한다는 것입니다. 크리스 힌디 (Chris Hindy) <chrish@io.org>는 실제 값으로 차트를 보냈습니다 :
+
+	ET1	ET2	Response Time	Reconfiguration Time
+  ET1 ET2 응답 시간 재구성 시간
+	---	---	-------------	--------------------
+	open	open	74.7us		840us
+	open	closed	283.4us		1680us
+	closed	open	561.8us		1680us
+	closed	closed	1118.6us	1680us
+    
+    Make sure you set ETS1 and ETS2 to the SAME VALUE for all cards on your network.
+    네트워크의 모든 카드에 대해 ETS1과 ETS2를 같은 값으로 설정하십시오.
+    
+Also, on many cards (not mine, though) there are red and green LED's. 
+Vojtech Pavlik <vojtech@suse.cz> tells me this is what they mean:
+또한, 많은 카드 (내 것이 아니라)에 빨간색과 녹색 LED가 있습니다.
+Vojtech Pavlik <vojtech@suse.cz>는 이것이 무엇을 의미하는지 알려줍니다.
+
+	GREEN           RED             Status
+	-----		---		------
+	OFF             OFF             Power off
+	OFF             Short flashes   Cabling problems (broken cable or not)
+					  terminated)
+	OFF (short)     ON              Card init
+	ON              ON              Normal state - everything OK, nothing
+					  happens
+	ON              Long flashes    Data transfer
+	ON              OFF             Never happens (maybe when wrong ID)
+
+
+The following is all the specific information people have sent me about
+their own particular ARCnet cards.  It is officially a mess, and contains
+huge amounts of duplicated information.  I have no time to fix it.  If you
+want to, PLEASE DO!  Just send me a 'diff -u' of all your changes.
+다음은 사람들이 자신의 특정 ARCnet 카드에 대해 보낸 특정 정보입니다. 그것은 공식적으로 엉망이며, 거대한 양의 중복 된 정보를 담고 있습니다. 나는 그것을 고칠 시간이 없다. 원한다면 제발! 모든 변경 사항을 'diff -u'로 보내주십시오.
+
+The model # is listed right above specifics for that card, so you should be
+able to use your text viewer's "search" function to find the entry you want. 
+If you don't KNOW what kind of card you have, try looking through the
+various diagrams to see if you can tell.
+모델 #은 해당 카드의 세부 정보 바로 위에 나열되어 있으므로 텍스트 뷰어의 "검색"기능을 사용하여 원하는 항목을 찾을 수 있어야합니다. 어떤 종류의 카드인지 모르는 경우 다양한 다이어그램을 통해 알 수 있는지 알아보십시오.
+
+If your model isn't listed and/or has different settings, PLEASE PLEASE
+tell me.  I had to figure mine out without the manual, and it WASN'T FUN!
+모델이 목록에 없거나 설정이 다른 경우 제발 알려주십시오. 매뉴얼없이 광산을 찾아야했는데 재미가 없었습니다!
+
+Even if your ARCnet model isn't listed, but has the same jumpers as another
+model that is, please e-mail me to say so.
+ARCnet 모델이 나열되어 있지 않지만 다른 모델과 동일한 점퍼가있는 경우에도 전자 메일로 알려주십시오.
+
+Cards Listed in this file (in this order, mostly):
+이 파일에 나열된 카드 (주로 순서대로) :
+
+	Manufacturer	Model #			Bits
+	------------	-------			----
+	SMC		PC100			8
+	SMC		PC110			8
+	SMC		PC120			8
+	SMC		PC130			8
+	SMC		PC270E			8
+	SMC		PC500			16
+	SMC		PC500Longboard		16
+	SMC		PC550Longboard		16
+	SMC		PC600			16
+	SMC		PC710			8
+	SMC?		LCS-8830(-T)		8/16
+	Puredata	PDI507			8
+	CNet Tech	CN120-Series		8
+	CNet Tech	CN160-Series		16
+	Lantech?	UM9065L chipset		8
+	Acer		5210-003		8
+	Datapoint?	LAN-ARC-8		8
+	Topware		TA-ARC/10		8
+	Thomas-Conrad	500-6242-0097 REV A	8
+	Waterloo?	(C)1985 Waterloo Micro. 8
+	No Name		--			8/16
+	No Name		Taiwan R.O.C?		8
+	No Name		Model 9058		8
+	Tiara		Tiara Lancard?		8
+	
+
+** SMC = Standard Microsystems Corp.
+** CNet Tech = CNet Technology, Inc.
+
+
+Unclassified Stuff
+------------------
+  - Please send any other information you can find.
+  - 찾을 수있는 다른 정보를 보내주십시오.
+  
+  - And some other stuff (more info is welcome!):
+     From: root@ultraworld.xs4all.nl (Timo Hilbrink)
+     To: apenwarr@foxnet.net (Avery Pennarun)
+     Date: Wed, 26 Oct 1994 02:10:32 +0000 (GMT)
+     Reply-To: timoh@xs4all.nl
+  - 그리고 다른 것들 (더 많은 정보를 환영합니다!) :
+      출처 : root@ultraworld.xs4all.nl (Timo Hilbrink)
+      받는 사람 : apenwarr@foxnet.net (Avery Pennarun)
+      날짜 : Wed, 26 Oct 1994 02:10:32 +0000 (GMT)
+      답장 : timoh@xs4all.nl
+
+
+     [...parts deleted...]
+
+     About the jumpers: On my PC130 there is one more jumper, located near the
+     cable-connector and it's for changing to star or bus topology; 
+     closed: star - open: bus
+     On the PC500 are some more jumper-pins, one block labeled with RX,PDN,TXI
+     and another with ALE,LA17,LA18,LA19 these are undocumented..
+     점퍼 정보 : PC130에는 케이블 커넥터 근처에 점퍼가 하나 더 있으며 별 또는 버스 토폴로지로 변경하기위한 것입니다.
+     휴관일 : 스타 오픈 : 버스
+     PC500에는 RX, PDN, TXI라는 레이블이 붙은 점퍼 핀과 ALE, LA17, LA18, LA19가있는 점퍼 핀이 있습니다. 이들은 문서화되어 있지 않습니다.
+
+     [...more parts deleted...]
+
+     --- CUT ---
+
+
+** Standard Microsystems Corp (SMC) **
+PC100, PC110, PC120, PC130 (8-bit cards)
+PC500, PC600 (16-bit cards)
+** 표준 마이크로 시스템 (SMC) **
+PC100, PC110, PC120, PC130 (8 비트 카드)
+PC500, PC600 (16 비트 카드)
+
+---------------------------------
+  - mainly from Avery Pennarun <apenwarr@worldvisions.ca>.  Values depicted
+    are from Avery's setup.
+    - 주로 Avery Pennarun <apenwarr@worldvisions.ca>. 표시된 값은 Avery의 설정입니다.
+
+  - special thanks to Timo Hilbrink <timoh@xs4all.nl> for noting that PC120,
+    130, 500, and 600 all have the same switches as Avery's PC100. 
+    PC500/600 have several extra, undocumented pins though. (?)
+    Timo Hilbrink <timoh@xs4all.nl>에게 감사드립니다. PC120, 130, 500 및 600은 모두 Avery의 PC100과 동일한 스위치를 사용합니다.
+    PC500 / 600에는 문서화되지 않은 핀이 여러 개 있습니다. (?)
+
+  - PC110 settings were verified by Stephen A. Wood <saw@cebaf.gov>
+  - PC110 설정은 Stephen A. Wood에 의해 확인되었습니다. <saw@cebaf.gov>
+
+  - Also, the JP- and S-numbers probably don't match your card exactly.  Try
+    to find jumpers/switches with the same number of settings - it's
+    probably more reliable.
+     - JP와 S 번호가 카드와 정확하게 일치하지 않을 수도 있습니다. 점퍼 / 스위치를 동일한 수의 설정으로 찾으십시오. 아마도 더 신뢰할 수 있습니다.
+
+
+     JP5		       [|]    :    :    :    :
+(IRQ Setting)		      IRQ2  IRQ3 IRQ4 IRQ5 IRQ7
+		Put exactly one jumper on exactly one set of pins.
+    핀 하나에 정확하게 하나의 점퍼를 놓습니다.
+
+                          1  2   3  4  5  6   7  8  9 10
+     S1                /----------------------------------\
+(I/O and Memory        |  1  1 * 0  0  0  0 * 1  1  0  1  |
+ addresses)            \----------------------------------/
+                          |--|   |--------|   |--------|
+                          (a)       (b)           (m)
+                          
+                WARNING.  It's very important when setting these which way
+                you're holding the card, and which way you think is '1'!
+                경고.  카드를 가지고하는 방법 과 '1'이라고 생각하는 방식을 설정할 때 매우 중요합니다!
+                
+                If you suspect that your settings are not being made
+		correctly, try reversing the direction or inverting the
+		switch positions.
+    설정이 제대로 작성되지 않았다고 의심되면 방향을 바꾸거나 스위치 위치를 뒤집으십시오.
+
+		a: The first digit of the I/O address.
+			Setting		Value
+			-------		-----
+			00		0
+			01		1
+			10		2
+			11		3
+
+		b: The second digit of the I/O address.
+			Setting		Value
+			-------		-----
+			0000		0
+			0001		1
+			0010		2
+			...		...
+			1110		E
+			1111		F
+
+		The I/O address is in the form ab0.  For example, if
+		a is 0x2 and b is 0xE, the address will be 0x2E0.
+    I / O 주소는 ab0 형식입니다. 예를 들어, a가 0x2이고 b가 0xE이면 주소는 0x2E0입니다.
+
+		DO NOT SET THIS LESS THAN 0x200!!!!!
+    이 값은 0x200보다 작게 설정하지 마십시오 !!!!!
+
+		m: The first digit of the memory address.
+			Setting		Value
+			-------		-----
+			0000		0
+			0001		1
+			0010		2
+			...		...
+			1110		E
+			1111		F
+
+		The memory address is in the form m0000.  For example, if
+		m is D, the address will be 0xD0000.
+    메모리 주소는 m0000 형식입니다. 예를 들어, m이 D이면 주소는 0xD0000이됩니다.
+
+		DO NOT SET THIS TO C0000, F0000, OR LESS THAN A0000!
+    이것을 C0000, F0000, 또는 A0000보다 작게 설정하지 마십시오!
+
+                          1  2  3  4  5  6  7  8
+     S2                /--------------------------\
+(Station Address)      |  1  1  0  0  0  0  0  0  |
+                       \--------------------------/
+
+			Setting		Value
+			-------		-----
+			00000000	00
+			10000000	01
+			01000000	02
+			...
+			01111111	FE
+			11111111	FF
+
+		Note that this is binary with the digits reversed!
+    이것은 숫자가 반전 된 바이너리입니다.
+
+		DO NOT SET THIS TO 0 OR 255 (0xFF)!
+    0 또는 255 (0xFF)로 설정하지 마십시오!
+
+*****************************************************************************
+
+** Standard Microsystems Corp (SMC) **
+PC130E/PC270E (8-bit cards)
+---------------------------
+  - from Juergen Seifert <seifert@htwm.de>
+  - Juergen Seifert 출신 <seifert@htwm.de>
+
+STANDARD MICROSYSTEMS CORPORATION (SMC) ARCNET(R)-PC130E/PC270E
+===============================================================
+
+This description has been written by Juergen Seifert <seifert@htwm.de>
+using information from the following Original SMC Manual 
+이 설명은 다음 원본 SMC 설명서의 정보를 사용하여 Juergen Seifert <seifert@htwm.de>가 작성했습니다.
+
+             "Configuration Guide for
+             ARCNET(R)-PC130E/PC270
+            Network Controller Boards
+                Pub. # 900.044A
+                   June, 1989"
+
+ARCNET is a registered trademark of the Datapoint Corporation
+SMC is a registered trademark of the Standard Microsystems Corporation  
+ARCNET은 Datapoint Corporation의 등록 상표입니다.
+SMC는 Standard Microsystems Corporation의 등록 상표입니다.
+
+
+The PC130E is an enhanced version of the PC130 board, is equipped with a 
+standard BNC female connector for connection to RG-62/U coax cable.
+Since this board is designed both for point-to-point connection in star
+networks and for connection to bus networks, it is downwardly compatible 
+with all the other standard boards designed for coax networks (that is,
+the PC120, PC110 and PC100 star topology boards and the PC220, PC210 and 
+PC200 bus topology boards).
+PC130E는 PC130 보드의 향상된 버전으로, RG-62 / U 동축 케이블에 연결할 수있는 표준 BNC 암 커넥터가 장착되어 있습니다. 
+이 보드는 스타 네트워크의 지점 간 연결과 버스 네트워크 연결 모두를 위해 설계되었으므로 동축 네트워크 용으로 설계된 다른 모든 표준 보드 (즉, PC120, PC110 및 PC100 스타 토폴로지 보드 및 PC220, PC210 및 PC200 버스 토폴로지 보드)와 하향 호환됩니다.
+
+
+The PC270E is an enhanced version of the PC260 board, is equipped with two 
+modular RJ11-type jacks for connection to twisted pair wiring.
+It can be used in a star or a daisy-chained network.
+PC270E는 PC260 보드의 향상된 버전으로 트위스트 페어 (twisted pair) 배선에 연결할 수있는 2 개의 모듈 형 RJ11 유형 잭이 장착되어 있습니다. star 또는  daisy-chained 네트워크에서 사용할 수 있습니다.
+
+         8 7 6 5 4 3 2 1
+    ________________________________________________________________
+   |   |       S1        |                                          |
+   |   |_________________|                                          |
+   |    Offs|Base |I/O Addr                                         |
+   |     RAM Addr |                                              ___|
+   |         ___  ___                                       CR3 |___|
+   |        |   \/   |                                      CR4 |___|
+   |        |  PROM  |                                           ___|
+   |        |        |                                        N |   | 8
+   |        | SOCKET |                                        o |   | 7
+   |        |________|                                        d |   | 6
+   |                   ___________________                    e |   | 5
+   |                  |                   |                   A | S | 4
+   |       |oo| EXT2  |                   |                   d | 2 | 3
+   |       |oo| EXT1  |       SMC         |                   d |   | 2
+   |       |oo| ROM   |      90C63        |                   r |___| 1
+   |       |oo| IRQ7  |                   |               |o|  _____|
+   |       |oo| IRQ5  |                   |               |o| | J1  |
+   |       |oo| IRQ4  |                   |              STAR |_____|
+   |       |oo| IRQ3  |                   |                   | J2  |
+   |       |oo| IRQ2  |___________________|                   |_____|
+   |___                                               ______________|
+       |                                             |
+       |_____________________________________________|
+
+Legend:
+
+SMC 90C63	ARCNET Controller / Transceiver /Logic
+S1	1-3:	I/O Base Address Select
+	4-6:	Memory Base Address Select
+	7-8:	RAM Offset Select
+S2	1-8:	Node ID Select
+EXT		Extended Timeout Select
+ROM		ROM Enable Select
+STAR		Selected - Star Topology	(PC130E only)
+		Deselected - Bus Topology	(PC130E only)
+CR3/CR4		Diagnostic LEDs
+J1		BNC RG62/U Connector		(PC130E only)
+J1		6-position Telephone Jack	(PC270E only)
+J2		6-position Telephone Jack	(PC270E only)
+
+Setting one of the switches to Off/Open means "1", On/Closed means "0".
+스위치 중 하나를 Off / Open으로 설정하면 "1", On / Closed가 "0"을 의미합니다.
+
+Setting the Node ID
+-------------------
+
+The eight switches in group S2 are used to set the node ID.
+These switches work in a way similar to the PC100-series cards; see that
+entry for more information.
+그룹 S2의 8 개 스위치는 노드 ID를 설정하는 데 사용됩니다.
+이 스위치는 PC100 시리즈 카드와 비슷한 방식으로 작동합니다. 자세한 내용은 해당 항목을 참조하십시오.
+
+Setting the I/O Base Address
+----------------------------
+
+The first three switches in switch group S1 are used to select one
+of eight possible I/O Base addresses using the following table
+스위치 그룹 S1의 처음 세 스위치는 다음 표를 사용하여 8 개의 가능한 I / O Base 주소 중 하나를 선택하는 데 사용됩니다
+
+
+   Switch | Hex I/O
+   1 2 3  | Address
+   -------|--------
+   0 0 0  |  260
+   0 0 1  |  290
+   0 1 0  |  2E0  (Manufacturer's default)
+   0 1 1  |  2F0
+   1 0 0  |  300
+   1 0 1  |  350
+   1 1 0  |  380
+   1 1 1  |  3E0
+
+
+Setting the Base Memory (RAM) buffer Address
+--------------------------------------------
+
+The memory buffer requires 2K of a 16K block of RAM. The base of this
+16K block can be located in any of eight positions.
+Switches 4-6 of switch group S1 select the Base of the 16K block.
+Within that 16K address space, the buffer may be assigned any one of four 
+positions, determined by the offset, switches 7 and 8 of group S1.
+메모리 버퍼는 2K의 16K RAM 블록을 필요로합니다. 이 16K 블록의베이스는 8 가지 위치 중 하나에 위치 할 수 있습니다. 스위치 그룹 S1의 스위치 4-6은 16K 블록의베이스를 선택합니다. 그 16K 어드레스 공간 내에서, 버퍼는 그룹 S1의 스위치 7 및 8의 오프셋에 의해 결정되는 4 개의 위치 중 하나를 할당받을 수있다.
+
+   Switch     | Hex RAM | Hex ROM
+   4 5 6  7 8 | Address | Address *)
+   -----------|---------|-----------
+   0 0 0  0 0 |  C0000  |  C2000
+   0 0 0  0 1 |  C0800  |  C2000
+   0 0 0  1 0 |  C1000  |  C2000
+   0 0 0  1 1 |  C1800  |  C2000
+              |         |
+   0 0 1  0 0 |  C4000  |  C6000
+   0 0 1  0 1 |  C4800  |  C6000
+   0 0 1  1 0 |  C5000  |  C6000
+   0 0 1  1 1 |  C5800  |  C6000
+              |         |
+   0 1 0  0 0 |  CC000  |  CE000
+   0 1 0  0 1 |  CC800  |  CE000
+   0 1 0  1 0 |  CD000  |  CE000
+   0 1 0  1 1 |  CD800  |  CE000
+              |         |
+   0 1 1  0 0 |  D0000  |  D2000  (Manufacturer's default)
+   0 1 1  0 1 |  D0800  |  D2000
+   0 1 1  1 0 |  D1000  |  D2000
+   0 1 1  1 1 |  D1800  |  D2000
+              |         |
+   1 0 0  0 0 |  D4000  |  D6000
+   1 0 0  0 1 |  D4800  |  D6000
+   1 0 0  1 0 |  D5000  |  D6000
+   1 0 0  1 1 |  D5800  |  D6000
+              |         |
+   1 0 1  0 0 |  D8000  |  DA000
+   1 0 1  0 1 |  D8800  |  DA000
+   1 0 1  1 0 |  D9000  |  DA000
+   1 0 1  1 1 |  D9800  |  DA000
+              |         |
+   1 1 0  0 0 |  DC000  |  DE000
+   1 1 0  0 1 |  DC800  |  DE000
+   1 1 0  1 0 |  DD000  |  DE000
+   1 1 0  1 1 |  DD800  |  DE000
+              |         |
+   1 1 1  0 0 |  E0000  |  E2000
+   1 1 1  0 1 |  E0800  |  E2000
+   1 1 1  1 0 |  E1000  |  E2000
+   1 1 1  1 1 |  E1800  |  E2000
+  
+*) To enable the 8K Boot PROM install the jumper ROM.
+   The default is jumper ROM not installed.
+*) 8K 부트 PROM을 활성화하려면 점퍼 ROM을 설치하십시오.
+    기본값은 점퍼 ROM이 설치되어 있지 않습니다.
+
+Setting the Timeouts and Interrupt
+----------------------------------
+
+The jumpers labeled EXT1 and EXT2 are used to determine the timeout 
+parameters. These two jumpers are normally left open.
+ EXT1 및 EXT2라고 표시된 점퍼는 시간 초과 매개 변수를 결정하는 데 사용됩니다. 이 두 개의 점퍼는 일반적으로 열려 있습니다.
+
+To select a hardware interrupt level set one (only one!) of the jumpers
+IRQ2, IRQ3, IRQ4, IRQ5, IRQ7. The Manufacturer's default is IRQ2.
+하드웨어 인터럽트 레벨을 선택하려면 점퍼 IRQ2, IRQ3, IRQ4, IRQ5, IRQ7 중 하나 (단 하나!)를 설정하십시오. 제조업체의 기본값은 IRQ2입니다.
+
+Configuring the PC130E for Star or Bus Topology
+-----------------------------------------------
+
+The single jumper labeled STAR is used to configure the PC130E board for 
+star or bus topology.
+STAR이라고 표시된 단일 점퍼는 스타 또는 버스 토폴로지 용 PC130E 보드를 구성하는 데 사용됩니다.
+
+When the jumper is installed, the board may be used in a star network, when 
+it is removed, the board can be used in a bus topology.
+점퍼가 설치되면 스타 네트워크에서 보드를 사용할 수 있으며 보드를 제거하면 보드를 버스 토폴로지로 사용할 수 있습니다.
+
+Diagnostic LEDs
+---------------
+
+Two diagnostic LEDs are visible on the rear bracket of the board.
+The green LED monitors the network activity: the red one shows the
+board activity:
+두 개의 진단 LED가 보드의 후면 브래킷에 표시됩니다.
+녹색 LED는 네트워크 활동을 모니터링합니다 : 빨간색은 보드 활동을 표시합니다 :
+
+ Green  | Status               Red      | Status
+ -------|-------------------   ---------|-------------------
+  on    | normal activity      flash/on | data transfer
+  blink | reconfiguration      off      | no data transfer;
+  off   | defective board or            | incorrect memory or
+        | node ID is zero               | I/O address
+
+
+*****************************************************************************
+
+** Standard Microsystems Corp (SMC) **
+PC500/PC550 Longboard (16-bit cards)
+-------------------------------------
+  - from Juergen Seifert <seifert@htwm.de>
+
+
+STANDARD MICROSYSTEMS CORPORATION (SMC) ARCNET-PC500/PC550 Long Board
+=====================================================================
+
+Note: There is another Version of the PC500 called Short Version, which 
+      is different in hard- and software! The most important differences
+      are:
+      - The long board has no Shared memory.
+      - On the long board the selection of the interrupt is done by binary
+        coded switch, on the short board directly by jumper.
+        참고 : PC500에는 하드 버전과 소프트웨어 버전이 다른 짧은 버전이라는 또 다른 버전이 있습니다! 가장 중요한 차이점은 다음과 같습니다.
+       - long board에는 공유 메모리가 없습니다.
+       - long board에서 인터럽트 선택은 바이너리 코드 스위치로 수행되고 short board에서는 점퍼에 의해 직접 수행됩니다.
+
+[Avery's note: pay special attention to that: the long board HAS NO SHARED
+MEMORY.  This means the current Linux-ARCnet driver can't use these cards. 
+I have obtained a PC500Longboard and will be doing some experiments on it in
+the future, but don't hold your breath.  Thanks again to Juergen Seifert for
+his advice about this!]
+[에이버리의 메모 : 그것에 특별한주의를 기울이십시오 : 긴 널에는 아무 공유 한 기억도 없다. 이것은 현재 Linux-ARCnet 드라이버가이 카드를 사용할 수 없음을 의미합니다.
+나는 PC500Longboard를 얻었고 앞으로도 몇 가지 실험을 해보 겠지만 숨을 멈추지는 마라. 이것에 대한 그의 조언을 위해 Juergen Seifert에게 다시 한번 감사드립니다!]
+
+This description has been written by Juergen Seifert <seifert@htwm.de>
+using information from the following Original SMC Manual 
+이 설명은 다음 원본 SMC 설명서의 정보를 사용하여 Juergen Seifert <seifert@htwm.de>가 작성했습니다.
+
+             "Configuration Guide for
+             SMC ARCNET-PC500/PC550
+         Series Network Controller Boards
+             Pub. # 900.033 Rev. A
+                November, 1989"
+
+ARCNET is a registered trademark of the Datapoint Corporation
+SMC is a registered trademark of the Standard Microsystems Corporation  
+ARCNET은 Datapoint Corporation의 등록 상표입니다.
+SMC는 Standard Microsystems Corporation의 등록 상표입니다.
+
+The PC500 is equipped with a standard BNC female connector for connection
+to RG-62/U coax cable.
+The board is designed both for point-to-point connection in star networks
+and for connection to bus networks.
+PC500에는 RG-62 / U 동축 케이블 연결 용 표준 BNC 암 커넥터가 장착되어 있습니다.
+이 보드는 스타 네트워크에서 지점 간 연결과 버스 네트워크에 연결하기 위해 설계되었습니다.
+
+The PC550 is equipped with two modular RJ11-type jacks for connection
+to twisted pair wiring.
+It can be used in a star or a daisy-chained (BUS) network.
+PC550에는 트위스트 페어 (twisted pair) 배선에 연결할 수있는 2 개의 모듈 형 RJ11 유형 잭이 장착되어 있습니다.
+별 또는 데이지 체인 (BUS) 네트워크에서 사용할 수 있습니다.
+
+       1 
+       0 9 8 7 6 5 4 3 2 1     6 5 4 3 2 1
+    ____________________________________________________________________
+   < |         SW1         | |     SW2     |                            |
+   > |_____________________| |_____________|                            |
+   <   IRQ    |I/O Addr                                                 |
+   >                                                                 ___|
+   <                                                            CR4 |___|
+   >                                                            CR3 |___|
+   <                                                                 ___|
+   >                                                              N |   | 8
+   <                                                              o |   | 7
+   >                                                              d | S | 6
+   <                                                              e | W | 5
+   >                                                              A | 3 | 4
+   <                                                              d |   | 3
+   >                                                              d |   | 2
+   <                                                              r |___| 1
+   >                                                        |o|    _____|
+   <                                                        |o|   | J1  |
+   >  3 1                                                   JP6   |_____|
+   < |o|o| JP2                                                    | J2  |
+   > |o|o|                                                        |_____|
+   <  4 2__                                               ______________|
+   >    |  |                                             |
+   <____|  |_____________________________________________|
+
+Legend:
+
+SW1	1-6:	I/O Base Address Select
+	7-10:	Interrupt Select
+SW2	1-6:	Reserved for Future Use
+SW3	1-8:	Node ID Select
+JP2	1-4:	Extended Timeout Select
+JP6		Selected - Star Topology	(PC500 only)
+		Deselected - Bus Topology	(PC500 only)
+CR3	Green	Monitors Network Activity
+CR4	Red	Monitors Board Activity
+J1		BNC RG62/U Connector		(PC500 only)
+J1		6-position Telephone Jack	(PC550 only)
+J2		6-position Telephone Jack	(PC550 only)
+
+Setting one of the switches to Off/Open means "1", On/Closed means "0".
+스위치 중 하나를 Off / Open으로 설정하면 "1", On / Closed가 "0"을 의미합니다.
+
+Setting the Node ID
+-------------------
+
+The eight switches in group SW3 are used to set the node ID. Each node
+attached to the network must have an unique node ID which must be 
+different from 0.
+Switch 1 serves as the least significant bit (LSB).
+그룹 SW3의 8 개 스위치는 노드 ID를 설정하는 데 사용됩니다. 네트워크에 연결된 각 노드는 0과 다른 고유 한 노드 ID를 가져야합니다.
+스위치 1은 최하위 비트 (LSB)로 사용됩니다.
+
+The node ID is the sum of the values of all switches set to "1"  
+These values are:
+노드 ID는 "1"로 설정된 모든 스위치 값의 합계입니다.이 값은 다음과 같습니다.
+
+    Switch | Value
+    -------|-------
+      1    |   1
+      2    |   2
+      3    |   4
+      4    |   8
+      5    |  16
+      6    |  32
+      7    |  64
+      8    | 128
+
+Some Examples:
+
+    Switch         | Hex     | Decimal 
+   8 7 6 5 4 3 2 1 | Node ID | Node ID
+   ----------------|---------|---------
+   0 0 0 0 0 0 0 0 |    not allowed
+   0 0 0 0 0 0 0 1 |    1    |    1 
+   0 0 0 0 0 0 1 0 |    2    |    2
+   0 0 0 0 0 0 1 1 |    3    |    3
+       . . .       |         |
+   0 1 0 1 0 1 0 1 |   55    |   85
+       . . .       |         |
+   1 0 1 0 1 0 1 0 |   AA    |  170
+       . . .       |         |  
+   1 1 1 1 1 1 0 1 |   FD    |  253
+   1 1 1 1 1 1 1 0 |   FE    |  254
+   1 1 1 1 1 1 1 1 |   FF    |  255 
+
+
+Setting the I/O Base Address
+----------------------------
+
+The first six switches in switch group SW1 are used to select one
+of 32 possible I/O Base addresses using the following table
+스위치 그룹 SW1의 처음 6 개 스위치는 다음 표를 사용하여 32 개의 가능한 I / O Base 주소 중 하나를 선택하는 데 사용됩니다
+
+   Switch       | Hex I/O
+   6 5  4 3 2 1 | Address
+   -------------|--------
+   0 1  0 0 0 0 |  200
+   0 1  0 0 0 1 |  210
+   0 1  0 0 1 0 |  220
+   0 1  0 0 1 1 |  230
+   0 1  0 1 0 0 |  240
+   0 1  0 1 0 1 |  250
+   0 1  0 1 1 0 |  260
+   0 1  0 1 1 1 |  270
+   0 1  1 0 0 0 |  280
+   0 1  1 0 0 1 |  290
+   0 1  1 0 1 0 |  2A0
+   0 1  1 0 1 1 |  2B0
+   0 1  1 1 0 0 |  2C0
+   0 1  1 1 0 1 |  2D0
+   0 1  1 1 1 0 |  2E0 (Manufacturer's default)
+   0 1  1 1 1 1 |  2F0
+   1 1  0 0 0 0 |  300
+   1 1  0 0 0 1 |  310
+   1 1  0 0 1 0 |  320
+   1 1  0 0 1 1 |  330
+   1 1  0 1 0 0 |  340
+   1 1  0 1 0 1 |  350
+   1 1  0 1 1 0 |  360
+   1 1  0 1 1 1 |  370
+   1 1  1 0 0 0 |  380
+   1 1  1 0 0 1 |  390
+   1 1  1 0 1 0 |  3A0
+   1 1  1 0 1 1 |  3B0
+   1 1  1 1 0 0 |  3C0
+   1 1  1 1 0 1 |  3D0
+   1 1  1 1 1 0 |  3E0
+   1 1  1 1 1 1 |  3F0
+
+
+Setting the Interrupt
+---------------------
+
+Switches seven through ten of switch group SW1 are used to select the 
+interrupt level. The interrupt level is binary coded, so selections 
+from 0 to 15 would be possible, but only the following eight values will
+be supported: 3, 4, 5, 7, 9, 10, 11, 12.
+스위치 그룹 SW1의 스위치 7 - 10은 인터럽트 레벨을 선택하는 데 사용됩니다. 인터럽트 레벨은 2 진 코드이므로 0에서 15까지의 선택이 가능하지만 다음의 8 개 값만 지원됩니다 : 3, 4, 5, 7, 9, 10, 11, 12.
+
+   Switch   | IRQ
+   10 9 8 7 | 
+   ---------|-------- 
+    0 0 1 1 |  3
+    0 1 0 0 |  4
+    0 1 0 1 |  5
+    0 1 1 1 |  7
+    1 0 0 1 |  9 (=2) (default)
+    1 0 1 0 | 10
+    1 0 1 1 | 11
+    1 1 0 0 | 12
+
+
+Setting the Timeouts 
+--------------------
+
+The two jumpers JP2 (1-4) are used to determine the timeout parameters. 
+These two jumpers are normally left open.
+Refer to the COM9026 Data Sheet for alternate configurations.
+두 개의 점퍼 JP2 (1-4)는 시간 초과 매개 변수를 결정하는 데 사용됩니다.
+이 두 개의 점퍼는 일반적으로 열려 있습니다.
+대체 구성에 대해서는 COM9026 데이터 시트를 참조하십시오.
+
+Configuring the PC500 for Star or Bus Topology
+----------------------------------------------
+
+The single jumper labeled JP6 is used to configure the PC500 board for 
+star or bus topology.
+When the jumper is installed, the board may be used in a star network, when 
+it is removed, the board can be used in a bus topology.
+
+
+Diagnostic LEDs
+---------------
+
+Two diagnostic LEDs are visible on the rear bracket of the board.
+The green LED monitors the network activity: the red one shows the
+board activity:
+두 개의 진단 LED가 보드의 후면 브래킷에 표시됩니다.
+녹색 LED는 네트워크 활동을 모니터링합니다 : 빨간색은 보드 활동을 표시합니다 :
+
+ Green  | Status               Red      | Status
+ -------|-------------------   ---------|-------------------
+  on    | normal activity      flash/on | data transfer
+  blink | reconfiguration      off      | no data transfer;
+  off   | defective board or            | incorrect memory or
+        | node ID is zero               | I/O address
+
+
+** SMC **
+PC710 (8-bit card)
+------------------
+  - from J.S. van Oosten <jvoosten@compiler.tdcnet.nl>
+  
+Note: this data is gathered by experimenting and looking at info of other
+cards. However, I'm sure I got 99% of the settings right.
+참고 :이 데이터는 다른 카드의 정보를 실험하고 살펴봄으로써 수집됩니다. 그러나, 나는 설정의 99 %를 가지고 있다고 확신한다.
+
+The SMC710 card resembles the PC270 card, but is much more basic (i.e. no
+LEDs, RJ11 jacks, etc.) and 8 bit. Here's a little drawing:
+SMC710 카드는 PC270 카드와 유사하지만 훨씬 기본적이고 (i.e.가 아닌 LED, RJ11 잭 등) 8 비트입니다. 여기에 약간의 그림이 있습니다.
+
+    _______________________________________   
+   | +---------+  +---------+              |____
+   | |   S2    |  |   S1    |              |
+   | +---------+  +---------+              |
+   |                                       |
+   |  +===+    __                          |
+   |  | R |   |  | X-tal                 ###___
+   |  | O |   |__|                      ####__'|
+   |  | M |    ||                        ###
+   |  +===+                                |
+   |                                       |
+   |   .. JP1   +----------+               |
+   |   ..       | big chip |               |   
+   |   ..       |  90C63   |               |
+   |   ..       |          |               |
+   |   ..       +----------+               |
+    -------                     -----------
+           |||||||||||||||||||||
+
+The row of jumpers at JP1 actually consists of 8 jumpers, (sometimes
+labelled) the same as on the PC270, from top to bottom: EXT2, EXT1, ROM,
+IRQ7, IRQ5, IRQ4, IRQ3, IRQ2 (gee, wonder what they would do? :-) )
+JP1의 점퍼 행은 실제로 위에서 아래로 PC270과 같은 8 개의 점퍼 (때로는 레이블이 지정됨)로 구성됩니다.
+EXT2, EXT1, ROM, IRQ7, IRQ5, IRQ4, IRQ3, IRQ2 (이런, 그들이 뭘할지 궁금?)
+
+S1 and S2 perform the same function as on the PC270, only their numbers
+are swapped (S1 is the nodeaddress, S2 sets IO- and RAM-address).
+S1과 S2는 PC270에서와 동일한 기능을 수행하지만 번호 만 바뀝니다 (S1은 노드 주소, S2는 IO- 및 RAM 주소를 설정 함).
+
+I know it works when connected to a PC110 type ARCnet board.
+나는 그것이 PC110 타입 ARCnet 보드에 연결될 때 작동한다는 것을 알고있다.
+	
+*****************************************************************************
+
+** Possibly SMC **
+LCS-8830(-T) (8 and 16-bit cards)
+---------------------------------
+  - from Mathias Katzer <mkatzer@HRZ.Uni-Bielefeld.DE>
+  - Marek Michalkiewicz <marekm@i17linuxb.ists.pwr.wroc.pl> says the
+    LCS-8830 is slightly different from LCS-8830-T.  These are 8 bit, BUS
+    only (the JP0 jumper is hardwired), and BNC only.
+  - Mathias Katzer <mkatzer@HRZ.Uni-Bielefeld.DE>
+  - Marek Michalkiewicz <marekm@i17linuxb.ists.pwr.wroc.pl>에 따르면 LCS-8830은 LCS-8830-T와 약간 다릅니다. 이들은 8 비트, BUS 전용 (JP0 점퍼가 내장되어 있음) 및 BNC 전용입니다.
+	
+This is a LCS-8830-T made by SMC, I think ('SMC' only appears on one PLCC,
+nowhere else, not even on the few Xeroxed sheets from the manual).
+이것은 SMC가 만든 LCS-8830-T입니다. ( 'SMC'는 한 PLCC에만 나타나고 다른 곳에서는 매뉴얼의 Xeroxed 시트조차도 아닙니다.)
+
+SMC ARCnet Board Type LCS-8830-T
+
+   ------------------------------------
+  |                                    |
+  |              JP3 88  8 JP2         |
+  |       #####      | \               |
+  |       #####    ET1 ET2          ###|
+  |                              8  ###|
+  |  U3   SW 1                  JP0 ###|  Phone Jacks
+  |  --                             ###|
+  | |  |                               |
+  | |  |   SW2                         |
+  | |  |                               |
+  | |  |  #####                        |
+  |  --   #####                       ####  BNC Connector 
+  |                                   ####
+  |   888888 JP1                       |
+  |   234567                           |
+   --                           -------
+     |||||||||||||||||||||||||||
+      --------------------------
+
+
+SW1: DIP-Switches for Station Address
+       스테이션 주소 용 DIP 스위치
+SW2: DIP-Switches for Memory Base and I/O Base addresses
+       메모리베이스 및 I / O베이스 주소 용 DIP 스위치
+
+JP0: If closed, internal termination on (default open)
+      닫힌 경우 내부 종료 (기본 열림)
+
+JP1: IRQ Jumpers
+JP2: Boot-ROM enabled if closed
+      부팅 ROM이 닫혀 있으면 활성화 됨
+JP3: Jumpers for response timeout
+      응답 시간 초과 용 점퍼
+ 
+U3: Boot-ROM Socket          
+      부팅 ROM 소켓
+
+ET1 ET2     Response Time     Idle Time    Reconfiguration Time
+
+               78                86               840
+ X            285               316              1680
+     X        563               624              1680
+ X   X       1130              1237              1680
+
+(X means closed jumper)
+
+(DIP-Switch downwards means "0")
+(DIP- 스위치 아래쪽은 "0"을 의미)
+
+The station address is binary-coded with SW1.
+스테이션 주소는 SW1로 이진 코드됩니다.
+
+The I/O base address is coded with DIP-Switches 6,7 and 8 of SW2:
+I / O 기본 주소는 SW2의 DIP 스위치 6,7 및 8로 코딩됩니다.
+
+Switches        Base
+678             Address
+000		260-26f
+100		290-29f
+010		2e0-2ef
+110		2f0-2ff
+001		300-30f
+101		350-35f
+011		380-38f
+111 		3e0-3ef
+
+
+DIP Switches 1-5 of SW2 encode the RAM and ROM Address Range:
+SW2의 DIP 스위치 1-5는 RAM 및 ROM을 인코딩합니다. 주소 범위 :
+
+Switches        RAM           ROM
+12345           Address Range  Address Range
+00000		C:0000-C:07ff	C:2000-C:3fff
+10000		C:0800-C:0fff
+01000		C:1000-C:17ff
+11000		C:1800-C:1fff
+00100		C:4000-C:47ff	C:6000-C:7fff
+10100		C:4800-C:4fff
+01100		C:5000-C:57ff 
+11100		C:5800-C:5fff
+00010		C:C000-C:C7ff	C:E000-C:ffff
+10010		C:C800-C:Cfff
+01010		C:D000-C:D7ff
+11010		C:D800-C:Dfff
+00110		D:0000-D:07ff	D:2000-D:3fff
+10110		D:0800-D:0fff
+01110		D:1000-D:17ff
+11110		D:1800-D:1fff
+00001		D:4000-D:47ff	D:6000-D:7fff
+10001		D:4800-D:4fff
+01001		D:5000-D:57ff
+11001		D:5800-D:5fff
+00101		D:8000-D:87ff	D:A000-D:bfff
+10101		D:8800-D:8fff
+01101		D:9000-D:97ff
+11101		D:9800-D:9fff 
+00011		D:C000-D:c7ff	D:E000-D:ffff
+10011		D:C800-D:cfff
+01011		D:D000-D:d7ff
+11011		D:D800-D:dfff
+00111		E:0000-E:07ff	E:2000-E:3fff
+10111		E:0800-E:0fff
+01111		E:1000-E:17ff
+11111		E:1800-E:1fff
+
+
+*****************************************************************************
+
+** PureData Corp **
+PDI507 (8-bit card)
+--------------------
+  - from Mark Rejhon <mdrejhon@magi.com> (slight modifications by Avery)
+  - Avery's note: I think PDI508 cards (but definitely NOT PDI508Plus cards)
+    are mostly the same as this.  PDI508Plus cards appear to be mainly
+    software-configured.
+  - Mark Rejhon <mdrejhon@magi.com> (에이버리가 약간 수정)
+  - 에이버리의 메모 : 나는 PDI508 카드 (그러나 확실히 PDI508Plus 카드가 아닌 것)는 거의 이것과 같다고 생각한다. PDI508Plus 카드는 주로 소프트웨어로 구성된 것으로 보입니다.
+  
+Jumpers:
+	There is a jumper array at the bottom of the card, near the edge
+        connector.  This array is labelled J1.  They control the IRQs and
+        something else.  Put only one jumper on the IRQ pins.
+카드 하단에는 가장자리 커넥터 근처에 점퍼 배열이 있습니다. 이 배열에는 J1이라는 레이블이 지정됩니다. 그들은 IRQ와 다른 것을 제어합니다. IRQ 핀에 점퍼를 하나만 넣으십시오.
+
+	ETS1, ETS2 are for timing on very long distance networks.  See the
+	more general information near the top of this file.
+  ETS1, ETS2는 장거리 네트워크에서 타이밍을 맞추기위한 것입니다. 이 파일의 맨 위에있는보다 일반적인 정보를 참조하십시오.
+
+	There is a J2 jumper on two pins.  A jumper should be put on them,
+        since it was already there when I got the card.  I don't know what
+        this jumper is for though.
+  두 개의 핀에 J2 점퍼가 있습니다. 내가 카드를 받았을 때 이미 거기에 있었기 때문에 점퍼를 올려 놓아야합니다. 나는이 점퍼가 무엇인지에 관해 모른다.
+        
+	There is a two-jumper array for J3.  I don't know what it is for,
+        but there were already two jumpers on it when I got the card.  It's
+        a six pin grid in a two-by-three fashion.  The jumpers were
+        configured as follows:
+J3에는 2 개의 점퍼 배열이 있습니다. 나는 그것이 무엇인지에 관해 모른다. 그러나 내가 카드를 얻을 때 벌써 그것에 2 개의 점퍼가 있었다. 그것은 2x3 fashion의 6 핀 그리드입니다. 점퍼는 다음과 같이 구성되었습니다.
+
+	   .-------.
+	 o | o   o |
+	   :-------:    ------> Accessible end of card with connectors
+	 o | o   o |             in this direction ------->
+	   `-------'
+
+Carl de Billy <CARL@carainfo.com> explains J3 and J4:
+
+	J3 Diagram:
+
+           .-------.
+         o | o   o |
+           :-------:    TWIST Technology
+         o | o   o |
+           `-------'
+           .-------.
+           | o   o | o
+           :-------:    COAX Technology
+           | o   o | o
+           `-------'
+
+  - If using coax cable in a bus topology the J4 jumper must be removed;
+    place it on one pin.
+- 버스 topology에서 동축 케이블을 사용하는 경우 J4 점퍼를 제거해야합니다. 그것을 하나의 핀에 놓으십시오.
+
+  - If using bus topology with twisted pair wiring move the J3 
+    jumpers so they connect the middle pin and the pins closest to the RJ11
+    Connectors.  Also the J4 jumper must be removed; place it on one pin of
+    J4 jumper for storage.
+   - twisted pair 배선을 사용하는 버스 토폴로지를 사용하는 경우 J3 점퍼를 이동하여 가운데 핀과 RJ11 커넥터에 가장 가까운 핀을 연결합니다. 또한 J4 점퍼를 제거해야합니다. J4 점퍼의 한 핀에 보관하십시오.
+
+  - If using  star topology with twisted pair wiring move the J3 
+    jumpers so they connect the middle pin and the pins closest to the RJ11
+    connectors.
+   - twisted pair 배선을 사용하는 스타 토폴로지를 사용하는 경우 J3 점퍼를 이동하여 가운데 핀과 RJ11 커넥터에 가장 가까운 핀을 연결합니다.
+
+DIP Switches:
+
+	The DIP switches accessible on the accessible end of the card while
+        it is installed, is used to set the ARCnet address.  There are 8
+        switches.  Use an address from 1 to 254.
+카드가 설치되어있는 동안 액세스 할 수있는 쪽에서 액세스 할 수있는 DIP 스위치는 ARCnet 주소를 설정하는 데 사용됩니다. 8 개의 스위치가 있습니다. 1에서 254까지의 주소를 사용하십시오.
+
+	Switch No.
+	12345678	ARCnet address
+	-----------------------------------------
+	00000000	FF  	(Don't use this!)
+	00000001	FE
+	00000010	FD
+	....
+	11111101	2	
+	11111110	1
+	11111111	0	(Don't use this!)
+
+	There is another array of eight DIP switches at the top of the
+        card.  There are five labelled MS0-MS4 which seem to control the
+        memory address, and another three labelled IO0-IO2 which seem to
+        control the base I/O address of the card.
+카드 상단에는 8 개의 DIP 스위치가 배열되어 있습니다. 메모리 주소를 제어하는 것으로 보이는 5 개의 MS0-MS4 레이블과 카드의 기본 I / O 주소를 제어하는 IO0-IO2 레이블이있는 3 개의 레이블이 있습니다.
+
+	This was difficult to test by trial and error, and the I/O addresses
+        are in a weird order.  This was tested by setting the DIP switches,
+        rebooting the computer, and attempting to load ARCETHER at various
+        addresses (mostly between 0x200 and 0x400).  The address that caused
+        the red transmit LED to blink, is the one that I thought works.
+시행 착오로 테스트하기가 어렵고 I / O 주소가 이상한 순서로되어 있습니다. 이것은 DIP 스위치를 설정하고, 컴퓨터를 재부팅하고, ARCETHER를 다양한 주소 (주로 0x200와 0x400 사이)에로드하여 테스트했습니다. 빨간색 전송 LED가 깜박 거리는 주소가 작동한다고 생각하는 주소입니다.
+
+	Also, the address 0x3D0 seem to have a special meaning, since the
+        ARCETHER packet driver loaded fine, but without the red LED
+        blinking.  I don't know what 0x3D0 is for though.  I recommend using
+        an address of 0x300 since Windows may not like addresses below
+        0x300.
+또한 주소 0x3D0은 ARCETHER 패킷 드라이버가 제대로 로드되었지만 빨간색 LED가 깜박이지 않아 특별한 의미가있는 것처럼 보입니다. 나는 0x3D0이 무엇인지에 관해 모른다. Windows는 0x300 이하의 주소를 좋아하지 않을 수 있으므로 0x300의 주소를 사용하는 것이 좋습니다.
+
+	IO Switch No.
+	210             I/O address
+	-------------------------------
+	111             0x260
+	110             0x290
+	101             0x2E0
+	100             0x2F0
+	011             0x300
+	010             0x350
+	001             0x380
+	000             0x3E0
+
+	The memory switches set a reserved address space of 0x1000 bytes
+        (0x100 segment units, or 4k).  For example if I set an address of
+        0xD000, it will use up addresses 0xD000 to 0xD100.
+메모리 스위치는 0x1000 바이트 (0x100 세그먼트 단위 또는 4k)의 예약 된 주소 공간을 설정합니다. 예를 들어 0xD000의 주소를 설정하면 주소 0xD000에서 0xD100까지 사용합니다.
+
+	The memory switches were tested by booting using QEMM386 stealth,
+        and using LOADHI to see what address automatically became excluded
+        from the upper memory regions, and then attempting to load ARCETHER
+        using these addresses.
+메모리 스위치는 QEMM386 스텔스를 사용하여 부팅하고 LOADHI를 사용하여 자동으로 상위 메모리 영역에서 제외 된 주소를 확인한 다음이 주소를 사용하여 ARCETHER를로드하려고 시도하여 테스트되었습니다.
+
+	I recommend using an ARCnet memory address of 0xD000, and putting
+        the EMS page frame at 0xC000 while using QEMM stealth mode.  That
+        way, you get contiguous high memory from 0xD100 almost all the way
+        the end of the megabyte.
+ARCnet 메모리 주소 0xD000을 사용하고 QEMM 은폐 모드를 사용하는 동안 0xC000에 EMS 페이지 프레임을 넣는 것이 좋습니다. 그렇게하면 0xD100에서부터 메가 바이트 끝까지 거의 연속적인 높은 메모리를 얻을 수 있습니다.
+
+	Memory Switch 0 (MS0) didn't seem to work properly when set to OFF
+        on my card.  It could be malfunctioning on my card.  Experiment with
+        it ON first, and if it doesn't work, set it to OFF.  (It may be a
+        modifier for the 0x200 bit?)
+        내 카드에서 OFF로 설정하면 메모리 스위치 0 (MS0)이 제대로 작동하지 않는 것 같습니다. 카드에 오작동을 일으킬 수 있습니다. 먼저 테스트 해보고 작동하지 않으면 끄기로 설정하십시오. 0x200 비트의 수식어가 될지도 모릅니다.
+
+	MS Switch No.
+	43210           Memory address
+	--------------------------------
+	00001           0xE100  (guessed - was not detected by QEMM)
+	00011           0xE000  (guessed - was not detected by QEMM)
+	00101           0xDD00
+	00111           0xDC00
+	01001           0xD900
+	01011           0xD800
+	01101           0xD500
+	01111           0xD400
+	10001           0xD100
+	10011           0xD000
+	10101           0xCD00
+	10111           0xCC00
+	11001           0xC900 (guessed - crashes tested system)
+	11011           0xC800 (guessed - crashes tested system)
+	11101           0xC500 (guessed - crashes tested system)
+	11111           0xC400 (guessed - crashes tested system)
+	
+	
+*****************************************************************************
+
+** CNet Technology Inc. **
+120 Series (8-bit cards)
+------------------------
+  - from Juergen Seifert <seifert@htwm.de>
+  - Juergen Seifert 출신 <seifert@htwm.de>
+
+CNET TECHNOLOGY INC. (CNet) ARCNET 120A SERIES
+==============================================
+
+This description has been written by Juergen Seifert <seifert@htwm.de>
+using information from the following Original CNet Manual 
+이 설명은 다음 원본 CNet 설명서의 정보를 사용하여 Juergen Seifert <seifert@htwm.de>가 작성했습니다.
+
+              "ARCNET
+            USER'S MANUAL 
+                for
+               CN120A
+               CN120AB
+               CN120TP
+               CN120ST
+               CN120SBT
+             P/N:12-01-0007
+             Revision 3.00"
+
+ARCNET is a registered trademark of the Datapoint Corporation
+ARCNET은 Datapoint Corporation의 등록 상표입니다.
+
+P/N 120A   ARCNET 8 bit XT/AT Star
+P/N 120AB  ARCNET 8 bit XT/AT Bus
+P/N 120TP  ARCNET 8 bit XT/AT Twisted Pair
+P/N 120ST  ARCNET 8 bit XT/AT Star, Twisted Pair
+P/N 120SBT ARCNET 8 bit XT/AT Star, Bus, Twisted Pair
+
+    __________________________________________________________________
+   |                                                                  |
+   |                                                               ___|
+   |                                                          LED |___|
+   |                                                               ___|
+   |                                                            N |   | ID7
+   |                                                            o |   | ID6
+   |                                                            d | S | ID5
+   |                                                            e | W | ID4
+   |                     ___________________                    A | 2 | ID3
+   |                    |                   |                   d |   | ID2
+   |                    |                   |  1 2 3 4 5 6 7 8  d |   | ID1
+   |                    |                   | _________________ r |___| ID0
+   |                    |      90C65        ||       SW1       |  ____|
+   |  JP 8 7            |                   ||_________________| |    |
+   |    |o|o|  JP1      |                   |                    | J2 |
+   |    |o|o|  |oo|     |                   |         JP 1 1 1   |    |
+   |   ______________   |                   |            0 1 2   |____|
+   |  |  PROM        |  |___________________|           |o|o|o|  _____|
+   |  >  SOCKET      |  JP 6 5 4 3 2                    |o|o|o| | J1  |
+   |  |______________|    |o|o|o|o|o|                   |o|o|o| |_____|
+   |_____                 |o|o|o|o|o|                   ______________|
+         |                                             |
+         |_____________________________________________|
+
+Legend:
+
+90C65       ARCNET Probe
+S1  1-5:    Base Memory Address Select
+    6-8:    Base I/O Address Select
+S2  1-8:    Node ID Select (ID0-ID7)
+JP1     ROM Enable Select
+JP2     IRQ2
+JP3     IRQ3
+JP4     IRQ4
+JP5     IRQ5
+JP6     IRQ7
+JP7/JP8     ET1, ET2 Timeout Parameters
+JP10/JP11   Coax / Twisted Pair Select  (CN120ST/SBT only)
+JP12        Terminator Select       (CN120AB/ST/SBT only)
+J1      BNC RG62/U Connector        (all except CN120TP)
+J2      Two 6-position Telephone Jack   (CN120TP/ST/SBT only)
+
+Setting one of the switches to Off means "1", On means "0".
+스위치 중 하나를 Off로 설정하면 "1"을 의미하고, On이면 "0"을 의미합니다.
+
+Setting the Node ID
+-------------------
+
+The eight switches in SW2 are used to set the node ID. Each node attached
+to the network must have an unique node ID which must be different from 0.
+Switch 1 (ID0) serves as the least significant bit (LSB).
+SW2의 8 개 스위치는 노드 ID를 설정하는 데 사용됩니다. 네트워크에 연결된 각 노드는 0과 다른 고유 한 노드 ID를 가져야합니다. 스위치 1 (ID0)은 최하위 비트 (LSB)로 사용됩니다.
+
+The node ID is the sum of the values of all switches set to "1"  
+These values are:
+노드 ID는 "1"로 설정된 모든 스위치 값의 합계입니다.이 값은 다음과 같습니다.
+
+   Switch | Label | Value
+   -------|-------|-------
+     1    | ID0   |   1
+     2    | ID1   |   2
+     3    | ID2   |   4
+     4    | ID3   |   8
+     5    | ID4   |  16
+     6    | ID5   |  32
+     7    | ID6   |  64
+     8    | ID7   | 128
+
+Some Examples:
+
+    Switch         | Hex     | Decimal 
+   8 7 6 5 4 3 2 1 | Node ID | Node ID
+   ----------------|---------|---------
+   0 0 0 0 0 0 0 0 |    not allowed
+   0 0 0 0 0 0 0 1 |    1    |    1 
+   0 0 0 0 0 0 1 0 |    2    |    2
+   0 0 0 0 0 0 1 1 |    3    |    3
+       . . .       |         |
+   0 1 0 1 0 1 0 1 |   55    |   85
+       . . .       |         |
+   1 0 1 0 1 0 1 0 |   AA    |  170
+       . . .       |         |  
+   1 1 1 1 1 1 0 1 |   FD    |  253
+   1 1 1 1 1 1 1 0 |   FE    |  254
+   1 1 1 1 1 1 1 1 |   FF    |  255
+
+
+Setting the I/O Base Address
+----------------------------
+
+The last three switches in switch block SW1 are used to select one
+of eight possible I/O Base addresses using the following table
+스위치 블록 SW1의 마지막 세 스위치는 다음 표를 사용하여 8 개의 가능한 I / O Base 주소 중 하나를 선택하는 데 사용됩니다.
+
+   Switch      | Hex I/O
+    6   7   8  | Address
+   ------------|--------
+   ON  ON  ON  |  260
+   OFF ON  ON  |  290
+   ON  OFF ON  |  2E0  (Manufacturer's default)
+   OFF OFF ON  |  2F0
+   ON  ON  OFF |  300
+   OFF ON  OFF |  350
+   ON  OFF OFF |  380
+   OFF OFF OFF |  3E0
+
+
+Setting the Base Memory (RAM) buffer Address
+--------------------------------------------
+
+The memory buffer (RAM) requires 2K. The base of this buffer can be 
+located in any of eight positions. The address of the Boot Prom is
+memory base + 8K or memory base + 0x2000.
+Switches 1-5 of switch block SW1 select the Memory Base address.
+메모리 버퍼 (RAM)에는 2K가 필요합니다. 이 버퍼의베이스는 8 개 위치 중 하나에 위치 할 수 있습니다. Boot Prom의 주소는 메모리베이스 + 8K 또는 메모리베이스 + 0x2000입니다. 스위치 블록 SW1의 스위치 1-5는 메모리 기본 주소를 선택합니다.
+
+   Switch              | Hex RAM | Hex ROM
+    1   2   3   4   5  | Address | Address *)
+   --------------------|---------|-----------
+   ON  ON  ON  ON  ON  |  C0000  |  C2000
+   ON  ON  OFF ON  ON  |  C4000  |  C6000
+   ON  ON  ON  OFF ON  |  CC000  |  CE000
+   ON  ON  OFF OFF ON  |  D0000  |  D2000  (Manufacturer's default)
+   ON  ON  ON  ON  OFF |  D4000  |  D6000
+   ON  ON  OFF ON  OFF |  D8000  |  DA000
+   ON  ON  ON  OFF OFF |  DC000  |  DE000
+   ON  ON  OFF OFF OFF |  E0000  |  E2000
+  
+*) To enable the Boot ROM install the jumper JP1
+    부트 ROM을 활성화하려면 점퍼 JP1을 설치하십시오.
+
+Note: Since the switches 1 and 2 are always set to ON it may be possible
+      that they can be used to add an offset of 2K, 4K or 6K to the base
+      address, but this feature is not documented in the manual and I
+      haven't tested it yet.
+참고 : 스위치 1과 2는 항상 ON으로 설정되어 있기 때문에 기본 주소에 2K, 4K 또는 6K 오프셋을 추가하는 데 사용할 수 있지만이 기능은 설명서에 설명되어 있지 않습니다. 아직 테스트를 거치지 않았다.
+
+Setting the Interrupt Line
+--------------------------
+
+To select a hardware interrupt level install one (only one!) of the jumpers
+JP2, JP3, JP4, JP5, JP6. JP2 is the default.
+하드웨어 인터럽트 레벨을 선택하려면 점퍼 JP2, JP3, JP4, JP5, JP6 중 하나 (단 하나!)를 설치하십시오. JP2가 기본값입니다.
+
+   Jumper | IRQ     
+   -------|-----
+     2    |  2
+     3    |  3
+     4    |  4
+     5    |  5
+     6    |  7
+
+
+Setting the Internal Terminator on CN120AB/TP/SBT
+--------------------------------------------------
+
+The jumper JP12 is used to enable the internal terminator. 
+점퍼 JP12는 internal terminator 를 활성화하는 데 사용됩니다.
+                         -----
+       0                |  0  |     
+     -----   ON         |     |  ON
+    |  0  |             |  0  |
+    |     |  OFF         -----   OFF
+    |  0  |                0
+     -----
+   Terminator          Terminator 
+    disabled            enabled
+  
+
+Selecting the Connector Type on CN120ST/SBT
+-------------------------------------------
+
+     JP10    JP11        JP10    JP11
+                         -----   -----
+       0       0        |  0  | |  0  |       
+     -----   -----      |     | |     |
+    |  0  | |  0  |     |  0  | |  0  |
+    |     | |     |      -----   -----
+    |  0  | |  0  |        0       0 
+     -----   -----
+     Coaxial Cable       Twisted Pair Cable 
+       (Default)
+
+
+Setting the Timeout Parameters
+------------------------------
+
+The jumpers labeled EXT1 and EXT2 are used to determine the timeout 
+parameters. These two jumpers are normally left open.
+EXT1 및 EXT2라고 표시된 점퍼는 시간 초과 매개 변수를 결정하는 데 사용됩니다. 이 두 개의 점퍼는 일반적으로 열려 있습니다.
+
+
+*****************************************************************************
+
+** CNet Technology Inc. **
+160 Series (16-bit cards)
+-------------------------
+  - from Juergen Seifert <seifert@htwm.de>
+
+CNET TECHNOLOGY INC. (CNet) ARCNET 160A SERIES
+==============================================
+
+This description has been written by Juergen Seifert <seifert@htwm.de>
+using information from the following Original CNet Manual 
+이 설명은 Juergen Seifert <seifert@htwm.de>에 의해 작성되었습니다.
+다음 원본 CNet 설명서의 정보 사용
+
+              "ARCNET
+            USER'S MANUAL 
+                for
+               CN160A
+               CN160AB
+               CN160TP
+             P/N:12-01-0006
+             Revision 3.00"
+
+ARCNET is a registered trademark of the Datapoint Corporation
+ARCNET은 Datapoint Corporation의 등록 상표입니다.
+
+P/N 160A   ARCNET 16 bit XT/AT Star
+P/N 160AB  ARCNET 16 bit XT/AT Bus
+P/N 160TP  ARCNET 16 bit XT/AT Twisted Pair
+
+   ___________________________________________________________________
+  <                             _________________________          ___|
+  >               |oo| JP2     |                         |    LED |___|
+  <               |oo| JP1     |        9026             |    LED |___|
+  >                            |_________________________|         ___|
+  <                                                             N |   | ID7
+  >                                                      1      o |   | ID6
+  <                                    1 2 3 4 5 6 7 8 9 0      d | S | ID5
+  >         _______________           _____________________     e | W | ID4
+  <        |     PROM      |         |         SW1         |    A | 2 | ID3
+  >        >    SOCKET     |         |_____________________|    d |   | ID2
+  <        |_______________|          | IO-Base   | MEM   |     d |   | ID1
+  >                                                             r |___| ID0
+  <                                                               ____|
+  >                                                              |    |
+  <                                                              | J1 |
+  >                                                              |    |
+  <                                                              |____|
+  >                            1 1 1 1                                |
+  <  3 4 5 6 7      JP     8 9 0 1 2 3                                |
+  > |o|o|o|o|o|           |o|o|o|o|o|o|                               |
+  < |o|o|o|o|o| __        |o|o|o|o|o|o|                    ___________|
+  >            |  |                                       |
+  <____________|  |_______________________________________|
+
+Legend:
+
+9026            ARCNET Probe
+SW1 1-6:    Base I/O Address Select
+    7-10:   Base Memory Address Select
+SW2 1-8:    Node ID Select (ID0-ID7)
+JP1/JP2     ET1, ET2 Timeout Parameters
+JP3-JP13    Interrupt Select
+J1      BNC RG62/U Connector        (CN160A/AB only)
+J1      Two 6-position Telephone Jack   (CN160TP only)
+LED
+
+Setting one of the switches to Off means "1", On means "0".
+스위치 중 하나를 Off로 설정하면 "1"을 의미하고, On이면 "0"을 의미합니다.
+
+Setting the Node ID
+-------------------
+
+The eight switches in SW2 are used to set the node ID. Each node attached
+to the network must have an unique node ID which must be different from 0.
+Switch 1 (ID0) serves as the least significant bit (LSB).
+SW2의 8 개 스위치는 노드 ID를 설정하는 데 사용됩니다. 네트워크에 연결된 각 노드는 0과 다른 고유 한 노드 ID를 가져야합니다. 스위치 1 (ID0)은 최하위 비트 (LSB)로 사용됩니다.
+
+The node ID is the sum of the values of all switches set to "1"  
+These values are:
+노드 ID는 "1"로 설정된 모든 스위치 값의 합계입니다.이 값은 다음과 같습니다.
+
+   Switch | Label | Value
+   -------|-------|-------
+     1    | ID0   |   1
+     2    | ID1   |   2
+     3    | ID2   |   4
+     4    | ID3   |   8
+     5    | ID4   |  16
+     6    | ID5   |  32
+     7    | ID6   |  64
+     8    | ID7   | 128
+
+Some Examples:
+
+    Switch         | Hex     | Decimal 
+   8 7 6 5 4 3 2 1 | Node ID | Node ID
+   ----------------|---------|---------
+   0 0 0 0 0 0 0 0 |    not allowed
+   0 0 0 0 0 0 0 1 |    1    |    1 
+   0 0 0 0 0 0 1 0 |    2    |    2
+   0 0 0 0 0 0 1 1 |    3    |    3
+       . . .       |         |
+   0 1 0 1 0 1 0 1 |   55    |   85
+       . . .       |         |
+   1 0 1 0 1 0 1 0 |   AA    |  170
+       . . .       |         |  
+   1 1 1 1 1 1 0 1 |   FD    |  253
+   1 1 1 1 1 1 1 0 |   FE    |  254
+   1 1 1 1 1 1 1 1 |   FF    |  255
+
+
+Setting the I/O Base Address
+----------------------------
+
+The first six switches in switch block SW1 are used to select the I/O Base
+address using the following table:
+스위치 블록 SW1의 처음 6 개 스위치는 다음 표를 사용하여 I / O Base 주소를 선택하는 데 사용됩니다.
+
+             Switch        | Hex I/O
+    1   2   3   4   5   6  | Address
+   ------------------------|--------
+   OFF ON  ON  OFF OFF ON  |  260
+   OFF ON  OFF ON  ON  OFF |  290
+   OFF ON  OFF OFF OFF ON  |  2E0  (Manufacturer's default)
+   OFF ON  OFF OFF OFF OFF |  2F0
+   OFF OFF ON  ON  ON  ON  |  300
+   OFF OFF ON  OFF ON  OFF |  350
+   OFF OFF OFF ON  ON  ON  |  380
+   OFF OFF OFF OFF OFF ON  |  3E0
+
+Note: Other IO-Base addresses seem to be selectable, but only the above
+      combinations are documented.
+참고 : 다른 IO-Base 주소는 선택할 수 있지만 위의 조합 만이 문서화됩니다.
+
+Setting the Base Memory (RAM) buffer Address
+--------------------------------------------
+
+The switches 7-10 of switch block SW1 are used to select the Memory
+Base address of the RAM (2K) and the PROM.
+스위치 블록 (SW1)의 스위치 (7-10)는 RAM (2K) 및 PROM의 메모리베이스 어드레스를 선택하는데 사용된다.
+
+   Switch          | Hex RAM | Hex ROM
+    7   8   9  10  | Address | Address
+   ----------------|---------|-----------
+   OFF OFF ON  ON  |  C0000  |  C8000
+   OFF OFF ON  OFF |  D0000  |  D8000 (Default)
+   OFF OFF OFF ON  |  E0000  |  E8000
+
+Note: Other MEM-Base addresses seem to be selectable, but only the above
+      combinations are documented.
+주 : 다른 MEM-Base 주소는 선택 가능하지만 위의 조합 만이 문서화되어 있습니다.
+
+Setting the Interrupt Line
+--------------------------
+
+To select a hardware interrupt level install one (only one!) of the jumpers
+JP3 through JP13 using the following table:
+하드웨어 인터럽트 레벨을 선택하려면 다음 테이블을 사용하여 JP3에서 JP13 사이의 점퍼를 설치하십시오 (단 하나!).
+
+   Jumper | IRQ     
+   -------|-----------------
+     3    |  14
+     4    |  15
+     5    |  12
+     6    |  11
+     7    |  10
+     8    |   3
+     9    |   4
+    10    |   5
+    11    |   6
+    12    |   7
+    13    |   2 (=9) Default!
+
+Note:  - Do not use JP11=IRQ6, it may conflict with your Floppy Disk
+         Controller
+       - Use JP3=IRQ14 only, if you don't have an IDE-, MFM-, or RLL-
+         Hard Disk, it may conflict with their controllers
+참고 : - JP11 = IRQ6을 사용하지 마십시오. 플로피 디스크 컨트롤러와 충돌 할 수 있습니다.
+        - JP3 = IRQ14 만 사용하십시오. IDE, MFM 또는 RLL 하드 디스크가 없으면 컨트롤러와 충돌 할 수 있습니다
+
+
+Setting the Timeout Parameters
+------------------------------
+
+The jumpers labeled JP1 and JP2 are used to determine the timeout
+parameters. These two jumpers are normally left open.
+JP1 및 JP2 레이블이 붙은 점퍼가 시간 초과 매개 변수를 결정하는 데 사용됩니다. 이 두 개의 점퍼는 일반적으로 열려 있습니다.
+
+*****************************************************************************
+
+** Lantech **
+8-bit card, unknown model
+-------------------------
+  - from Vlad Lungu <vlungu@ugal.ro> - his e-mail address seemed broken at
+    the time I tried to reach him.  Sorry Vlad, if you didn't get my reply.
+- 블라드 루구 (Vlad Lungu) <vlungu@ugal.ro> - 그의 이메일 주소는 내가 그에게 다가 섰을 때 깨져 보였습니다. 죄송합니다 블라드, 내 대답을받지 못했다면.
+
+   ________________________________________________________________
+   |   1         8                                                 |
+   |   ___________                                               __|
+   |   |   SW1    |                                         LED |__|
+   |   |__________|                                                |
+   |                                                            ___|
+   |                _____________________                       |S | 8
+   |                |                   |                       |W |
+   |                |                   |                       |2 |
+   |                |                   |                       |__| 1
+   |                |      UM9065L      |     |o|  JP4         ____|____
+   |                |                   |     |o|              |  CN    |
+   |                |                   |                      |________|
+   |                |                   |                          |
+   |                |___________________|                          |
+   |                                                               |
+   |                                                               |
+   |      _____________                                            |
+   |      |            |                                           |
+   |      |    PROM    |        |ooooo|  JP6                       |
+   |      |____________|        |ooooo|                            |
+   |_____________                                             _   _|
+                |____________________________________________| |__|
+
+
+UM9065L : ARCnet Controller
+
+SW 1    : Shared Memory Address and I/O Base
+          공유 메모리 주소 및 I / O베이스
+
+        ON=0
+
+        12345|Memory Address
+        -----|--------------
+        00001|  D4000
+        00010|  CC000
+        00110|  D0000
+        01110|  D1000
+        01101|  D9000
+        10010|  CC800
+        10011|  DC800
+        11110|  D1800
+
+It seems that the bits are considered in reverse order.  Also, you must
+observe that some of those addresses are unusual and I didn't probe them; I
+used a memory dump in DOS to identify them.  For the 00000 configuration and
+some others that I didn't write here the card seems to conflict with the
+video card (an S3 GENDAC). I leave the full decoding of those addresses to
+you.
+비트는 역순으로 간주됩니다. 또한, 당신은 그 주소 중 일부는 비정상적인 것으로 관찰해야하고 나는 그것을 조사하지 않았다. 나는 그들을 식별하기 위해 DOS에서 메모리 덤프를 사용했다. 00000 구성과 여기에 쓰지 않은 다른 것들은 비디오 카드 (S3 GENDAC)와 충돌하는 것 같습니다. 그 주소들에 대한 완전한 해독을 당신에게 맡깁니다.
+
+        678| I/O Address
+        ---|------------
+        000|    260
+        001|    failed probe
+        010|    2E0
+        011|    380
+        100|    290
+        101|    350
+        110|    failed probe
+        111|    3E0
+
+SW 2  : Node ID (binary coded)
+
+JP 4  : Boot PROM enable   CLOSE - enabled
+                           OPEN  - disabled
+
+JP 6  : IRQ set (ONLY ONE jumper on 1-5 for IRQ 2-6)
+
+
+*****************************************************************************
+
+** Acer **
+8-bit card, Model 5210-003
+--------------------------
+  - from Vojtech Pavlik <vojtech@suse.cz> using portions of the existing
+    arcnet-hardware file.
+  - Vojtech Pavlik <vojtech@suse.cz>에서 기존 arcnet-hardware 파일의 일부를 사용합니다.
+
+This is a 90C26 based card.  Its configuration seems similar to the SMC
+PC100, but has some additional jumpers I don't know the meaning of.
+이것은 90C26 기반 카드입니다. 그 구성은 SMC PC100과 유사하지만, 의미를 모르는 몇 가지 추가 점퍼가 있습니다.
+
+               __
+              |  |
+   ___________|__|_________________________
+  |         |      |                       |
+  |         | BNC  |                       |
+  |         |______|                    ___|
+  |  _____________________             |___  
+  | |                     |                |
+  | | Hybrid IC           |                |
+  | |                     |       o|o J1   |
+  | |_____________________|       8|8      |
+  |                               8|8 J5   |
+  |                               o|o      |
+  |                               8|8      |
+  |__                             8|8      |
+ (|__| LED                        o|o      |
+  |                               8|8      |
+  |                               8|8 J15  |
+  |                                        |
+  |                    _____               |
+  |                   |     |   _____      |
+  |                   |     |  |     |  ___|
+  |                   |     |  |     | |    
+  |  _____            | ROM |  | UFS | |    
+  | |     |           |     |  |     | |   
+  | |     |     ___   |     |  |     | |   
+  | |     |    |   |  |__.__|  |__.__| |   
+  | | NCR |    |XTL|   _____    _____  |   
+  | |     |    |___|  |     |  |     | |   
+  | |90C26|           |     |  |     | |   
+  | |     |           | RAM |  | UFS | |   
+  | |     | J17 o|o   |     |  |     | |   
+  | |     | J16 o|o   |     |  |     | |   
+  | |__.__|           |__.__|  |__.__| |   
+  |  ___                               |   
+  | |   |8                             |   
+  | |SW2|                              |   
+  | |   |                              |   
+  | |___|1                             |   
+  |  ___                               |   
+  | |   |10           J18 o|o          |   
+  | |   |                 o|o          |   
+  | |SW1|                 o|o          |   
+  | |   |             J21 o|o          |   
+  | |___|1                             |   
+  |                                    |   
+  |____________________________________|   
+
+
+Legend:
+
+90C26       ARCNET Chip
+XTL         20 MHz Crystal
+SW1 1-6     Base I/O Address Select
+    7-10    Memory Address Select
+SW2 1-8     Node ID Select (ID0-ID7)
+J1-J5       IRQ Select
+J6-J21      Unknown (Probably extra timeouts & ROM enable ...)
+LED1        Activity LED 
+BNC         Coax connector (STAR ARCnet)
+RAM         2k of SRAM
+ROM         Boot ROM socket
+UFS         Unidentified Flying Sockets
+
+
+Setting the Node ID
+-------------------
+
+The eight switches in SW2 are used to set the node ID. Each node attached
+to the network must have an unique node ID which must not be 0.
+Switch 1 (ID0) serves as the least significant bit (LSB).
+SW2의 8 개 스위치는 노드 ID를 설정하는 데 사용됩니다. 네트워크에 연결된 각 노드는 0이 아니어야하는 고유 한 노드 ID를 가져야합니다. 스위치 1 (ID0)은 최하위 비트 (LSB)로 사용됩니다.
+
+Setting one of the switches to OFF means "1", ON means "0".
+스위치 중 하나를 OFF로 설정하는 것은 "1"을 의미하고, ON은 "0"을 의미합니다.
+
+The node ID is the sum of the values of all switches set to "1"
+These values are:
+노드 ID는 "1"로 설정된 모든 스위치 값의 합계입니다.이 값은 다음과 같습니다.
+
+   Switch | Value
+   -------|-------
+     1    |   1
+     2    |   2
+     3    |   4
+     4    |   8
+     5    |  16
+     6    |  32
+     7    |  64
+     8    | 128
+
+Don't set this to 0 or 255; these values are reserved.
+0 또는 255로 설정하지 마십시오. 이 값은 예약되어 있습니다.
+
+Setting the I/O Base Address
+----------------------------
+
+The switches 1 to 6 of switch block SW1 are used to select one
+of 32 possible I/O Base addresses using the following tables
+스위치 블록 SW1의 스위치 1 ~ 6은 다음 표를 사용하여 32 개의 가능한 I / O Base 주소 중 하나를 선택하는 데 사용됩니다
+
+          | Hex
+   Switch | Value
+   -------|-------
+     1    | 200  
+     2    | 100  
+     3    |  80  
+     4    |  40  
+     5    |  20  
+     6    |  10 
+
+The I/O address is sum of all switches set to "1". Remember that
+the I/O address space bellow 0x200 is RESERVED for mainboard, so
+switch 1 should be ALWAYS SET TO OFF. 
+I / O 주소는 "1"로 설정된 모든 스위치의 합계입니다. 메인 보드에는 0x200의 I / O 주소 공간이 예약되어 있으므로 스위치 1은 항상 꺼짐으로 설정되어야합니다.
+
+Setting the Base Memory (RAM) buffer Address
+--------------------------------------------
+
+The memory buffer (RAM) requires 2K. The base of this buffer can be
+located in any of sixteen positions. However, the addresses below
+A0000 are likely to cause system hang because there's main RAM.
+메모리 버퍼 (RAM)에는 2K가 필요합니다. 이 버퍼의베이스는 16 개의 임의의 위치에 배치 할 수 있습니다. 그러나 A0000 아래의 주소는 메인 RAM이 있기 때문에 시스템이 멈추는 원인이 될 수 있습니다.
+
+Jumpers 7-10 of switch block SW1 select the Memory Base address.
+스위치 블록 SW1의 점퍼 7-10은 메모리 기본 주소를 선택합니다.
+
+   Switch          | Hex RAM
+    7   8   9  10  | Address
+   ----------------|---------
+   OFF OFF OFF OFF |  F0000 (conflicts with main BIOS)
+   OFF OFF OFF ON  |  E0000 
+   OFF OFF ON  OFF |  D0000
+   OFF OFF ON  ON  |  C0000 (conflicts with video BIOS)
+   OFF ON  OFF OFF |  B0000 (conflicts with mono video)
+   OFF ON  OFF ON  |  A0000 (conflicts with graphics)
+
+
+Setting the Interrupt Line
+--------------------------
+
+Jumpers 1-5 of the jumper block J1 control the IRQ level. ON means 
+shorted, OFF means open.
+점퍼 블록 J1의 점퍼 1-5는 IRQ 레벨을 제어합니다. ON은 단락을 의미하고 OFF는 개방을 의미합니다.
+
+    Jumper              |  IRQ
+    1   2   3   4   5   |
+   ----------------------------
+    ON  OFF OFF OFF OFF |  7
+    OFF ON  OFF OFF OFF |  5
+    OFF OFF ON  OFF OFF |  4
+    OFF OFF OFF ON  OFF |  3
+    OFF OFF OFF OFF ON  |  2
+
+
+Unknown jumpers & sockets
+-------------------------
+
+I know nothing about these. I just guess that J16&J17 are timeout
+jumpers and maybe one of J18-J21 selects ROM. Also J6-J10 and
+J11-J15 are connecting IRQ2-7 to some pins on the UFSs. I can't
+guess the purpose.
+나는 이것들에 관해 아무것도 모른다. J16 & J17은 타임 아웃 점퍼이고 J18-J21 중 하나는 ROM을 선택합니다. 또한 J6-J10 및 J11-J15는 UFS의 일부 핀에 IRQ2-7을 연결합니다. 나는 그 목적을 짐작할 수 없다.
+
+*****************************************************************************
+
+** Datapoint? **
+LAN-ARC-8, an 8-bit card
+------------------------
+  - from Vojtech Pavlik <vojtech@suse.cz>
+
+This is another SMC 90C65-based ARCnet card. I couldn't identify the
+manufacturer, but it might be DataPoint, because the card has the
+original arcNet logo in its upper right corner.
+이것은 다른 SMC 90C65 기반 ARCnet 카드입니다. 제조업체를 식별 할 수는 없지만 카드의 오른쪽 상단에 원래 arcNet 로고가 있기 때문에 DataPoint 일 수 있습니다.
+
+          _______________________________________________________
+         |                         _________                     |
+         |                        |   SW2   | ON      arcNet     |
+         |                        |_________| OFF             ___|
+         |  _____________         1 ______  8                |   | 8  
+         | |             | SW1     | XTAL | ____________     | S |    
+         | > RAM (2k)    |         |______||            |    | W |    
+         | |_____________|                 |      H     |    | 3 |    
+         |                        _________|_____ y     |    |___| 1  
+         |  _________            |         |     |b     |        |    
+         | |_________|           |         |     |r     |        |    
+         |                       |     SMC |     |i     |        |    
+         |                       |    90C65|     |d     |        |      
+         |  _________            |         |     |      |        |
+         | |   SW1   | ON        |         |     |I     |        |
+         | |_________| OFF       |_________|_____/C     |   _____|
+         |  1       8                      |            |  |     |___
+         |  ______________                 |            |  | BNC |___|
+         | |              |                |____________|  |_____|
+         | > EPROM SOCKET |              _____________           |
+         | |______________|             |_____________|          |
+         |                                         ______________|
+         |                                        | 
+         |________________________________________|
+
+Legend:
+
+90C65       ARCNET Chip 
+SW1 1-5:    Base Memory Address Select
+    6-8:    Base I/O Address Select
+SW2 1-8:    Node ID Select
+SW3 1-5:    IRQ Select   
+    6-7:    Extra Timeout
+    8  :    ROM Enable   
+BNC         Coax connector
+XTAL        20 MHz Crystal
+
+
+Setting the Node ID
+-------------------
+
+The eight switches in SW3 are used to set the node ID. Each node attached
+to the network must have an unique node ID which must not be 0.
+Switch 1 serves as the least significant bit (LSB).
+SW3의 8 개 스위치는 노드 ID를 설정하는 데 사용됩니다. 네트워크에 연결된 각 노드는 고유 한 노드 ID를 가져야합니다.이 노드 ID는 0이 아니어야합니다. 스위치 1은 최하위 비트 (LSB)로 사용됩니다.
+
+Setting one of the switches to Off means "1", On means "0".
+스위치 중 하나를 Off로 설정하면 "1"을 의미하고, On이면 "0"을 의미합니다.
+
+The node ID is the sum of the values of all switches set to "1"  
+These values are:
+노드 ID는 "1"로 설정된 모든 스위치 값의 합계입니다.이 값은 다음과 같습니다.
+
+   Switch | Value
+   -------|-------
+     1    |   1
+     2    |   2
+     3    |   4
+     4    |   8
+     5    |  16
+     6    |  32
+     7    |  64
+     8    | 128
+
+
+Setting the I/O Base Address
+----------------------------
+
+The last three switches in switch block SW1 are used to select one
+of eight possible I/O Base addresses using the following table
+스위치 블록 SW1의 마지막 세 스위치는 다음 표를 사용하여 8 개의 가능한 I / O Base 주소 중 하나를 선택하는 데 사용됩니다
+
+   Switch      | Hex I/O
+    6   7   8  | Address
+   ------------|--------
+   ON  ON  ON  |  260
+   OFF ON  ON  |  290
+   ON  OFF ON  |  2E0  (Manufacturer's default)
+   OFF OFF ON  |  2F0
+   ON  ON  OFF |  300
+   OFF ON  OFF |  350
+   ON  OFF OFF |  380
+   OFF OFF OFF |  3E0
+
+
+Setting the Base Memory (RAM) buffer Address
+--------------------------------------------
+
+The memory buffer (RAM) requires 2K. The base of this buffer can be 
+located in any of eight positions. The address of the Boot Prom is
+memory base + 0x2000.
+Jumpers 3-5 of switch block SW1 select the Memory Base address.
+
+메모리 버퍼 (RAM)에는 2K가 필요합니다. 이 버퍼의베이스는 8 개 위치 중 하나에 위치 할 수 있습니다. Boot Prom의 주소는 메모리 기본 + 0x2000입니다.
+스위치 블록 (SW1)의 점퍼 3-5 는 메모리베이스 어드레스를 선택한다.
+
+   Switch              | Hex RAM | Hex ROM
+    1   2   3   4   5  | Address | Address *)
+   --------------------|---------|-----------
+   ON  ON  ON  ON  ON  |  C0000  |  C2000
+   ON  ON  OFF ON  ON  |  C4000  |  C6000
+   ON  ON  ON  OFF ON  |  CC000  |  CE000
+   ON  ON  OFF OFF ON  |  D0000  |  D2000  (Manufacturer's default)
+   ON  ON  ON  ON  OFF |  D4000  |  D6000
+   ON  ON  OFF ON  OFF |  D8000  |  DA000
+   ON  ON  ON  OFF OFF |  DC000  |  DE000
+   ON  ON  OFF OFF OFF |  E0000  |  E2000
+  
+*) To enable the Boot ROM set the switch 8 of switch block SW3 to position ON.
+    부트 ROM을 활성화하려면 스위치 블록 SW3의 스위치 8을 ON으로 설정하십시오.
+
+The switches 1 and 2 probably add 0x0800 and 0x1000 to RAM base address.
+스위치 1과 2는 아마도 RAM 기본 주소에 0x0800과 0x1000을 추가합니다.
+
+Setting the Interrupt Line
+--------------------------
+
+Switches 1-5 of the switch block SW3 control the IRQ level.
+스위치 블럭 SW3의 스위치 1-5는 IRQ 레벨을 제어합니다.
+
+    Jumper              |  IRQ
+    1   2   3   4   5   |
+   ----------------------------
+    ON  OFF OFF OFF OFF |  3
+    OFF ON  OFF OFF OFF |  4
+    OFF OFF ON  OFF OFF |  5
+    OFF OFF OFF ON  OFF |  7
+    OFF OFF OFF OFF ON  |  2
+
+
+Setting the Timeout Parameters
+------------------------------
+
+The switches 6-7 of the switch block SW3 are used to determine the timeout
+parameters.  These two switches are normally left in the OFF position.
+스위치 블록 (SW3)의 스위치 (6-7)는 타임 아웃 파라미터를 결정하는데 사용된다. 이 두 스위치는 일반적으로 OFF 위치에 있습니다.
+
+
+*****************************************************************************
+
+** Topware **
+8-bit card, TA-ARC/10
+-------------------------
+  - from Vojtech Pavlik <vojtech@suse.cz>
+
+This is another very similar 90C65 card. Most of the switches and jumpers
+are the same as on other clones.
+이것은 매우 유사한 또 다른 90C65 카드입니다. 대부분의 스위치와 점퍼는 다른 클론과 동일합니다.
+
+ _____________________________________________________________________
+|  ___________   |                         |            ______        |
+| |SW2 NODE ID|  |                         |           | XTAL |       |
+| |___________|  |  Hybrid IC              |           |______|       |
+|  ___________   |                         |                        __|    
+| |SW1 MEM+I/O|  |_________________________|                   LED1|__|)   
+| |___________|           1 2                                         |     
+|                     J3 |o|o| TIMEOUT                          ______|    
+|     ______________     |o|o|                                 |      |    
+|    |              |  ___________________                     | RJ   |    
+|    > EPROM SOCKET | |                   \                    |------|     
+|J2  |______________| |                    |                   |      |    
+||o|                  |                    |                   |______|
+||o| ROM ENABLE       |        SMC         |    _________             |
+|     _____________   |       90C65        |   |_________|       _____|    
+|    |             |  |                    |                    |     |___ 
+|    > RAM (2k)    |  |                    |                    | BNC |___|
+|    |_____________|  |                    |                    |_____|    
+|                     |____________________|                          |    
+| ________ IRQ 2 3 4 5 7                  ___________                 |
+||________|   |o|o|o|o|o|                |___________|                |
+|________   J1|o|o|o|o|o|                               ______________|
+         |                                             |
+         |_____________________________________________|
+
+Legend:
+
+90C65       ARCNET Chip
+XTAL        20 MHz Crystal
+SW1 1-5     Base Memory Address Select
+    6-8     Base I/O Address Select
+SW2 1-8     Node ID Select (ID0-ID7)
+J1          IRQ Select
+J2          ROM Enable
+J3          Extra Timeout
+LED1        Activity LED 
+BNC         Coax connector (BUS ARCnet)
+RJ          Twisted Pair Connector (daisy chain)
+
+
+Setting the Node ID
+-------------------
+
+The eight switches in SW2 are used to set the node ID. Each node attached to
+the network must have an unique node ID which must not be 0.  Switch 1 (ID0)
+serves as the least significant bit (LSB).
+SW2의 8 개 스위치는 노드 ID를 설정하는 데 사용됩니다. 네트워크에 연결된 각 노드는 0이 아니어야하는 고유 한 노드 ID를 가져야합니다. 스위치 1 (ID0)은 최하위 비트 (LSB)로 사용됩니다.
+
+Setting one of the switches to Off means "1", On means "0".
+스위치 중 하나를 Off로 설정하면 "1"을 의미하고, On이면 "0"을 의미합니다.
+
+The node ID is the sum of the values of all switches set to "1"
+These values are:
+노드 ID는 "1"로 설정된 모든 스위치 값의 합계입니다.이 값은 다음과 같습니다.
+
+   Switch | Label | Value
+   -------|-------|-------
+     1    | ID0   |   1
+     2    | ID1   |   2
+     3    | ID2   |   4
+     4    | ID3   |   8
+     5    | ID4   |  16
+     6    | ID5   |  32
+     7    | ID6   |  64
+     8    | ID7   | 128
+
+Setting the I/O Base Address
+----------------------------
+
+The last three switches in switch block SW1 are used to select one
+of eight possible I/O Base addresses using the following table:
+스위치 블록 SW1의 마지막 세 스위치는 다음 테이블을 사용하여 8 개의 가능한 I / O Base 주소 중 하나를 선택하는 데 사용됩니다.
+
+   Switch      | Hex I/O
+    6   7   8  | Address
+   ------------|--------
+   ON  ON  ON  |  260  (Manufacturer's default)
+   OFF ON  ON  |  290
+   ON  OFF ON  |  2E0                         
+   OFF OFF ON  |  2F0
+   ON  ON  OFF |  300
+   OFF ON  OFF |  350
+   ON  OFF OFF |  380
+   OFF OFF OFF |  3E0
+
+
+Setting the Base Memory (RAM) buffer Address
+--------------------------------------------
+
+The memory buffer (RAM) requires 2K. The base of this buffer can be
+located in any of eight positions. The address of the Boot Prom is
+memory base + 0x2000.
+Jumpers 3-5 of switch block SW1 select the Memory Base address.
+메모리 버퍼 (RAM)에는 2K가 필요합니다. 이 버퍼의베이스는 8 개 위치 중 하나에 위치 할 수 있습니다. Boot Prom의 주소는 메모리 기본 + 0x2000입니다.
+스위치 블록 (SW1)의 점퍼 3-5 는 메모리베이스 어드레스를 선택한다.
+
+   Switch              | Hex RAM | Hex ROM
+    1   2   3   4   5  | Address | Address *)
+   --------------------|---------|-----------
+   ON  ON  ON  ON  ON  |  C0000  |  C2000
+   ON  ON  OFF ON  ON  |  C4000  |  C6000  (Manufacturer's default) 
+   ON  ON  ON  OFF ON  |  CC000  |  CE000
+   ON  ON  OFF OFF ON  |  D0000  |  D2000  
+   ON  ON  ON  ON  OFF |  D4000  |  D6000
+   ON  ON  OFF ON  OFF |  D8000  |  DA000
+   ON  ON  ON  OFF OFF |  DC000  |  DE000
+   ON  ON  OFF OFF OFF |  E0000  |  E2000
+
+*) To enable the Boot ROM short the jumper J2.
+
+The jumpers 1 and 2 probably add 0x0800 and 0x1000 to RAM address.
+*) Boot ROM을 활성화하려면 점퍼 J2를 잠급니다.
+점퍼 1과 2는 아마도 RAM 주소에 0x0800과 0x1000을 추가합니다.
+
+Setting the Interrupt Line
+--------------------------
+
+Jumpers 1-5 of the jumper block J1 control the IRQ level.  ON means
+shorted, OFF means open.
+점퍼 블록 J1의 점퍼 1-5는 IRQ 레벨을 제어합니다. ON은 단락을 의미하고 OFF는 개방을 의미합니다.
+
+    Jumper              |  IRQ
+    1   2   3   4   5   |
+   ----------------------------
+    ON  OFF OFF OFF OFF |  2
+    OFF ON  OFF OFF OFF |  3
+    OFF OFF ON  OFF OFF |  4
+    OFF OFF OFF ON  OFF |  5
+    OFF OFF OFF OFF ON  |  7
+
+
+Setting the Timeout Parameters
+------------------------------
+
+The jumpers J3 are used to set the timeout parameters. These two 
+jumpers are normally left open.
+점퍼 J3는 타임 아웃 매개 변수를 설정하는 데 사용됩니다. 이 두 개의 점퍼는 일반적으로 열려 있습니다.
+  
+*****************************************************************************
+
+** Thomas-Conrad **
+Model #500-6242-0097 REV A (8-bit card)
+---------------------------------------
+  - from Lars Karlsson <100617.3473@compuserve.com>
+
+     ________________________________________________________
+   |          ________   ________                           |_____
+   |         |........| |........|                            |
+   |         |________| |________|                         ___|
+   |            SW 3       SW 1                           |   |
+   |         Base I/O   Base Addr.                Station |   |
+   |                                              address |   |
+   |    ______                                    switch  |   |
+   |   |      |                                           |   |
+   |   |      |                                           |___|    
+   |   |      |                                 ______        |___._
+   |   |______|                                |______|         ____| BNC
+   |                                            Jumper-        _____| Connector
+   |   Main chip                                block  _    __|   '  
+   |                                                  | |  |    RJ Connector
+   |                                                  |_|  |    with 110 Ohm
+   |                                                       |__  Terminator
+   |    ___________                                         __|
+   |   |...........|                                       |    RJ-jack
+   |   |...........|    _____                              |    (unused)
+   |   |___________|   |_____|                             |__
+   |  Boot PROM socket IRQ-jumpers                            |_  Diagnostic
+   |________                                       __          _| LED (red)
+            | | | | | | | | | | | | | | | | | | | |  |        |
+            | | | | | | | | | | | | | | | | | | | |  |________|
+                                                              |
+                                                              |
+
+And here are the settings for some of the switches and jumpers on the cards.
+다음은 카드의 일부 스위치 및 점퍼 설정입니다.
+
+          I/O
+
+         1 2 3 4 5 6 7 8
+
+2E0----- 0 0 0 1 0 0 0 1
+2F0----- 0 0 0 1 0 0 0 0
+300----- 0 0 0 0 1 1 1 1
+350----- 0 0 0 0 1 1 1 0
+
+"0" in the above example means switch is off "1" means that it is on.
+위의 예에서 "0"은 스위치가 꺼짐을 의미합니다 "1"은 스위치가 켜져 있음을 의미합니다.
+
+    ShMem address.
+
+      1 2 3 4 5 6 7 8
+
+CX00--0 0 1 1 | |   |
+DX00--0 0 1 0       |
+X000--------- 1 1   |
+X400--------- 1 0   |
+X800--------- 0 1   |
+XC00--------- 0 0   
+ENHANCED----------- 1
+COMPATIBLE--------- 0
+
+
+       IRQ
+
+
+   3 4 5 7 2
+   . . . . .
+   . . . . .
+
+
+There is a DIP-switch with 8 switches, used to set the shared memory address
+to be used. The first 6 switches set the address, the 7th doesn't have any
+function, and the 8th switch is used to select "compatible" or "enhanced".
+When I got my two cards, one of them had this switch set to "enhanced". That
+card didn't work at all, it wasn't even recognized by the driver. The other
+card had this switch set to "compatible" and it behaved absolutely normally. I
+guess that the switch on one of the cards, must have been changed accidentally
+when the card was taken out of its former host. The question remains
+unanswered, what is the purpose of the "enhanced" position?
+사용되는 enhanced 메모리 주소를 설정하는 데 사용되는 8 개의 스위치가있는 DIP 스위치가 있습니다. 첫 번째 6 개 스위치는 주소를 설정하고 7 번째 스위치는 기능이 없으며 8 번째 스위치는 "compatible 가능"또는 "enhanced"을 선택하는 데 사용됩니다. 두 장의 카드를 받았을 때 그 중 한 명은이 스위치를 "강화"로 설정했습니다. 그 카드는 전혀 작동하지 않았고 driver가 인식하지 못했습니다. 다른 카드는이 스위치를 "compatible"로 설정했으며 절대적으로 정상적으로 작동합니다. 카드 중 하나의 스위치가 카드가 이전 호스트에서 꺼내 졌을 때 실수로 변경되었을 것입니다. 문제는 "enhanced"입장의 목적은 무엇입니까?
+
+[Avery's note: "enhanced" probably either disables shared memory (use IO
+ports instead) or disables IO ports (use memory addresses instead).  This
+varies by the type of card involved.  I fail to see how either of these
+enhance anything.  Send me more detailed information about this mode, or
+just use "compatible" mode instead.]
+[Avery 's note : "enhanced"는 공유 메모리를 비활성화하거나 (IO 포트 사용) 또는 IO 포트를 비활성화합니다 (메모리 주소 사용). 이것은 관련된 카드의 유형에 따라 다릅니다. 나는이 두 가지가 어떻게 향상되는지를 보지 못한다. 이 모드에 대한 자세한 정보를 보내거나 대신 "호환 가능"모드를 사용하십시오.]
+
+*****************************************************************************
+
+** Waterloo Microsystems Inc. ?? **
+8-bit card (C) 1985
+-------------------
+  - from Robert Michael Best <rmb117@cs.usask.ca>
+
+[Avery's note: these don't work with my driver for some reason.  These cards
+SEEM to have settings similar to the PDI508Plus, which is
+software-configured and doesn't work with my driver either.  The "Waterloo
+chip" is a boot PROM, probably designed specifically for the University of
+Waterloo.  If you have any further information about this card, please
+e-mail me.]
+[Avery 's note : 이것들은 내 운전자에게 어떤 이유로 든 작동하지 않습니다. 이 카드는 소프트웨어 구성이며 드라이버에서 작동하지 않는 PDI508Plus와 유사한 설정을 가지고 있습니다. "Waterloo
+chip"은 워털루 대학을 위해 특별히 설계된 부트 PROM입니다. 이 카드에 대한 추가 정보가 있으면 이메일을 보내주십시오.]
+
+The probe has not been able to detect the card on any of the J2 settings,
+and I tried them again with the "Waterloo" chip removed.
+ 프로브가 J2 설정에서 카드를 감지하지 못했고 "Waterloo"칩을 제거한 상태에서 다시 시도했습니다.
+
+ _____________________________________________________________________
+| \/  \/              ___  __ __                                      |
+| C4  C4     |^|     | M ||  ^  ||^|                                  |
+| --  --     |_|     | 5 ||     || | C3                               |
+| \/  \/      C10    |___||     ||_|                                  | 
+| C4  C4             _  _ |     |                 ??                  | 
+| --  --            | \/ ||     |                                     | 
+|                   |    ||     |                                     | 
+|                   |    ||  C1 |                                     | 
+|                   |    ||     |  \/                            _____|    
+|                   | C6 ||     |  C9                           |     |___ 
+|                   |    ||     |  --                           | BNC |___| 
+|                   |    ||     |          >C7|                 |_____|
+|                   |    ||     |                                     |
+| __ __             |____||_____|       1 2 3     6                   |
+||  ^  |     >C4|                      |o|o|o|o|o|o| J2    >C4|       |
+||     |                               |o|o|o|o|o|o|                  |
+|| C2  |     >C4|                                          >C4|       |
+||     |                                   >C8|                       |
+||     |       2 3 4 5 6 7  IRQ                            >C4|       |
+||_____|      |o|o|o|o|o|o| J3                                        |
+|_______      |o|o|o|o|o|o|                            _______________|
+        |                                             |
+        |_____________________________________________|
+
+C1 -- "COM9026
+       SMC 8638"
+      In a chip socket.
+
+C2 -- "@Copyright
+       Waterloo Microsystems Inc.
+       1985"
+      In a chip Socket with info printed on a label covering a round window
+      showing the circuit inside. (The window indicates it is an EPROM chip.)
+      정보 내부 회로를 보여주는 라운드 창 취재 레이블에 인쇄 된 칩 소켓 있음. (이 창은 EPROM 칩임을 나타냅니다.)
+
+C3 -- "COM9032
+       SMC 8643"
+      In a chip socket.
+
+C4 -- "74LS"
+      9 total no sockets.
+
+M5 -- "50006-136
+       20.000000 MHZ
+       MTQ-T1-S3
+       0 M-TRON 86-40"
+      Metallic case with 4 pins, no socket.
+      4 개의 핀이있는 금속 케이스, 소켓 없음.
+
+C6 -- "MOSTEK@TC8643
+       MK6116N-20
+       MALAYSIA"
+      No socket.
+
+C7 -- No stamp or label but in a 20 pin chip socket.
+      스탬프 또는 라벨이 없지만 20 핀 칩 소켓.
+
+C8 -- "PAL10L8CN
+       8623"
+      In a 20 pin socket.
+
+C9 -- "PAl16R4A-2CN
+       8641"
+      In a 20 pin socket.
+
+C10 -- "M8640
+          NMC
+        9306N"
+       In an 8 pin socket.
+
+?? -- Some components on a smaller board and attached with 20 pins all 
+      along the side closest to the BNC connector.  The are coated in a dark 
+      resin.
+      더 작은 보드의 일부 구성 요소와 BNC 커넥터에 가장 가까운 쪽을 따라 20 개의 핀이 모두 부착되어 있습니다. 어두운 수지로 코팅되어 있습니다.
+
+On the board there are two jumper banks labeled J2 and J3. The 
+manufacturer didn't put a J1 on the board. The two boards I have both 
+came with a jumper box for each bank.
+보드에는 J2 및 J3이라는 레이블이 붙은 두 개의 점퍼 뱅크가 있습니다. 제조업체는 보드에 J1을 넣지 않았습니다. 내가 가지고있는 두 개의 보드에는 각 은행의 점퍼 박스가 있습니다.
+
+J2 -- Numbered 1 2 3 4 5 6. 
+      4 and 5 are not stamped due to solder points.
+      4 및 5는 납땜 지점으로 인해 스탬프되지 않습니다.
+
+J3 -- IRQ 2 3 4 5 6 7
+
+The board itself has a maple leaf stamped just above the irq jumpers 
+and "-2 46-86" beside C2. Between C1 and C6 "ASS 'Y 300163" and "@1986 
+CORMAN CUSTOM ELECTRONICS CORP." stamped just below the BNC connector.
+Below that "MADE IN CANADA"
+보드 자체에는 irq 점퍼 바로 위에 스탬프 된 메이플 리프와 C2 옆에 "-2 46-86"이 있습니다. C1과 C6 사이 "ASS 'Y 300163"및 "@ 1986 CORMAN CUSTOM ELECTRONICS CORP." BNC 커넥터 바로 아래에 찍혀 있습니다. 그 아래 "MADE IN CANADA"
+  
+*****************************************************************************
+
+** No Name **
+8-bit cards, 16-bit cards
+-------------------------
+  - from Juergen Seifert <seifert@htwm.de>
+  
+NONAME 8-BIT ARCNET
+===================
+
+I have named this ARCnet card "NONAME", since there is no name of any
+manufacturer on the Installation manual nor on the shipping box. The only
+hint to the existence of a manufacturer at all is written in copper,
+it is "Made in Taiwan"
+
+This description has been written by Juergen Seifert <seifert@htwm.de>
+using information from the Original
+                    "ARCnet Installation Manual"
+
+설치 설명서 나 배송 상자에 제조업체 이름이 없으므로이 ARCnet 카드의 이름을 "NAME"으로 지정했습니다. 제조자의 존재에 대한 유일한 힌트는 구리로 쓰여졌습니다. 그것은 "Made in Taiwan"입니다.
+
+이 설명은 원본 "ARCnet 설치 설명서"의 정보를 사용하여 Juergen Seifert <seifert@htwm.de>
+
+
+
+    ________________________________________________________________
+   | |STAR| BUS| T/P|                                               |
+   | |____|____|____|                                               |
+   |                            _____________________               |
+   |                           |                     |              |
+   |                           |                     |              |
+   |                           |                     |              |
+   |                           |        SMC          |              |
+   |                           |                     |              |
+   |                           |       COM90C65      |              |
+   |                           |                     |              |
+   |                           |                     |              |
+   |                           |__________-__________|              |
+   |                                                           _____|
+   |      _______________                                     |  CN |
+   |     | PROM          |                                    |_____|
+   |     > SOCKET        |                                          |
+   |     |_______________|         1 2 3 4 5 6 7 8  1 2 3 4 5 6 7 8 |
+   |                               _______________  _______________ |
+   |           |o|o|o|o|o|o|o|o|  |      SW1      ||      SW2      ||
+   |           |o|o|o|o|o|o|o|o|  |_______________||_______________||
+   |___         2 3 4 5 7 E E R        Node ID       IOB__|__MEM____|
+       |        \ IRQ   / T T O                      |
+       |__________________1_2_M______________________|
+
+Legend:
+
+COM90C65:       ARCnet Probe
+S1  1-8:    Node ID Select
+S2  1-3:    I/O Base Address Select
+    4-6:    Memory Base Address Select
+    7-8:    RAM Offset Select
+ET1, ET2    Extended Timeout Select
+ROM     ROM Enable Select
+CN              RG62 Coax Connector
+STAR| BUS | T/P Three fields for placing a sign (colored circle)
+                indicating the topology of the card
+ STAR| BUS | T/P 카드의 토폴로지를 나타내는 부호 (채색 원) 배치를위한 세 개의 필드
+
+Setting one of the switches to Off means "1", On means "0".
+스위치 중 하나를 Off로 설정하면 "1"을 의미하고, On이면 "0"을 의미합니다.
+
+Setting the Node ID
+-------------------
+
+The eight switches in group SW1 are used to set the node ID.
+Each node attached to the network must have an unique node ID which
+must be different from 0.
+Switch 8 serves as the least significant bit (LSB).
+그룹 SW1의 8 개 스위치는 노드 ID를 설정하는 데 사용됩니다.
+네트워크에 연결된 각 노드는 0과 다른 고유 노드 ID를 가져야합니다. 스위치 8은 최하위 비트 (LSB)로 사용됩니다.
+
+The node ID is the sum of the values of all switches set to "1"  
+노드 ID는 "1"로 설정된 모든 스위치의 값의 합계입니다.
+
+These values are:
+
+    Switch | Value
+    -------|-------
+      8    |   1
+      7    |   2
+      6    |   4
+      5    |   8
+      4    |  16
+      3    |  32
+      2    |  64
+      1    | 128
+
+Some Examples:
+
+    Switch         | Hex     | Decimal 
+   1 2 3 4 5 6 7 8 | Node ID | Node ID
+   ----------------|---------|---------
+   0 0 0 0 0 0 0 0 |    not allowed
+   0 0 0 0 0 0 0 1 |    1    |    1 
+   0 0 0 0 0 0 1 0 |    2    |    2
+   0 0 0 0 0 0 1 1 |    3    |    3
+       . . .       |         |
+   0 1 0 1 0 1 0 1 |   55    |   85
+       . . .       |         |
+   1 0 1 0 1 0 1 0 |   AA    |  170
+       . . .       |         |  
+   1 1 1 1 1 1 0 1 |   FD    |  253
+   1 1 1 1 1 1 1 0 |   FE    |  254
+   1 1 1 1 1 1 1 1 |   FF    |  255
+
+
+Setting the I/O Base Address
+----------------------------
+
+The first three switches in switch group SW2 are used to select one
+of eight possible I/O Base addresses using the following table
+스위치 그룹 SW2의 처음 세 스위치는 다음 표를 사용하여 8 개의 가능한 I / O Base 주소 중 하나를 선택하는 데 사용됩니다
+
+   Switch      | Hex I/O
+    1   2   3  | Address
+   ------------|--------
+   ON  ON  ON  |  260
+   ON  ON  OFF |  290
+   ON  OFF ON  |  2E0  (Manufacturer's default)
+   ON  OFF OFF |  2F0
+   OFF ON  ON  |  300
+   OFF ON  OFF |  350
+   OFF OFF ON  |  380
+   OFF OFF OFF |  3E0
+
+
+Setting the Base Memory (RAM) buffer Address
+--------------------------------------------
+
+The memory buffer requires 2K of a 16K block of RAM. The base of this
+16K block can be located in any of eight positions.
+Switches 4-6 of switch group SW2 select the Base of the 16K block.
+Within that 16K address space, the buffer may be assigned any one of four
+positions, determined by the offset, switches 7 and 8 of group SW2.
+메모리 버퍼는 RAM의 16K 블록 2K 가 필요하다. 이 16K 블록의베이스는 8 가지 위치 중 하나에 위치 할 수 있습니다. 스위치 그룹 SW2의 스위치 4-6은 16K 블록의베이스를 선택합니다. 그 16K 어드레스 공간 내에서, 버퍼는 그룹 SW2의 스위치 7 및 8의 오프셋에 의해 결정되는 4 개의 위치 중 하나를 할당받을 수있다.
+
+   Switch     | Hex RAM | Hex ROM
+   4 5 6  7 8 | Address | Address *)
+   -----------|---------|-----------
+   0 0 0  0 0 |  C0000  |  C2000
+   0 0 0  0 1 |  C0800  |  C2000
+   0 0 0  1 0 |  C1000  |  C2000
+   0 0 0  1 1 |  C1800  |  C2000
+              |         |
+   0 0 1  0 0 |  C4000  |  C6000
+   0 0 1  0 1 |  C4800  |  C6000
+   0 0 1  1 0 |  C5000  |  C6000
+   0 0 1  1 1 |  C5800  |  C6000
+              |         |
+   0 1 0  0 0 |  CC000  |  CE000
+   0 1 0  0 1 |  CC800  |  CE000
+   0 1 0  1 0 |  CD000  |  CE000
+   0 1 0  1 1 |  CD800  |  CE000
+              |         |
+   0 1 1  0 0 |  D0000  |  D2000  (Manufacturer's default)
+   0 1 1  0 1 |  D0800  |  D2000
+   0 1 1  1 0 |  D1000  |  D2000
+   0 1 1  1 1 |  D1800  |  D2000
+              |         |
+   1 0 0  0 0 |  D4000  |  D6000
+   1 0 0  0 1 |  D4800  |  D6000
+   1 0 0  1 0 |  D5000  |  D6000
+   1 0 0  1 1 |  D5800  |  D6000
+              |         |
+   1 0 1  0 0 |  D8000  |  DA000
+   1 0 1  0 1 |  D8800  |  DA000
+   1 0 1  1 0 |  D9000  |  DA000
+   1 0 1  1 1 |  D9800  |  DA000
+              |         |
+   1 1 0  0 0 |  DC000  |  DE000
+   1 1 0  0 1 |  DC800  |  DE000
+   1 1 0  1 0 |  DD000  |  DE000
+   1 1 0  1 1 |  DD800  |  DE000
+              |         |
+   1 1 1  0 0 |  E0000  |  E2000
+   1 1 1  0 1 |  E0800  |  E2000
+   1 1 1  1 0 |  E1000  |  E2000
+   1 1 1  1 1 |  E1800  |  E2000
+  
+*) To enable the 8K Boot PROM install the jumper ROM.
+   The default is jumper ROM not installed.
+*) 8K 부트 PROM을 활성화하려면 점퍼 ROM을 설치하십시오.
+    기본값은 점퍼 ROM이 설치되어 있지 않습니다.
+
+
+Setting Interrupt Request Lines (IRQ)
+-------------------------------------
+
+To select a hardware interrupt level set one (only one!) of the jumpers
+IRQ2, IRQ3, IRQ4, IRQ5 or IRQ7. The manufacturer's default is IRQ2.
+ 하드웨어 인터럽트 레벨을 선택하려면 점퍼 IRQ2, IRQ3, IRQ4, IRQ5 또는 IRQ7 중 하나 (단 하나!)를 설정하십시오. 제조업체의 기본값은 IRQ2입니다.
+
+Setting the Timeouts
+--------------------
+
+The two jumpers labeled ET1 and ET2 are used to determine the timeout
+parameters (response and reconfiguration time). Every node in a network
+must be set to the same timeout values.
+ET1 및 ET2라고 표시된 두 개의 점퍼가 시간 초과 매개 변수 (응답 및 재구성 시간)를 결정하는 데 사용됩니다. 네트워크의 모든 노드는 동일한 제한 시간 값으로 설정되어야합니다.
+
+   ET1 ET2 | Response Time (us) | Reconfiguration Time (ms)
+   --------|--------------------|--------------------------
+   Off Off |        78          |          840   (Default)
+   Off On  |       285          |         1680
+   On  Off |       563          |         1680
+   On  On  |      1130          |         1680
+
+On means jumper installed, Off means jumper not installed
+점퍼가 설치된 상태에서 꺼짐은 점퍼가 설치되지 않았 음을 의미합니다.
+
+NONAME 16-BIT ARCNET
+====================
+
+The manual of my 8-Bit NONAME ARCnet Card contains another description
+of a 16-Bit Coax / Twisted Pair Card. This description is incomplete,
+because there are missing two pages in the manual booklet. (The table
+of contents reports pages ... 2-9, 2-11, 2-12, 3-1, ... but inside
+the booklet there is a different way of counting ... 2-9, 2-10, A-1,
+(empty page), 3-1, ..., 3-18, A-1 (again), A-2)
+Also the picture of the board layout is not as good as the picture of
+8-Bit card, because there isn't any letter like "SW1" written to the
+picture.
+Should somebody have such a board, please feel free to complete this
+description or to send a mail to me!
+
+
+내 8 비트 NONAME ARCnet 카드의 설명서에는 16-Bit Coax / Twisted Pair Card에 대한 다른 설명이 들어 있습니다. 수동 소책자에 2 페이지가 빠져 있기 때문에이 설명은 불완전합니다. 
+
+
+
+(목차는 ... 2-9, 2-11, 2-12, 3-1, ... 페이지를보고합니다. 그러나 소책자 안에는 다른 계산 방법이 있습니다 ... 2-9, 2-10 , A-1,2-9, 2-10, A-1, (빈 페이지), 3-1, ..., 3-18, A-1 (다시), A-2) 또한 보드 레이아웃의 그림은 그림에 쓰여진 "SW1"과 같은 글자가 없기 때문에 8-Bit card의 그림처럼 좋습니다.
+
+This description has been written by Juergen Seifert <seifert@htwm.de>
+using information from the Original
+                    "ARCnet Installation Manual"
+이 설명은 Juergen Seifert <seifert@htwm.de>에 의해 작성되었습니다.
+원본 "ARCnet 설치 설명서"의 정보를 사용하여
+
+   ___________________________________________________________________
+  <                    _________________  _________________           |
+  >                   |       SW?       ||      SW?        |          |
+  <                   |_________________||_________________|          |
+  >                       ____________________                        |
+  <                      |                    |                       |
+  >                      |                    |                       |
+  <                      |                    |                       |
+  >                      |                    |                       |
+  <                      |                    |                       |
+  >                      |                    |                       |
+  <                      |                    |                       |
+  >                      |____________________|                       |
+  <                                                               ____|
+  >                       ____________________                   |    |
+  <                      |                    |                  | J1 |
+  >                      |                    <                  |    |
+  <                      |____________________|  ? ? ? ? ? ?     |____|
+  >                                             |o|o|o|o|o|o|         |
+  <                                             |o|o|o|o|o|o|         |
+  >                                                                   |
+  <             __                                         ___________|
+  >            |  |                                       |
+  <____________|  |_______________________________________|
+
+
+Setting one of the switches to Off means "1", On means "0".
+스위치 중 하나를 Off로 설정하면 "1"을 의미하고, On이면 "0"을 의미합니다.
+
+Setting the Node ID
+-------------------
+
+The eight switches in group SW2 are used to set the node ID.
+Each node attached to the network must have an unique node ID which
+must be different from 0.
+Switch 8 serves as the least significant bit (LSB).
+그룹 SW2의 8 개 스위치는 노드 ID를 설정하는 데 사용됩니다.
+네트워크에 연결된 각 노드는 0과 다른 고유 한 노드 ID를 가져야합니다.
+스위치 8은 최하위 비트 (LSB)로 사용됩니다.
+
+The node ID is the sum of the values of all switches set to "1"  
+These values are:
+노드 ID는 "1"로 설정된 모든 스위치 값의 합계입니다.이 값은 다음과 같습니다.
+
+    Switch | Value
+    -------|-------
+      8    |   1
+      7    |   2
+      6    |   4
+      5    |   8
+      4    |  16
+      3    |  32
+      2    |  64
+      1    | 128
+
+Some Examples:
+
+    Switch         | Hex     | Decimal 
+   1 2 3 4 5 6 7 8 | Node ID | Node ID
+   ----------------|---------|---------
+   0 0 0 0 0 0 0 0 |    not allowed
+   0 0 0 0 0 0 0 1 |    1    |    1 
+   0 0 0 0 0 0 1 0 |    2    |    2
+   0 0 0 0 0 0 1 1 |    3    |    3
+       . . .       |         |
+   0 1 0 1 0 1 0 1 |   55    |   85
+       . . .       |         |
+   1 0 1 0 1 0 1 0 |   AA    |  170
+       . . .       |         |  
+   1 1 1 1 1 1 0 1 |   FD    |  253
+   1 1 1 1 1 1 1 0 |   FE    |  254
+   1 1 1 1 1 1 1 1 |   FF    |  255
+
+
+Setting the I/O Base Address
+----------------------------
+
+The first three switches in switch group SW1 are used to select one
+of eight possible I/O Base addresses using the following table
+스위치 그룹 SW1의 처음 세 스위치는 다음 표를 사용하여 8 개의 가능한 I / O Base 주소 중 하나를 선택하는 데 사용됩니다
+
+   Switch      | Hex I/O
+    3   2   1  | Address
+   ------------|--------
+   ON  ON  ON  |  260
+   ON  ON  OFF |  290
+   ON  OFF ON  |  2E0  (Manufacturer's default)
+   ON  OFF OFF |  2F0
+   OFF ON  ON  |  300
+   OFF ON  OFF |  350
+   OFF OFF ON  |  380
+   OFF OFF OFF |  3E0
+
+
+Setting the Base Memory (RAM) buffer Address
+--------------------------------------------
+
+The memory buffer requires 2K of a 16K block of RAM. The base of this
+16K block can be located in any of eight positions.
+Switches 6-8 of switch group SW1 select the Base of the 16K block.
+Within that 16K address space, the buffer may be assigned any one of four
+positions, determined by the offset, switches 4 and 5 of group SW1.
+메모리 버퍼는 RAM의 16K 블록 2K가 필요하다. 이 16K 블록의베이스는 8 가지 위치 중 하나에 위치 할 수 있습니다. 스위치 그룹 SW1의 스위치 6-8은 16K 블록의베이스를 선택합니다. 그 16K 어드레스 공간 내에서, 버퍼는 그룹 SW1의 스위치 4 및 5의 오프셋에 의해 결정되는 4 개의 위치 중 하나를 할당받을 수있다.
+
+   Switch     | Hex RAM | Hex ROM
+   8 7 6  5 4 | Address | Address
+   -----------|---------|-----------
+   0 0 0  0 0 |  C0000  |  C2000
+   0 0 0  0 1 |  C0800  |  C2000
+   0 0 0  1 0 |  C1000  |  C2000
+   0 0 0  1 1 |  C1800  |  C2000
+              |         |
+   0 0 1  0 0 |  C4000  |  C6000
+   0 0 1  0 1 |  C4800  |  C6000
+   0 0 1  1 0 |  C5000  |  C6000
+   0 0 1  1 1 |  C5800  |  C6000
+              |         |
+   0 1 0  0 0 |  CC000  |  CE000
+   0 1 0  0 1 |  CC800  |  CE000
+   0 1 0  1 0 |  CD000  |  CE000
+   0 1 0  1 1 |  CD800  |  CE000
+              |         |
+   0 1 1  0 0 |  D0000  |  D2000  (Manufacturer's default)
+   0 1 1  0 1 |  D0800  |  D2000
+   0 1 1  1 0 |  D1000  |  D2000
+   0 1 1  1 1 |  D1800  |  D2000
+              |         |
+   1 0 0  0 0 |  D4000  |  D6000
+   1 0 0  0 1 |  D4800  |  D6000
+   1 0 0  1 0 |  D5000  |  D6000
+   1 0 0  1 1 |  D5800  |  D6000
+              |         |
+   1 0 1  0 0 |  D8000  |  DA000
+   1 0 1  0 1 |  D8800  |  DA000
+   1 0 1  1 0 |  D9000  |  DA000
+   1 0 1  1 1 |  D9800  |  DA000
+              |         |
+   1 1 0  0 0 |  DC000  |  DE000
+   1 1 0  0 1 |  DC800  |  DE000
+   1 1 0  1 0 |  DD000  |  DE000
+   1 1 0  1 1 |  DD800  |  DE000
+              |         |
+   1 1 1  0 0 |  E0000  |  E2000
+   1 1 1  0 1 |  E0800  |  E2000
+   1 1 1  1 0 |  E1000  |  E2000
+   1 1 1  1 1 |  E1800  |  E2000
+  
+
+Setting Interrupt Request Lines (IRQ)
+-------------------------------------
+
+??????????????????????????????????????
+
+
+Setting the Timeouts
+--------------------
+
+??????????????????????????????????????
+
+
+*****************************************************************************
+
+** No Name **
+8-bit cards ("Made in Taiwan R.O.C.")
+-----------
+  - from Vojtech Pavlik <vojtech@suse.cz>
+
+I have named this ARCnet card "NONAME", since I got only the card with
+no manual at all and the only text identifying the manufacturer is 
+"MADE IN TAIWAN R.O.C" printed on the card.
+
+이 ARCnet 카드의 이름을 "NONAME"으로 지정했습니다. 설명서가없는 카드 만 있었고 제조업체를 식별하는 유일한 텍스트는 카드에 인쇄 된 "MADE IN TAIWAN R.O.C"입니다.
+
+          ____________________________________________________________
+         |                 1 2 3 4 5 6 7 8                            |
+         | |o|o| JP1       o|o|o|o|o|o|o|o| ON                        |
+         |  +              o|o|o|o|o|o|o|o|                        ___|
+         |  _____________  o|o|o|o|o|o|o|o| OFF         _____     |   | ID7
+         | |             | SW1                         |     |    |   | ID6
+         | > RAM (2k)    |        ____________________ |  H  |    | S | ID5
+         | |_____________|       |                    ||  y  |    | W | ID4
+         |                       |                    ||  b  |    | 2 | ID3
+         |                       |                    ||  r  |    |   | ID2
+         |                       |                    ||  i  |    |   | ID1
+         |                       |       90C65        ||  d  |    |___| ID0
+         |      SW3              |                    ||     |        |      
+         | |o|o|o|o|o|o|o|o| ON  |                    ||  I  |        |
+         | |o|o|o|o|o|o|o|o|     |                    ||  C  |        |
+         | |o|o|o|o|o|o|o|o| OFF |____________________||     |   _____|
+         |  1 2 3 4 5 6 7 8                            |     |  |     |___
+         |  ______________                             |     |  | BNC |___|
+         | |              |                            |_____|  |_____|
+         | > EPROM SOCKET |                                           |
+         | |______________|                                           |
+         |                                              ______________|
+         |                                             |
+         |_____________________________________________|
+
+Legend:
+
+90C65       ARCNET Chip 
+SW1 1-5:    Base Memory Address Select
+    6-8:    Base I/O Address Select
+SW2 1-8:    Node ID Select (ID0-ID7)
+SW3 1-5:    IRQ Select   
+    6-7:    Extra Timeout
+    8  :    ROM Enable   
+JP1         Led connector
+BNC         Coax connector
+
+Although the jumpers SW1 and SW3 are marked SW, not JP, they are jumpers, not 
+switches.
+점퍼 SW1과 SW3은 JP가 아닌 SW로 표시되어 있지만 스위치가 아닌 점퍼입니다.
+
+Setting the jumpers to ON means connecting the upper two pins, off the bottom 
+two - or - in case of IRQ setting, connecting none of them at all.
+점퍼를 ON으로 설정한다는 것은 두 개의 상단 핀을 연결하는 것을 의미합니다. IRQ 설정의 경우 두 개의 핀을 모두 연결하지 않아도됩니다.
+
+Setting the Node ID
+-------------------
+
+The eight switches in SW2 are used to set the node ID. Each node attached
+to the network must have an unique node ID which must not be 0.
+Switch 1 (ID0) serves as the least significant bit (LSB).
+SW2의 8 개 스위치는 노드 ID를 설정하는 데 사용됩니다. 네트워크에 연결된 각 노드는 0이 아니어야하는 고유 한 노드 ID를 가져야합니다. 스위치 1 (ID0)은 최하위 비트 (LSB)로 사용됩니다.
+
+Setting one of the switches to Off means "1", On means "0".
+스위치 중 하나를 Off로 설정하면 "1"을 의미하고, On이면 "0"을 의미합니다.
+
+The node ID is the sum of the values of all switches set to "1"  
+These values are:
+노드 ID는 "1"로 설정된 모든 스위치 값의 합계입니다.이 값은 다음과 같습니다.
+
+   Switch | Label | Value
+   -------|-------|-------
+     1    | ID0   |   1
+     2    | ID1   |   2
+     3    | ID2   |   4
+     4    | ID3   |   8
+     5    | ID4   |  16
+     6    | ID5   |  32
+     7    | ID6   |  64
+     8    | ID7   | 128
+
+Some Examples:
+
+    Switch         | Hex     | Decimal 
+   8 7 6 5 4 3 2 1 | Node ID | Node ID
+   ----------------|---------|---------
+   0 0 0 0 0 0 0 0 |    not allowed
+   0 0 0 0 0 0 0 1 |    1    |    1 
+   0 0 0 0 0 0 1 0 |    2    |    2
+   0 0 0 0 0 0 1 1 |    3    |    3
+       . . .       |         |
+   0 1 0 1 0 1 0 1 |   55    |   85
+       . . .       |         |
+   1 0 1 0 1 0 1 0 |   AA    |  170
+       . . .       |         |  
+   1 1 1 1 1 1 0 1 |   FD    |  253
+   1 1 1 1 1 1 1 0 |   FE    |  254
+   1 1 1 1 1 1 1 1 |   FF    |  255
+
+
+Setting the I/O Base Address
+----------------------------
+
+The last three switches in switch block SW1 are used to select one
+of eight possible I/O Base addresses using the following table
+스위치 블록 SW1의 마지막 세 스위치는 다음 표를 사용하여 8 개의 가능한 I / O Base 주소 중 하나를 선택하는 데 사용됩니다
+
+
+   Switch      | Hex I/O
+    6   7   8  | Address
+   ------------|--------
+   ON  ON  ON  |  260
+   OFF ON  ON  |  290
+   ON  OFF ON  |  2E0  (Manufacturer's default)
+   OFF OFF ON  |  2F0
+   ON  ON  OFF |  300
+   OFF ON  OFF |  350
+   ON  OFF OFF |  380
+   OFF OFF OFF |  3E0
+
+
+Setting the Base Memory (RAM) buffer Address
+--------------------------------------------
+
+The memory buffer (RAM) requires 2K. The base of this buffer can be 
+located in any of eight positions. The address of the Boot Prom is
+memory base + 0x2000.
+Jumpers 3-5 of jumper block SW1 select the Memory Base address.
+메모리 버퍼 (RAM)에는 2K가 필요합니다. 이 버퍼의베이스는 8 개 위치 중 하나에 위치 할 수 있습니다. Boot Prom의 주소는 메모리 기본 + 0x2000입니다.
+점퍼 블록 SW1의 점퍼 3-5는 메모리 기본 주소를 선택합니다.
+
+   Switch              | Hex RAM | Hex ROM
+    1   2   3   4   5  | Address | Address *)
+   --------------------|---------|-----------
+   ON  ON  ON  ON  ON  |  C0000  |  C2000
+   ON  ON  OFF ON  ON  |  C4000  |  C6000
+   ON  ON  ON  OFF ON  |  CC000  |  CE000
+   ON  ON  OFF OFF ON  |  D0000  |  D2000  (Manufacturer's default)
+   ON  ON  ON  ON  OFF |  D4000  |  D6000
+   ON  ON  OFF ON  OFF |  D8000  |  DA000
+   ON  ON  ON  OFF OFF |  DC000  |  DE000
+   ON  ON  OFF OFF OFF |  E0000  |  E2000
+  
+*) To enable the Boot ROM set the jumper 8 of jumper block SW3 to position ON.
+*) Boot ROM을 활성화하려면 점퍼 블록 SW3의 점퍼 8을 ON으로 설정하십시오.
+
+The jumpers 1 and 2 probably add 0x0800, 0x1000 and 0x1800 to RAM adders.
+점퍼 1과 2는 아마도 RAM 가산기에 0x0800, 0x1000 및 0x1800을 추가합니다.
+
+
+Setting the Interrupt Line
+인터럽트 라인 설정하기
+--------------------------
+
+Jumpers 1-5 of the jumper block SW3 control the IRQ level.
+점퍼 블록 SW3의 점퍼 1-5는 IRQ 레벨을 제어합니다.
+
+    Jumper              |  IRQ
+    1   2   3   4   5   |
+   ----------------------------
+    ON  OFF OFF OFF OFF |  2
+    OFF ON  OFF OFF OFF |  3
+    OFF OFF ON  OFF OFF |  4
+    OFF OFF OFF ON  OFF |  5
+    OFF OFF OFF OFF ON  |  7
+
+
+Setting the Timeout Parameters
+------------------------------
+
+The jumpers 6-7 of the jumper block SW3 are used to determine the timeout 
+parameters. These two jumpers are normally left in the OFF position.
+점퍼 블록 SW3의 점퍼 6-7은 타임 아웃 매개 변수를 결정하는 데 사용됩니다. 이 두 점퍼는 일반적으로 OFF 위치에 있습니다.
+
+*****************************************************************************
+
+** No Name **
+(Generic Model 9058)
+--------------------
+  - from Andrew J. Kroll <ag784@freenet.buffalo.edu>
+  - Sorry this sat in my to-do box for so long, Andrew! (yikes - over a
+    year!)
+    미안 해요, 너무 오래 앤드류를 위해서 할일에 앉아 있었어요! (yikes - 1 년 이상!)
+                                                                      _____
+                                                                     |    <
+                                                                     | .---'
+    ________________________________________________________________ | |
+   |                           |     SW2     |                      |  |
+   |   ___________             |_____________|                      |  |
+   |  |           |              1 2 3 4 5 6                     ___|  |
+   |  >  6116 RAM |         _________                         8 |   |  |
+   |  |___________|        |20MHzXtal|                        7 |   |  |
+   |                       |_________|       __________       6 | S |  |
+   |    74LS373                             |          |-     5 | W |  |
+   |   _________                            |      E   |-     4 |   |  |
+   |   >_______|              ______________|..... P   |-     3 | 3 |  |
+   |                         |              |    : O   |-     2 |   |  |
+   |                         |              |    : X   |-     1 |___|  |
+   |   ________________      |              |    : Y   |-           |  |
+   |  |      SW1       |     |      SL90C65 |    :     |-           |  |
+   |  |________________|     |              |    : B   |-           |  |
+   |    1 2 3 4 5 6 7 8      |              |    : O   |-           |  |
+   |                         |_________o____|..../ A   |-    _______|  |
+   |    ____________________                |      R   |-   |       |------,   
+   |   |                    |               |      D   |-   |  BNC  |   #  |
+   |   > 2764 PROM SOCKET   |               |__________|-   |_______|------'
+   |   |____________________|              _________                |  |
+   |                                       >________| <- 74LS245    |  |
+   |                                                                |  |
+   |___                                               ______________|  |
+       |H H H H H H H H H H H H H H H H H H H H H H H|               | |
+       |U_U_U_U_U_U_U_U_U_U_U_U_U_U_U_U_U_U_U_U_U_U_U|               | |
+                                                                      \|
+Legend:
+
+SL90C65 	ARCNET Controller / Transceiver /Logic
+SW1	1-5:	IRQ Select
+	  6:	ET1
+	  7:	ET2
+	  8:	ROM ENABLE 
+SW2	1-3:    Memory Buffer/PROM Address
+	3-6:	I/O Address Map
+SW3	1-8:	Node ID Select
+BNC		BNC RG62/U Connection 
+		*I* have had success using RG59B/U with *NO* terminators!
+		What gives?!
+* * * terminators 가있는 RG59B / U를 사용하여 성공했습니다! 뭐라고?!
+
+SW1: Timeouts, Interrupt and ROM
+---------------------------------
+
+To select a hardware interrupt level set one (only one!) of the dip switches
+up (on) SW1...(switches 1-5)
+IRQ3, IRQ4, IRQ5, IRQ7, IRQ2. The Manufacturer's default is IRQ2.
+하드웨어 인터럽트 레벨을 선택하려면 딥스 위치를 SW1 ... (스위치 1 ~ 5) 위로 (켜짐) 설정하십시오.
+IRQ3, IRQ4, IRQ5, IRQ7, IRQ2. 제조업체의 기본값은 IRQ2입니다.
+
+The switches on SW1 labeled EXT1 (switch 6) and EXT2 (switch 7)
+are used to determine the timeout parameters. These two dip switches
+are normally left off (down).
+EXT1 (스위치 6) 및 EXT2 (스위치 7)라고 표시된 SW1의 스위치는 타임 아웃 매개 변수를 결정하는 데 사용됩니다. 이 두 딥 스위치는 일반적으로 꺼져 있습니다 (아래로).
+
+   To enable the 8K Boot PROM position SW1 switch 8 on (UP) labeled ROM.
+   The default is jumper ROM not installed.
+   8K 부트 PROM 위치를 활성화하려면 SW1 스위치 8을 ROM (ROM)에 켭니다.
+    기본값은 점퍼 ROM이 설치되어 있지 않습니다.
+
+Setting the I/O Base Address
+----------------------------
+
+The last three switches in switch group SW2 are used to select one
+of eight possible I/O Base addresses using the following table
+스위치 그룹 SW2의 마지막 세 스위치는 다음 표를 사용하여 8 개의 가능한 I / O Base 주소 중 하나를 선택하는 데 사용됩니다
+
+
+   Switch | Hex I/O
+   4 5 6  | Address
+   -------|--------
+   0 0 0  |  260
+   0 0 1  |  290
+   0 1 0  |  2E0  (Manufacturer's default)
+   0 1 1  |  2F0
+   1 0 0  |  300
+   1 0 1  |  350
+   1 1 0  |  380
+   1 1 1  |  3E0
+
+
+Setting the Base Memory Address (RAM & ROM)
+-------------------------------------------
+
+The memory buffer requires 2K of a 16K block of RAM. The base of this
+16K block can be located in any of eight positions.
+Switches 1-3 of switch group SW2 select the Base of the 16K block.
+(0 = DOWN, 1 = UP)
+I could, however, only verify two settings...
+메모리 버퍼는 RAM의 16K 블록 2K가 필요하다. 이 16K 블록의베이스는 8 가지 위치 중 하나에 위치 할 수 있습니다. 스위치 그룹 SW2의 스위치 1-3은 16K 블록의베이스를 선택합니다. (0 = DOWN, 1 = UP) 그러나 두 가지 설정 만 검증 할 수는 있습니다 ...
+
+   Switch| Hex RAM | Hex ROM
+   1 2 3 | Address | Address
+   ------|---------|-----------
+   0 0 0 |  E0000  |  E2000
+   0 0 1 |  D0000  |  D2000  (Manufacturer's default)
+   0 1 0 |  ?????  |  ?????
+   0 1 1 |  ?????  |  ?????  
+   1 0 0 |  ?????  |  ?????
+   1 0 1 |  ?????  |  ?????
+   1 1 0 |  ?????  |  ?????
+   1 1 1 |  ?????  |  ?????
+
+
+Setting the Node ID
+-------------------
+
+The eight switches in group SW3 are used to set the node ID.
+Each node attached to the network must have an unique node ID which
+must be different from 0.
+Switch 1 serves as the least significant bit (LSB).
+switches in the DOWN position are OFF (0) and in the UP position are ON (1)
+그룹 SW3의 8 개 스위치는 노드 ID를 설정하는 데 사용됩니다.
+네트워크에 연결된 각 노드는 0과 다른 고유 한 노드 ID를 가져야합니다. 스위치 1은 최하위 비트 (LSB)로 사용됩니다.
+DOWN 위치의 스위치는 OFF (0)이고 UP 위치의 스위치는 ON (1)
+
+The node ID is the sum of the values of all switches set to "1"  
+These values are:
+노드 ID는 "1"로 설정된 모든 스위치 값의 합계입니다.이 값은 다음과 같습니다.
+
+    Switch | Value
+    -------|-------
+      1    |   1
+      2    |   2
+      3    |   4
+      4    |   8
+      5    |  16
+      6    |  32
+      7    |  64
+      8    | 128
+
+Some Examples:
+
+    Switch#     |   Hex   | Decimal 
+8 7 6 5 4 3 2 1 | Node ID | Node ID
+----------------|---------|---------
+0 0 0 0 0 0 0 0 |    not allowed  <-.
+0 0 0 0 0 0 0 1 |    1    |    1    | 
+0 0 0 0 0 0 1 0 |    2    |    2    |
+0 0 0 0 0 0 1 1 |    3    |    3    |
+    . . .       |         |         |
+0 1 0 1 0 1 0 1 |   55    |   85    |
+    . . .       |         |         + Don't use 0 or 255!
+1 0 1 0 1 0 1 0 |   AA    |  170    |
+    . . .       |         |         |
+1 1 1 1 1 1 0 1 |   FD    |  253    |
+1 1 1 1 1 1 1 0 |   FE    |  254    |
+1 1 1 1 1 1 1 1 |   FF    |  255  <-'
+  
+
+*****************************************************************************
+
+** Tiara **
+(model unknown)
+-------------------------
+  - from Christoph Lameter <christoph@lameter.com>
+  
+
+Here is information about my card as far as I could figure it out:
+내가 알아낼 수있는 한 내 카드 정보가있다.
+
+----------------------------------------------- tiara
+Tiara LanCard of Tiara Computer Systems.
+Tiara LanCard of Tiara 컴퓨터 시스템.
+
++----------------------------------------------+
+!           ! Transmitter Unit !               !
+!           +------------------+             -------
+!          MEM                              Coax Connector
+!  ROM    7654321 <- I/O                     -------
+!  :  :   +--------+                           !
+!  :  :   ! 90C66LJ!                         +++
+!  :  :   !        !                         !D  Switch to set
+!  :  :   !        !                         !I  the Nodenumber
+!  :  :   +--------+                         !P
+!                                            !++
+!         234567 <- IRQ                      !
++------------!!!!!!!!!!!!!!!!!!!!!!!!--------+
+             !!!!!!!!!!!!!!!!!!!!!!!!
+
+0 = Jumper Installed
+1 = Open
+
+Top Jumper line Bit 7 = ROM Enable 654=Memory location 321=I/O
+최고 점퍼 라인 비트 7 = ROM 활성화 654 = 메모리 위치 321 = I / O
+
+Settings for Memory Location (Top Jumper Line)
+메모리 위치 설정 (상단 점퍼 라인)
+
+456     Address selected
+000	C0000
+001     C4000
+010     CC000
+011     D0000
+100     D4000
+101     D8000
+110     DC000     
+111     E0000
+
+Settings for I/O Address (Top Jumper Line)
+I / O 주소 설정 (상단 점퍼 라인)
+123     Port
+000	260
+001	290
+010	2E0
+011	2F0
+100	300
+101	350
+110	380
+111	3E0
+
+Settings for IRQ Selection (Lower Jumper Line)
+IRQ 선택 설정 (하단 점퍼 라인)
+234567
+011111 IRQ 2
+101111 IRQ 3
+110111 IRQ 4
+111011 IRQ 5
+111110 IRQ 7
+
+*****************************************************************************
+
+
+Other Cards
+-----------
+
+I have no information on other models of ARCnet cards at the moment.  Please
+send any and all info to:
+	apenwarr@worldvisions.ca
+나는 현재 ARCnet 카드의 다른 모델에 대한 정보가 없습니다. 모든 정보를 다음 주소로 보내주십시오.
+apenwarr@worldvisions.ca
+
+
+Thanks.

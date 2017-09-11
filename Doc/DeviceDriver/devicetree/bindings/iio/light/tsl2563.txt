@@ -1,0 +1,42 @@
+* AMS TAOS TSL2563 ambient light sensor
+
+Required properties:
+
+  - compatible : should be "amstaos,tsl2563"
+  - reg : the I2C address of the sensor
+
+Optional properties:
+
+  - amstaos,cover-comp-gain : integer used as multiplier for gain
+                              compensation (default = 1)
+
+Example:
+
+tsl2563@29 {
+	compatible = "amstaos,tsl2563";
+	reg = <0x29>;
+	amstaos,cover-comp-gain = <16>;
+};
+
+/*
+* AMS TAOS TSL2563 주변 광선 센서
+
+필수 속성 :
+
+   - 호환 가능 : "amstaos, tsl2563"이어야합니다.
+   - reg : 센서의 I2C 주소
+
+선택 속성 :
+
+   - amstaos, cover-comp-gain : 이득을위한 승수로 사용되는 정수
+                               보상 (기본값 = 1)
+
+Example:
+
+tsl2563@29 {
+	compatible = "amstaos,tsl2563";
+	reg = <0x29>;
+	amstaos,cover-comp-gain = <16>;
+};
+
+*/

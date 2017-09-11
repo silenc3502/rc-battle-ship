@@ -1,0 +1,50 @@
+* Maxim 1027/1029/1031 Analog to Digital Converter (ADC)
+
+Required properties:
+  - compatible: Should be "maxim,max1027" or "maxim,max1029" or "maxim,max1031"
+  - reg: SPI chip select number for the device
+  - interrupt-parent: phandle to the parent interrupt controller
+  see: Documentation/devicetree/bindings/interrupt-controller/interrupts.txt
+  - interrupts: IRQ line for the ADC
+  see: Documentation/devicetree/bindings/interrupt-controller/interrupts.txt
+
+Recommended properties:
+- spi-max-frequency: Definition as per
+                     Documentation/devicetree/bindings/spi/spi-bus.txt
+
+Example:
+adc@0 {
+	compatible = "maxim,max1027";
+	reg = <0>;
+	interrupt-parent = <&gpio5>;
+	interrupts = <15 IRQ_TYPE_EDGE_RISING>;
+	spi-max-frequency = <1000000>;
+};
+
+
+/*
+
+* Maxim 1027/1029/1031 아날로그 - 디지털 컨버터 (ADC)
+
+필수 속성 :
+   - compatible : "maxim, max1027"또는 "maxim, max1029"또는 "maxim, max1031"이어야합니다.
+   - reg : 장치의 SPI 칩 선택 번호
+   --interrupt-parent : 부모 인터럽트 컨트롤러와 연결
+   Documentation / devicetree / bindings / interrupt-controller / interrupts.txt를 참조하십시오.
+   - 인터럽트 : ADC의 IRQ 라인 참조 : Documentation / devicetree / bindings / interrupt-controller / interrupts.txt
+
+권장 속성 :
+- spi-max-frequency : 정의대로
+      Documentation/devicetree/bindings/spi/spi-bus.txt
+
+Example:
+adc@0 {
+	compatible = "maxim,max1027";
+	reg = <0>;
+	interrupt-parent = <&gpio5>;
+	interrupts = <15 IRQ_TYPE_EDGE_RISING>;
+	spi-max-frequency = <1000000>;
+};
+
+
+*/

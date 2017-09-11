@@ -1,0 +1,762 @@
+=====================================================================
+SEC 4 Device Tree Binding
+Copyright (C) 2008-2011 Freescale Semiconductor Inc.
+
+ CONTENTS
+   -Overview
+   -SEC 4 Node
+   -Job Ring Node
+   -Run Time Integrity Check (RTIC) Node
+   -Run Time Integrity Check (RTIC) Memory Node
+   -Secure Non-Volatile Storage (SNVS) Node
+   -Secure Non-Volatile Storage (SNVS) Low Power (LP) RTC Node
+   -Full Example
+
+NOTE: the SEC 4 is also known as Freescale's Cryptographic Accelerator
+Accelerator and Assurance Module (CAAM).
+
+SEC 4 디바이스 트리 바인딩
+저작권 (C) 2008-2011 Freescale Semiconductor Inc.
+
+  내용
+    - 개요
+    -SEC 4 노드
+    - Ring 링 노드
+    -RUN 시간 무결성 검사 (RTIC) 노드
+    -RUN 시간 무결성 검사 (RTIC) 메모리 노드
+    보안 비 휘발성 스토리지 (SNVS) 노드
+    안전한 비 휘발성 스토리지 (SNVS) 저전력 (LP) RTC 노드
+    - 전체 예제
+
+참고 : SEC 4는 Freescale의 Cryptographic Accelerator Accelerator and Assurance Module (CAAM)이라고도합니다.
+
+
+=====================================================================
+Overview
+
+DESCRIPTION
+
+SEC 4 h/w can process requests from 2 types of sources.
+1. DPAA Queue Interface (HW interface between Queue Manager & SEC 4).
+2. Job Rings (HW interface between cores & SEC 4 registers).
+
+High Speed Data Path Configuration:
+
+HW interface between QM & SEC 4 and also BM & SEC 4, on DPAA-enabled parts
+such as the P4080.  The number of simultaneous dequeues the QI can make is
+equal to the number of Descriptor Controller (DECO) engines in a particular
+SEC version.  E.g., the SEC 4.0 in the P4080 has 5 DECOs and can thus
+dequeue from 5 subportals simultaneously.
+
+Job Ring Data Path Configuration:
+
+Each JR is located on a separate 4k page, they may (or may not) be made visible
+in the memory partition devoted to a particular core.  The P4080 has 4 JRs, so
+up to 4 JRs can be configured; and all 4 JRs process requests in parallel.
+
+개요
+
+기술
+
+SEC 4 h / w는 2 가지 유형의 소스로부터의 요청을 처리 할 수 있습니다.
+1. DPAA 대기열 인터페이스 (대기열 관리자 및 SEC 4 사이의 HW 인터페이스).
+2. 작업 링 (코어와 SEC 4 레지스터 사이의 HW 인터페이스).
+
+High Speed Data Path 구성 :
+
+P4080과 같은 DPAA 지원 부품에서 QM & SEC 4와 BM & SEC 4 사이의 HW 인터페이스. QI가 수행 할 수있는 동시 큐 해제 횟수는 특정 SEC 버전의 디스크립터 컨트롤러 (DECO) 엔진 수와 같습니다. E.g.가있는 P4080의 SEC 4.0에는 5 개의 DECO가 있으므로 5 개의 하위 포털에서 동시에 대기열에서 제외 할 수 있습니다.
+
+Job Ring Data Path Configuration :
+
+각 JR은 별도의 4k 페이지에 있으며, 특정 코어에 할당 된 메모리 파티션에 표시 될 수도 있고 표시되지 않을 수도 있습니다. P4080에는 4 개의 JR이 있으므로 최대 4 개의 JR을 구성 할 수 있습니다. 4 명의 JR은 모두 요청을 병렬로 처리합니다.
+
+
+
+=====================================================================
+SEC 4 Node
+
+Description
+
+    Node defines the base address of the SEC 4 block.
+    This block specifies the address range of all global
+    configuration registers for the SEC 4 block.  It
+    also receives interrupts from the Run Time Integrity Check
+    (RTIC) function within the SEC 4 block.
+
+기술
+
+  노드는 SEC 4 블록의 기본 주소를 정의합니다.
+  이 블록은 SEC 4 블록에 대한 모든 전역 구성 레지스터의 주소 범위를 지정합니다. 또한 SEC 4 블록 내에서 실행 시간 무결성 검사 (RTIC) 기능으로부터 인터럽트를 수신합니다.
+
+
+
+
+PROPERTIES
+속성
+
+   - compatible
+      Usage: required
+      Value type: <string>
+      Definition: Must include "fsl,sec-v4.0"
+  - compatible
+       사용법 : 필수
+       값 유형 : <문자열>
+       정의 : "fsl, sec-v4.0"을 포함해야합니다.
+
+   - fsl,sec-era
+      Usage: optional
+      Value type: <u32>
+      Definition: A standard property. Define the 'ERA' of the SEC device.
+   - fsl, sec-era
+       사용법 : 선택 사항
+       값 유형 : <u32>
+       정의 : 표준 속성. SEC 장치의 'ERA'을 정의하십시오.
+
+   - #address-cells
+       Usage: required
+       Value type: <u32>
+       Definition: A standard property.  Defines the number of cells
+           for representing physical addresses in child nodes.
+   - # address-cells
+        사용법 : 필수
+        값 유형 : <u32>
+        정의 : 표준 속성. 자식 노드의 물리적 주소를 나타내는 셀의 수를 정의합니다.       
+
+
+   - #size-cells
+       Usage: required
+       Value type: <u32>
+       Definition: A standard property.  Defines the number of cells
+           for representing the size of physical addresses in
+           child nodes.
+  - # size-cells
+        사용법 : 필수
+        값 유형 : <u32>
+        정의 : 표준 속성. 자식 노드의 물리적 주소 크기를 나타내는 셀 수를 정의합니다.
+
+   - reg
+      Usage: required
+      Value type: <prop-encoded-array>
+      Definition: A standard property.  Specifies the physical
+          address and length of the SEC4 configuration registers.
+          registers
+    - reg
+       사용법 : 필수
+       값 유형 : <prop-encoded-array>
+       정의 : 표준 속성. SEC4 구성 레지스터의 실제 주소와 길이를 지정합니다.
+
+   - ranges
+       Usage: required
+       Value type: <prop-encoded-array>
+       Definition: A standard property.  Specifies the physical address
+           range of the SEC 4.0 register space (-SNVS not included).  A
+           triplet that includes the child address, parent address, &
+           length.
+  - ranges
+        사용법 : 필수
+        값 유형 : <prop-encoded-array>
+        정의 : 표준 속성. SEC 4.0 레지스터 공간의 물리적 주소 범위를 지정합니다 (-SNVS는 포함되지 않음). 하위 주소, 상위 주소 및 길이를 포함하는 세 쌍.
+
+   - interrupts
+      Usage: required
+      Value type: <prop_encoded-array>
+      Definition:  Specifies the interrupts generated by this
+           device.  The value of the interrupts property
+           consists of one interrupt specifier. The format
+           of the specifier is defined by the binding document
+           describing the node's interrupt parent.
+  -  interrupts
+       사용법 : 필수
+       값 유형 : <prop_encoded-array>
+       정의 :이 장치에서 생성 된 인터럽트를 지정합니다. interrupts 속성의 값은 하나의 인터럽트 지정자로 구성됩니다.
+         지정자의 형식은 노드의 인터럽트 상위를 설명하는 바인딩 문서에 의해 정의됩니다.      
+
+
+
+   - interrupt-parent
+      Usage: (required if interrupt property is defined)
+      Value type: <phandle>
+      Definition: A single <phandle> value that points
+          to the interrupt parent to which the child domain
+          is being mapped.
+- interrupt-parent
+       사용법 : (인터럽트 속성이 정의 된 경우 필요)
+       값 유형 : <phandle>
+       정의 : 자식 도메인이 매핑되는 인터럽트 부모를 가리키는 단일 <phandle> 값입니다.
+
+
+   - clocks
+      Usage: required if SEC 4.0 requires explicit enablement of clocks
+      Value type: <prop_encoded-array>
+      Definition:  A list of phandle and clock specifier pairs describing
+          the clocks required for enabling and disabling SEC 4.0.
+   - clocks
+       사용법 : SEC 4.0이 클럭의 명시적인 인 에이블 링을 필요로하는 경우 필요
+       값 유형 : <prop_encoded-array>
+       정의 : SEC 4.0 활성화 및 비활성화에 필요한 clocks를 설명하는 phandle 및 clocks 지정자 pairs 목록입니다.
+
+   - clock-names
+      Usage: required if SEC 4.0 requires explicit enablement of clocks
+      Value type: <string>
+      Definition: A list of clock name strings in the same order as the
+          clocks property.
+ - clock-names
+       사용법 : SEC 4.0이 클럭의 explicit enablement 을 필요로하는 경우 필요
+       값 유형 : <문자열>
+       정의 : clocks 속성과 같은 순서로 clock-names 문자열의 목록.
+
+
+   Note: All other standard properties (see the ePAPR) are allowed
+   but are optional.
+참고 : 다른 모든 표준 속성 (ePAPR 참조)은 허용되지만 선택 사항입니다.
+
+EXAMPLE
+	crypto@300000 {
+		compatible = "fsl,sec-v4.0";
+		fsl,sec-era = <2>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+		reg = <0x300000 0x10000>;
+		ranges = <0 0x300000 0x10000>;
+		interrupt-parent = <&mpic>;
+		interrupts = <92 2>;
+		clocks = <&clks IMX6QDL_CLK_CAAM_MEM>,
+			 <&clks IMX6QDL_CLK_CAAM_ACLK>,
+			 <&clks IMX6QDL_CLK_CAAM_IPG>,
+			 <&clks IMX6QDL_CLK_EIM_SLOW>;
+		clock-names = "mem", "aclk", "ipg", "emi_slow";
+	};
+
+=====================================================================
+Job Ring (JR) Node
+
+    Child of the crypto node defines data processing interface to SEC 4
+    across the peripheral bus for purposes of processing
+    cryptographic descriptors. The specified address
+    range can be made visible to one (or more) cores.
+    The interrupt defined for this node is controlled within
+    the address range of this node.
+ 암호 노드의 자식 (child)은 암호화 기술자를 처리하기 위해 주변 장치 버스를 통해 SEC 4에 대한 데이터 처리 인터페이스를 정의합니다. 지정된 주소 범위는 하나 이상의 (또는 그 이상의) 코어에서 볼 수 있습니다.
+     이 노드에 대해 정의 된 인터럽트는이 노드의 주소 범위 내에서 제어됩니다.
+
+  - compatible
+      Usage: required
+      Value type: <string>
+      Definition: Must include "fsl,sec-v4.0-job-ring"
+- compatible
+       사용법 : 필수
+       값 유형 : <문자열>
+       정의 : "fsl, sec-v4.0-job-ring"을 포함해야합니다.
+
+  - reg
+      Usage: required
+      Value type: <prop-encoded-array>
+      Definition: Specifies a two JR parameters:  an offset from
+          the parent physical address and the length the JR registers.
+  - reg
+       사용법 : 필수
+       값 유형 : <prop-encoded-array>
+       정의 : 두 개의 JR 매개 변수를 지정합니다 : 부모의 실제 주소로부터의 오프셋과 JR이 등록하는 길이.
+
+   - fsl,liodn
+       Usage: optional-but-recommended
+       Value type: <prop-encoded-array>
+       Definition:
+           Specifies the LIODN to be used in conjunction with
+           the ppid-to-liodn table that specifies the PPID to LIODN mapping.
+           Needed if the PAMU is used.  Value is a 12 bit value
+           where value is a LIODN ID for this JR. This property is
+           normally set by boot firmware.
+- fsl, liodn
+        사용법 : 선택적이지만 권장 됨
+        값 유형 : <prop-encoded-array>
+        정의:
+            PPID 에서 LIODN 매핑을 지정하는 ppid-to-liodn 테이블과 함께 사용되는 LIODN을 지정합니다.
+            PAMU가 사용되는 경우 필요합니다. 값은이 JR에 대한 LIODN ID 값이 12 비트 값입니다. 이 등록 정보는 일반적으로 부트 펌웨어에 의해 설정됩니다.
+
+   - interrupts
+      Usage: required
+      Value type: <prop_encoded-array>
+      Definition:  Specifies the interrupts generated by this
+           device.  The value of the interrupts property
+           consists of one interrupt specifier. The format
+           of the specifier is defined by the binding document
+           describing the node's interrupt parent.
+    - interrupts
+       사용법 : 필수
+       값 유형 : <prop_encoded-array>
+       정의 :이 장치에서 생성 된 인터럽트를 지정합니다. interrupts 속성의 값은 하나의 인터럽트 지정자로 구성됩니다. 지정자의 형식은 노드의 인터럽트 상위를 설명하는 바인딩 문서에 의해 정의됩니다.
+
+   - interrupt-parent
+      Usage: (required if interrupt property is defined)
+      Value type: <phandle>
+      Definition: A single <phandle> value that points
+          to the interrupt parent to which the child domain
+          is being mapped.
+- interrupt-parent
+       사용법 : (인터럽트 속성이 정의 된 경우 필요)
+       값 유형 : <phandle>
+       정의 : 자식 도메인이 매핑되는 인터럽트 부모를 가리키는 단일 <phandle> 값입니다.
+
+
+EXAMPLE
+	jr@1000 {
+		compatible = "fsl,sec-v4.0-job-ring";
+		reg = <0x1000 0x1000>;
+		fsl,liodn = <0x081>;
+		interrupt-parent = <&mpic>;
+		interrupts = <88 2>;
+	};
+
+
+=====================================================================
+Run Time Integrity Check (RTIC) Node
+
+  Child node of the crypto node.  Defines a register space that
+  contains up to 5 sets of addresses and their lengths (sizes) that
+  will be checked at run time.  After an initial hash result is
+  calculated, these addresses are checked by HW to monitor any
+  change.  If any memory is modified, a Security Violation is
+  triggered (see SNVS definition).
+the crypto node 의 Child node 입니다. 실행시에 점검 될 최대 5 세트의 주소와 길이 (크기)를 포함하는 레지스터 공간을 정의합니다. 초기 해시 결과가 계산 된 후, 이러한 주소는 HW에 의해 점검되어 변경 사항을 모니터합니다. 메모리가 수정되면 보안 위반이 트리거됩니다 (SNVS 정의 참조).
+
+  - compatible
+      Usage: required
+      Value type: <string>
+      Definition: Must include "fsl,sec-v4.0-rtic".
+-  compatible
+       사용법 : 필수
+       값 유형 : <문자열>
+       정의 : "fsl, sec-v4.0-rtic"을 포함해야합니다.
+
+   - #address-cells
+       Usage: required
+       Value type: <u32>
+       Definition: A standard property.  Defines the number of cells
+           for representing physical addresses in child nodes.  Must
+           have a value of 1.
+- # address-cells
+        사용법 : 필수
+        값 유형 : <u32>
+        정의 : 표준 속성. 셀의 수를 정의합니다.
+            자식 노드의 물리적 주소를 나타냅니다. 값은 1이어야합니다.
+
+   - #size-cells
+       Usage: required
+       Value type: <u32>
+       Definition: A standard property.  Defines the number of cells
+           for representing the size of physical addresses in
+           child nodes.  Must have a value of 1.
+- #size-cells
+        사용법 : 필수
+        값 유형 : <u32>
+        정의 : 표준 속성. 자식 노드의 물리적 주소 크기를 나타내는 셀 수를 정의합니다. 값은 1이어야합니다.
+  - reg
+      Usage: required
+      Value type: <prop-encoded-array>
+      Definition: A standard property.  Specifies a two parameters:
+          an offset from the parent physical address and the length
+          the SEC4 registers.
+  - reg
+       사용법 : 필수
+       값 유형 : <prop-encoded-array>
+       정의 : 표준 속성. 두 개의 매개 변수를 지정합니다 : 상위 물리적 주소로부터의 오프셋과 SEC4 레지스터의 길이.
+
+   - ranges
+       Usage: required
+       Value type: <prop-encoded-array>
+       Definition: A standard property.  Specifies the physical address
+           range of the SEC 4 register space (-SNVS not included).  A
+           triplet that includes the child address, parent address, &
+           length.
+- ranges
+        사용법 : 필수
+        값 유형 : <prop-encoded-array>
+        정의 : 표준 속성. SEC 4 레지스터 공간의 물리적 주소 범위를 지정합니다 (-SNVS는 포함되지 않음). 하위 주소, 상위 주소 및 길이를 포함하는 세 쌍.
+
+EXAMPLE
+	rtic@6000 {
+		compatible = "fsl,sec-v4.0-rtic";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		reg = <0x6000 0x100>;
+		ranges = <0x0 0x6100 0xe00>;
+	};
+
+=====================================================================
+Run Time Integrity Check (RTIC) Memory Node
+  A child node that defines individual RTIC memory regions that are used to
+  perform run-time integrity check of memory areas that should not modified.
+  The node defines a register that contains the memory address &
+  length (combined) and a second register that contains the hash result
+  in big endian format.
+   수정할 필요가없는 메모리 영역의 런타임 무결성 검사를 수행하는 데 사용되는 개별 RTIC 메모리 영역을 정의하는 자식 노드. 노드는 메모리 주소 및 길이 (결합 된)와 빅 엔디안 형식의 해시 결과가 들어있는 두 번째 레지스터를 포함하는 레지스터를 정의합니다.
+
+  - compatible
+      Usage: required
+      Value type: <string>
+      Definition: Must include "fsl,sec-v4.0-rtic-memory".
+- compatible
+       사용법 : 필수
+       값 유형 : <문자열>
+       정의 : "fsl, sec-v4.0-rtic-memory"를 포함해야합니다.
+
+  - reg
+      Usage: required
+      Value type: <prop-encoded-array>
+      Definition: A standard property.  Specifies two parameters:
+          an offset from the parent physical address and the length:
+
+          1. The location of the RTIC memory address & length registers.
+          2. The location RTIC hash result.
+- reg
+       사용법 : 필수
+       값 유형 : <prop-encoded-array>
+       정의 : 표준 속성. 두 개의 매개 변수를 지정합니다.
+           부모의 물리적 주소와 길이로부터의 오프셋 :
+
+           1. RTIC 메모리 주소 및 길이 레지스터의 위치.
+           2. RTIC 해시 결과의 위치.
+
+  - fsl,rtic-region
+       Usage: optional-but-recommended
+       Value type: <prop-encoded-array>
+       Definition:
+           Specifies the HW address (36 bit address) for this region
+           followed by the length of the HW partition to be checked;
+           the address is represented as a 64 bit quantity followed
+           by a 32 bit length.
+- fsl, rtic-region
+        사용법 : 선택적이지만 권장 됨
+        값 유형 : <prop-encoded-array>
+        정의:
+            이 영역의 HW 주소 (36 비트 주소)와 그 뒤에 검사 할 HW 파티션의 길이를 지정합니다. 주소는 64 비트 양과 32 비트 길이로 표시됩니다.
+
+   - fsl,liodn
+       Usage: optional-but-recommended
+       Value type: <prop-encoded-array>
+       Definition:
+           Specifies the LIODN to be used in conjunction with
+           the ppid-to-liodn table that specifies the PPID to LIODN
+           mapping.  Needed if the PAMU is used.  Value is a 12 bit value
+           where value is a LIODN ID for this RTIC memory region. This
+           property is normally set by boot firmware.
+- fsl, liodn
+        사용법 : 선택적이지만 권장 됨
+        값 유형 : <prop-encoded-array>
+        정의:
+            PPID 에서 LIODN 매핑을 지정하는 ppid-to-liodn 테이블과 함께 사용되는 LIODN을 지정합니다. PAMU가 사용되는 경우 필요합니다. 값은 값이이 RTIC 메모리 영역에 대한 LIODN ID 인 12 비트 값입니다. 이 등록 정보는 일반적으로 부트 펌웨어에 의해 설정됩니다.
+
+EXAMPLE
+	rtic-a@0 {
+		compatible = "fsl,sec-v4.0-rtic-memory";
+		reg = <0x00 0x20 0x100 0x80>;
+		fsl,liodn   = <0x03c>;
+		fsl,rtic-region  = <0x12345678 0x12345678 0x12345678>;
+	};
+
+=====================================================================
+Secure Non-Volatile Storage (SNVS) Node
+
+    Node defines address range and the associated
+    interrupt for the SNVS function.  This function
+    monitors security state information & reports
+    security violations. This also included rtc,
+    system power off and ON/OFF key.
+노드는 주소 범위와 SNVS 기능에 대한 관련 인터럽트를 정의합니다. 이 기능은 보안 상태 정보를 모니터링하고 보안 위반을보고합니다. 이것은 또한 rtc, 시스템 전원 꺼짐 및 ON / OFF 키를 포함합니다.
+
+  - compatible
+      Usage: required
+      Value type: <string>
+      Definition: Must include "fsl,sec-v4.0-mon" and "syscon".
+- compatible
+       사용법 : 필수
+       값 유형 : <문자열>
+       정의 : "fsl, sec-v4.0-mon"및 "syscon"을 포함해야합니다.
+
+  - reg
+      Usage: required
+      Value type: <prop-encoded-array>
+      Definition: A standard property.  Specifies the physical
+          address and length of the SEC4 configuration
+          registers.
+ - reg
+       사용법 : 필수
+       값 유형 : <prop-encoded-array>
+       정의 : 표준 속성. SEC4 구성 레지스터의 실제 주소와 길이를 지정합니다.
+
+   - #address-cells
+       Usage: required
+       Value type: <u32>
+       Definition: A standard property.  Defines the number of cells
+           for representing physical addresses in child nodes.  Must
+           have a value of 1.
+- # address-cells
+        사용법 : 필수
+        값 유형 : <u32>
+        정의 : 표준 속성. 자식 노드의 물리적 주소를 나타내는 셀의 수를 정의합니다. 값은 1이어야합니다.
+
+   - #size-cells
+       Usage: required
+       Value type: <u32>
+       Definition: A standard property.  Defines the number of cells
+           for representing the size of physical addresses in
+           child nodes.  Must have a value of 1.
+- # size-cells
+        사용법 : 필수
+        값 유형 : <u32>
+        정의 : 표준 속성. 자식 노드의 물리적 주소 크기를 나타내는 셀 수를 정의합니다. 값은 1이어야합니다.
+
+   - ranges
+       Usage: required
+       Value type: <prop-encoded-array>
+       Definition: A standard property.  Specifies the physical address
+           range of the SNVS register space.  A triplet that includes
+           the child address, parent address, & length.
+-  ranges
+        사용법 : 필수
+        값 유형 : <prop-encoded-array>
+        정의 : 표준 속성. SNVS 레지스터 공간의 물리적 주소 범위를 지정합니다. 하위 주소, 상위 주소 및 길이를 포함하는 세 쌍.
+
+   - interrupts
+      Usage: optional
+      Value type: <prop_encoded-array>
+      Definition:  Specifies the interrupts generated by this
+           device.  The value of the interrupts property
+           consists of one interrupt specifier. The format
+           of the specifier is defined by the binding document
+           describing the node's interrupt parent.
+-interrupts
+       사용법 : 선택 사항
+       값 유형 : <prop_encoded-array>
+       정의 :이 장치에서 생성 된 인터럽트를 지정합니다. interrupts 속성의 값은 하나의 인터럽트 지정자로 구성됩니다. 지정자의 형식은 노드의 인터럽트 상위를 설명하는 바인딩 문서에 의해 정의됩니다.
+
+   - interrupt-parent
+      Usage: (required if interrupt property is defined)
+      Value type: <phandle>
+      Definition: A single <phandle> value that points
+          to the interrupt parent to which the child domain
+          is being mapped.
+- interrupt-parent
+       사용법 : (인터럽트 속성이 정의 된 경우 필요)
+       값 유형 : <phandle>
+       정의 : 자식 도메인이 매핑되는 인터럽트 부모를 가리키는 단일 <phandle> 값입니다.
+
+EXAMPLE
+	sec_mon@314000 {
+		compatible = "fsl,sec-v4.0-mon", "syscon";
+		reg = <0x314000 0x1000>;
+		ranges = <0 0x314000 0x1000>;
+		interrupt-parent = <&mpic>;
+		interrupts = <93 2>;
+	};
+
+=====================================================================
+Secure Non-Volatile Storage (SNVS) Low Power (LP) RTC Node
+
+  A SNVS child node that defines SNVS LP RTC.
+SNVS LP RTC를 정의하는 SNVS 하위 노드.
+
+  - compatible
+      Usage: required
+      Value type: <string>
+      Definition: Must include "fsl,sec-v4.0-mon-rtc-lp".
+ - compatible
+       사용법 : 필수
+       값 유형 : <문자열>
+       정의 : "fsl, sec-v4.0-mon-rtc-lp"를 포함해야합니다.
+
+  - interrupts
+      Usage: required
+      Value type: <prop_encoded-array>
+      Definition: Specifies the interrupts generated by this
+	   device.  The value of the interrupts property
+	   consists of one interrupt specifier. The format
+	   of the specifier is defined by the binding document
+     describing the node's interrupt parent.
+   
+- interrupts
+       사용법 : 필수
+       값 유형 : <prop_encoded-array>
+       정의 :이 장치에서 생성 된 인터럽트를 지정합니다. interrupts 속성의 값은 하나의 인터럽트 지정자로 구성됩니다. 
+       지정자의 형식은 노드의 인터럽트 상위를 설명하는 바인딩 문서에 의해 정의됩니다.
+
+ - regmap
+	Usage: required
+	Value type: <phandle>
+	Definition: this is phandle to the register map node.
+- regmap
+사용법 : 필수
+값 유형 : <phandle>
+정의 : 이것은 레지스터 맵 노드의 phandle입니다.
+
+ - offset
+	Usage: option
+	value type: <u32>
+	Definition: LP register offset. default it is 0x34.
+- 오프셋
+사용법 : 옵션
+값 유형 : <u32>
+정의 : LP 레지스터 오프셋. 기본값은 0x34입니다
+
+EXAMPLE
+	sec_mon_rtc_lp@1 {
+		compatible = "fsl,sec-v4.0-mon-rtc-lp";
+		interrupts = <93 2>;
+		regmap = <&snvs>;
+		offset = <0x34>;
+	};
+
+=====================================================================
+System ON/OFF key driver
+
+  The snvs-pwrkey is designed to enable POWER key function which controlled
+  by SNVS ONOFF, the driver can report the status of POWER key and wakeup
+  system if pressed after system suspend.
+snvs-pwrkey는 SNVS ONOFF에 의해 제어되는 POWER key 기능을 활성화 시키도록 설계되었으며, driver는 시스템이 일시 중단 된 후 POWER key와 wakeup system의 상태를보고 할 수 있습니다.
+  
+  - compatible:
+      Usage: required
+      Value type: <string>
+      Definition: Mush include "fsl,sec-v4.0-pwrkey".
+- compatible :
+       사용법 : 필수
+       값 유형 : <문자열>
+       정의 : Mush에는 "fsl, sec-v4.0-pwrkey"가 포함됩니다.
+
+  - interrupts:
+      Usage: required
+      Value type: <prop_encoded-array>
+      Definition: The SNVS ON/OFF interrupt number to the CPU(s).
+ - interrupts:
+       사용법 : 필수
+       값 유형 : <prop_encoded-array>
+       정의 : CPU에 대한 SNVS ON / OFF 인터럽트 번호..
+
+  - linux,keycode:
+      Usage: option
+      Value type: <int>
+      Definition: Keycode to emit, KEY_POWER by default.
+ - linux,keycode:
+       사용법 : 옵션
+       값 유형 : <int>
+       정의 : 방출 할 키 코드, 기본적으로 KEY_POWER.
+
+  - wakeup-source:
+      Usage: option
+      Value type: <boo>
+      Definition: Button can wake-up the system.
+- wakeup-source :
+       사용법 : 옵션
+       값 유형 : <boo>
+       정의 : 버튼은 시스템을 깨울 수 있습니다.
+
+ - regmap:
+      Usage: required:
+      Value type: <phandle>
+      Definition: this is phandle to the register map node.
+  - regmap :
+       용도 : 필수 :
+       값 유형 : <phandle>
+       정의 : 이것은 레지스터 맵 노드의 phandle입니다.
+
+EXAMPLE:
+	snvs-pwrkey@0x020cc000 {
+		compatible = "fsl,sec-v4.0-pwrkey";
+		regmap = <&snvs>;
+		interrupts = <0 4 0x4>
+	        linux,keycode = <116>; /* KEY_POWER */
+		wakeup-source;
+	};
+
+=====================================================================
+FULL EXAMPLE
+
+	crypto: crypto@300000 {
+		compatible = "fsl,sec-v4.0";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		reg = <0x300000 0x10000>;
+		ranges = <0 0x300000 0x10000>;
+		interrupt-parent = <&mpic>;
+		interrupts = <92 2>;
+
+		sec_jr0: jr@1000 {
+			compatible = "fsl,sec-v4.0-job-ring";
+			reg = <0x1000 0x1000>;
+			interrupt-parent = <&mpic>;
+			interrupts = <88 2>;
+		};
+
+		sec_jr1: jr@2000 {
+			compatible = "fsl,sec-v4.0-job-ring";
+			reg = <0x2000 0x1000>;
+			interrupt-parent = <&mpic>;
+			interrupts = <89 2>;
+		};
+
+		sec_jr2: jr@3000 {
+			compatible = "fsl,sec-v4.0-job-ring";
+			reg = <0x3000 0x1000>;
+			interrupt-parent = <&mpic>;
+			interrupts = <90 2>;
+		};
+
+		sec_jr3: jr@4000 {
+			compatible = "fsl,sec-v4.0-job-ring";
+			reg = <0x4000 0x1000>;
+			interrupt-parent = <&mpic>;
+			interrupts = <91 2>;
+		};
+
+		rtic@6000 {
+			compatible = "fsl,sec-v4.0-rtic";
+			#address-cells = <1>;
+			#size-cells = <1>;
+			reg = <0x6000 0x100>;
+			ranges = <0x0 0x6100 0xe00>;
+
+			rtic_a: rtic-a@0 {
+				compatible = "fsl,sec-v4.0-rtic-memory";
+				reg = <0x00 0x20 0x100 0x80>;
+			};
+
+			rtic_b: rtic-b@20 {
+				compatible = "fsl,sec-v4.0-rtic-memory";
+				reg = <0x20 0x20 0x200 0x80>;
+			};
+
+			rtic_c: rtic-c@40 {
+				compatible = "fsl,sec-v4.0-rtic-memory";
+				reg = <0x40 0x20 0x300 0x80>;
+			};
+
+			rtic_d: rtic-d@60 {
+				compatible = "fsl,sec-v4.0-rtic-memory";
+				reg = <0x60 0x20 0x500 0x80>;
+			};
+		};
+	};
+
+	sec_mon: sec_mon@314000 {
+		compatible = "fsl,sec-v4.0-mon";
+		reg = <0x314000 0x1000>;
+		ranges = <0 0x314000 0x1000>;
+
+		sec_mon_rtc_lp@34 {
+			compatible = "fsl,sec-v4.0-mon-rtc-lp";
+			regmap = <&sec_mon>;
+			offset = <0x34>;
+			interrupts = <93 2>;
+		};
+
+		snvs-pwrkey@0x020cc000 {
+			compatible = "fsl,sec-v4.0-pwrkey";
+			regmap = <&sec_mon>;
+			interrupts = <0 4 0x4>;
+			linux,keycode = <116>; /* KEY_POWER */
+			wakeup-source;
+		};
+	};
+
+=====================================================================

@@ -1,0 +1,9 @@
+PACKAGE_VERSION="01.00.00.00"
+PACKAGE_NAME="uio-module-drv"
+CLEAN="make clean"
+BUILT_MODULE_NAME="uio_module_drv"
+BUILT_MODULE_LOCATION="./"
+DEST_MODULE_LOCATION="/kernel/../extra/uio-module-drv/"
+MAKE="make KERNEL_SRC=$kernel_source_dir"
+AUTOINSTALL="yes"
+

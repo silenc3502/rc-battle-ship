@@ -1,0 +1,99 @@
+Qualcomm's SPMI PMIC current ADC
+
+QPNP PMIC current ADC (IADC) provides interface to clients to read current.
+A 16 bit ADC is used for current measurements. IADC can measure the current
+through an external resistor (channel 1) or internal (built-in) resistor
+(channel 0). When using an external resistor it is to be described by
+qcom,external-resistor-micro-ohms property.
+
+IADC node:
+
+- compatible:
+    Usage: required
+    Value type: <string>
+    Definition: Should contain "qcom,spmi-iadc".
+
+- reg:
+    Usage: required
+    Value type: <prop-encoded-array>
+    Definition: IADC base address and length in the SPMI PMIC register map
+
+- interrupts:
+    Usage: optional
+    Value type: <prop-encoded-array>
+    Definition: End of ADC conversion.
+
+- qcom,external-resistor-micro-ohms:
+    Usage: optional
+    Value type: <u32>
+    Definition: Sense resister value in micro Ohm.
+                If not defined value of 10000 micro Ohms will be used.
+
+Example:
+	/* IADC node */
+	pmic_iadc: iadc@3600 {
+		compatible = "qcom,spmi-iadc";
+		reg = <0x3600 0x100>;
+		interrupts = <0x0 0x36 0x0 IRQ_TYPE_EDGE_RISING>;
+		qcom,external-resistor-micro-ohms = <10000>;
+		#io-channel-cells  = <1>;
+	};
+
+	/* IIO client node */
+	bat {
+		io-channels = <&pmic_iadc  0>;
+		io-channel-names = "iadc";
+	};
+
+
+
+/*
+
+Qualcomm의 SPMI PMIC 전류 ADC
+
+QPNP PMIC 전류 ADC (IADC)는 클라이언트에게 전류를 판독 할 수있는 인터페이스를 제공한다.
+16 비트 ADC는 전류 측정에 사용됩니다. IADC는 전류를 측정 할 수 있습니다.
+외부 저항 (채널 1) 또는 내부 (내장형) 저항 (채널 0)을 통해.
+외부 저항을 사용할 때는 qcom, 외부 저항 마이크로 옴 특성으로 설명해야한다.
+
+IADC 노드 :
+
+- 호환 가능 :
+    사용법 : 필수
+    값 유형 : <문자열>
+    정의 : "qcom, spmi-iadc"를 포함해야합니다.
+
+- reg :
+    사용법 : 필수
+    값 유형 : <prop-encoded-array>
+    정의 : SPAD PMIC 레지스터 맵의 IADC 기본 주소 및 길이
+
+- 인터럽트 :
+    사용법 : 선택 사항
+    값 유형 : <prop-encoded-array>
+    정의 : ADC 변환의 끝.
+
+- qcom, 외부 저항 - 마이크로 옴 :
+    사용법 : 선택 사항
+    값 유형 : <u32>
+    정의 : 저항 값을 마이크로 옴 단위로 감지합니다.
+                10000 마이크로 옴의 정의되지 않은 값이 사용됩니다.
+
+Example:
+	/* IADC node */
+	pmic_iadc: iadc@3600 {
+		compatible = "qcom,spmi-iadc";
+		reg = <0x3600 0x100>;
+		interrupts = <0x0 0x36 0x0 IRQ_TYPE_EDGE_RISING>;
+		qcom,external-resistor-micro-ohms = <10000>;
+		#io-channel-cells  = <1>;
+	};
+
+	/* IIO client node */
+	bat {
+		io-channels = <&pmic_iadc  0>;
+		io-channel-names = "iadc";
+	};
+
+
+*/

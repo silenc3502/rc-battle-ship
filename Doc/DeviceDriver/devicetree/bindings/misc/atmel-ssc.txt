@@ -1,0 +1,67 @@
+* Atmel SSC driver.
+* Atmel SSC 드라이버.
+
+Required properties:
+- compatible: "atmel,at91rm9200-ssc" or "atmel,at91sam9g45-ssc"
+	- atmel,at91rm9200-ssc: support pdc transfer
+	- atmel,at91sam9g45-ssc: support dma transfer
+- reg: Should contain SSC registers location and length
+- interrupts: Should contain SSC interrupt
+- clock-names: tuple listing input clock names.
+	Required elements: "pclk"
+- clocks: phandles to input clocks.
+필수 속성 :
+- 호환 : "atmel, at91rm9200-ssc"또는 "atmel, at91sam9g45-ssc"
+- atmel, at91rm9200-ssc : pdc 전송 지원
+- atmel, at91sam9g45-ssc : dma transfer 지원
+- reg : SSC 레지스터 위치와 길이를 포함해야 함
+- 인터럽트 : SSC 인터럽트를 포함해야합니다.
+- clock-names : 튜플에 입력 클럭 이름을 나열합니다.
+필수 요소 : "pclk"
+- clocks : 입력 클락에 대한 phandles.
+
+Required properties for devices compatible with "atmel,at91sam9g45-ssc":
+- dmas: DMA specifier, consisting of a phandle to DMA controller node,
+  the memory interface and SSC DMA channel ID (for tx and rx).
+  See Documentation/devicetree/bindings/dma/atmel-dma.txt for details.
+- dma-names: Must be "tx", "rx".
+"atmel, at91sam9g45-ssc"와 호환되는 장치의 필수 속성 :
+- dmas : DMA 컨트롤러 노드에 대한 phandle, 메모리 인터페이스 및 SSC DMA 채널 ID (tx 및 rx의 경우)로 구성된 DMA 지정자입니다. 자세한 내용은 Documentation / devicetree / bindings / dma / atmel-dma.txt를 참조하십시오.
+- dma-names : "tx", "rx"여야합니다.
+
+Optional properties:
+  - atmel,clk-from-rk-pin: bool property.
+     - When SSC works in slave mode, according to the hardware design, the
+       clock can get from TK pin, and also can get from RK pin. So, add
+       this parameter to choose where the clock from.
+     - By default the clock is from TK pin, if the clock from RK pin, this
+       property is needed.
+선택적 속성 :
+   - atmel, clk-from-rk-pin : bool 속성.
+      - SSC가 슬레이브 모드로 동작 할 때, 하드웨어 설계에 따라 clock는 TK 핀으로부터 얻을 수 있고 RK 핀으로부터도 얻을 수 있습니다. 따라서이 매개 변수를 추가하여 clock의 위치를  선택하십시오.
+      - 기본적으로 클록은 TK 핀에서 나오며, RK 핀의 클럭 인 경우이 속성이 필요합니다.
+
+
+
+Examples:
+- PDC transfer:
+ssc0: ssc@fffbc000 {
+	compatible = "atmel,at91rm9200-ssc";
+	reg = <0xfffbc000 0x4000>;
+	interrupts = <14 4 5>;
+	clocks = <&ssc0_clk>;
+	clock-names = "pclk";
+};
+
+- DMA transfer:
+ssc0: ssc@f0010000 {
+      compatible = "atmel,at91sam9g45-ssc";
+      reg = <0xf0010000 0x4000>;
+      interrupts = <28 4 5>;
+      dmas = <&dma0 1 13>,
+	     <&dma0 1 14>;
+      dma-names = "tx", "rx";
+      pinctrl-names = "default";
+      pinctrl-0 = <&pinctrl_ssc0_tx &pinctrl_ssc0_rx>;
+      status = "disabled";
+};

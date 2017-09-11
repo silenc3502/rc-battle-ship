@@ -1,0 +1,196 @@
+1990 년대 말에 IEEE 에서 무선 로컬 영역 네트워크(WLANS) 에 대한
+Protocol 과 관련된 토론이 있었다.
+IEEE 802.11 규격은 지속적으로 개정되어
+2012 년도에 2793 쪽짜리 규격이 배포되었다.
+
+IEEE 802.11 의 첫 승인 이후 Wi-Fi 인터페이스를 가진 노트북이 인기를 얻었다.
+이러한 이유로 OS 들도 Wireless System 을 갖춰 경쟁사들과 경쟁해야만 했다.
+이로 인해 Linux 진영에서 Wireless Network Interface 를 제공하는 것과
+Wireless SW Stack 을 제공하는 것이 중요했다.
+
+처음 무선 드라이버를 개발하게 되었을때 누구도 설계를 생각하지 않았다.
+왜냐하면 디바이스 드라이버의 난이도 중
+가장 어려운 것이 무선 드라이버이기 때문이다.
+그래서 현재의 우리와 같이 "제발 씨x 좀 돌아갔으면 좋겠다" 라는 생각을 하며
+"씨x 제발 이번엔 성공" 을 마음속으로 외치며 드라이버를 만들고 삽질을 해댔다.
+이로 인해 초창기에 Wireless Driver 의 코드는 지저분하기 짝이 없었다.
+중복된 코드들이 난무하며 개판에 시장바닥이 판을 쳤다.
+
+이렇게 수년이 지난 후 MAC80211 이라고 하는
+새로운 802.11 Wireless Stack 이 개발됐다.
+2007 년 7 월에 Linux Kernel 2.6.22 에 통합됐다.
+(당시에 삼성 노트북을 사용하면서 무선이 되서 굉장히 좋아했던 기억이 난다)
+
+MAC80211 Stack 은 D80211 Stack 을 기반으로 하며
+D80211 Stack 은 Devicescape 라고 하는 회사에서 만든
+GPL License 가 적용된 Open Source Stack 이다.
+
+802.11 과 802.3 즉 유선과 무선의 차이점은 CSMA/CD 와 CSMA/CA 이다.
+CSMA/CA 는 반송파 감지 다중 접근/충돌 회피
+(Carrier Sense Multiple Access/Collision Avoidance) 를 의미하고
+CSMA/CD 는 반송파 감지 다중 접근/충돌 탐지
+(Carrier Sense Multiple Access/Collision Detection) 를 의미한다.
+
+Ethernet 은 Cisco 사의 Switch 를 공부하면서도 학습하겠지만
+전송하는 동안 충돌을 탐지할 수 있어 충돌이 탐지되면 전송을 멈추고
+더 이상 충돌이 탐지되지 않으면 다시 전송을 시작하는 구조를 가진다.
+반면 무선 시스템은 충돌을 탐지할 수 없기에
+802.11 규격에서 Broadcast 와 Multicast 를 제외한
+모든 Frame 이 수신되면 확인응답한다.
+
+
+
+* 802.11 MAC Header
+
+MAC Frame 은 MAC Header, Variable-Length Frame Body, 32 bit FCS 등으로 구성된다.
+802.11 Header 는 mac80211 에서 ieee80211_hdr 구조체로 표현된다.
+현재 우리가 사용하는 Kernel Version 4.4.32 에서
+include/linux/ieee80211.h 에서 아래 내용을 확인해볼 수 있다.
+
+struct ieee80211_hdr {
+        __le16 frame_control;
+        __le16 duration_id;
+        u8 addr1[ETH_ALEN];
+        u8 addr2[ETH_ALEN];
+        u8 addr3[ETH_ALEN];
+        __le16 seq_ctrl;
+        u8 addr4[ETH_ALEN];
+} __packed __aligned(2);
+
+struct ieee80211_hdr_3addr {
+        __le16 frame_control;
+        __le16 duration_id;
+        u8 addr1[ETH_ALEN];
+        u8 addr2[ETH_ALEN];
+        u8 addr3[ETH_ALEN];
+        __le16 seq_ctrl;
+} __packed __aligned(2);
+
+struct ieee80211_qos_hdr {
+        __le16 frame_control;
+        __le16 duration_id;
+        u8 addr1[ETH_ALEN];
+        u8 addr2[ETH_ALEN];
+        u8 addr3[ETH_ALEN];
+        __le16 seq_ctrl;
+        __le16 qos_ctrl;
+} __packed __aligned(2);
+
+우리가 일반적으로 사용하는 구조 Station 혹은 AP 에서는 주소 3 개를 사용한다.
+802.11 MAC Header 의 구조를 보자면 아래와 같은 것들로 구성된다.
+
+Frame Control
+Duration/ID
+Address1
+Address2
+Address3
+Order Control
+Address4
+QoS Control
+HT Control
+
+MAC 헤더의 맨 앞 Frame Control(프레임 제어)는 16 비트(2 바이트)다.
+이 필드의 내부에 대해서 상세히 까보자면 아래와 같다.
+
+Protocol Version(2 bit)
+Type(2 bit)
+Sub Type(4 bit)
+ToDS(1 bit)
+FromDS(1 bit)
+More Frag(1 bit)
+Retry(1 bit)
+Power Management(1 bit)
+More Data(1 bit)
+WEP(1 bit)
+Order(1 bit)
+
+위의 모든 비트를 합치면 16 비트(2 바이트)가 나온다.
+각각의 비트에 대해 알아보자면 아래와 같다.
+
+Protocol Version
+사용하는 MAC 802.11 의 버전으로 현재 하나의 MAC 버전이 있고 0 이다.
+
+Type
+802.11 에는 3 가지 패킷 타입으로 관리, 제어, 데이터가 있다.
+
+- 관리 패킷(IEEE80211_FTYPE_MGMT)은 연관, 인증, 검사(Scanning) 등과 같은
+  관리 동작을 위한 패킷이다.
+- 제어 패킷(IEEE80211_FTYPE_CTL)은 보통 데이터 패킷과 일부 관련성을 가진다.
+  예로 PS-Poll 패킷은 AP Buffer 에서 Packet 을 검색한다.
+  다른 예로 전송하려는 Station 이
+  RTS(Request to Send: 송신 요청) 제어 패킷을 먼저 보낸다.
+  매체가 여유가 있다면 목적지 Station 은
+  CTS(Clear to Send: 송신 확인) 라는 제어 패킷을 회신할 것이다.
+- 데이터 패킷(IEEE80211_FTYPE_DATA)은 원시 데이터 패킷이다.
+  NULL 패킷은 원시 패킷의 특수한 경우로서 데이터를 운반하지 않으며
+  대부분 전원 관리 제어 목적으로 사용된다.
+
+Subtype
+위의 3 가지 패킷 타입(관리, 제어, 데이터)의 경우
+패킷이 사용되는 특징을 구별하는 Subtype 필드가 있다.
+
+- 관리 프레임에서 Subtype Field 값 0100 은
+  패킷이 탐지 요청(Probe Request) 관리 패킷(IEEE80211_STYPE_PROBE_REQ)을
+  의미하며 이 패킷은 검사 동작에 사용된다.
+- 제어 패킷에서 Subtype 필드 값 1011 은
+  제어 패킷 송신 요청(IEEE80211_STYPE_RTS) 하는 것을 의미한다.
+  데이터 패킷의 Subtype 값 0100 은 전원 관리 제어에 사용되는
+  NULL 데이터(IEEE80211_STYPE_NULLFUNC) 패킷을 의미한다.
+- 데이터 패킷의 Subtype 값 1000(IEEE80211_STYPE_QOS_DATA)은
+  QoS 데이터 패킷을 의미한다.
+  Subtype 은 QoS 강화를 다룬 IEEE802.11e 개정이 추가됐다.
+
+ToDS
+이 bit 가 설정된 경우 분배 시스템으로 가는 패킷을 의미한다.
+
+FromDs
+이 bit 가 설정된 경우 분배 시스템에서 온 패킷을 의미한다.
+
+More Frag
+단편화(Fragmentation)을 사용하면 이 bit 는 1 로 설정된다.
+
+Retry
+패킷이 재전송되면 이 bit 는 1 로 설정된다.
+재전송이 이뤄지는 가장 일반적인 경우는
+패킷이 정해진 시간에 확인 응답을 수신하지 못할 때다.
+확인 응답은 보통 Wireless Driver 의 FW 가 보낸다.
+
+Power Management
+전원 관리 bit 가 설정되면 Station 이 절전 기능으로 들어갈 것임을 의미한다.
+
+More Data
+AP 가 절전 상태의 Station 으로 향하는 Buffered Packet 을 전송할 때
+AP 의 Buffer 가 비어있지 않으면 이 bit 를 1 로 설정한다.
+그러므로 Station 은 검색할 Packet 이 더 있음을 알게 된다.
+Buffer 가 비어 있으면 이 bit 는 0 으로 설정된다.
+
+WEP
+이 bit 는 Frame 이 암호화 되어 있으면 1 로 설정된다.
+Data Frame 과 Authentication Frame 만 암호화 될 수 있다.
+
+Order
+엄격한 순서라 불리는 MAC Service 가 사용중이면 순서 비트는 1 로 설정된다.
+거의 사용되지 않음
+
+다음으로 남아 있는 부분들을 살펴보도록 하자!
+
+
+
+Duration/ID
+Microsecond 단위의 NAV(Network Allocation Vector)에 대한 값을 보관하고
+Duration/ID 필드의 15 bit 로 구성되며 16 번째 bit 는 0 이다.
+절전 모드로 동작할 경우 PS-Poll Frame 에 대한 Station 의 AID(Association ID)가 된다.
+NAV 는 가상 반송파 감지 메커니즘이며 이 알고리즘은 논문등을 참조하는 것이 좋다.
+
+Order Control
+이 녀석은 2 byte 를 차지하며
+802.11 에서는 패킷이 한 번 이상 수신될 가능성이 있다.
+주로 특정한 이유로 확인 응답이 수신되지 않는 경우가 여기에 해당한다.
+순서 제어 필드는 Fragmentation Number(4 bit) 와 Order Number(12 bit) 로 구성된다.
+Order Number 는 전송 Station 에서 생성하며 ieee80211_tx_h_sequence() 에서 생성된다.
+재전송에서 중복 프레임의 경우 폐기되고 폐기된 중복 프레임 카운터는 1 씩 증가한다.
+이를 제어하는 함수는 ieee80211_rx_h_check() 에서 이뤄진다.
+
+Address 1 ~ 4
+주소가 4 개 있지만 항상 모두 사용하는 것은 아니다.
+주소 1 은 수신 주소(RA: Receive Address)이며 모든 패킷에서 사용된다.

@@ -1,0 +1,10 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Name=Refresh Matrix
+GenericName=Demo App
+Icon=/usr/share/matrix-gui-2.0/apps/images/refresh-icon.png
+Type=Application
+Exec=runRefreshMatrix.sh
+Categories=settings
+ProgramType=console
+X-MATRIX-Description=/usr/share/matrix-gui-2.0/apps/refresh_matrix/desc_refresh_matrix.html

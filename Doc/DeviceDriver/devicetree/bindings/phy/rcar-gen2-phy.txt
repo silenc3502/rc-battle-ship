@@ -1,0 +1,79 @@
+* Renesas R-Car generation 2 USB PHY
+
+This file provides information on what the device node for the R-Car generation
+2 USB PHY contains.
+
+Required properties:
+- compatible: "renesas,usb-phy-r8a7790" if the device is a part of R8A7790 SoC.
+	      "renesas,usb-phy-r8a7791" if the device is a part of R8A7791 SoC.
+	      "renesas,usb-phy-r8a7794" if the device is a part of R8A7794 SoC.
+- reg: offset and length of the register block.
+- #address-cells: number of address cells for the USB channel subnodes, must
+		  be <1>.
+- #size-cells: number of size cells for the USB channel subnodes, must be <0>.
+- clocks: clock phandle and specifier pair.
+- clock-names: string, clock input name, must be "usbhs".
+
+The USB PHY device tree node should have the subnodes corresponding to the USB
+channels. These subnodes must contain the following properties:
+- reg: the USB controller selector; see the table below for the values.
+- #phy-cells: see phy-bindings.txt in the same directory, must be <1>.
+
+The phandle's argument in the PHY specifier is the USB controller selector for
+the USB channel; see the selector meanings below:
+
++-----------+---------------+---------------+
+|\ Selector |               |               |
++ --------- +       0       |       1       |
+| Channel  \|               |               |
++-----------+---------------+---------------+
+| 0         | PCI EHCI/OHCI | HS-USB        |
+| 2         | PCI EHCI/OHCI | xHCI          |
++-----------+---------------+---------------+
+
+이 파일은 R-Car 세대 2 USB PHY의 장치 노드에 포함 된 정보를 제공합니다.
+
+필수 속성 :
+- compatible : 장치가 R8A7790 SoC의 일부인 경우 "renesas, usb-phy-r8a7790"
+장치가 R8A7791 SoC의 일부인 경우 "renesas, usb-phy-r8a7791".
+장치가 R8A7794 SoC의 일부인 경우 "renesas, usb-phy-r8a7794".
+- reg : 레지스터 블록의 오프셋과 길이.
+- # address-cells : USB 채널 하위 노드의 주소 셀 수는 <1>이어야합니다.
+- # size-cells : USB 채널 하위 노드의 크기 셀 수는 <0>이어야합니다.
+- clocks : clock phandle 및 specifier pair.
+- clock-names : 문자열, clock input name은 "usbhs"여야합니다.
+
+USB PHY 장치 트리 노드에는 USB 채널에 해당하는 하위 노드가 있어야합니다. 이러한 하위 노드에는 다음 속성이 포함되어야합니다.
+- reg : USB 컨트롤러 선택기. 값은 아래 표를 참조하십시오.
+- # phy-cells : 동일한 디렉토리에서 phy-bindings.txt를 참조하십시오. <1> 여야합니다.
+
+PHY 지정자의 phandle 인수는 USB 채널 용 USB 컨트롤러 선택기입니다. 아래의 선택기 의미를 참조하십시오.
+
++-----------+---------------+---------------+
+|\ Selector |               |               |
++ --------- +       0       |       1       |
+| Channel  \|               |               |
++-----------+---------------+---------------+
+| 0         | PCI EHCI/OHCI | HS-USB        |
+| 2         | PCI EHCI/OHCI | xHCI          |
++-----------+---------------+---------------+
+
+Example (Lager board):
+
+	usb-phy@e6590100 {
+		compatible = "renesas,usb-phy-r8a7790";
+		reg = <0 0xe6590100 0 0x100>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		clocks = <&mstp7_clks R8A7790_CLK_HSUSB>;
+		clock-names = "usbhs";
+
+		usb-channel@0 {
+			reg = <0>;
+			#phy-cells = <1>;
+		};
+		usb-channel@2 {
+			reg = <2>;
+			#phy-cells = <1>;
+		};
+	};

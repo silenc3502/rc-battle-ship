@@ -1,0 +1,108 @@
+This page describes the structures and procedures used by the cx2341x DMA engine.
+이 페이지에서는 cx2341x DMA 엔진에서 사용되는 구조 및 절차에 대해 설명합니다.
+ 
+ 
+ 
+Introduction
+============
+ 
+The cx2341x PCI interface is busmaster capable. 
+cx2341x PCI 인터페이스는 busmaster를 사용할 수 있습니다. 
+[참고] 버스마스터링(Bus mastering) : 수많은 버스 구조에서 지원하는 기능으로, 버스에 연결된 장치가 트랜잭션을 시작할 수 있게 도와 준다. "퍼스트 파티 DMA"라고도 부르며, 이는 시스템 DMA 컨트롤러가 실제로 전송을 하는 서드 파티 DMA와는 대조된다.
+어떠한 종류의 버스들은 하나의 장치(일반적으로 CPU 등)만이 트랜잭션을 시작할 수 있게 한다. PCI와 같은 현대의 대부분의 버스 구조는 여러 개의 장치들에 버스 마스터링을 허용할 수 있는데 이는 일반 목적의 운영 체제 성능을 상당히 개선시켜 주기 때문이다. 일부 실시간 운영 체제는 주변 기기가 버스 마스터가 되는 것을 금지하는데 이는 스케줄러가 더 이상 버스를 중재하지 못하여 결정적인 레이턴시(latency : 자극과 반응 사이의 시간이며, 더 일반적인 관점에서는 관찰되는 시스템에서의 어떠한 물리적 변화에 대한 원인과 결과 간의 지연 시간)를 제공하지 못하기 때문이다.
+버스 마스터링은 이론적으로 하나의 주변 기기를 다른 기기와 직접 통신할 수 있게 하지만, 실제로는 거의 모든 주변 기기는 기본 메모리에 DMA를 수행할 목적으로 버스 마스터링을 이용한다.
+여러 개의 장치가 버스 마스터링을 할 수 있다면 여러 개의 장치가 동시에 버스를 운영하려는 시도를 방지하는 중재 계획이 필요하다. 각기 다른 수많은 계획이 여기에 사용되는데 이를테면 SCSI는 개별 SCSI ID를 위한 고정된 우선 순위를 지니고 있다. PCI의 경우 사용할 알고리즘을 지정하지 않는다.
+ 
+This means it has a DMA engine to efficiently transfer large volumes of data between the card and main memory without requiring help from a CPU. Like most hardware, it must operate on contiguous physical memory. This is difficult to come by in large quantities on virtual memory machines.
+즉, CPU의 도움 없이도 카드와 주 메모리간에 많은 양의 데이터를 효율적으로 전송하는 DMA 엔진이 있습니다. 대부분의 하드웨어와 마찬가지로 연속적인 물리적 메모리에서 작동해야합니다. 이것은 가상 메모리 머신에서 대량으로 오기가 어렵습니다.
+ 
+Therefore, it also supports a technique called "scatter-gather". The card can transfer multiple buffers in one operation. Instead of allocating one large contiguous buffer, the driver can allocate several smaller buffers.
+따라서 "분산 수집"이라는 기술도 지원합니다. 카드는 한 번에 여러 버퍼를 전송할 수 있습니다. 하나의 큰 연속 버퍼를 할당하는 대신 드라이버는 몇 개의 작은 버퍼를 할당 할 수 있습니다.
+ 
+In practice, I've seen the average transfer to be roughly 80K, but transfers above 128K were not uncommon, particularly at startup. The 128K figure is important, because that is the largest block that the kernel can normally allocate. Even still, 128K blocks are hard to come by, so the driver writer is urged to choose a smaller block size and learn the scatter-gather technique.
+실제적으로 평균 전송량은 약 80K이지만 전송률이 128K를 넘는 것은 드문 일이 아니며 특히 시작시에 발생했습니다. 128K 수치는 커널이 정상적으로 할당 할 수있는 가장 큰 블록이기 때문에 중요합니다. 여전히 128K 블록이 나오기가 어렵기 때문에 드라이버 작성자는 더 작은 블록 크기를 선택하고 분산 수집 기술을 배우도록 촉구됩니다.
+ 
+Mailbox #10 is reserved for DMA transfer information.
+사서함 # 10은 DMA 전송 정보 용으로 예약되어 있습니다.
+ 
+Note: the hardware expects little-endian data ('intel format').
+참고 : 하드웨어는 리틀 엔디안 데이터를 필요로 합니다 ( '인텔 포맷' )
+ 
+ 
+ 
+Flow 
+====
+ 
+This section describes, in general, the order of events when handling DMA transfers. Detailed information follows this section.
+이 절에서는 일반적으로 DMA 전송을 처리 할 때의 이벤트 순서에 대해 설명합니다.
+ 
+- The card raises the Encoder interrupt.
+  카드가 인코더 인터럽트를 발생시킵니다.
+- The driver reads the transfer type, offset and size from Mailbox #10.
+  드라이버는 Mailbox # 10에서 전송 유형, 오프셋 및 크기를 읽습니다.
+- The driver constructs the scatter-gather array from enough free dma buffers to cover the size.
+  드라이버는 크기를 충당하기에 충분한 free dma 버퍼에서 scatter-gather 배열을 생성합니다.
+- The driver schedules the DMA transfer via the ScheduleDMAtoHost API call.
+  드라이버가 ScheduleDMAtoHost API 호출을 통해 DMA 전송을 예약합니다.
+- The card raises the DMA Complete interrupt.
+  카드가 DMA 완료 인터럽트를 발생시킵니다.
+- The driver checks the DMA status register for any errors.
+  드라이버가 DMA 상태 레지스터에서 오류를 확인합니다.
+- The driver post-processes the newly transferred buffers.
+  드라이버가 새로 전송 된 버퍼를 후처리합니다.
+ 
+NOTE! It is possible that the Encoder and DMA Complete interrupts get raised simultaneously. (End of the last, start of the next, etc.)
+인코더 및 DMA 완료 인터럽트가 동시에 발생하는 것이 가능합니다. (마지막 끝, 다음 시작 등)
+ 
+ 
+ 
+Mailbox #10
+===========
+ 
+The Flags, Command, Return Value and Timeout fields are ignored.
+Flags, Command, Return Value 및 Timeout 필드는 무시됩니다.
+ 
+Name:       Mailbox #10
+Results[0]: Type: 0: MPEG.
+Results[1]: Offset: The position relative to the card's memory space.
+	          카드의 메모리 공간을 기준으로 한 상대적인 위치입니다.
+Results[2]: Size: The exact number of bytes to transfer.
+	        전송할 정확한 바이트 수.
+ 
+My speculation is that since the StartCapture API has a capture type of "RAW" available, that the type field will have other values that correspond to YUV and PCM data.
+내 추측은.. StartCapture API에는 "RAW"캡처 유형이 있으므로, 형식 필드에는 YUV 및 PCM 데이터에 해당하는 다른 값이 있습니다.
+ 
+ 
+Scatter-Gather Array
+====================
+ 
+The scatter-gather array is a contiguously allocated block of memory that tells the card the source and destination of each data-block to transfer.
+Card "addresses" are derived from the offset supplied by Mailbox #10. Host addresses are the physical memory location of the target DMA buffer.
+scatter-gather array는 연속적으로 할당 된 메모리 블록으로, 전송할 각 데이터 블록의 원본과 대상을 카드에 알려줍니다.
+카드 "addresses"는 사서함 # 10에서 제공한 오프셋에서 파생됩니다. 호스트 주소는 대상 DMA 버퍼의 실제 메모리 위치입니다.
+ 
+Each S-G array element is a struct of three 32-bit words. The first word is the source address, the second is the destination address. Both take up the entire 32 bits. The lowest 18 bits of the third word is the transfer byte count. The high-bit of the third word is the "last" flag. The last-flag tells the card to raise the DMA_DONE interrupt. From hard personal experience, if you forget to set this bit, the card will still "work" but the stream will most likely get corrupted.
+각 S-G 배열 요소는 세 개의 32 비트 단어로 구성된 구조체입니다. 첫 번째 단어는 소스 주소이고, 두 번째 단어는 대상 주소입니다. 양쪽 모두 32 비트 전체를 차지합니다. 세 번째 단어의 하위 18 비트는 전송 바이트 수입니다. 세 번째 단어의 상위 비트는 "마지막"플래그입니다. last-flag는 DMA_DONE 인터럽트를 발생 시키도록 카드에 지시한다. From hard personal experience, 이 비트를 설정하는 것을 잊어 버리면 카드는 여전히 "작동"하지만 스트림이 손상 될 가능성이 큽니다.
+ 
+The transfer count must be a multiple of 256. Therefore, the driver will need to track how much data in the target buffer is valid and deal with it accordingly.
+전송 횟수는 256의 배수 여야합니다. 따라서 드라이버는 대상 버퍼의 데이터가 얼마나 유효한 지 추적하고 이에 따라 처리해야합니다.
+ 
+Array Element:
+ 
+- 32-bit Source Address
+- 32-bit Destination Address
+- 14-bit reserved (high bit is the last flag)
+- 18-bit byte count
+ 
+DMA Transfer Status
+===================
+ 
+Register 0x0004 holds the DMA Transfer Status:
+ 
+Bit
+0   read completed
+1   write completed
+2   DMA read error
+3   DMA write error
+4   Scatter-Gather array error
+

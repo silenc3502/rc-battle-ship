@@ -1,0 +1,651 @@
+Acknowledgements
+
+이것은 Zynq Book 과 함께 제공되는 자습서의 새로운 버전이다.
+Vivado 2015.1 을 기반으로 하며 ZedBoard 및 Zybo Development Board 를 모두 지원한다.
+
+많은 사람들이 원래의 자습서에 대한 피드백을 제공해줬다.
+Xilinx 의 Austin Lesea 와 Y. C. Wang 은
+제작 초기 단계에서 Tutorial 을 테스트하고 몇 가지 유용한 제안을 했다.
+Strathclyde 대학에서 Iain Chalmers, Sarunas Kalade, Damien Muir 및 Craig Ramsay 는
+자습서의 다양한 버전을 통해 작업하고 사용자 경험에 대해 알려주는데 많은 도움을 주었다.
+
+다시 한 번 Xilinx 대학 프로그램의 Cathal McCabe 는 Tutorial 자료 제작에 대한
+중요한 피드백과 지원을 제공할 뿐만 아니라 다른 사람들에게도 이러한 자료의 배포를 조율했다.
+
+Louise Crockett, Ross Elliot, Martin Enderwitz, and David Northcote.
+
+August 2015.
+
+
+
+How to Use This Book
+
+Example Files and Ebook Version
+
+The Zynq Book Tutorials 를 따르기 위해서 책의 웹 사이트에서 준비된 파일 모음을 다운로드해야 한다:
+www.zynqbook.com
+
+이 Tutorial 의 모음은 전자 서적(인쇄할 수 없는 PDF) 버전도 위 링크에서 다운로드할 수 있다.
+
+Instructions for Zybo and ZedBoard Development Boards
+
+Tutorial 을 읽으면서 특정 절차에 사용되는 개발 보드에 따라 다른 변형이 있음을 알 수 있다.
+일련의 명령어가 보드 전용(즉, ZedBoard 혹은 Zybo 와 관련된)인 경우
+시퀀스의 시작 부분은 왼쪽 여백에 컬러 블록 아이콘으로 표시된다.
+
+2 개의 Board 에 공통적인 명령 재개에는 또 다른 아이콘이 표시된다:
+
+Zed 혹은 Zybo 아이콘을 식별하여 Board 와 관련된 지침을 선택하고 기본 흐름을 재개할 위치를 찾도록 한다.
+
+Operating System
+
+Zynq Book Tutorial 은 MS OS 를 사용하여 테스트되었다.
+이것은 테스트되지 않았지만 Linux Kernel OS 에서도 작동할 것으로 예상한다.
+
+
+
+1. First Design on Zynq
+
+이 Tutorial 은 Vivado IDE(Integrated Development Environment) 를 사용하여 첫 번째 Zynq Design 을 작성하는 과정을 안내하고
+Zynq Development Board 에 구현되는 간단한 Zynq 프로세서 설계를 생성하기 위한 IP Integrator 환경을 소개한다.
+SDK(SW Development Kit) 는 Zynq 의 ARM 프로세싱 시스템(PS)에서 실행되어 PL(Programmable Logic) 로
+구현되는 HW 를 제어하는 간단한 SW Application 을 생성하는데 사용된다.
+
+이 Tutorial 은 3 가지 연습으로 나누어져 있어 아래와 같이 구성되어 있다:
+
+Exercise 1A - 이 연습에서는 Vivado IDE 를 시작하고 처음으로 Project 를 만드는 과정을 안내한다.
+              새 프로젝트 마법사의 다양한 단계가 소개된다.
+
+Exercise 1B - 이 실습에서는 실습 1A 에서 만든 Project 를 사용하여 그래픽 도구, IP Integrator 를 사용하여
+              간단한 Zynq Embedded System 을 만들고 Vivado IP Catalog 의 기존 IP 를 통합한다.
+              특정 장비 또는 Board 에 대한 IP Module 의 사용자 정의를 자동화하는
+              Board 자동화 기능과 같이 이 연습 전반에 걸쳐 많은 설계 지원이 사용된다.
+              Zynq PS 와 PL 의 IP Module 간의 연결을 지원하는 Designer Assistance 기능도 시연된다.
+
+일단 설계가 완료되면, HW System 을 완성하고
+PL 에서의 구현을 위한 bitstream 을 생성하기 위한 많은 단계가 수행될 것이다.
+완성된 HW Design 은 실습 1C 의 간단한 SW App 개발을 위해 SDK(SW Development Kit) 으로 보내진다.
+
+Exercise 1C - 세 번째 연습에서 SDK 가 소개되고 Zynq 프로세서가 PL 에 구현된 IP 와
+              상호작용할 수 있도록 간단한 SW App 이 만들어진다.
+              SDK 가 Zynq 프로세서와 통신할 수 있도록 HW Server 에 연결된다.
+              IP Module 용 Vivado IDE 에 의해 자동으로 생성된 SW Driver 는
+              Zynq 에서 SW App 을 Build 하고 실행하기 전에 탐색되고 SW App 에 통합된다.
+
+참고: 실제적인 Tutorial 연습을 통해 C:\Zynq_Book 을 작업 디렉토리로 사용하게 될 것이다.
+이것이 적합하지 않은 경우 원하는 디렉토리로 대체할 수 있지만
+연습을 성공적으로 완료하려면 일부 소스 파일을 변경해야 한다.
+
+
+
+Exercise 1A - Creating a First IP Integrator Design
+
+이 연습에서는 Vivado IDE New Project Wizard 의 단계를 진행하여 Vivado IDE New Project 를 만든다.
+
+Zybo 는 기본 부품을 올바르게 설정하기 위해 한 번 추가 설정 절차가 필요하다.
+Vivado 2015.1 에는 Zybo Development Board 용 Board 부품이 없기 때문에 작업이 필요하다.
+이미 Zybo Board 부품으로 Vivado 2015.1 을 구성한 경우 이 절차를 건너 뛰고 단계 (a) 부터 시작할 수 있다.
+
+Windows 탐색기를 열고 Zynq Book 소스 파일 내의 아래 위치로 이동한다:
+C:\Zynq_Book\sources\zybo\setup\board_part
+
+이 디렉토리에는 zybo 라는 파일이 있다.
+여기에는 Rev. B.3 Zybo Development Board 용 부품이 들어있다.
+Board 바닥을 검사하여 Zybo 의 개정판을 획득할 수 있다.
+업데이트된 Board 부품은 아래 링크를 사용하여 Digilent 웹 사이트에서 검색할 수 있다:
+https://reference.digilentinc.com/vivado:boardfiles
+
+파일을 마우스 오른쪽 버튼으로 클릭하고 아래 그림과 같이 복사를 선택하여 Zybo 파일을 복사한다.
+
+두 번째 Windows 탐색기를 열고 Vivado 2015.1 설치 디렉토리에서 아래로 이동한다:
+{Vivado Installation Directory}\2015.1\data\boards\board_parts\zynq
+
+이 디렉토리는 Vivado 2015.1 Design Suite 에 사용할 수 있는 다양한 Zynq Board 의 모든 부품을 담당한다.
+이제 디렉토리에 Zybo Development Board 를 추가할 것이다.
+zybo 라는 파일이 이미 있음을 확인하고 이를 무시하고 다음 절차를 계속 수행한다.
+
+폴더의 빈 공간을 마우스 우클릭하고 붙여넣기를 수행한다.
+
+현재 Zybo 폴더가 있는 경우 들어오는 폴더를 병합할지 묻는 대화창이 나타날 수 있다.
+Yes 를 클릭하라.
+
+이제 Zybo Board 부품을 Vivado 2015.1 Design Suite 에 성공적으로 추가했다.
+
+다음으로 Vivado IDE 를 시작하여 작업을 진행하도록 한다.
+
+(a) Vivado 바탕 아이콘을 두 번 클릭하여 Vivado 를 시작한다.
+    Vivado 아이콘을 누르거나
+    시작 -> All Programs -> Xilinx Design Tools -> Vivado 2015.1 -> Vivado 2015.1 을 누른다.
+
+(b) Vivado 가 Load 되면 시작 화면이 나타난다.
+
+(c) Create New Project 옵션을 선택하면 New Project Wizard 가 열린다.
+    Next 를 클릭한다.
+
+(d) Project Name Dialogue 에서 first_zynq_design 을 프로젝트 이름으로 입력하고
+    C:/Zynq_Book 을 프로젝트 위치로 입력한다.
+    프로젝트 하위 디렉토리 만들기 옵션을 선택해야 한다.
+    모든 옵션이 잘 구성되었는지 확인하도록 한다.
+    Next 를 클릭한다.
+    Zynq_Book 이라는 디렉토리가 C 드라이브에 아직 없는 경우 생성된다.
+
+(e) Project Type Dialogue 에서 RTL Project 를 선택하고
+    Do not specify sources at this time 이 선택되지 않았는지 확인한다.
+    Next 를 누른다.
+
+(f) Add Sources Dialogue 에서 Target language 로 VHDL 을 선택하고 Simulator Language 로 Mixed 를 선택한다.
+    기존 소스를 HDL 혹은 Netlist 파일 형식으로 프로젝트에 추가하면 이 단계에서 가져올 수 있다.
+    프로젝트에 추가할 소스가 없으므로 Next 를 클릭한다.
+
+(g) Add Existing IP(optional) Dialogue 가 열린다.
+    기존 IP 소스가 프로젝트에 포함되면 여기에 추가할 수 있다.
+    추가할 기존 IP 가 없으므로 다음을 클릭한다.
+
+(h) Add Constraints(optional) Dialogue 가 열린다.
+    이것은 물리적 혹은 타이밍 제약 파일을 프로젝트에 추가할 수 있는 단계다.
+    추가할 constraints 파일이 없으므로 Next 를 클릭한다.
+
+(i) Default Part Dialogue 에서
+
+    ZedBoard 의 경우)
+    Select Dialogue 에서 Boards 를 선택하고
+    Display Name 목록에서 ZedBoard Zynq Evaluation and Development Kit 을 클릭하고
+    Board Rev 에서 전체 목록을 클릭한다.
+    Board 에 적합한 버전을 선택하도록 한다(Rev. D 등등)
+    Next 를 누른다.
+
+    Zybo 의 경우)
+    Select Dialogue 에서 Boards 를 선택하고
+    Display Name 목록에서 Zybo 를 클릭하고 Board Rev 목록에서 All 을 클릭한다.
+    Board 에 적합한 버전을 선택하도록 한다(Rev. B.3 등등)
+
+    Next 를 클릭한다.
+
+(j) New Project Summary Dialogue 에서 지정된 옵션을 검토하고
+    Finish 를 클릭하여 프로젝트를 만든다.
+
+Vivado IDE 에서 첫 번째 프로젝트를 만들었으므로
+이제 첫 번째 Zynq Embedded System Design 을 만들 수 있다.
+
+이를 수행하기 전에 Vivado IDE Tool Layout 을 도입해야 한다.
+기본 Vivado IDE 환경 Layout 을 적절하게 커스텀해야 한다.
+ZedBoard 와 Zybo 에 따라 Layout 이 다르게 나온다.
+Vivado IDE 환경의 주요 구성 요소는 아래와 같다.
+
+1. Menu Bar
+   기본 Access Bar 는 Vivado IDE 명령에 대한 접근을 제공한다.
+
+2. Main Toolbar
+   Main Toolbar 는 가장 일반적으로 사용되는 Vivado IDE 명령에 쉽게 접근할 수 있게 해준다.
+   Tooltip 설명은 Toolbar 모음의 각 명령에 대한 정보를 제공하며
+   버튼 위에 마우스 포인터를 올려놓으면 볼 수 있다.
+
+3. Workspace
+   workspace 는 더 큰 화면 공간이 필요한 패널과
+   그래픽 인터페이스가 있는 패널에 대해 더 넓은 영역을 제공한다:
+
+   * Schematic Panel
+   * Device Panel
+   * Package Panel
+   * Test Editor Panel
+
+4. Project Status Bar
+   Project Status Bar 에는 현재 활성화된 Design 의 상태가 표시된다.
+
+5. Flow Navigator
+   Flow Navigator 는 처음부터 끝까지 Design 을 안내하는데 필요한 Design Entry 가 있는
+   Project Manager 섹션에서 시작하고 Program 및 Debug Section 의 bitstream 생성으로 끝난다.
+   Simulation, Synthesis 및 Implementation 섹션에서 Run 명령을 사용하여
+   Active Design 을 Simulate 하고 Synthesize 하며 Implement 할 수 있다.
+
+6. Data Windows Pane
+   Data Windows Pane 에는 기본적으로 Design Data 및 Source 와 관련된 정보가 표시된다:
+
+   * Properties Window
+     선택한 Logic Objects 혹은 Device Resources 에 대한 정보를 표시한다.
+
+   * Netlist Window
+     합성 또는 정교화된 Logic Design 의 계층적 View 를 제공한다.
+
+   * Sources Window
+     IP Source, Hierarchy(계층 구조), Library 및 Compile 순서 View 를 표시한다.
+
+7. Status Bar
+   Status Bar 에는 아래와 같은 다양한 정보가 표시된다:
+
+   * 명령에 접근할 때 Menu Bar 와 Toolbar 커맨드에 대한 자세한 정보가 Status Bar 의 왼쪽 하단에 표시된다.
+   * 마우스 포인터로 Schematic Window 에서 Object 위로 마우스를 가져가면
+     Object 세부 정보가 Status Bar 에 나타난다.
+   * Device and Package Windows 에서 constraint 및 placement 작성중에
+     validity 및 constraint type 이 Status Bar 의 왼쪽에 표시된다.
+     오른쪽에 유형등이 표시된다.
+   * Background 작업 버튼을 실행하면 실행중인 작업의 작업 진행률이 Status Bar 의 오른쪽으로 재배치된다.
+
+8. Results Window Area
+   Results Window 는 Vivado IDE 환경의 맨 아래에
+   그룹화된 일련의 창에서 명령의 상태와 결과를 표시한다.
+   커맨드가 진행되면서 메시지가 생성되고 Log 파일과 report 가 작성된다.
+   관련 정보가 여기에 표시된다.
+   기본 창은 아래와 같다:
+
+   * Messages
+     Active Design 에 대한 모든 메시지를 표시한다.
+
+   * Tcl Console
+     Tcl 명령을 입력할 수 있으며 이전 명령 및 출력의 히스토리를 살펴볼 수 있다.
+
+   * Reports
+     Design Flow 전반에 걸쳐 생성된 report 에 신속하게 접근할 수 있다.
+
+   * Log
+     Simulation, Synthesis 및 Implementation 으로 생성된 Log 파일을 표시한다.
+
+   * Design Runs
+     현재 프로젝트에 대한 실행을 관리한다.
+
+필요한 경우 이 영역에 나탈 수 있는 추가 창은 아래와 같다:
+Find Results Window, Timing Results Window, Package Pins Window
+
+Vivado IDE 환경의 Layout 이 도입됨에 따라 이제 Zynq System 을 만들 수 있다.
+
+
+
+Exercise 1B - Creating a Zynq System in Vivado
+
+이번 실습에서 Zynq Device 의 PL 에 범용 입출력(GPIO) controller 를
+구현하는 간단한 Zynq Embedded System 을 생성할 것이다.
+GPIO controller 가 LED 에 연결된다.
+또한 AXI Bus 연결을 통해 Zynq Processor 에 연결되어
+LED 가 Exercise 1C 에서 만들 SW App 에 의해 제어되도록 한다.
+
+Zynq Embedded Design 에서 Zynq PS 와 Zynq PL 이 AXI Connection 을 통해 연결된다.
+
+Vivado IDE 에서 새로운 Block Design 을 만드는 것으로 시작한다.
+
+(a) Flow Navigator Window 에서 IP Integrator 섹션으로 이동하여 Create Block Design 을 선택한다.
+
+    Create Block Design Dialouge 가 열릴 것이다.
+
+(b) Design Name 박스에서 first_zynq_system 를 입력한다.
+
+    OK 를 클릭한다.
+    Vivado IP Integrator Diagram Canvas 가 Workspace 내에 열릴 것이다.
+
+    Design 에 추가할 첫 번째 Block 은 Zynq Processing System 이다.
+
+(c) Vivado IP Integrator Diagram Canvas 에서
+    아무곳이나 마우스 오른쪽 버튼으로 클릭하고 Add IP 를 선택한다.
+    혹은 Canvas 의 왼쪽에 있는 Toolbar 에서 Add IP 버튼을 누른다.
+
+    Pop-up IP Catalog Window 가 열릴 것이다.
+
+(d) 검색 필드에 zynq 를 입력하고 ZYNQ7 Processing System 을 선택한다.
+    BFM 버전을 선택하지 말고 키보드의 Enter 키를 누른다.
+
+    Processing System 이 실제로 Design 에 올바르게 추가되었는지 확인하고자 한다면
+    Tcl Console Window 에서 아래와 같은 메시지를 확인하면 된다:
+    create_bd_cell -type ip -vlnv xilinx.com:ip:processing_system7:5.5 processing_system7_0
+
+    이와 같은 메시지는 IP Integrator Block 에서 수행되는
+    모든 작업에 대해 Tcl Console Window 에 표시된다.
+
+    다음 단계는 Zynq PS 의 DDR 및 FIXED_IO Interface 포트를
+    Design 의 최상위 Interface 포트에 연결하는 것이다.
+
+(e) Diagram Window 의 맨 위에 있는
+    Designer Assistance 메시지에서 Run Block Automation 옵션을 클릭한다.
+
+    ZedBoard 의 경우)
+    Run Block Automation Dialogue 에서
+    Apply Board Preset 이 선택되었는지 확인하고 OK 를 클릭한다.
+    이제 DDR 및 FIXED_IO Interface 에 대한 외부 연결이 생성된다.
+
+    ZedBoard Platform 이 Target Development Board 이며
+    이것은 Project 를 만들때 지정되었으므로 Vivado 는 Zynq Processor Block 을 적절하게 구성한다.
+
+    Zybo 의 경우)
+    Run Block Automation Dialogue 에서
+    Apply Board Preset 이 선택되었는지 확인하고 OK 를 클릭한다.
+    이제 DDR 및 FIXED_IO Interface 에 대한 외부 연결이 생성된다.
+
+    Zybo Platform 이 Target Development Board 이므로
+    이것은 Project 를 만들때 지정되었으므로 Vivado 는 Zynq Processor Block 을 적절하게 구성한다.
+
+    이제 주요 Zynq PS 가 만든 Design 에 추가되고 구성되었으므로
+    System 에 기능을 추가하기 위해 PL 에 배치될 추가적인 Block 을 추가할 수 있다.
+    이 경우 Development Board 의 LED 에 접근할 수 있도록
+    Single Block 인 AXI GPIO 만 추가할 것이다.
+
+(f) Diagram Window 의 빈 영역을 마우스 우클릭하고 Add IP 를 선택한다.
+    검색 필드에 GPIO 를 입력하고 AXI GPIO IP 의 Instance 를 추가하라.
+
+    이제 IP Integrator Designer Assistance Tool 을 사용하여
+    AXI GPIO Block 과 ZYNQ7 Processing System 의 연결을 자동화한다.
+
+(g) Diagram Window 의 맨 위에있는 Designer Assistance 메시지에서
+    Run Connection Automation 을 클릭하고 /axi_gpio_0/S_AXI 를 선택한다.
+
+    이렇게하면 GPIO 를 AXI 포트에 연결하는 절차가 자동화되고
+    2 개의 IP Block 이 자동으로 Instance 화 된다:
+
+    * Processor System Reset Module
+      Peripherals, Interconnect 및 Processor 자체를 포함한
+      전체 Processing System 에 맞춤식 Reset 기능을 제공한다.
+
+    * AXI Interconnect
+      System 의 AXI Interconnect 를 제공하므로
+      PL 의 추가적인 IP 및 Peripherals 가 Main Processing System 과 통신할 수 있다.
+
+    OK 를 클릭한다.
+
+    Block 간의 모든 연결은 자동으로 이루어져야 한다.
+
+(h) AXI GPIO Block 을 Development Board 의 LED 에 연결하려면 최종 연결이 하나 필요하다.
+    이는 Designer Assistance 를 사용하여 완료할 수도 있다.
+
+    ZedBoard 의 경우)
+    Diagram Window 맨 위에있는 Designer Automation 메시지에서 Run Connection Automation 을 클릭한다.
+    Run Connection Automation Dialogue 가 열릴 것이다.
+
+    /axi_gpio_0/GPIO 를 선택한다.
+
+    Select Board Part Interface Drop-Down 메뉴에서 leds_8bits 를 선택하고 OK 를 클릭한다.
+
+    AXI GPIO Block 의 gpio Interface 는 이제 Development Board 의 LED 에 연결되며
+    완전한 Design 은 ZYNQ7 Processing System, Processor System Reset,
+    AXI Interconnect, AXI GPIO 가 모두 존재해야한다.
+
+    Design 시 개별 IP Block 의 배치는 다를 수 있지만 Block 과 그 연결은 동일해야 한다.
+    (Vivado 에 배치가 달라도 신호선의 연결이 같아야 한다는 것임)
+
+    Zybo 의 경우)
+    Diagram Window 맨 위에있는 Designer Automation 메시지에서 Run Connection Automation 을 클릭한다.
+    Run Connection Automation Dialogue 가 열릴 것이다.
+
+    /axi_gpio_0/GPIO 를 선택한다.
+
+    Select Board Part Interface Drop-Down 메뉴에 leds_4bits 를 선택하고 OK 를 누른다.
+
+    AXI GPIO Block 의 gpio Interface 는 Development Board 의 LED 에 연결되고
+    완전한 Design 은 앞서 ZedBoard 와 동일한 구성을 가지게 된다.
+
+    마찬가지로 배치가 달라도 신호선의 연결이 같아야 한다.
+
+    IP Integrator 는 Design 에 있는 모든 IP 에 대한 Memory Map 을 자동으로 할당한다.
+    이 Tutorial 에서는 Memory Map 을 변경하지 않지만
+    나중에 참조하기 위해 Address Editor 를 살펴보도록 한다.
+
+(i) Workspace Window 의 상단에서 Address Editor Tab 을 선택하고 Data group 을 확장한다.
+
+    IP Integrator 가 AXI GPIO Interface 에 대한
+    Memory Map(Memory 의 특정 섹션을 PL 의 IP Block 의 Memory Mapping 된 Register 에 Mapping) 과
+    64K 의 범위를 이미 지정했음을 알 수 있다.
+
+    이제 System 이 완성되었으므로 먼저 HDL Design File 을 생성하기 전에 Design 을 검증해야 한다.
+
+(j) Menu Bar 에서 File -> Save Block Design 을 선택하여 Design 을 저장한다.
+
+(k) Menu Bar 에서 Tool -> Validate Design 을 선택하여 Design 의 유효성을 검사한다.
+    그러면 DRC(Design-Rule-Check) 가 실행된다.
+
+    혹은 Main Toolbar 에서 Validate Design 버튼을 선택하거나
+    Diagram Canvas 의 아무곳에서 우클릭하여 Validate Design 을 선택하면 된다.
+
+(l) Design 의 유효성 확인이 성공했는지 확인하기 위해
+    Validate Design Dialogue 가 나타난다.
+    OK 를 클릭하여 메시지를 닫는다.
+
+    Design 이 성공적으로 검증되면 이제 System 을 위한 HDL Design 파일을 생성할 수 있다.
+
+(m) Menu Bar 에서 Window -> Sources 를 선택하여 Sources Tab 으로 전환한다.
+
+(n) Source Window 에서 최상위 System Design 을 우클릭하고 Create HDL Wrapper 를 선택한다.
+
+    Create HDL Wrapper Dialogue 가 열릴 것이다.
+    Vivado 가 Wrapper 를 관리하고 자동 Update 하도록 선택하고 OK 를 클릭한다.
+
+    이렇게하면 System 의 최상위 수준의 HDL Wrapper 가 생성된다.
+
+    IP Integrator Block Diagram 에서 사용된 IP Block 의 모든 소스 파일과
+    관련 constraint 파일이 synthesis 절차중에 생성된다.
+    Exercise 1A 에서 Project 를 만들 때 VHDL 을 target language 로 지정했으므로
+    생성된 모든 소스 파일은 VHDL 이다.
+
+    모든 HDL Design 파일이 생성되면
+    Vivado 의 다음 단계는 Design 을 구현하고 bitstream 파일을 생성하는 것이다.
+
+(o) Flow Navigator 에 있는 Program and Debug 섹션에서 Generate Bitstream 을 클릭한다.
+    Design 을 저장하겠냐는 Dialogue Window 가 나타나면 Save 를 클릭한다.
+
+(p) Generate Bitstream 절차를 시작하기 전에
+    synthesis 및 implementation 을 시작하라는 Dialogue Window 가 열릴 것이다.
+    수락하려면 Yes 를 클릭한다.
+
+    Synthesis, Implementation 및 Bitstream Generation 절차를 연속적으로 실행하는 방법은
+    Computer System 의 성능에 따라 몇 분이 걸릴 수도 있다.
+
+(q) Bitstream Generation 이 완료되면
+절차가 성공적으로 완료되었음을 알리는 Dialogue Window 가 열릴 것이다.
+
+Open Implemented Design 을 선택하고 OK 를 클릭한다.
+
+이 시점에서 Device View 를 볼 수 있으며,
+이 View 에서는 Design 에서 사용되는 PL Resource 를 볼 수 있다.
+기본 색상 구성은 밝은 파란색으로 표시된다.
+
+Bitstream 이 생성되면 HW Image 가 완성된다.
+이제 커스텀 HW 를 제어하고 상호작용할 SW App 을 Build 하는 SW 환경으로 export 해야한다.
+
+Vivado 의 마지막 단계는 Design 을 SDK 로 export 하는 것이며
+여기에서 Zynq PS 가 Development Board 의 LED 를 제어할 수 있게 하는 SW App 을 만든다.
+
+(r) Menu Bar 에서 File -> Export -> Export Hardware... 을 선택한다.
+
+(s) Export Hardware Dialogue Window 가 열릴 것이다.
+    Include bitstream 옵션이 선택되었는지 확인하고 OK 를 클릭한다.
+
+알림: Include bitstream 옵션을 사용하려면 구현된 Design 이 active 되어야 한다.
+      이것은 (q) 단계에서 구현된 Design 을 열었기 때문이다.
+
+(t) Menu Bar 에서 File -> Launch SDK 를 선택하여 Vivado 내에서 SDK 를 띄우도록 한다.
+
+이것으로 Vivado IDE 에서 필요한 단계가 완료된다.
+System 의 모든 HW 구성요소가 구성되고 생성되었다.
+다음 실습에서 System 을 제어할 간단한 SW 구성요소를 만드는 방법으로 넘어간다.
+
+
+
+Exercise 1C - Creating a Software Application in the SDK
+
+이번 실습에서는 Zynq Development Board 의 LED 를 제어하는 간단한 SW Application 을 작성한다.
+SW App 은 Zynq Processing System 에서 실행되며
+PL 에 구현된 AXI GPIO Block 과 통신한다.
+Development Board 에서 SW 를 Build 하고 실행하기 전에
+각 IP Module 에 대해 IP Integrator 에서 만든 SW Driver 를 살펴보도록 한다.
+
+Exercise 1B 가 끝난 후에 SDK 가 열려있어야 한다.
+열려있지 않으면 Start -> All Programs -> Xilinx Design Tools ->
+SDK 2015.1 -> Xilinx SDK 2015.1 를 눌러서 SDK 를 열 수 있다.
+
+시작 메뉴에서 SDK 를 시작할 때
+Vivado IP Integrator Design 을 Exercise 1B 에서 export 한다면
+작성된 workspace 를 지정해야 한다.
+이것은 아래와 같아야 한다:
+C:\Zynq_Book\first_zynq_design\first_zynq_design.sdk
+
+Workspace Launcher Dialogue Window 의 Workspace Field 에 위의 내용을 입력한다.
+
+SDK 를 연 상태에서 SW App 을 만들 수 있다.
+앞서서 자동으로 생성되어 열려있는 Hardware Platform Project 를 볼 수 있다.
+이제 Application Project 와 Board Support Package 를 추가해야 한다.
+
+(a) Menu Bar 에서 File -> New -> Application Project 를 선택한다.
+
+(b) New Project Dialouge Window 가 열릴 것이다.
+    Project name 필드에 LED_test 를 입력하고 다른 모든 옵션을 기본 설정으로 유지한다.
+    Next 를 누른다(Finish 를 선택하지 않도록 주의하라)
+
+(c) New Project Templates 화면에서 Empty Application 을 선택하고 클릭한다.
+
+    Finish 를 클릭하여 Project 를 생성한다.
+
+    알림:
+    새 프로젝트가 자동으로 열린다.
+    그렇지 않은 경우 프로젝트를 보려면 Welcome Tab 을 닫아야 한다.
+
+    새로운 Application Project 가 생성됨에 따라 미리 준비된 Application 의 소스 코드를 가져올 수 있다.
+
+(d) Project Explorer Panel 에서 LED_test 를 확장하고 src 디렉토리를 강조 표시한다.
+    우클릭하여 Import... 을 선택한다.
+
+(e) Import Window 가 열릴 것이다.
+    General 옵션을 확장하고 File System 을 강조 표시한 후 Next 를 클릭한다.
+
+(f) Import File System Window 에서 Browse... 버튼을 클릭한다.
+
+    소스 파일 디렉토리는 사용중인 Zynq Development Board 에 따라 다르다.
+    ZedBoard 를 사용하는 경우 아래를 살펴본다:
+    C:\Zynq_Book\sources\zedboard\first_zynq_design
+    Zybo 를 사용하는 경우 C:\Zynq_Book\sources\zybo\first_zynq_design 를 살펴본다.
+
+    OK 를 클릭한다.
+
+(g) LED_test_tut_1C.c 파일을 선택하고 Finish 를 클릭한다.
+
+    C 소스 파일이 import 되고 project 가 자동으로 Build 될 것이다.
+    Console Window 아래쪽에 Finished building: LED_test.elf.size 가 나타난다.
+
+(h) src 폴더를 확장하고 LED_test_tut_1C.c 를 더블 클릭하여
+    가져온 소스 파일을 열고 Code 를 탐색한다.
+
+    XGpio_Initialize(&Gpio, GPIO_DEVICE_ID); 명령을 유의하라.
+    이 함수는 GPIO Device Driver 가 xgpio.h 파일에서 제공한다.
+    GPIO_DEVICE_ID 로 지정된 Device 의 고유 ID 로
+    XGpio Instance 인 Gpio 를 초기화한다.
+
+    소스 파일의 맨 위를 보면 GPIO_DEVICE_ID 가
+    XPAR_AXI_GPIO_0_DEVICE_ID 로 정의되어 있음을 알 수 있다.
+    XPAR_AXI_GPIO_0_DEVICE_ID 의 값은 HW Design 을 SDK 로 내보낼 때
+    Vivado IDE 에서 자동으로 생성되는 xparameters.h 파일을 열면 찾을 수 있다.
+    여기엔 System 의 모든 HW Parameter 에 대한 정의가 들어있다.
+
+    함수 XGpio_SetDataDirection(&Gpio, LED_CHANNEL, 0xFF); 는
+    GPIO Device Driver 에서도 제공되며 지정된 GPIO Port 의 방향을 설정한다.
+    현재 예의 경우 LED 를 지정하므로 출력을 지정한다.
+    '0' 으로 설정된 비트가 출력이며 '1' 은 입력이다.
+    ZedBoard 에는 8 개의 LED 가 있으므로 LED 채널 방향을 0x00
+    혹은 2 진수 00000000 으로 설정하면 8 개의 LED 를 모두 출력으로 설정하게 된다.
+    마찬가지로 Zybo 에는 4 개의 LED 가 있으므로 LED 채널 방향을 0x0
+    혹은 2 진수 0000 으로 설정하여 4 개의 LED 를 모두 출력으로 설정한다.
+
+    Peripheral Drivers 에 대한 자세한 내용은 system.mss Tab 을 선택하여 찾을 수 있다.
+    System 의 모든 Peripheral 목록과 사용 가능한 문서 및 예에 대한 링크가 제공된다.
+
+    다음 단계는 Exercise 1B 에서 생성한 bitstream 파일로 Zynq PL 을 프로그래밍 하는 것이다.
+
+(i) Zynq Development Board 의 전원이 켜져 있고
+    JTAG 포트가 제공된 USB-A 에서 USB-B Cable 을 통해 PC 에 연결되어 있는지 확인한다.
+    또한 JTAG Mode 를 사용하려면 HW 를 프로그래밍하고
+    System Debugging Tool 에 접근할 수 있도록 Board 점퍼를 올바르게 설정해야 한다.
+
+    ZedBoard 의 경우)
+    ZedBoard 는 FMC 포트를 우측으로 놓았을때 점퍼가 모두 아래쪽에 꽂혀있어야 한다.
+    이 구성은 JTAG Mode 를 활성화한다.
+
+    Zybo 의 경우)
+    Main Power 를 위쪽으로 놓았을 때 아래쪽에 점퍼를 연결하고
+    또 다른 점퍼는 Audio 포트에 가까운 쪽으로 꽂는다.
+    추가적인 Board 의 전원 공급 장치인 USB 로부터
+    전력을 공급받을 수 있도록 점퍼를 설정하는 것이다.
+
+(j) Menu Bar 에서 Xilinx Tools -> Program FPGA 를 선택하여
+    bitstream 을 Zynq PL 로 다운로드 한다.
+    Program FPGA Window 가 나타날 것이다.
+    Bitstream field 는 올바른 bitstream 파일로 채워져야 한다.
+
+    알림:
+    Device 가 성공적으로 프로그래밍되면 ZedBoard 의 DONE LED 가 파란색으로 바뀐다.
+    마찬가지로 Zybo 의 DONE LED 가 녹색으로 바뀐다.
+
+    Bitstream 파일로 구성된 Zynq PL 을 사용하여 Zynq PS 에서 SW App 을 구동할 수 있다.
+
+(k) Project Explorer 에서 Project LED_test 를 선택한다.
+    마우스 우클릭으로 Run As -> Launch on Hardware(GDB) 를 선택한다.
+
+    ZedBoard 의 경우)
+    몇 초 후 ZedBoard 의 LED 가 빛나는 상태로 깜빡이기 시작해야 한다.
+
+    Zybo 의 경우)
+    Zybo 의 LED 는 강조 표시된 상태로 깜빡이기 시작해야 한다.
+
+    Zynq Processing System 에서 첫 번째 SW App 을 만들고 실행했다.
+
+    요약하면 GPIO controller 는 Zynq Device 의 FPGA fabric 에 성공적으로 구현되어
+    AXI Interface 를 통해 Zynq Processing System 과 Development Board LED 를 연결한다.
+    그런 다음 Zynq Processing System 은 FPGA fabric 의 GPIO controller 와
+    Interface 할 수 있는 기능을 갖춘 독립형 SW App 을 사용하여 LED 를 제어하도록 프로그래밍 되었다.
+
+
+
+2. Next Steps in Zynq SoC Design
+
+Introduction
+
+이 Tutorial 은 Interrupt 를 활용하여 Zynq Design 을 만드는 과정을 설명한다.
+Vivado IDE(Integrated Development Environment) 및 IP Integrator 환경을 사용하면
+간단한 Zynq Processor Design 이 생성되어 Zynq Development Board 에 구현된다.
+SDK(Software Development Kit) 는 Zynq 의 ARM Processing System(PS) 에서
+실행되어 PL(Programmable Logic)에 구현된 HW 를 제어하는 간단한 SW App 을 만드는데 사용된다.
+이 Tutorial 은 이전의 Tutorial 에서 습득한 기술을 확장하여 설명한다.
+
+이 Tutorial 은 4 가지 실습으로 나누어져 있으며 아래와 같이 구성된다:
+
+Exercise 2A - 이 실습에서 Vivado IDE 를 시작하고
+              New Project Wizard 를 사용하여 Project 를 만드는 과정에 대한 추가 Guide 를 제공한다.
+
+Exercise 2B - 이 실습에서 Exercise 2A 에서 생성된 Project 를 사용하여
+              IP Integrator 에서 Interrupt 를 활용하고
+              Vivado IP Catalog 에서 기존 IP 를 통합하는 Zynq Embedded System 을 구축한다.
+              이는 IP Integrator 에서 Block 기반 System 을 만들고 연결하는데 필요한 사전 지식을 확장한다.
+              완성된 Design 은 관련 bitstream 을 생성하고 Test App 과 연동하기 위해 Xilinx SDK 로 export 할 것이다.
+
+Exercise 2C - Xilinx SDK 에서 생성된 HW System 용 Test SW App 이 생성되고 설명된다.
+              Zynq Development Board 에서 이 App 을 실행하면
+              Interrupt 의 기능과 이를 활용하는 App 의 코딩 방법을 볼 수 있다.
+
+Exercise 2D - 마지막으로 Exercise 2B 에서 System 으로 돌아가서
+              추가적인 Interrupt 의 소스를 포함하여 필요한 연결을 만들고
+              bitstream 을 생성하고 Xilinx SDK 로 export 한다.
+              그런 다음 이전 SW App 을 수정하여 변경된 System 의 작동을 검사한다.
+
+Exercise 2A - Expanding the Basic IP Integrator Design
+
+이 실습에서 추가적인 GPIO 를 추가하고 Interrupt 를 활용하도록
+System 을 구성하여 Vivado IDE 의 이전 프로젝트를 확장한다.
+명확성과 이해를 위해 기본 System 을 다시 한 번 Build 할 것이다.
+Vivado IDE 를 띄운다.
+
+(a) 바탕 화면의 Vivado 아이콘을 더블클릭하여 Vivado 를 띄운다.
+    Start -> All Programs -> Xilinx Design Tools -> Vivado 2015.1 -> Vivado 2015.1 로 한다.
+
+(b) Vivado 가 Load 되면 Getting Started Screen 이 나타난다.
+
+(c) Create New Project 옵션을 선택한다.
+
+    Next 를 클릭한다.
+
+(d) Project Name Dialogue 에서 Project name 으로 zynq_interrupts 를 입력하고
+    Project location 으로 C:/Zynq_Book 을 입력한다.
+    Create project subdirectory 옵션을 선택했는지 확인한다.
+
+    Next 를 클릭한다.
+
+    Zynq_Book 이라는 디렉토리가 C Drive 에 아직 없는 경우 생성된다.
+
+(e) Project Type Dialogue 에서 RTL Project 를 선택하고
+    Do not specify sources at this time 옵션이 선택되지 않았는지 확인한다.
+
+    Next 를 클릭한다.
+
+(f) Add Sources Dialogue 에서 VHDL 을 Target Language 로 선택하고
+    Simulator Language 로 Mixed 를 선택한다:

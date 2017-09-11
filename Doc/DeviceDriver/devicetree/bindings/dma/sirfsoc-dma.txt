@@ -1,0 +1,90 @@
+* CSR SiRFSoC DMA controller
+
+See dma.txt first
+
+Required properties:
+- compatible: Should be "sirf,prima2-dmac", "sirf,atlas7-dmac" or
+  "sirf,atlas7-dmac-v2"
+- reg: Should contain DMA registers location and length.
+- interrupts: Should contain one interrupt shared by all channel
+- #dma-cells: must be <1>. used to represent the number of integer
+    cells in the dmas property of client device.
+- clocks: clock required
+
+Example:
+
+Controller:
+dmac0: dma-controller@b00b0000 {
+	compatible = "sirf,prima2-dmac";
+	reg = <0xb00b0000 0x10000>;
+	interrupts = <12>;
+	clocks = <&clks 24>;
+	#dma-cells = <1>;
+};
+
+
+Client:
+Fill the specific dma request line in dmas. In the below example, spi0 read
+channel request line is 9 of the 2nd dma controller, while write channel uses
+4 of the 2nd dma controller; spi1 read channel request line is 12 of the 1st
+dma controller, while write channel uses 13 of the 1st dma controller:
+
+spi0: spi@b00d0000 {
+	compatible = "sirf,prima2-spi";
+	dmas = <&dmac1 9>,
+		<&dmac1 4>;
+	dma-names = "rx", "tx";
+};
+
+spi1: spi@b0170000 {
+	compatible = "sirf,prima2-spi";
+	dmas = <&dmac0 12>,
+		<&dmac0 13>;
+	dma-names = "rx", "tx";
+};
+
+
+
+/*
+* CSR SiRFSoC DMA 컨트롤러
+
+먼저 dma.txt보기
+
+필수 속성 :
+- 호환 : "sirf, prima2-dmac", "sirf, atlas7-dmac"또는 "sirf, atlas7-dmac-v2"이어야합니다.
+- reg : DMA 레지스터 위치와 길이를 포함해야합니다.
+- interrupts : 모든 채널이 공유하는 하나의 인터럽트를 포함해야합니다.
+- # dma-cells : <1>이어야합니다. 클라이언트 장치의 dmas 등록 정보에있는 정수 셀 수를 나타내는 데 사용됩니다.
+- clock : 필요한 clock
+
+
+Example:
+
+Controller:
+dmac0: dma-controller@b00b0000 {
+	compatible = "sirf,prima2-dmac";
+	reg = <0xb00b0000 0x10000>;
+	interrupts = <12>;
+	clocks = <&clks 24>;
+	#dma-cells = <1>;
+};
+
+
+client:
+dmas의 특정 dma 요청 행을 채 웁니다. 아래 예에서 쓰기 채널은 두 번째 dma 컨트롤러의 4 개를 사용하는 반면 spi0 읽기 채널 요청 라인은 두 번째 DMA 컨트롤러의 9 개입니다. spi1 읽기 채널 요청 라인은 첫 번째 DMA 컨트롤러의 12 개이며 쓰기 채널은 첫 번째 DMA 컨트롤러의 13 개를 사용합니다.
+
+spi0: spi@b00d0000 {
+	compatible = "sirf,prima2-spi";
+	dmas = <&dmac1 9>,
+		<&dmac1 4>;
+	dma-names = "rx", "tx";
+};
+
+spi1: spi@b0170000 {
+	compatible = "sirf,prima2-spi";
+	dmas = <&dmac0 12>,
+		<&dmac0 13>;
+	dma-names = "rx", "tx";
+};
+
+*/

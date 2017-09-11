@@ -1,0 +1,130 @@
+Network Devices, the Kernel, and You!
+
+
+Introduction
+============
+The following is a random collection of documentation regarding
+network devices.
+다음은 네트워크 장치에 관한 문서의 무작위 수집입니다.
+
+struct net_device allocation rules
+==================================
+Network device structures need to persist even after module is unloaded and
+must be allocated with alloc_netdev_mqs() and friends.
+If device has registered successfully, it will be freed on last use
+by free_netdev(). This is required to handle the pathologic case cleanly
+(example: rmmod mydriver </sys/class/net/myeth/mtu )
+네트워크 장치 구조는 모듈이 언로드 된 후에도 유지되어야하며 alloc_netdev_mqs () 및 친구와 함께 할당되어야합니다. 장치가 성공적으로 등록되면 free_netdev ()에 의해 마지막 사용시 해제됩니다. 이것은 pathologic 케이스를 깨끗하게 처리하는 데 필요합니다 (예 : rmmod mydriver </ sys / class / net / myeth / mtu)
+
+alloc_netdev_mqs()/alloc_netdev() reserve extra space for driver
+private data which gets freed when the network device is freed. If
+separately allocated data is attached to the network device
+(netdev_priv(dev)) then it is up to the module exit handler to free that.
+alloc_netdev_mqs () / alloc_netdev ()는 네트워크 장치가 해제 될 때 해제되는 드라이버 개인 데이터에 대한 추가 공간을 예약합니다. 별도로 할당 된 데이터가 네트워크 장치 (netdev_priv (dev))에 연결되면 모듈 종료 핸들러가이를 해제합니다.
+
+MTU
+===
+Each network device has a Maximum Transfer Unit. The MTU does not
+include any link layer protocol overhead. Upper layer protocols must
+not pass a socket buffer (skb) to a device to transmit with more data
+than the mtu. The MTU does not include link layer header overhead, so
+for example on Ethernet if the standard MTU is 1500 bytes used, the
+actual skb will contain up to 1514 bytes because of the Ethernet
+header. Devices should allow for the 4 byte VLAN header as well.
+각 네트워크 장치에는 최대 전송 단위가 있습니다. MTU에는 링크 계층 프로토콜 오버 헤드가 포함되어 있지 않습니다. 상위 계층 프로토콜은 mtu보다 많은 데이터로 전송할 장치에 소켓 버퍼 (skb)를 전달해서는 안됩니다. MTU는 링크 계층 헤더 오버 헤드를 포함하지 않으므로 예를 들어 표준 MTU가 1500 바이트 인 경우 이더넷에서 이더넷 헤더로 인해 실제 skb에 최대 1514 바이트가 포함됩니다. 장치는 4 바이트 VLAN 헤더도 허용해야합니다.
+
+Segmentation Offload (GSO, TSO) is an exception to this rule.  The
+upper layer protocol may pass a large socket buffer to the device
+transmit routine, and the device will break that up into separate
+packets based on the current MTU.
+분할 오프로드 (GSO, TSO)는이 규칙의 예외입니다. 상위 계층 프로토콜은 대형 소켓 버퍼를 장치 전송 루틴으로 전달할 수 있으며 장치는 현재 MTU를 기반으로 별도의 패킷으로이를 분리합니다.
+
+MTU is symmetrical and applies both to receive and transmit. A device
+must be able to receive at least the maximum size packet allowed by
+the MTU. A network device may use the MTU as mechanism to size receive
+buffers, but the device should allow packets with VLAN header. With
+standard Ethernet mtu of 1500 bytes, the device should allow up to
+1518 byte packets (1500 + 14 header + 4 tag).  The device may either:
+drop, truncate, or pass up oversize packets, but dropping oversize
+packets is preferred.
+MTU는 대칭이며 수신 및 전송에 모두 적용됩니다. 장치는 적어도 MTU가 허용하는 최대 크기의 패킷을 수신 할 수 있어야합니다. 네트워크 장치는 수신 버퍼의 크기를 결정하는 메커니즘으로 MTU를 사용할 수 있지만 장치는 VLAN 헤더가있는 패킷을 허용해야합니다. 1500 바이트의 표준 이더넷 mtu에서 장치는 최대 1518 바이트 패킷 (1500 + 14 헤더 + 4 태그)을 허용해야합니다.
+장치는 다음 중 하나 일 수 있습니다.oversize 패킷을 버리거나 잘라내거나 전달할 수 있지만 오버 사이즈 패킷을 삭제하는 것이 좋습니다.
+
+struct net_device synchronization rules
+=======================================
+ndo_open:
+	Synchronization: rtnl_lock() semaphore.
+	Context: process
+
+ndo_stop:
+	Synchronization: rtnl_lock() semaphore.
+	Context: process
+	Note: netif_running() is guaranteed false
+	참고 : netif_running ()은 false가 보장됩니다.
+
+ndo_do_ioctl:
+	Synchronization: rtnl_lock() semaphore.
+	Context: process
+
+ndo_get_stats:
+	Synchronization: dev_base_lock rwlock.
+	Context: nominally process, but don't sleep inside an rwlock
+	컨텍스트 : 명목상 프로세스이지만 rwlock 내부에서 자는 것은 아닙니다.
+
+ndo_start_xmit:
+	Synchronization: __netif_tx_lock spinlock.
+
+	When the driver sets NETIF_F_LLTX in dev->features this will be
+	called without holding netif_tx_lock. In this case the driver
+	has to lock by itself when needed. It is recommended to use a try lock
+	for this and return NETDEV_TX_LOCKED when the spin lock fails.
+	The locking there should also properly protect against 
+	set_rx_mode. Note that the use of NETIF_F_LLTX is deprecated.
+	Don't use it for new drivers.
+	드라이버가 NETIF_F_LLTX를 dev-> features로 설정하면 netif_tx_lock을 유지하지 않고 호출됩니다. 이 경우 운전자는 필요할 때 스스로 자물쇠를 채워야합니다. 이것을 위해 try lock을 사용하고 spin lock이 실패 할 때 NETDEV_TX_LOCKED를 반환하는 것이 좋습니다. 또한 set_rx_mode에 대해 적절하게 보호해야합니다. NETIF_F_LLTX는 더 이상 사용되지 않습니다. 새 드라이버에는 사용하지 마십시오.
+
+	Context: Process with BHs disabled or BH (timer),
+	         will be called with interrupts disabled by netconsole.
+	컨텍스트 : BH가 비활성화 된 프로세스 또는 BH (타이머)가 netconsole에 의해 비활성화 된 인터럽트로 호출됩니다.
+	         
+	Return codes: 
+	o NETDEV_TX_OK everything ok. 
+	o NETDEV_TX_BUSY Cannot transmit packet, try later 
+	  Usually a bug, means queue start/stop flow control is broken in
+	  the driver. Note: the driver must NOT put the skb in its DMA ring.
+	o NETDEV_TX_LOCKED Locking failed, please retry quickly.
+	  Only valid when NETIF_F_LLTX is set.
+	  Return codes :
+	o NETDEV_TX_OK 모든 것이 좋습니다.
+		o NETDEV_TX_BUSY 패킷을 전송할 수 없습니다. 나중에 시도하십시오. 일반적으로 버그는 대기열 시작 / 중지 흐름 제어가 드라이버에서 중단되었음을 의미합니다. 
+		참고 : 드라이버는 DMA ring에 skb를 넣지 않아야합니다.
+	o NETDEV_TX_LOCKED 잠그지 못했습니다. 빨리 재 시도하십시오.
+	NETIF_F_LLTX가 설정된 경우에만 유효합니다.
+
+ndo_tx_timeout:
+	Synchronization: netif_tx_lock spinlock; all TX queues frozen.
+	Context: BHs disabled
+	Notes: netif_queue_stopped() is guaranteed true
+	
+	Synchronization : netif_tx_lock spinlock; 모든 TX 대기열이 고정됩니다.
+	Context : BH가 사용 중지됨
+	Notes : netif_queue_stopped ()는 true가 보증됩니다.
+
+	ndo_set_rx_mode:
+	Synchronization: netif_addr_lock spinlock.
+	Context: BHs disabled
+	Synchronization : netif_addr_lock spinlock.
+	Context : BH가 사용 중지됨
+
+struct napi_struct synchronization rules
+========================================
+napi->poll:
+	Synchronization: NAPI_STATE_SCHED bit in napi->state.  Device
+		driver's ndo_stop method will invoke napi_disable() on
+		all NAPI instances which will do a sleeping poll on the
+		NAPI_STATE_SCHED napi->state bit, waiting for all pending
+		NAPI activity to cease.
+	Context: softirq
+	         will be called with interrupts disabled by netconsole.
+   Synchronization  : napi-> state의 NAPI_STATE_SCHED 비트. 장치 드라이버의 ndo_stop 메서드는 모든 NAPI 인스턴스에서 napi_disable ()을 호출하여 NAPI_STATE_SCHED napi-> state 비트에 대한 절전 모드 폴링을 수행하고 모든 보류중인 NAPI 작업이 중지 될 때까지 대기합니다.
+	Context : softirq는 netconsole에 의해 비활성화 된 인터럽트로 호출됩니다.

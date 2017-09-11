@@ -1,0 +1,317 @@
+Linux and the 3Com EtherLink III Series Ethercards (driver v1.18c and higher)
+Linux 및 3Com EtherLink III 시리즈 Ethercards (드라이버 v1.18c 이상)
+----------------------------------------------------------------------------
+
+This file contains the instructions and caveats for v1.18c and higher versions
+of the 3c509 driver. You should not use the driver without reading this file.
+이 파일에는 v1.18c 및 3c509 드라이버의 상위 버전에 대한 지침 및 주의 사항이 들어 있습니다. 이 파일을 읽지 않고 드라이버를 사용하지 마십시오.
+
+release 1.0
+28 February 2002
+Current maintainer (corrections to):
+  David Ruggiero <jdr@farfalle.com>
+릴리스 1.0
+2002 년 2 월 28 일
+현재 관리자 (수정) :
+   David Ruggiero <jdr@farfalle.com>
+
+----------------------------------------------------------------------------
+
+(0) Introduction
+
+The following are notes and information on using the 3Com EtherLink III series
+ethercards in Linux. These cards are commonly known by the most widely-used
+card's 3Com model number, 3c509. They are all 10mb/s ISA-bus cards and shouldn't
+be (but sometimes are) confused with the similarly-numbered PCI-bus "3c905"
+(aka "Vortex" or "Boomerang") series.  Kernel support for the 3c509 family is
+provided by the module 3c509.c, which has code to support all of the following
+models:
+다음은 Linux에서 3Com EtherLink III 시리즈 이더넷 카드 사용에 대한 참고 사항과 정보입니다. 이 카드는 널리 사용되는 카드의 3Com 모델 번호 인 3c509에서 일반적으로 알려져 있습니다. 그것들은 모두 10mb / s ISA 버스 카드이며 비슷한 번호의 PCI 버스 "3c905"(일명 "Vortex"또는 "Boomerang") 시리즈와 혼동해서는 안됩니다. 3c509 제품군에 대한 커널 지원은 3c509.c 모듈에서 제공하며, 다음 모델을 모두 지원하는 코드가 있습니다.
+
+  3c509 (original ISA card)
+  3c509B (later revision of the ISA card; supports full-duplex)
+  3c589 (PCMCIA)
+  3c589B (later revision of the 3c589; supports full-duplex)
+  3c579 (EISA)
+
+  3c509 (원본 ISA 카드)
+   3c509B (ISA 카드의 최신 개정판, full-duplex(전이중 지원)
+   3c589 (PCMCIA)
+   3c589B (3c589의 최신 개정판, full-duplex(전이중 지원))
+   3c579 (EISA)
+
+Large portions of this documentation were heavily borrowed from the guide
+written the original author of the 3c509 driver, Donald Becker. The master
+copy of that document, which contains notes on older versions of the driver,
+currently resides on Scyld web server: http://www.scyld.com/.
+이 문서의 상당 부분은 3c509 드라이버 인 Donald Becker의 원저자가 작성한 가이드에서 많이 빌려 왔습니다. 이전 버전의 드라이버에 대한 메모가 들어있는 해당 문서의 마스터 복사본은 현재 Scyld 웹 서버에 있습니다 (http://www.scyld.com/).
+
+(1) Special Driver Features
+
+Overriding card settings
+
+The driver allows boot- or load-time overriding of the card's detected IOADDR,
+IRQ, and transceiver settings, although this capability shouldn't generally be
+needed except to enable full-duplex mode (see below). An example of the syntax
+for LILO parameters for doing this:
+
+드라이버는 카드의 감지 된 IOADDR, IRQ 및 트랜시버 설정을 부트 또는로드 타임 오버라이드 할 수 있지만 일반적으로 full-duplex mode를 사용하는 경우를 제외하고는이 기능이 필요하지 않습니다 (아래 참조). LILO 매개 변수에 대한 구문 예제 :
+
+    ether=10,0x310,3,0x3c509,eth0 
+
+
+This configures the first found 3c509 card for IRQ 10, base I/O 0x310, and
+transceiver type 3 (10base2). The flag "0x3c509" must be set to avoid conflicts
+with other card types when overriding the I/O address. When the driver is
+loaded as a module, only the IRQ may be overridden. For example,
+setting two cards to IRQ10 and IRQ11 is done by using the irq module
+option:
+그러면 IRQ 10, 기본 I / O 0x310 및 트랜시버 유형 3 (10base2)에 대해 처음으로 발견 된 3c509 카드가 구성됩니다. I / O 주소를 재정의 할 때 다른 카드 유형과 충돌하지 않도록 "0x3c509"플래그를 설정해야합니다. 드라이버가 모듈로로드되면 IRQ 만 재정의 될 수 있습니다. 예를 들어, 두 개의 카드를 IRQ10 및 IRQ11로 설정하는 작업은 irq 모듈 옵션을 사용하여 수행됩니다.
+
+   options 3c509 irq=10,11
+
+
+(2) Full-duplex mode
+
+The v1.18c driver added support for the 3c509B's full-duplex capabilities.
+In order to enable and successfully use full-duplex mode, three conditions
+must be met: 
+v1.18c 드라이버는 3c509B의 full-duplex 기능에 대한 지원을 추가했습니다.
+full-duplex mode를 활성화하고 성공적으로 사용하려면 세 가지 조건이 충족되어야합니다.
+
+(a) You must have a Etherlink III card model whose hardware supports full-
+duplex operations. Currently, the only members of the 3c509 family that are
+positively known to support full-duplex are the 3c509B (ISA bus) and 3c589B
+(PCMCIA) cards. Cards without the "B" model designation do *not* support
+full-duplex mode; these include the original 3c509 (no "B"), the original
+3c589, the 3c529 (MCA bus), and the 3c579 (EISA bus).
+(a) 하드웨어가 full-duplex 작동을 지원하는 Etherlink III 카드 모델이 있어야합니다. 현재 full-duplex을 지원하는 것으로 알려진 3c509 제품군의 유일한 구성원은 3c509B (ISA 버스) 및 3c589B (PCMCIA) 카드입니다.
+"B"모델 지정이없는 카드는 full-duplex mode 를 지원하지 않습니다. 원래 3c509 ( "B"없음), 원래 3c589, 3c529 (MCA 버스) 및 3c579 (EISA 버스)가 포함됩니다.
+
+(b) You must be using your card's 10baseT transceiver (i.e., the RJ-45
+connector), not its AUI (thick-net) or 10base2 (thin-net/coax) interfaces.
+AUI and 10base2 network cabling is physically incapable of full-duplex
+operation.
+(b) AUI (thick-net) 또는 10base2 (thin-net / coax) 인터페이스가 아닌 카드의 10baseT 트랜시버 (즉, RJ-45 커넥터)를 사용해야합니다. AUI 및 10base2 네트워크 케이블 링은 실제로 전이중 작업이 불가능합니다.
+
+(c) Most importantly, your 3c509B must be connected to a link partner that is
+itself full-duplex capable. This is almost certainly one of two things: a full-
+duplex-capable  Ethernet switch (*not* a hub), or a full-duplex-capable NIC on
+another system that's connected directly to the 3c509B via a crossover cable.
+(c) 가장 중요한 점은 3c509B가 full-duplex 기능이있는 링크 파트너에 연결되어야한다는 것입니다. 이것은 거의 확실하게 두 가지 중 하나입니다 : 크로스 오버 케이블을 통해 3c509B에 직접 연결된 다른 시스템의 full-duplex 가능 이더넷 스위치 (허브가 아님) 또는 full-duplex 가능 NIC.
+
+Full-duplex mode can be enabled using 'ethtool'.
+Full-duplex mode는 'ethtool'을 사용하여 활성화 할 수 있습니다.
+
+/////Extremely important caution concerning full-duplex mode/////
+Understand that the 3c509B's hardware's full-duplex support is much more
+limited than that provide by more modern network interface cards. Although
+at the physical layer of the network it fully supports full-duplex operation,
+the card was designed before the current Ethernet auto-negotiation (N-way)
+spec was written. This means that the 3c509B family ***cannot and will not
+auto-negotiate a full-duplex connection with its link partner under any
+circumstances, no matter how it is initialized***. If the full-duplex mode
+of the 3c509B is enabled, its link partner will very likely need to be
+independently _forced_ into full-duplex mode as well; otherwise various nasty
+failures will occur - at the very least, you'll see massive numbers of packet
+collisions. This is one of very rare circumstances where disabling auto-
+negotiation and forcing the duplex mode of a network interface card or switch
+would ever be necessary or desirable.
+
+///// full-duplex mode에 대한 매우 중요한주의 사항 /////
+3c509B의 하드웨어 full-duplex 지원은 최신 네트워크 인터페이스 카드보다 훨씬 제한적이라는 것을 이해하십시오. 네트워크의 물리적 계층에서 full-duplex 작동을 완벽하게 지원하지만 현재 Ethernet auto-negotiation (N-way) 사양이 작성되기 전에 카드가 설계되었습니다. 즉, 3c509B 제품군 ***은 초기화되는 방법에 관계없이 어떠한 상황에서도 링크 파트너와 full-duplex 연결을 auto-negotiation 할 수  없습니다***. 3c509B의 full-duplex mode 를 사용하는 경우 링크 파트너도 full-duplex mode 로 설정해야 한다 그렇지 않으면 다양한 불쾌한 오류가 발생할 것입니다. 실패할 경우 적어도 패킷 충돌이 엄청나게 많습니다.이것은 네트워크 인터페이스 카드 또는 스위치의 duplex mode를 강제로 해제하거나 auto- negotiation 을 비활성화해야하는 매우 드문 상황 중 하나입니다.
+
+(3) Available Transceiver Types
+(3) 사용 가능한 트랜시버 유형
+
+For versions of the driver v1.18c and above, the available transceiver types are:
+ 드라이버 v1.18c 이상 버전에서 사용 가능한 트랜시버 유형은 다음과 같습니다.
+
+0  transceiver type from EEPROM config (normally 10baseT); force half-duplex
+1  AUI (thick-net / DB15 connector)
+2  (undefined)
+3  10base2 (thin-net == coax / BNC connector)
+4  10baseT (RJ-45 connector); force half-duplex mode
+8  transceiver type and duplex mode taken from card's EEPROM config settings
+12 10baseT (RJ-45 connector); force full-duplex mode
+
+0EEPROM 구성에서 0 트랜시버 유형 (일반적으로 10baseT); half-duplex을 강요하다
+1 AUI (thick-net / DB15 커넥터)
+2 (정의되지 않음)
+3 10base2 (씬넷 == 동축 케이블 / BNC 커넥터)
+4 10baseT (RJ-45 커넥터); 강제 반이중 모드
+8카드의 EEPROM 구성 설정에서 가져온 8 송수신기 유형 및 duplex mode
+12 10baseT (RJ-45 커넥터); 강제 full-duplex mode
+
+
+Prior to driver version 1.18c, only transceiver codes 0-4 were supported. Note
+that the new transceiver codes 8 and 12 are the *only* ones that will enable
+full-duplex mode, no matter what the card's detected EEPROM settings might be.
+This insured that merely upgrading the driver from an earlier version would
+never automatically enable full-duplex mode in an existing installation;
+it must always be explicitly enabled via one of these code in order to be
+activated.
+드라이버 버전 1.18c 이전에는 트랜시버 코드 0-4 만 지원되었습니다. 새로운 트랜시버 코드 8과 12는 카드의 감지 된 EEPROM 설정에 상관없이 전이중 모드를 사용할 수있는 유일한 것입니다. 이렇게하면 이전 버전에서 드라이버를 업그레이드하는 것만으로는 기존 설치에서 전이중 모드가 자동으로 활성화되지 않습니다. 이 코드 중 하나를 통해 명시 적으로 활성화해야 활성화 할 수 있습니다.
+
+The transceiver type can be changed using 'ethtool'.
+  송수신기 유형은 'ethtool'을 사용하여 변경할 수 있습니다.
+
+(4a) Interpretation of error messages and common problems
+(4a) 오류 메시지 및 공통 문제의 해석
+
+Error Messages
+오류 메시지
+
+eth0: Infinite loop in interrupt, status 2011. 
+eth0 : 인터럽트, 상태 2011 년 무한 루프.
+
+These are "mostly harmless" message indicating that the driver had too much
+work during that interrupt cycle. With a status of 0x2011 you are receiving
+packets faster than they can be removed from the card. This should be rare
+or impossible in normal operation. Possible causes of this error report are:
+이들은 driver가 그 인터럽트주기 동안 너무 많은 작업을했다는 것을 나타내는 "mostly harmless"메시지입니다. 0x2011의 상태에서는 카드에서 제거 할 수있는 것보다 더 빨리 패킷을 수신합니다. 이는 정상 작동시 희소하거나 불가능해야합니다. 이 오류 보고서의 가능한 원인은 다음과 같습니다.
+
+   - a "green" mode enabled that slows the processor down when there is no
+     keyboard activity. 
+
+   - some other device or device driver hogging the bus or disabling interrupts.
+     Check /proc/interrupts for excessive interrupt counts. The timer tick
+     interrupt should always be incrementing faster than the others. 
+  - 키보드 작동이 없을 때 프로세서 속도를 늦추는 "green"모드가 활성화되었습니다.   
+
+  - 버스를 호깅하거나 인터럽트를 비활성화하는 다른 장치 또는 장치 드라이버.
+    과도한 인터럽트 카운트에 대해서는 / proc / interrupts를 점검하십시오. timer tick interrupt는 항상 다른 타이머보다 빠르게 증가해야합니다.
+
+
+
+No received packets 
+If a 3c509, 3c562 or 3c589 can successfully transmit packets, but never
+receives packets (as reported by /proc/net/dev or 'ifconfig') you likely
+have an interrupt line problem. Check /proc/interrupts to verify that the
+card is actually generating interrupts. If the interrupt count is not
+increasing you likely have a physical conflict with two devices trying to
+use the same ISA IRQ line. The common conflict is with a sound card on IRQ10
+or IRQ5, and the easiest solution is to move the 3c509 to a different
+interrupt line. If the device is receiving packets but 'ping' doesn't work,
+you have a routing problem.
+수신 패킷 없음
+3c509, 3c562 또는 3c589가 패킷을 성공적으로 전송할 수 있지만 (/ proc / net / dev 또는 'ifconfig'에 의해보고 된 것처럼) 패킷을 수신하지 못하면 인터럽트 회선 문제가있을 수 있습니다. / proc / interrupts를 검사하여 카드가 실제로 인터럽트를 생성하고 있는지 확인하십시오. 인터럽트 카운트가 증가하지 않으면 동일한 ISA IRQ 라인을 사용하려고하는 두 장치와 물리적 충돌이있을 가능성이 있습니다. 일반적인 충돌은 IRQ10 또는 IRQ5의 사운드 카드와 관련이 있으며 가장 쉬운 해결 방법은 3c509를 다른 인터럽트 라인으로 이동하는 것입니다. 장치가 패킷을 수신하지만 '핑 (ping)'이 작동하지 않으면 라우팅 문제가 발생합니다.
+
+Tx Carrier Errors Reported in /proc/net/dev 
+If an EtherLink III appears to transmit packets, but the "Tx carrier errors"
+field in /proc/net/dev increments as quickly as the Tx packet count, you
+likely have an unterminated network or the incorrect media transceiver selected. 
+
+3c509B card is not detected on machines with an ISA PnP BIOS. 
+While the updated driver works with most PnP BIOS programs, it does not work
+with all. This can be fixed by disabling PnP support using the 3Com-supplied
+setup program. 
+
+3c509 card is not detected on overclocked machines 
+Increase the delay time in id_read_eeprom() from the current value, 500,
+to an absurdly high value, such as 5000. 
+
+/ proc / net / dev에 Tx Carrier 오류가보고되었습니다.
+EtherLink III가 패킷을 전송하는 것처럼 보이지만 / proc / net / dev에있는 "Tx carrier errors"필드가 Tx 패킷 수만큼 빠르게 증가하는 경우, 종단되지 않은 네트워크 또는 잘못된 미디어 트랜시버가 선택되었을 수 있습니다.
+
+ISA PnP BIOS가있는 컴퓨터에서는 3c509B 카드가 감지되지 않습니다.
+업데이트 된 드라이버는 대부분의 PnP BIOS 프로그램에서 작동하지만 모든 프로그램에서 작동하지는 않습니다. 3Com에서 제공 한 설치 프로그램을 사용하여 PnP 지원을 비활성화하면이 문제를 해결할 수 있습니다.
+
+overclock 된 시스템에서 3c509 카드가 검색되지 않습니다. id_read_eeprom ()의 지연 시간을 현재 값 500에서 비정상적으로 높은 값 (예 : 5000)으로 늘립니다.
+
+(4b) Decoding Status and Error Messages
+
+The bits in the main status register are: 
+
+value 	description
+0x01 	Interrupt latch
+0x02 	Tx overrun, or Rx underrun
+0x04 	Tx complete
+0x08 	Tx FIFO room available
+0x10 	A complete Rx packet has arrived
+0x20 	A Rx packet has started to arrive
+0x40 	The driver has requested an interrupt
+0x80 	Statistics counter nearly full
+
+
+(4b) 상태 및 오류 메시지 디코딩
+
+기본 상태 레지스터의 비트는 다음과 같습니다.
+
+value description
+0x01 Interrupt latch
+0x02 Tx 초과 실행 또는 Rx 언더런
+0x04 Tx 완료
+0x08 Tx FIFO 룸 사용 가능
+0x10 omplete Rx packet 이 도착했습니다.
+0x20 Rx packet이 도착하기 시작했습니다.
+0x40 드라이버가 인터럽트를 요청했습니다.
+0x80 통계 카운터가 거의 가득 찼습니다.
+
+
+The bits in the transmit (Tx) status word are: 
+
+value 	description
+0x02 	Out-of-window collision.
+0x04 	Status stack overflow (normally impossible).
+0x08 	16 collisions.
+0x10 	Tx underrun (not enough PCI bus bandwidth).
+0x20 	Tx jabber.
+0x40 	Tx interrupt requested.
+0x80 	Status is valid (this should always be set).
+
+전송 (Tx) 상태 워드의 비트는 다음과 같습니다.
+
+value description
+0x02 윈도우 외부 충돌.
+0x04 상태 스택 오버플로 (정상적으로 불가능).
+0x08 16 충돌.
+0x10 Tx 언더런 (충분한 PCI 버스 대역폭이 아님).
+0x20 Tx jabber.
+0x40 Tx 인터럽트가 요청되었습니다.
+0x80 상태가 유효합니다 (항상 설정되어야 함).
+
+When a transmit error occurs the driver produces a status message such as 
+
+   eth0: Transmit error, Tx status register 82
+
+전송 오류가 발생하면 드라이버는 다음과 같은 상태 메시지를 생성합니다.
+
+    eth0 : 전송 오류, Tx 상태 레지스터 82
+
+
+The two values typically seen here are:
+
+0x82 
+Out of window collision. This typically occurs when some other Ethernet
+host is incorrectly set to full duplex on a half duplex network. 
+
+0x88 
+16 collisions. This typically occurs when the network is exceptionally busy
+or when another host doesn't correctly back off after a collision. If this
+error is mixed with 0x82 errors it is the result of a host incorrectly set
+to full duplex (see above).
+
+Both of these errors are the result of network problems that should be
+corrected. They do not represent driver malfunction.
+
+
+(5) Revision history (this file)
+
+28Feb02 v1.0  DR   New; major portions based on Becker original 3c509 docs
+
+
+일반적으로 여기에 표시된 두 값은 다음과 같습니다.
+
+0x82
+창 충돌. 이것은 일반적으로 다른 이더넷 호스트가 half duplex 네트워크에서 full duplex으로 잘못 설정된 경우에 발생합니다.
+
+0x88
+16 충돌. 일반적으로 네트워크가 예외적으로 사용 중이거나 충돌 후 다른 호스트가 올바르게 백 오프하지 않는 경우에 발생합니다. 이 오류가 0x82 오류와 섞인 경우 호스트가 full duplex으로 잘못 설정된 결과입니다 (위 참조).
+
+이 두 가지 오류는 모두 수정해야하는 네트워크 문제의 결과입니다. 그들은 driver의 오작동을 나타내지 않습니다.
+
+
+(5) 개정 내역 (이 파일)
+
+28Feb02 v1.0 DR 새로운 기능; Becker 독창적 인 3c509 문서를 기반으로 한 주요 부분

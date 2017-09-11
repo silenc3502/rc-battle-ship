@@ -1,0 +1,54 @@
+SMSC USB3503 High-Speed Hub Controller
+
+Required properties:
+- compatible: Should be "smsc,usb3503" or "smsc,usb3503a".
+
+Optional properties:
+- reg: Specifies the i2c slave address, it is required and should be 0x08
+       if I2C is used.
+- connect-gpios: Should specify GPIO for connect.
+- disabled-ports: Should specify the ports unused.
+	'1' or '2' or '3' are available for this property to describe the port
+	number. 1~3 property values are possible to be described.
+	Do not describe this property if all ports have to be enabled.
+- intn-gpios: Should specify GPIO for interrupt.
+- reset-gpios: Should specify GPIO for reset.
+- initial-mode: Should specify initial mode.
+                (1 for HUB mode, 2 for STANDBY mode)
+- refclk: Clock used for driving REFCLK signal (optional, if not provided
+	the driver assumes that clock signal is always available, its
+	rate is specified by REF_SEL pins and a value from the primary
+	reference clock frequencies table is used)
+- refclk-frequency: Frequency of the REFCLK signal as defined by REF_SEL
+	pins (optional, if not provided, driver will not set rate of the
+	REFCLK signal and assume that a value from the primary reference
+	clock frequencies table is used)
+
+필수 속성 :
+- compatible : "smsc, usb3503"또는 "smsc, usb3503a"여야합니다.
+
+선택적 속성 :
+- reg : I2C 슬레이브 주소를 지정합니다. I2C가 사용되는 경우 필요하며 0x08이어야합니다.
+- connect-gpios : 연결할 GPIO를 지정해야합니다.
+- disabled-ports : 사용되지 않는 포트를 지정해야합니다.
+이 등록 정보에서 포트 번호를 설명하는 데 '1'또는 '2'또는 '3'을 사용할 수 있습니다. 1 ~ 3 개의 속성 값을 기술 할 수 있습니다.
+모든 포트를 활성화해야하는 경우이 속성을 사용하지 마십시오.
+- intn-gpios : 인터럽트에 대해 GPIO를 지정해야합니다.
+- reset-gpios : 재설정을 위해 GPIO를 지정해야합니다.
+- 초기 모드 : 초기 모드를 지정해야합니다.
+                 (HUB 모드의 경우 1, STANDBY 모드의 경우 2)
+- refclk : REFCLK 신호를 구동하는 데 사용되는 클록 (옵션, 클럭 신호가 항상 사용 가능하고 해당 속도가 REF_SEL 핀에 의해 지정되고 기본 참조 클럭 주파수 표의 값이 사용되는 경우 드라이버가 제공되지 않는 경우 선택적)
+
+- refclk-frequency : REF_SEL 핀으로 정의 된 REFCLK 신호의 주파수 (옵션으로 제공되지 않는 경우 드라이버는 REFCLK 신호의 속도를 설정하지 않고 기본 참조 클럭 주파수 표의 값이 사용된다고 가정 함)
+
+
+Examples:
+	usb3503@08 {
+		compatible = "smsc,usb3503";
+		reg = <0x08>;
+		connect-gpios = <&gpx3 0 1>;
+		disabled-ports = <2 3>;
+		intn-gpios = <&gpx3 4 1>;
+		reset-gpios = <&gpx3 5 1>;
+		initial-mode = <1>;
+	};

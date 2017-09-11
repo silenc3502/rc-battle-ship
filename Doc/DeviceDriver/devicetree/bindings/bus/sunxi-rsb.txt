@@ -1,0 +1,70 @@
+Allwinner Reduced Serial Bus (RSB) controller
+
+The RSB controller found on later Allwinner SoCs is an SMBus like 2 wire
+serial bus with 1 master and up to 15 slaves. It is represented by a node
+for the controller itself, and child nodes representing the slave devices.
+
+Required properties :
+
+ - reg             : Offset and length of the register set for the controller.
+ - compatible      : Shall be "allwinner,sun8i-a23-rsb".
+ - interrupts      : The interrupt line associated to the RSB controller.
+ - clocks          : The gate clk associated to the RSB controller.
+ - resets          : The reset line associated to the RSB controller.
+ - #address-cells  : shall be 1
+ - #size-cells     : shall be 0
+
+Optional properties :
+
+ - clock-frequency : Desired RSB bus clock frequency in Hz. Maximum is 20MHz.
+		     If not set this defaults to 3MHz.
+
+Child nodes:
+
+An RSB controller node can contain zero or more child nodes representing
+slave devices on the bus.  Child 'reg' properties should contain the slave
+device's hardware address. The hardware address is hardwired in the device,
+which can normally be found in the datasheet.
+
+
+Allwinner RSB (Reduced Serial Bus) 컨트롤러
+
+최신 Allwinner SoC에서 발견되는 RSB 컨트롤러는 1 개의 마스터와 최대 15 개의 슬레이브가있는 2 와이어 직렬 버스와 같은 SMBus입니다. 제어기 자체의 노드와 슬레이브 장치를 나타내는 하위 노드로 표시됩니다.
+
+필수 속성 :
+
+  - reg : 컨트롤러에 설정된 레지스터 오프셋 및 길이.
+  - 호환 : "allwinner, sun8i-a23-rsb"이어야합니다.
+  - interrupts : RSB 컨트롤러와 관련된 인터럽트 라인.
+  - clocks : RSB 컨트롤러에 연결된 게이트 클럭입니다.
+  - reset : RSB 컨트롤러에 연결된 재설정 행.
+  - # address-cells : 1이어야합니다.
+  - # size-cells : 0이어야합니다.
+
+선택적 속성 :
+
+  - 클록 주파수 : 원하는 RSB 버스 클럭 주파수 (Hz). 최대는 20MHz입니다. 설정되지 않은 경우 기본값은 3MHz입니다.
+
+자식 노드 :
+
+RSB 컨트롤러 노드는 버스에 슬레이브 장치를 나타내는 0 개 이상의 자식 노드를 포함 할 수 있습니다. 하위 'reg'속성은 슬레이브 장치의 하드웨어 주소를 포함해야합니다. 하드웨어 주소는 일반적으로 데이터 시트에서 찾을 수 있는 장치에 내장되어 있습니다.
+
+Example:
+
+	rsb@01f03400 {
+		compatible = "allwinner,sun8i-a23-rsb";
+		reg = <0x01f03400 0x400>;
+		interrupts = <0 39 4>;
+		clocks = <&apb0_gates 3>;
+		clock-frequency = <3000000>;
+		resets = <&apb0_rst 3>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		pmic@3e3 {
+			compatible = "...";
+			reg = <0x3e3>;
+
+			/* ... */
+		};
+	};

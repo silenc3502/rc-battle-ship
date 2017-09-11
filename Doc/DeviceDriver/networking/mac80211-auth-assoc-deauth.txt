@@ -1,0 +1,157 @@
+#
+# This outlines the Linux authentication/association and
+# deauthentication/disassociation flows.
+#여기에는 Linux 인증 / 연결 및 인증 해제 / 연결 해제 흐름이 요약되어 있습니다.
+# This can be converted into a diagram using the service
+# at http://www.websequencediagrams.com/
+#이것은 http://www.websequencediagrams.com/의 서비스를 사용하여 다이어그램으로 변환 될 수 있습니다.
+
+participant userspace
+participant mac80211
+participant driver
+참여자 사용자 공간
+참여자 mac80211
+참가자 드라이버
+
+alt authentication needed (not FT)
+userspace->mac80211: authenticate
+대체 인증 필요 (FT 아님) 
+userspace-> mac80211 : 인증
+
+alt authenticated/authenticating already
+mac80211->driver: sta_state(AP, not-exists)
+mac80211->driver: bss_info_changed(clear BSSID)
+else associated
+note over mac80211,driver
+like deauth/disassoc, without sending the
+BA session stop & deauth/disassoc frames
+end note
+end
+고도 인증 / 이미 mac80211 인증 -> 드라이버 : sta_state (AP, 존재하지 않음)
+mac80211-> 드라이버 : bss_info_changed (클리어 BSSID) 그렇지 않으면 deauth / disassoc와 같은 드라이버 인 mac80211을 통해 BA 세션 중지 및 deauth / disassoc 프레임을 보내지 않고 연관된 노트
+
+mac80211->driver: config(channel, channel type)
+mac80211->driver: bss_info_changed(set BSSID, basic rate bitmap)
+mac80211->driver: sta_state(AP, exists)
+mac80211-> 드라이버 : config (채널, 채널 유형)
+mac80211-> 드라이버 : bss_info_changed (BSSID, 기본 속도 비트 맵 설정)
+mac80211-> 드라이버 : sta_state (AP, 존재)
+
+alt no probe request data known
+mac80211->driver: TX directed probe request
+driver->mac80211: RX probe response
+end
+대체 no probe 요청 데이터는 mac80211-> driver로 알려져 있습니다 : TX directed probe request
+드라이버 -> mac80211 : RX probe 응답
+end
+
+mac80211->driver: TX auth frame
+driver->mac80211: RX auth frame
+
+alt WEP shared key auth
+mac80211->driver: TX auth frame
+driver->mac80211: RX auth frame
+end
+
+alt WEP 공유 키 인증
+mac80211-> 드라이버 : TX 인증 프레임
+드라이버 -> mac80211 : RX 인증 프레임
+end
+
+mac80211->driver: sta_state(AP, authenticated)
+mac80211->userspace: RX auth frame
+end
+
+mac80211-> 드라이버 : sta_state (AP, 인증 됨)
+mac80211-> userpace : RX 인증 프레임
+end
+
+userspace->mac80211: associate
+alt authenticated or associated
+note over mac80211,driver: cleanup like for authenticate
+end
+userspace-> mac80211 : 인증 된 또는 연결된 연관
+mac80211 이상의 드라이버, 드라이버 : 인증을위한 클린업
+end
+
+alt not previously authenticated (FT)
+mac80211->driver: config(channel, channel type)
+mac80211->driver: bss_info_changed(set BSSID, basic rate bitmap)
+mac80211->driver: sta_state(AP, exists)
+mac80211->driver: sta_state(AP, authenticated)
+end
+mac80211->driver: TX assoc
+driver->mac80211: RX assoc response
+note over mac80211: init rate control
+mac80211->driver: sta_state(AP, associated)
+
+이전에 인증되지 않은 고도 (FT)
+mac80211-> 드라이버 : config (채널, 채널 유형)
+mac80211-> 드라이버 : bss_info_changed (BSSID, 기본 속도 비트 맵 설정)
+mac80211-> 드라이버 : sta_state (AP, 존재)
+mac80211-> 드라이버 : sta_state (AP, 인증 됨)
+end
+mac80211-> 드라이버 : TX assoc
+드라이버 -> mac80211 : RX assoc 응답
+mac80211 이상의 노트 : init rate control
+mac80211-> 드라이버 : sta_state (AP, 관련)
+
+
+alt not using WPA
+mac80211->driver: sta_state(AP, authorized)
+end
+WPA를 사용하지 않음
+mac80211-> 드라이버 : sta_state (AP, 인증)
+end
+
+mac80211->driver: set up QoS parameters
+
+mac80211->driver: bss_info_changed(QoS, HT, associated with AID)
+mac80211->userspace: associated
+mac80211-> driver : QoS 매개 변수 설정
+
+mac80211-> 드라이버 : bss_info_changed (QoS, HT, AID와 연결됨)
+mac80211-> userspace : 관련
+
+note left of userspace: associated now
+userspace의 왼쪽에 메모 남기기 : 지금 연결됨
+
+alt using WPA
+note over userspace
+do 4-way-handshake
+(data frames)
+end note
+userspace->mac80211: authorized
+mac80211->driver: sta_state(AP, authorized)
+end
+WPA를 사용하는 alt
+사용자 공간 오버플로는 4 방향 핸드 셰이크 (데이터 프레임) 끝말을 수행합니다.
+userspace-> mac80211 : 승인 됨
+mac80211-> 드라이버 : sta_state (AP, 인증)
+end
+
+userspace->mac80211: deauthenticate/disassociate
+mac80211->driver: stop BA sessions
+mac80211->driver: TX deauth/disassoc
+mac80211->driver: flush frames
+mac80211->driver: sta_state(AP,associated)
+mac80211->driver: sta_state(AP,authenticated)
+mac80211->driver: sta_state(AP,exists)
+mac80211->driver: sta_state(AP,not-exists)
+mac80211->driver: turn off powersave
+mac80211->driver: bss_info_changed(clear BSSID, not associated, no QoS, ...)
+mac80211->driver: config(channel type to non-HT)
+mac80211->userspace: disconnected
+
+userspace-> mac80211 : 인증 해제 / 해체
+mac80211-> 드라이버 : BA 세션 중지
+mac80211-> 드라이버 : TX deauth / disassoc
+mac80211-> driver : 플러시 프레임
+mac80211-> 드라이버 : sta_state (AP, 관련)
+mac80211-> 드라이버 : sta_state (AP, 인증 됨)
+mac80211-> 드라이버 : sta_state (AP, 존재)
+mac80211-> 드라이버 : sta_state (AP, 존재하지 않음)
+mac80211-> 드라이버 : 절전 모드 해제
+mac80211-> 드라이버 : bss_info_changed (클리어 BSSID, 관련 없음, QoS 없음 ...)
+mac80211-> driver : config (채널 유형을 non-HT로 설정)
+mac80211-> userspace : 연결이 끊어졌습니다.

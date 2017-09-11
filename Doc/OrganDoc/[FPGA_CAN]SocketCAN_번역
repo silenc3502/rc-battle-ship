@@ -1,0 +1,293 @@
+SocketCAN - The official CAN API of the Linux kernel
+SocketCAN - Linux 커널의 공식 CAN API
+Marc Kleine-Budde, Pengutronix
+
+Linux 커널의 공식 CAN API 인 SocketCAN은 3년 전부터 커널에 포함되었습니다. 한편 공식 Linux 저장소에는 다양한 아키텍처 및 버스 유형에 사용되는 모든 주요 CAN 칩셋용 장치 드라이버가 있습니다. SocketCAN은 사용자에게 CAN 기반 통신 및 구성을 위한 하드웨어 독립적 소켓 기반 API뿐만 아니라 멀티유저 사용기능을 제공합니다. 이 글에서는 SocketCAN에서 사용되는 소켓 기반 접근법에 동기 부여에 중점을 두고 다른 지원되는 Linux CAN 스택과 비교할 때 특히 지원 및 반대 주장과 현재 제한 사항에 대한 논의를 계속합니다. 일반적인 CAN 드라이버의 구조와 의무에 대해 자세히 살펴 보겠습니다. 원시 CAN 프레임 (SOCK_RAW)을 송수신하기 위한 가장 보편적인 userspace 프로토콜의 사용법은 간단한 프로그램으로 설명되어 있습니다. 이 논문은 isotp 및 J1939 프로토콜 구현과 같은 향후 기고 및 향상에 대한 전망에 대해 언급하면서 마무리됩니다.
+
+
+CAN 장치용 소켓 기반 네트워킹 스택의 첫번째 아이디어는 2002 년으로 거슬러 올라갑니다. 그 당시에는 Linux 용 CAN 구현이 몇 가지 있었지만 일부는 여전히 사용 가능합니다.
+
+이들은 고전적인 문자 장치 방식을 취하고, 각 CAN 컨트롤러는 직렬 장치 드라이버와 비슷한 장치 노드를 형성하며 Linux 네트워킹 스택을 무시합니다. 이러한 장치 노드는 CAN 프레임을 송수신하고 CAN 컨트롤러를 구성하기 위한 간단하고도 일정한 추상 인터페이스를 제공합니다. 
+
+이러한 프로젝트 중 일부는 커뮤니티 주도형이며 다른 일부는 하드웨어 공급 업체에서 제공합니다. 비표준 Linux CAN 드라이버 모델 접근 방식은 몇 가지 단점을 야기했습니다
+
+- CAN 하드웨어 벤더의 변경은 CAN 어플리케이션의 변경을 촉구합니다.
+- 더 높은 프로토콜 수준과 복잡한 필터링은 userspace 응용 프로그램에서 구현되어야합니다.
+- 한 번에 하나의 응용 프로그램만 CAN 인터페이스를 사용할 수 있습니다.
+
+
+
+
+
+Evolution of the character device drivers
+문자 장치 드라이버의 진화
+
+OCERA 프로젝트의 일부인 LinCAN은 원래 "Arnoud Westenberg"가 만든 "can-0.7.1"을 기반으로 이미 언급된 단점을 해결합니다. 특히 CAN 인터페이스당 단일 애플리케이션에 대한 제한은 "FIFO의 지향 그래프"에 기반한 "메시지 처리" 레이어를 추가함으로써 제거되었습니다.
+
+The Linux networking subsystem
+리눅스 네트워킹 서브 시스템
+
+TCP / IP 프로토콜을 구현하는 것으로 널리 알려진 Linux 네트워킹 하위 시스템은 매우 유연합니다. IPv6 및 IPv4 옆에는 ATM, ISDN 및 공식 Linux Bluetooth 스택의 커널 부분과 같은 몇 가지 다른 네트워킹 프로토콜이 포함되어 있습니다.
+
+
+
+
+위의 그림은 웹 또는 ftp 서버를 예로 들어 리눅스 커널 내의 다른 네트워킹 계층을 보여줍니다.
+
+응용 프로그램 수준에서 시작하여 커널에 대한 인터페이스를 정의하는 표준 POSIX 소켓 API가 있습니다. 아래는 다른 네트워킹 프로토콜을 구현하는 프로토콜 패밀리 (여기서는 PF_INET)로 구성된 프로토콜 계층을 따릅니다. 각 패밀리 내에서 여러 프로토콜 (여기서는 TCP 및 UDP)을 찾을 수 있습니다. 이 수준 아래에는 라우팅 및 패킷 스케줄링 계층이 있으며 네트워크 하드웨어 용 드라이버로 구성된 마지막 계층이 있습니다.
+
+
+A socket-based approach
+소켓 기반 접근법
+
+CAN 네트워킹을 Linux 커널에 적용하기 위해 CAN 지원이 기존 네트워킹 서브 시스템에 추가되었습니다. 이것은 주로 두 부분으로 구성됩니다.
+1. CAN_RAW 프로토콜을 포함하는 새로운 프로토콜군 PF_CAN
+2. 다양한 CAN 네트워킹을 위한 드라이버 장치.	
+
+이러한 접근 방식은 앞에서 언급 한 문자 장치 기반 솔루션에 비해 몇 가지 설계상의 이점을 제공합니다.
+
+- 응용 프로그램 개발자를 돕기 위해 기존의 POSIX 소켓 API를 활용합니다.
+- 새로운 프로토콜 패밀리는 설정된 추상화 레이어, 위의 소켓 레이어 및 아래의 패킷 스케줄러에 대해 개발됩니다.
+- CAN 네트워크 장치 드라이버는 이더넷 드라이버와 동일한 표준화 된 네트워킹 드라이버 모델을 구현합니다.
+- 통신 프로토콜과 복잡한 필터링은 커널 내부에서 구현 될 수 있습니다.
+- 단일 CAN 인터페이스에 다중 사용자 및 다중 애플리케이션 액세스를 지원할 수 있습니다.
+
+Multi-application support
+멀티 애플리케이션 지원
+	
+새로운 프로토콜군 PF_CAN과 CAN_RAW 프로토콜은 다중 CAN 프레임을 지원하여 관심있는 모든 애플리케이션에 전송됩니다.
+
+그러나 지역 발신 CAN 메시지는 어떻습니까? CAN을 통해 연결된 두 개의 임베디드 시스템을 고려해보십시오. 두 시스템 모두 SocketCAN 기반 응용 프로그램을 실행 중입니다. 한 애플리케이션의 프레임은 CAN 버스를 통해 원격 시스템의 다른 애플리케이션에 도달하고 반대의 경우도 마찬가지입니다. 이러한 애플리케이션이 하나의 시스템에 집중되어 있다면 이 두 애플리케이션 간의 CAN 메시지를 교환해야합니다. 일련의 프레임을 보장하기 위해, 로컬 발신 메시지는 전선에서의 전송이 완료 될 때 RX 큐에 저장됩니다. 이것은 일반적으로 송신 CAN 컨트롤러의 송신 완료 인터럽트 핸들러에서 수행됩니다. Echo 가능 드라이버는 netdevice의 플래그 필드에 "IFF_ECHO"플래그를 설정합니다. 그렇지 않으면 프레임 워크가 에코를 에뮬레이션하려고 시도하지만 CAN 프레임 순서가 더 이상 보장 될 수 없습니다. 
+
+Drawbacks and limitations
+단점과 한계 
+
+훨씬 더 큰 패키지 (최소 이더넷 프레임의 경우 64 바이트, can 프레임의 최대 8 데이터 바이트에 비해)로 설계된 네트워킹 서브 시스템을 사용하면보다 간단한 문자 디바이스 솔루션보다 많은 메모리 오버 헤드가 발생합니다
+
+또한 위의 그림에서 알 수 있듯이 패킷 스케줄러는 모든 네트워킹 장치 (이더넷 및 CAN) 간의 공유 리소스입니다. 이더넷의 트래픽이 많으면 결국 CAN 트래픽이 지연됩니다. 보다 자세한 분석은 "리눅스 CAN 드라이버의 타이밍 분석" 을 보십시오.
+
+SocketCAN은 들어오는 CAN 프레임의 하드웨어 필터링을 지원하지 않습니다. 현재 모든 CAN 프레임이 수신되어 애플리케이션 네트워킹 필터 레이어를 처리하는 CAN 네트워킹 레이어 코어로 전달됩니다. 하드웨어 필터를 활성화하면 수신 된 CAN 트래픽이 전반적으로 감소하지만 전역 설정이됩니다. - 애플리케이션 별 필터와는 대조적으로 - 다중 사용자, 다중 애플리케이션 시나리오에서 하드웨어 필터는 전반적인 CAN 설계가 완료 될 때까지는 실현 가능하지 않으며
+시스템에서 어떤 CAN 데이터가 필요한지 잘 알려져 있습니다.
+
+CAN networking device drivers
+CAN 네트워킹 장치 드라이버
+
+높은 수준의 추상화를 통해 CAN 네트워킹 장치 드라이버의 기능을 다음과 같이 설명 할 수 있습니다.
+- 커널 드라이버는 하드웨어를 초기화하고 구성하며,
+- 들어오는 CAN 프레임은 수신되어 상위 계층으로 푸시되며,
+- 상위 계층에서 나가는 프레임을 얻은 다음 와이어로 전송합니다.
+
+위에 나열된 요구 사항은 이더넷 프레임 대신 CAN 프레임이 처리된다는 점을 제외하면 이더넷 드라이버와 거의 동일합니다. 설계 결정은 다음과 같습니다 : CAN 네트워크 드라이버용 Linux 커널에서 이더넷 드라이버의 이미 설정된 표준 추상화를 활용합니다.
+
+Hardware initialization
+하드웨어 초기화
+
+하드웨어의 초기화 및 구성은 일반적으로 두 단계로 이루어집니다.
+
+1. "probe ()" 함수를 통해서만 한 번.
+2. 인터페이스가 "open ()"콜백을 통해 열릴 때마다. (“ifconfig can0 up”)
+
+드라이버가 로드 될 때, 커널은 드라이버의 "probe ()" 함수를 적합한 장치 당 한 번 호출합니다
+이 함수는 기본 초기화를 수행합니다. 주소 범위, IRQ 번호, 클럭 및 메모리와 같은 모든 리소스가 요청됩니다.
+
+static int flexcan_probe(
+ struct platform_device *pdev)
+{
+struct net_device *dev;
+struct flexcan_priv *priv;
+[...]
+dev = alloc_candev(
+ sizeof(struct flexcan_priv), 0);
+dev->netdev_ops =
+ &flexcan_netdev_ops;
+[...]
+priv = netdev_priv(dev);
+priv->can.bittiming_const =
+&flexcan_bittiming_const;
+[...]
+return register_candev(dev);
+}
+
+목록에 표시된대로 드라이버는 Linux 네트워킹 스택의 네트워킹 장치를 설명하는 구조체를 "struct net_device" 로 할당합니다. 여러 변수가 할당되며, 가장 중요한 것은 "netdev_ops"입니다.이 인터페이스에는 인터페이스의 관리 기능에 대한 포인터가 들어 있습니다. CAN 디바이스는 대개 세 가지만 구현합니다.
+
+- "open"및 "close" 콜백은 위에서 언급 한 것처럼 하드웨어 구성의 두 번째 부분을 가리 킵니다.
+- "start_xmit"은 CAN 프레임이 어플리케이션에서 나오고 드라이버에 의해 전송되어야 할 때 패킷 스케줄러에 의해 호출되기 시작합니다.
+
+다음 중요한 구조는 "struct bittiming_const"입니다. 이는 시간 퀀텀의 여러 배, 즉 클럭 속도에 독립적인 방식으로 하드웨어의 비트 타이밍 제한을 설명합니다. (tseg1, tseg2, …)
+CAN 프레임 워크는 요청 된 비트 레이트, 전류가 클럭 및 비트 타이밍 파라미터를 기반으로 실제 비트 타이밍 파라미터를 계산하는 알고리즘을 포함합니다. 
+
+마지막으로 "register_candev ()"를 사용하면 CAN 장치가 네트워킹 하위 시스템에 등록됩니다. 이제 장치는 사용 가능한 인터페이스 목록 ( "ifconfig -a")에서 CAN 인터페이스 ( "can0")로 표시되지만 비활성 상태로 유지됩니다. 
+하드웨어 초기화의 두 번째 부분은 사용자가 CAN 인터페이스를 활성화하면 수행됩니다. 네트워크 계층은 이전에 등록된 "open ()"함수를 호출합니다. 이 경우 드라이버는 구성을 완료해야하며 CAN 프레임을 송수신 할 준비가 되어 있어야합니다. 여기에는 보통 하드웨어에 원하는 비트 전송률을 프로그래밍하고 인터럽트를 요청하며 인터럽트 소스를 활성화하는 작업이 포함됩니다.
+
+CAN frame reception 
+CAN 프레임 수신
+
+수신 경로를 보면 단일 프레임 수신 버퍼 (또는 메일 박스)가 있는 CAN 컨트롤러와 여러 개의 수신 컨트롤러가 있는 컨트롤러를 구별 할 수 있습니다. SocketCAN은 수신 필터를 (아직) 지원하지 않으므로 모든 버퍼와 메일함을 모든 CAN 프레임을 허용하도록 구성해야합니다. 하드웨어 기능이 허용되면 여러 버퍼를 FIFO 또는 순환 버퍼에 연결할 수 있습니다. 드라이버는 수신되는 CAN 프레임의 순서를 보존하기 위해 주의를 기울여야합니다. 더 높은 수준의 프로토콜과 응용 프로그램은 정확한 프레임 시퀀스에 의존하기 때문입니다.
+
+CAN 프레임을 수신하면 컨트롤러는 인터럽트를 발행하고 Linux는 등록된 인터럽트 처리기를 실행합니다. 들어오는 패킷을 처리 할 수 있는 두 가지 방법이 있습니다.
+
+1. IRQ 핸들러에서 즉시 프레임을 읽거나
+2. 소프트웨어 IRQ 컨텍스트에서 나중에 여러 프레임을 읽는 루틴을 예약하십시오. 
+이 기술을 "NAPI"라고합니다.
+
+즉각적인 프레임 처리는 작은 수신 FIFO가 있는 단일 수신 버퍼 또는 로우 엔드 하드웨어가 있는 컨트롤러에서 사용됩니다. 
+
+딜레이 처리는 NAPI 처리기가 시작될 때까지 들어오는 CAN 프레임을 버퍼링 할 수 있는 큰 RX FIFO가 있는 하드웨어에 따라 다릅니다. 이 절차는 인터럽트 처리기 내부에서 보내는 시간을 줄여 시스템의 반응성을 높이고 IRQ 로드를 줄이는 데 도움이됩니다. 예약된 단일 NAPI 요청 내에서 여러 CAN 프레임을 처리 할 수 있습니다.
+
+
+다음 목록은 단일 프레임을 읽고 이를 상위 계층인 패킷 스케줄러로 전달하는 단계를 보여줍니다. 
+
+static int flexcan_read_frame(
+ struct net_device *dev)
+{
+struct can_frame *cf;
+
+struct sk_buff *skb;
+
+skb = alloc_can_skb(dev, &cf);
+flexcan_read_fifo(dev, cf);
+netif_receive_skb(skb);
+
+return 1;
+}
+여기서 중요한 두 가지 데이터 유형이 사용됩니다.
+
+- "struct sk_buff" 네트워킹 스택의 소켓 버퍼를 설명하는 Linux 커널의 일반 데이터 유형입니다. 여기에는 메타 데이터와 페이로드가 포함됩니다.
+- "struct can_frame" CAN 프레임의 SocketCAN 추상화는 CAN id, 데이터 길이 코드(dlc) 및 8 개의 데이터 바이트로 구성됩니다.
+
+첫째, 드라이버는 버퍼를 CAN 프레임으로 표시하고 "cf"가 버퍼의 페이로드 내에서 "struct can_frame"을 가리키도록 "alloc_can_skb()" 함수를 사용하여 일반 버퍼를 할당합니다. 이 예제에서 하드웨어 종속 helper 함수 "flexcan_read_fifo()"는 컨트롤러의 FIFO에서 CAN 프레임을 읽고 "can_frame"에 저장하고 따라서 일반 버퍼에 저장합니다. 이와 같은 NAPI 가능 드라이버에서 "netif_receive_skb ()"함수는 CAN 프레임을 패킷 스케줄러로 푸시하는 데 사용됩니다. IRQ 핸들러에서 버퍼는 대신 "netif_rx ()" 함수를 통해 전달됩니다.  
+
+CAN frame transmission 
+CAN 프레임 전송
+
+CAN 프레임의 전송은 보통 userspace에서 로컬 시스템에서 시작됩니다.
+예를 들어, 응용 프로그램이 원시 CAN 프레임 ( "struct can_frame"으로 추상화 됨 )을 보내려고 하면 CAN_RAW 소켓이 열리고 "write ()" 또는 "send ()" 시스템 호출이 실행됩니다. CAN_RAW 프로토콜은 CAN 프레임을 커널 공간에 복사하고 이를 패킷 스케줄러에 전달합니다. 소프트 IRQ 컨텍스트에서 패킷 스케줄러를 실행하는 동안 드라이버의 "start_xmit ()" 함수가 호출되어 CAN 프레임의 전송을 활성화합니다.
+
+위의 설명 된 순서에 흐름 제어가 없습니다. 응용 프로그램은 CAN 하드웨어가 전송할 수 있는 것보다 빠르게 CAN 프레임을 생성 할 수 있습니다. CAN 네트워킹 서브 시스템은 패킷 스케줄러 위의 계층에서 흐름 제어를 구현합니다. 드라이버에는 패킷 스케줄러에서 오는 CAN 프레임의 흐름을 제어하는 간단하고 표준적인 인터페이스가 있습니다. 
+
+각 인터페이스는 패킷 스케줄러에 전송 큐를 가지고 있습니다. 네트워크 인터페이스가 활성화되는 동안 (위의 "open ()" 콜백 참조) 전송 대기열이 시작됩니다. 패킷 스케줄러는 드라이버의 "start_xmit ()"함수를 호출하여 패킷 전송을 트리거 할 수 있습니다. 하드웨어에 전송 버퍼가 더 이상 남아 있지 않으면 드라이버는 대기열을 중지해야합니다.
+하나의 전송 버퍼만을 사용하는 드라이버의 "xmit ()"기능은 다음과 같습니다.
+
+static int flexcan_start_xmit (
+struct sk_buff *skb,
+struct net_device *dev)
+{
+struct can_frame *cf =
+ (struct can_frame *)skb->data;
+
+netif_stop_queue(dev);
+can_put_echo_skb(skb, dev, 0);
+flexcan_write_frame(dev, cfe);
+
+return NETDEV_TX_OK;
+}
+"xmit ()" 함수의 첫번째 인수는 전송되어야하는 일반 소켓 버퍼에 대한 포인터입니다. 버퍼의 페이로드 ( "skb-> data")는 표준 SocketCAN 프레임을 포함합니다. 드라이버가 하나의 TX 버퍼만을 사용하기 때문에 대기열은 이제 "netif_stop_queue ()" 함수를 사용하여 중지됩니다. 
+그런 다음 버퍼는 나중에 "can_put_echo_skb ()"를 울리기 위해 대기합니다 (위의 다중 응용 프로그램 지원 참조). 마지막으로 CAN 프레임은 하드웨어 종속 함수 "flexcan_write_frame ()"에 의해 전송됩니다. NETDEV_TX_OK를 반환하면 패킷 스케줄러로의 성공적인 전송 시작을 나타냅니다. 인터럽트 처리기의 "전송 완료" 부분은 아래와 같습니다.
+
+static irqreturn_t flexcan_irq(
+int irq, void *dev_id)
+{
+struct net_device *dev = dev_id;
+u32 reg_iflag1;
+
+[...]
+
+/* transmission complete IRQ */
+if (reg_iflag1 & FLEXCAN_TX_IRQ) {
+
+flexcan_ack_tx_irq(dev);
+can_get_echo_skb(dev, 0);
+netif_wake_queue(dev);
+
+}
+ return IRQ_HANDLED;
+}
+
+전송 완료 인터럽트가 감지되면, 먼저 확인 응답 한 다음 이전에 대기중인 소켓 버퍼가 "can_get_echo_skb ()"와 함께 다시 에코됩니다. 유일하게 하드웨어 TX 버퍼가 사용 가능하므로 대기열은 "netif_wake_queue ()"로 깨어나야합니다.
+
+하드웨어가 TX FIFO를 구현하는 경우, 드라이버는 TX FIFO도 사용할 수 있습니다. TX FIFO는 하드웨어 FIFO의 모든 버퍼가 채워질 때까지 활성 상태로 유지되고 FIFO에 다시 여유 공간이 있으면 다시 활성화됩니다. 한 번에 둘 이상의 TX 버퍼를 사용하는 경우 드라이버는 CAN 경로의 순서를 유지 관리하기 위해 RX 경로와 유사합니다.
+
+
+
+
+Applications and the CAN_RAW protocol
+애플리케이션 및 CAN_RAW 프로토콜
+
+CAN 버스에 접근하는 가장 간단한 방법은 원시 CAN 프레임을 송수신하는 것입니다. 문자 디바이스 드라이버와 유사한 이 프로그래밍 인터페이스는 CAN_RAW 프로토콜에 의해 제공됩니다.
+응용 프로그램 개발자는 네트워킹 소켓을 만들고 표준 시스템 호출을 사용하여 "struct can_frame"으로 표시된 CAN 프레임을 읽고 씁니다. CAN 프레임은 다음과 같이 정의됩니다.
+
+/* special address description flags  for the CAN_ID */
+
+/* EFF/SFF is set in the MSB */
+#define CAN_EFF_FLAG 0x80000000U
+
+/* remote transmission request */
+#define CAN_RTR_FLAG 0x40000000U
+
+/* error frame */
+#define CAN_ERR_FLAG 0x20000000U
+
+struct can_frame {
+/* 32 bit CAN_ID + EFF/RTR/ERR flags */ 
+canid_t can_id;
+
+/* data length code: 0 .. 8 */
+__u8 can_dlc;
+__u8 data[8]
+ __attribute__((aligned(8)));
+};
+
+"can_id"는 32 비트 폭이며 CAN id를 하위 11 비트에 유지합니다. 확장 된 CAN id는 "CAN_EFF_FLAG" 플래그로 표시되며, CAN id는 하위 29 비트를 포함합니다. RTR 프레임은 "CAN_RTR_FLAG"플래그에 의해 시그널링 됩니다. "can_dlc" 는 CAN 프레임에서 사용 된 데이터 바이트 수를 정의합니다. 8 바이트의 페이로드는 "데이터" 배열에 있습니다.
+
+다음 목록은 예제 userspace 프로그램을 보여줍니다. 먼저 소켓이 열리면 "socket ()" 함수의 매개 변수가 "CAN_RAW" 소켓을 요청합니다. 그런 다음 소켓은 첫 번째 CAN 인터페이스에 "bind ()" 됩니다. CAN 프레임은 데이터로 채워지고 "write ()" 호출로 전송됩니다. CAN 프레임을 수신하려면 "read ()" 가 아날로그 방식으로 사용됩니다.
+
+/* omitted vital #includes and error checking */
+int main(int argc, char **argv)
+{
+struct ifreq ifr;
+struct sockaddr_can addr;
+struct can_frame frame;
+int s;
+
+memset(&ifr, 0x0, sizeof(ifr));
+memset(&addr, 0x0, sizeof(addr));
+memset(&frame, 0x0, sizeof(frame));
+
+/* open CAN_RAW socket */
+s = socket(PF_CAN, SOCK_RAW, CAN_RAW);
+
+/* convert interface sting "can0" into interface index */
+strcpy(ifr.ifr_name, "can0");
+ioctl(s, SIOCGIFINDEX, &ifr);
+
+/* setup address for bind */
+addr.can_ifindex = ifr.ifr_ifindex;
+addr.can_family = PF_CAN;
+
+/* bind socket to the can0 interface */
+bind(s, (struct sockaddr *)&addr, sizeof(addr));
+
+/* first fill, then send the CAN frame */
+frame.can_id = 0x23;
+strcpy((char *)frame.data, "hello");
+frame.can_dlc = 5;
+write(s, &frame, sizeof(frame));
+
+/* first fill, then send the CAN frame */
+frame.can_id = 0x23;
+strcpy((char *)frame.data, "iCC2012");
+frame.can_dlc = 7;
+write(s, &frame, sizeof(frame));
+close(s);
+
+return 0;
+
+Outlook and Conclusion
+전망과 결론
+
+커널 내부 인터페이스가 안정적이긴 하지만 계속해서 커널이 발전하고 있습니다. 기존 개념의 재평가, 개선, 새로운 기능 및 통합은 SocketCAN 코어 또는 그 드라이버보다 먼저 중단되지 않습니다. 예를 들어, 작성 당시에는 CAN 드라이버의 오류 처리가 합병정리되고 통합되었습니다.
+
+또 다른 흥미로운 주제는 이 논문에서 언급되지 않은 CAN 프로토콜 (next to CAN_RAW) 입니다. broadcast 관리자를 나타내는 CAN_BCM이 있습니다. 이것은 주로 메시지의 순환 전송이 필요한 자동차(automotive) 도메인에서 사용됩니다. 곧 출시 될 커널 버전 v3.2는 CAN 인터페이스간에 CAN 메시지를 라우팅하고 선택적으로 수정하는 커널 기반 게이트웨이/라우터인 CAN_GW를 지원합니다. 개발 중에는 공식 커널이 아닌 ISO 15765-2 CAN 전송 프로토콜을 구현하는 CAN_ISOTP가 지원됩니다. CAN 인프라를 통해 신뢰할 수 있는 지점 간 통신이 가능합니다. 자동차(automotive) 프로토콜 SAE J1939 개발이 시작되었습니다. 
+
+SocketCAN 프레임 워크는 개발자에게 사용 가능한 CAN 컨트롤러와 독립적인 원시 CAN 프레임을 송수신하기 위한 다중 애플리케이션 가능 표준 POSIX 소켓 기반 API를 제공합니다.
+또한 드라이버 개발자에게 이더넷 드라이버에서 알려진 표준 네트워크 드라이버 모델을 제공합니다. PF_CAN 프로토콜 계층은 커널 내부에서보다 복잡한 프로토콜을 구현하기 위해 CAN 프레임 송수신 및 필터링을 위한 커널 내부 인프라를 제공합니다.

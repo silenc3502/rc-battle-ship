@@ -1,0 +1,9 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Name=Network Settings
+GenericName=Demo App
+Icon=/usr/share/matrix-gui-2.0/apps/images/netsettings-icon.png
+Type=Application
+Exec=networkSettings.sh
+Categories=settings
+ProgramType=console

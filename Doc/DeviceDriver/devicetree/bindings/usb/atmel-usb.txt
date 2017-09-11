@@ -1,0 +1,240 @@
+Atmel SOC USB controllers
+
+OHCI
+
+Required properties:
+ - compatible: Should be "atmel,at91rm9200-ohci" for USB controllers
+   used in host mode.
+ - reg: Address and length of the register set for the device
+ - interrupts: Should contain ehci interrupt
+ - clocks: Should reference the peripheral, host and system clocks
+ - clock-names: Should contains two strings
+		"ohci_clk" for the peripheral clock
+		"hclk" for the host clock
+		"uhpck" for the system clock
+ - num-ports: Number of ports.
+ - atmel,vbus-gpio: If present, specifies a gpio that needs to be
+   activated for the bus to be powered.
+ - atmel,oc-gpio: If present, specifies a gpio that needs to be
+   activated for the overcurrent detection.
+
+  - compatible : 호스트 모드에서 사용되는 USB 컨트롤러의 경우 "atmel, at91rm9200-ohci"여야합니다.
+  - reg : 장치에 설정된 레지스터의 주소와 길이
+  - interrupts : ehci 인터럽트를 포함해야합니다.
+  - 클럭 : 주변 장치, 호스트 및 시스템 클럭을 참조해야합니다.
+  - clock-names : 두 개의 문자열을 포함해야합니다.
+주변 장치 클럭 "ohci_clk"
+호스트 클럭의 "hclk"
+시스템 클럭의 "uhpck"
+  - num-ports : 포트 수.
+  - atmel, vbus-gpio : 있으면 버스에 전원을 공급하기 위해 활성화해야 할 gpio를 지정합니다.
+  - atmel, oc-gpio :있는 경우, 과전류 감지를 위해 활성화해야하는 gpio를 지정합니다.
+
+usb0: ohci@00500000 {
+	compatible = "atmel,at91rm9200-ohci", "usb-ohci";
+	reg = <0x00500000 0x100000>;
+	clocks = <&uhphs_clk>, <&uhphs_clk>, <&uhpck>;
+	clock-names = "ohci_clk", "hclk", "uhpck";
+	interrupts = <20 4>;
+	num-ports = <2>;
+};
+
+
+
+
+
+
+EHCI
+
+Required properties:
+ - compatible: Should be "atmel,at91sam9g45-ehci" for USB controllers
+   used in host mode.
+ - reg: Address and length of the register set for the device
+ - interrupts: Should contain ehci interrupt
+ - clocks: Should reference the peripheral and the UTMI clocks
+ - clock-names: Should contains two strings
+		"ehci_clk" for the peripheral clock
+		"usb_clk" for the UTMI clock
+
+  - compatible : 호스트 모드에서 사용되는 USB 컨트롤러의 경우 "atmel, at91sam9g45-ehci"여야합니다.
+  - reg : 장치에 설정된 레지스터의 주소와 길이
+  - interrupts : ehci 인터럽트를 포함해야합니다.
+  - clocks : 주변 장치 및 UTMI 클럭을 참조해야합니다.
+  - clock-names : 두 개의 문자열을 포함해야합니다.
+	주변 장치 클럭 "ehci_clk"
+	UTMI 시계의 경우 "usb_clk"
+
+
+usb1: ehci@00800000 {
+	compatible = "atmel,at91sam9g45-ehci", "usb-ehci";
+	reg = <0x00800000 0x100000>;
+	interrupts = <22 4>;
+	clocks = <&utmi>, <&uhphs_clk>;
+	clock-names = "usb_clk", "ehci_clk";
+};
+
+AT91 USB device controller
+
+Required properties:
+ - compatible: Should be one of the following
+	       "atmel,at91rm9200-udc"
+	       "atmel,at91sam9260-udc"
+	       "atmel,at91sam9261-udc"
+	       "atmel,at91sam9263-udc"
+ - reg: Address and length of the register set for the device
+ - interrupts: Should contain macb interrupt
+ - clocks: Should reference the peripheral and the AHB clocks
+ - clock-names: Should contains two strings
+		"pclk" for the peripheral clock
+		"hclk" for the AHB clock
+
+Optional properties:
+ - atmel,vbus-gpio: If present, specifies a gpio that needs to be
+   activated for the bus to be powered.
+
+필수 속성 :
+  - compatible : 다음 중 하나 여야합니다.
+		"atmel,at91rm9200-udc"
+	       "atmel,at91sam9260-udc"
+	       "atmel,at91sam9261-udc"
+	       "atmel,at91sam9263-udc"
+- reg : 장치에 설정된 레지스터의 주소와 길이
+  - interrupts : macb 인터럽트를 포함해야합니다.
+  - 클럭 : 주변 장치 및 AHB 클럭을 참조해야합니다.
+  - clock-names : 두 개의 문자열을 포함해야합니다.
+	주변 장치 클럭 "pclk"
+	AHB 시계 용 "hclk"
+
+
+선택적 속성 :
+  - atmel, vbus-gpio : 있으면 버스에 전원을 공급하기 위해 활성화해야 할 gpio를 지정합니다.
+
+
+usb1: gadget@fffa4000 {
+	compatible = "atmel,at91rm9200-udc";
+	reg = <0xfffa4000 0x4000>;
+	interrupts = <10 4>;
+	clocks = <&udc_clk>, <&udpck>;
+	clock-names = "pclk", "hclk";
+	atmel,vbus-gpio = <&pioC 5 0>;
+};
+
+Atmel High-Speed USB device controller
+
+Required properties:
+ - compatible: Should be one of the following
+	       "atmel,at91sam9rl-udc"
+	       "atmel,at91sam9g45-udc"
+	       "atmel,sama5d3-udc"
+ - reg: Address and length of the register set for the device
+ - interrupts: Should contain usba interrupt
+ - clocks: Should reference the peripheral and host clocks
+ - clock-names: Should contains two strings
+		"pclk" for the peripheral clock
+		"hclk" for the host clock
+ - ep childnode: To specify the number of endpoints and their properties.
+
+필수 속성 :
+  - compatible : 다음 중 하나 여야합니다.
+		"atmel,at91sam9rl-udc"
+	    "atmel,at91sam9g45-udc"
+	    "atmel,sama5d3-udc"
+  - reg : 장치에 설정된 레지스터의 주소와 길이
+  - 인터럽트 : usba 인터럽트를 포함해야합니다.
+  - 클럭 : 주변 장치 및 호스트 클럭을 참조해야합니다.
+  - clock-names : 두 개의 문자열을 포함해야합니다.
+주변 장치 클럭 "pclk"
+호스트 클럭의 "hclk"
+  - ep childnode : 엔드 포인트의 수와 특성을 지정합니다.
+
+
+Optional properties:
+ - atmel,vbus-gpio: If present, specifies a gpio that allows to detect whether
+   vbus is present (USB is connected).
+
+Required child node properties:
+ - name: Name of the endpoint.
+ - reg: Num of the endpoint.
+ - atmel,fifo-size: Size of the fifo.
+ - atmel,nb-banks: Number of banks.
+ - atmel,can-dma: Boolean to specify if the endpoint support DMA.
+ - atmel,can-isoc: Boolean to specify if the endpoint support ISOC.
+
+선택적 속성 :
+  - atmel, vbus-gpio : vbus가 있는지 여부를 감지 할 수있는 gpio를 지정합니다 (USB가 연결됨).
+
+필수 자식 노드 등록 정보 :
+  - name : 엔드 포인트의 이름.
+  - reg : 끝점 번호.
+  - atmel, fifo-size : fifo 크기입니다.
+  - atmel, nb-banks : banks의 수.
+  - atmel, can-dma : 끝점에서 DMA를 지원하는지 여부를 지정하는  boolean입니다.
+  - atmel, can-isoc : 끝점에서 ISOC를 지원하는지 여부를 지정하는  boolean입니다.
+
+
+
+
+
+usb2: gadget@fff78000 {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	compatible = "atmel,at91sam9rl-udc";
+	reg = <0x00600000 0x80000
+	       0xfff78000 0x400>;
+	interrupts = <27 4 0>;
+	clocks = <&utmi>, <&udphs_clk>;
+	clock-names = "hclk", "pclk";
+	atmel,vbus-gpio = <&pioB 19 0>;
+
+	ep0 {
+		reg = <0>;
+		atmel,fifo-size = <64>;
+		atmel,nb-banks = <1>;
+	};
+
+	ep1 {
+		reg = <1>;
+		atmel,fifo-size = <1024>;
+		atmel,nb-banks = <2>;
+		atmel,can-dma;
+		atmel,can-isoc;
+	};
+
+	ep2 {
+		reg = <2>;
+		atmel,fifo-size = <1024>;
+		atmel,nb-banks = <2>;
+		atmel,can-dma;
+		atmel,can-isoc;
+	};
+
+	ep3 {
+		reg = <3>;
+		atmel,fifo-size = <1024>;
+		atmel,nb-banks = <3>;
+		atmel,can-dma;
+	};
+
+	ep4 {
+		reg = <4>;
+		atmel,fifo-size = <1024>;
+		atmel,nb-banks = <3>;
+		atmel,can-dma;
+	};
+
+	ep5 {
+		reg = <5>;
+		atmel,fifo-size = <1024>;
+		atmel,nb-banks = <3>;
+		atmel,can-dma;
+		atmel,can-isoc;
+	};
+
+	ep6 {
+		reg = <6>;
+		atmel,fifo-size = <1024>;
+		atmel,nb-banks = <3>;
+		atmel,can-dma;
+		atmel,can-isoc;
+	};
+};

@@ -1,0 +1,937 @@
+Introduction
+============
+
+The V4L2 control API seems simple enough, but quickly becomes very hard to
+implement correctly in drivers. But much of the code needed to handle controls
+is actually not driver specific and can be moved to the V4L core framework.
+V4L2 제어 API는 충분히 단순해 보이지만, 드라이버에서 정확하게 구현하는데에는 매우 어려워집니다.
+그러나 제어 처리에 필요한 많은 코드는 실제로는 드라이버 특유의 것이 아니라서 V4L 코어 프레임 워크로 이동할 수 있습니다.
+
+After all, the only part that a driver developer is interested in is:
+결국, 드라이버 개발자가 관심을 갖는 유일한 부분은 다음과 같다 : 
+
+1) How do I add a control?
+어떻게 제어를 추가하느냐?
+2) How do I set the control's value? (i.e. s_ctrl)
+어떻게 제어 값을 설정하느냐? (예 : s_ctrl)
+
+And occasionally:
+그리고 때때로:
+
+3) How do I get the control's value? (i.e. g_volatile_ctrl)
+어떻게 제어 값을 얻는냐? (예 : g_volatile_ctrl)
+4) How do I validate the user's proposed control value? (i.e. try_ctrl)
+어떻게 사용자 제안 제어 값을 검증하느냐? (예 : try_ctrl)
+
+All the rest is something that can be done centrally.
+나머지는 모두 중앙에서 수행 할 수있는 작업입니다.
+
+The control framework was created in order to implement all the rules of the
+V4L2 specification with respect to controls in a central place. And to make
+life as easy as possible for the driver developer.
+제어 프레임 워크는 중앙 위치의 제어와 관련된 모든 규칙의 V4L2 규격을 구현하기 위해 만들어졌습니다.
+그리고 드라이버 개발자가 가능한 한 쉽게 개발하기 위해서 만들어졌습니다. 
+
+Note that the control framework relies on the presence of a struct v4l2_device
+for V4L2 drivers and struct v4l2_subdev for sub-device drivers.
+컨트롤 프레임 워크는 V4L2 드라이버의 경우 struct v4l2_device 그리고 하위 장치 드라이버의 경우 struct v4l2_subdev의 존재 여부에 의존합니다.
+
+
+Objects in the framework
+========================
+프레임 워크의 객체
+
+There are two main objects:
+두 개의 주요 객체가 있다:
+
+The v4l2_ctrl object describes the control properties and keeps track of the
+control's value (both the current value and the proposed new value).
+v4l2_ctrl 객체는 컨트롤 속성을 설명하고 컨트롤의 값을 추적한다 (현재 값과 제안 된 새 값 모두).
+
+v4l2_ctrl_handler is the object that keeps track of controls. It maintains a
+list of v4l2_ctrl objects that it owns and another list of references to
+controls, possibly to controls owned by other handlers.
+v4l2_ctrl_handler는 컨트롤을 추적하는 객체입니다. 그것은 자신이 소유 한 v4l2_ctrl 객체 목록 및 컨트롤, 가능한한 다른 핸들러가 소유한 컨트롤의 다른 참조 목록을 
+유지합니다.
+
+
+Basic usage for V4L2 and sub-device drivers
+===========================================
+V4L2 및 하위 장치 드라이버의 기본 사용법
+
+1) Prepare the driver:
+드라이버 준비하기 :
+
+1.1) Add the handler to your driver's top-level struct:
+드라이버의 최상위 구조체에 핸들러를 추가합니다.
+
+	struct foo_dev {
+		...
+		struct v4l2_ctrl_handler ctrl_handler;
+		...
+	};
+
+	struct foo_dev *foo;
+
+1.2) Initialize the handler:
+핸들러를 초기화하십시오.
+
+	v4l2_ctrl_handler_init(&foo->ctrl_handler, nr_of_controls);
+
+  The second argument is a hint telling the function how many controls this
+  handler is expected to handle. It will allocate a hashtable based on this
+  information. It is a hint only.
+두 번째 인수는 얼마나 많은 컨트롤을 이 핸들러가 처리할지를 그 기능에게 알리는 힌트입니다.
+그것은 이것에 근거해 해시 테이블을 할당합니다. 그것은 단지 힌트 일뿐입니다.
+
+1.3) Hook the control handler into the driver:
+컨트롤 핸들러를 드라이버에 연결합니다.
+
+1.3.1) For V4L2 drivers do this:
+V4L2 드라이버의 경우 다음을 수행하십시오.
+
+	struct foo_dev {
+		...
+		struct v4l2_device v4l2_dev;
+		...
+		struct v4l2_ctrl_handler ctrl_handler;
+		...
+	};
+
+	foo->v4l2_dev.ctrl_handler = &foo->ctrl_handler;
+
+  Where foo->v4l2_dev is of type struct v4l2_device.
+
+  Finally, remove all control functions from your v4l2_ioctl_ops (if any):
+  vidioc_queryctrl, vidioc_query_ext_ctrl, vidioc_querymenu, vidioc_g_ctrl,
+  vidioc_s_ctrl, vidioc_g_ext_ctrls, vidioc_try_ext_ctrls and vidioc_s_ext_ctrls.
+  Those are now no longer needed.
+마지막으로, v4l2_ioctl_ops (있는 경우)에서 모든 제어 기능을 제거하십시오 :
+vidioc_queryctrl, vidioc_query_ext_ctrl, vidioc_querymenu, vidioc_g_ctrl, vidioc_s_ctrl, vidioc_g_ext_ctrls, vidioc_try_ext_ctrls 및 vidioc_s_ext_ctrls.
+이제는 더 이상 필요하지 않습니다.
+
+1.3.2) For sub-device drivers do this:
+하위 장치 드라이버의 경우 다음을 수행하십시오.
+
+	struct foo_dev {
+		...
+		struct v4l2_subdev sd;
+		...
+		struct v4l2_ctrl_handler ctrl_handler;
+		...
+	};
+
+	foo->sd.ctrl_handler = &foo->ctrl_handler;
+
+  Where foo->sd is of type struct v4l2_subdev.
+
+  And set all core control ops in your struct v4l2_subdev_core_ops to these
+  helpers:
+그리고 struct v4l2_subdev_core_ops에 있는 모든 코어 컨트롤 작업을 이러한 helper에 설정하십시오 :
+
+	.queryctrl = v4l2_subdev_queryctrl,
+	.querymenu = v4l2_subdev_querymenu,
+	.g_ctrl = v4l2_subdev_g_ctrl,
+	.s_ctrl = v4l2_subdev_s_ctrl,
+	.g_ext_ctrls = v4l2_subdev_g_ext_ctrls,
+	.try_ext_ctrls = v4l2_subdev_try_ext_ctrls,
+	.s_ext_ctrls = v4l2_subdev_s_ext_ctrls,
+
+  Note: this is a temporary solution only. Once all V4L2 drivers that depend
+  on subdev drivers are converted to the control framework these helpers will
+  no longer be needed.
+참고 : 이는 일시적인 해결책 일뿐입니다. 일단 subdev 드라이버에 의존하는 모든 V4L2 드라이버는 제어 프레임 워크로 변환되면 이러한 helpers는 더 이상 필요하지 않습니다.
+
+1.4) Clean up the handler at the end:
+나중에 handler를 정리하십시오.
+
+	v4l2_ctrl_handler_free(&foo->ctrl_handler);
+
+
+2) Add controls:
+제어를 추가하세요 :
+
+You add non-menu controls by calling v4l2_ctrl_new_std:
+v4l2_ctrl_new_std를 호출하여 비 메뉴 컨트롤을 추가합니다.
+
+	struct v4l2_ctrl *v4l2_ctrl_new_std(struct v4l2_ctrl_handler *hdl,
+			const struct v4l2_ctrl_ops *ops,
+			u32 id, s32 min, s32 max, u32 step, s32 def);
+
+Menu and integer menu controls are added by calling v4l2_ctrl_new_std_menu:
+v4l2_ctrl_new_std_menu를 호출하여 메뉴 및 정수 메뉴 컨트롤이 추가되었습니다.
+
+	struct v4l2_ctrl *v4l2_ctrl_new_std_menu(struct v4l2_ctrl_handler *hdl,
+			const struct v4l2_ctrl_ops *ops,
+			u32 id, s32 max, s32 skip_mask, s32 def);
+
+Menu controls with a driver specific menu are added by calling
+v4l2_ctrl_new_std_menu_items:
+v4l2_ctrl_new_std_menu_items를 호출하여 드라이버 관련 메뉴가 있는 메뉴 컨트롤이 추가되었습니다.
+
+       struct v4l2_ctrl *v4l2_ctrl_new_std_menu_items(
+                       struct v4l2_ctrl_handler *hdl,
+                       const struct v4l2_ctrl_ops *ops, u32 id, s32 max,
+                       s32 skip_mask, s32 def, const char * const *qmenu);
+
+Integer menu controls with a driver specific menu can be added by calling
+v4l2_ctrl_new_int_menu:
+v4l2_ctrl_new_int_menu를 호출하여 드라이버 관련 메뉴가있는 정수 메뉴 컨트롤을 추가 할 수 있습니다.
+
+	struct v4l2_ctrl *v4l2_ctrl_new_int_menu(struct v4l2_ctrl_handler *hdl,
+			const struct v4l2_ctrl_ops *ops,
+			u32 id, s32 max, s32 def, const s64 *qmenu_int);
+
+These functions are typically called right after the v4l2_ctrl_handler_init:
+이러한 함수는 일반적으로 v4l2_ctrl_handler_init 바로 다음에 호출됩니다.
+
+	static const s64 exp_bias_qmenu[] = {
+	       -2, -1, 0, 1, 2
+	};
+	static const char * const test_pattern[] = {
+		"Disabled",
+		"Vertical Bars",
+		"Solid Black",
+		"Solid White",
+	};
+
+	v4l2_ctrl_handler_init(&foo->ctrl_handler, nr_of_controls);
+	v4l2_ctrl_new_std(&foo->ctrl_handler, &foo_ctrl_ops,
+			V4L2_CID_BRIGHTNESS, 0, 255, 1, 128);
+	v4l2_ctrl_new_std(&foo->ctrl_handler, &foo_ctrl_ops,
+			V4L2_CID_CONTRAST, 0, 255, 1, 128);
+	v4l2_ctrl_new_std_menu(&foo->ctrl_handler, &foo_ctrl_ops,
+			V4L2_CID_POWER_LINE_FREQUENCY,
+			V4L2_CID_POWER_LINE_FREQUENCY_60HZ, 0,
+			V4L2_CID_POWER_LINE_FREQUENCY_DISABLED);
+	v4l2_ctrl_new_int_menu(&foo->ctrl_handler, &foo_ctrl_ops,
+			V4L2_CID_EXPOSURE_BIAS,
+			ARRAY_SIZE(exp_bias_qmenu) - 1,
+			ARRAY_SIZE(exp_bias_qmenu) / 2 - 1,
+			exp_bias_qmenu);
+	v4l2_ctrl_new_std_menu_items(&foo->ctrl_handler, &foo_ctrl_ops,
+			V4L2_CID_TEST_PATTERN, ARRAY_SIZE(test_pattern) - 1, 0,
+			0, test_pattern);
+	...
+	if (foo->ctrl_handler.error) {
+		int err = foo->ctrl_handler.error;
+
+		v4l2_ctrl_handler_free(&foo->ctrl_handler);
+		return err;
+	}
+
+The v4l2_ctrl_new_std function returns the v4l2_ctrl pointer to the new
+control, but if you do not need to access the pointer outside the control ops,
+then there is no need to store it.
+v4l2_ctrl_new_std 함수는 v4l2_ctrl 포인터를 새 컨트롤로 반환하지만 컨트롤 연산 외부의 포인터에 액세스 할 필요가 없는 경우 
+포인터를 저장할 필요가 없습니다.
+
+The v4l2_ctrl_new_std function will fill in most fields based on the control
+ID except for the min, max, step and default values. These are passed in the
+last four arguments. These values are driver specific while control attributes
+like type, name, flags are all global. The control's current value will be set
+to the default value.
+v4l2_ctrl_new_std 함수는 min, max, step 및 default 값을 제외한 컨트롤 ID를 기반으로 대부분의 필드를 채 웁니다. 
+이것들은 마지막 네 가지 인수에서 전달됩니다. 이 값은 드라이버에 고유하며 type, name, flags와 같은 제어 속성은 모두 전역입니다. 
+컨트롤의 현재 값은 기본값으로 설정됩니다.
+
+The v4l2_ctrl_new_std_menu function is very similar but it is used for menu
+controls. There is no min argument since that is always 0 for menu controls,
+and instead of a step there is a skip_mask argument: if bit X is 1, then menu
+item X is skipped.
+v4l2_ctrl_new_std_menu 함수는 매우 비슷하지만 메뉴 컨트롤에 사용됩니다. 
+메뉴 제어에서는 항상 0이므로 min 인수가 없으며 step 대신 skip_mask 인수가 있습니다. 
+비트 X가 1이면 메뉴 항목 X는 생략됩니다.
+
+The v4l2_ctrl_new_int_menu function creates a new standard integer menu
+control with driver-specific items in the menu. It differs from
+v4l2_ctrl_new_std_menu in that it doesn't have the mask argument and takes
+as the last argument an array of signed 64-bit integers that form an exact
+menu item list.
+v4l2_ctrl_new_int_menu 함수는 메뉴에 드라이버 관련 항목이 있는 새로운 표준 정수 메뉴 컨트롤을 만듭니다. 
+그것은 v4l2_ctrl_new_std_menu와 달리 mask 인수를 가지지 않으며, 정확한 메뉴 항목 목록을 구성하는 부호있는 64 비트 정수 배열을 마지막 인수로 취합니다.
+
+The v4l2_ctrl_new_std_menu_items function is very similar to
+v4l2_ctrl_new_std_menu but takes an extra parameter qmenu, which is the driver
+specific menu for an otherwise standard menu control. A good example for this
+control is the test pattern control for capture/display/sensors devices that
+have the capability to generate test patterns. These test patterns are hardware
+specific, so the contents of the menu will vary from device to device.
+v4l2_ctrl_new_std_menu_items 함수는 v4l2_ctrl_new_std_menu와 매우 비슷하지만 별도의 표준 메뉴 컨트롤에 대한 드라이버 별 메뉴 인 추가 매개 변수 인 qmenu를 사용합니다. 
+이 컨트롤의 좋은 예는 테스트 패턴을 생성 할 수 있는 캡처 / 디스플레이 / 센서 장치 용 테스트 패턴 컨트롤입니다. 
+이러한 테스트 패턴은 하드웨어에 따라 다르므로 메뉴의 내용은 장치마다 다를 수 있습니다.
+
+Note that if something fails, the function will return NULL or an error and
+set ctrl_handler->error to the error code. If ctrl_handler->error was already
+set, then it will just return and do nothing. This is also true for
+v4l2_ctrl_handler_init if it cannot allocate the internal data structure.
+뭔가 실패하면 함수는 NULL 또는 오류를 반환하고 ctrl_handler-> error를 오류 코드로 설정합니다. 
+ctrl_handler-> error가 이미 설정되어 있다면, 그것은 단지 반환 만하고 아무것도하지 않을 것입니다. 
+v4l2_ctrl_handler_init가 내부 데이터 구조를 할당 할 수없는 경우에도 마찬가지입니다.
+
+This makes it easy to init the handler and just add all controls and only check
+the error code at the end. Saves a lot of repetitive error checking.
+이렇게하면 처리기를 초기화하고 모든 컨트롤을 추가하고 끝에 오류 코드만 확인하기가 쉽습니다. 
+반복적인 오류 검사를 많이 절감 합니다.
+
+It is recommended to add controls in ascending control ID order: it will be
+a bit faster that way.
+오름차순 컨트롤 ID 순서로 컨트롤을 추가하는 것이 좋습니다. 이렇게하면 조금 더 빠릅니다.
+
+3) Optionally force initial control setup:
+선택적으로 초기 제어 설정 강제 :
+
+	v4l2_ctrl_handler_setup(&foo->ctrl_handler);
+
+This will call s_ctrl for all controls unconditionally. Effectively this
+initializes the hardware to the default control values. It is recommended
+that you do this as this ensures that both the internal data structures and
+the hardware are in sync.
+무조건 모든 컨트롤에 대해 s_ctrl이 호출됩니다. 효과적으로 이것은 하드웨어를 기본 제어 값으로 초기화합니다. 
+이렇게하면 내부 데이터 구조와 하드웨어가 동기화되도록 보장 할 수 있으므로 이 작업을 수행하는 것이 좋습니다.
+
+4) Finally: implement the v4l2_ctrl_ops
+마지막으로 : v4l2_ctrl_ops 구현
+
+	static const struct v4l2_ctrl_ops foo_ctrl_ops = {
+		.s_ctrl = foo_s_ctrl,
+	};
+
+Usually all you need is s_ctrl:
+일반적으로 필요한 것은 s_ctrl뿐입니다.
+
+	static int foo_s_ctrl(struct v4l2_ctrl *ctrl)
+	{
+		struct foo *state = container_of(ctrl->handler, struct foo, ctrl_handler);
+
+		switch (ctrl->id) {
+		case V4L2_CID_BRIGHTNESS:
+			write_reg(0x123, ctrl->val);
+			break;
+		case V4L2_CID_CONTRAST:
+			write_reg(0x456, ctrl->val);
+			break;
+		}
+		return 0;
+	}
+
+The control ops are called with the v4l2_ctrl pointer as argument.
+The new control value has already been validated, so all you need to do is
+to actually update the hardware registers.
+제어 연산은 인수로 v4l2_ctrl 포인터와 함께 호출됩니다.
+새 컨트롤 값은 이미 확인되었으므로 하드웨어 레지스터를 실제로 업데이트해야합니다.
+
+You're done! And this is sufficient for most of the drivers we have. No need
+to do any validation of control values, or implement QUERYCTRL, QUERY_EXT_CTRL
+and QUERYMENU. And G/S_CTRL as well as G/TRY/S_EXT_CTRLS are automatically supported.
+끝났습니다! 그리고 이것은 우리가 가지고있는 대부분의 드라이버에 충분합니다. 
+제어 값의 유효성 검증을 수행하거나 QUERYCTRL, QUERY_EXT_CTRL 및 QUERYMENU를 구현할 필요가 없습니다. 
+G/S_CTRL은 물론 G/TRY/S_EXT_CTRLS도 자동으로 지원됩니다.
+
+
+==============================================================================
+
+The remainder of this document deals with more advanced topics and scenarios.
+In practice the basic usage as described above is sufficient for most drivers.
+이 문서의 나머지 부분에서는 고급 주제와 시나리오를 다룹니다.
+실제로 위에서 설명한 기본 사용법은 대부분의 드라이버에 충분합니다.
+
+===============================================================================
+
+
+Inheriting Controls
+===================
+상속 컨트롤
+
+When a sub-device is registered with a V4L2 driver by calling
+v4l2_device_register_subdev() and the ctrl_handler fields of both v4l2_subdev
+and v4l2_device are set, then the controls of the subdev will become
+automatically available in the V4L2 driver as well. If the subdev driver
+contains controls that already exist in the V4L2 driver, then those will be
+skipped (so a V4L2 driver can always override a subdev control).
+하위 장치가 v4l2_device_register_subdev ()를 호출하여 V4L2 드라이버에 등록되고 v4l2_subdev 및 v4l2_device의 ctrl_handler 필드가 설정되면, subdev의 컨트롤도 V4L2 드라이버에서 자동으로 사용할 수있게됩니다. 
+subdev 드라이버에 V4L2 드라이버에 이미 있는 컨트롤이 포함되어 있으면, 해당 드라이버는 건너 뜁니다 (V4L2 드라이버는 항상 subdev 컨트롤을 무시할 수 있습니다).
+
+What happens here is that v4l2_device_register_subdev() calls
+v4l2_ctrl_add_handler() adding the controls of the subdev to the controls
+of v4l2_device.
+여기서 일어나는 일은 v4l2_device_register_subdev ()가 v4l2_device의 컨트롤에 subdev의 컨트롤을 추가하는 v4l2_ctrl_add_handler ()를 호출한다는 것입니다.
+
+
+Accessing Control Values
+========================
+컨트롤 값 접근
+
+The following union is used inside the control framework to access control
+values:
+다음 유니온은 컨트롤 프레임 워크 내에서 컨트롤 값에 액세스하는 데 사용됩니다.
+
+union v4l2_ctrl_ptr {
+	s32 *p_s32;
+	s64 *p_s64;
+	char *p_char;
+	void *p;
+};
+
+The v4l2_ctrl struct contains these fields that can be used to access both
+current and new values:
+v4l2_ctrl 구조체는 현재 값과 새 값을 액세스하는 데 사용할 수 있는 다음 필드를 포함합니다.
+
+	s32 val;
+	struct {
+		s32 val;
+	} cur;
+
+
+	union v4l2_ctrl_ptr p_new;
+	union v4l2_ctrl_ptr p_cur;
+
+If the control has a simple s32 type type, then:
+컨트롤에 간단한 s32 유형이있는 경우 다음을 수행하십시오.
+
+	&ctrl->val == ctrl->p_new.p_s32
+	&ctrl->cur.val == ctrl->p_cur.p_s32
+
+For all other types use ctrl->p_cur.p<something>. Basically the val
+and cur.val fields can be considered an alias since these are used so often.
+다른 모든 유형의 경우 ctrl-> p_cur.p <something>를 사용하십시오. 
+기본적으로 val과 cur.val 필드는 자주 사용되기 때문에 별칭으로 간주 할 수 있습니다.
+
+Within the control ops you can freely use these. The val and cur.val speak for
+themselves. The p_char pointers point to character buffers of length
+ctrl->maximum + 1, and are always 0-terminated.
+제어 작업 내에서 자유롭게 이것들을 사용할 수 있습니다. val과 cur.val은 스스로 이야기합니다. 
+p_char 포인터는 길이가 ctrl-> maximum + 1 인 문자 버퍼를 가리키며 항상 0으로 종료됩니다.
+
+Unless the control is marked volatile the p_cur field points to the the
+current cached control value. When you create a new control this value is made
+identical to the default value. After calling v4l2_ctrl_handler_setup() this
+value is passed to the hardware. It is generally a good idea to call this
+function.
+컨트롤이 휘발성으로 표시되어 있지 않으면 p_cur 필드는 현재 캐시 된 컨트롤 값을 가리 킵니다. 
+새 컨트롤을 만들 때 이 값은 기본값과 동일하게 만들어집니다. v4l2_ctrl_handler_setup ()을 호출 한 후 이 값이 하드웨어로 전달됩니다. 일반적으로이 함수를 호출하는 것이 좋습니다.
+
+Whenever a new value is set that new value is automatically cached. This means
+that most drivers do not need to implement the g_volatile_ctrl() op. The
+exception is for controls that return a volatile register such as a signal
+strength read-out that changes continuously. In that case you will need to
+implement g_volatile_ctrl like this:
+새 값이 설정 될 때마다 새 값이 자동으로 캐시됩니다. 이것은 대부분의 드라이버가 g_volatile_ctrl () 연산을 구현할 필요가 없다는 것을 의미합니다.
+예외는 연속적으로 변하는 신호 강도 판독 값과 같은 휘발성 레지스터를 반환하는 컨트롤입니다. 이 경우 다음과 같이 g_volatile_ctrl을 구현해야합니다.
+
+	static int foo_g_volatile_ctrl(struct v4l2_ctrl *ctrl)
+	{
+		switch (ctrl->id) {
+		case V4L2_CID_BRIGHTNESS:
+			ctrl->val = read_reg(0x123);
+			break;
+		}
+	}
+
+Note that you use the 'new value' union as well in g_volatile_ctrl. In general
+controls that need to implement g_volatile_ctrl are read-only controls. If they
+are not, a V4L2_EVENT_CTRL_CH_VALUE will not be generated when the control
+changes.
+g_volatile_ctrl에서도 '새로운 값'유니온을 사용합니다. 일반적으로 g_volatile_ctrl을 구현해야하는 컨트롤은 읽기 전용 컨트롤입니다. 그렇치 않으면 컨트롤이 변경 될 때 V4L2_EVENT_CTRL_CH_VALUE가 생성되지 않습니다.
+
+To mark a control as volatile you have to set V4L2_CTRL_FLAG_VOLATILE:
+컨트롤을 휘발성으로 표시하려면 V4L2_CTRL_FLAG_VOLATILE을 설정해야합니다.
+
+	ctrl = v4l2_ctrl_new_std(&sd->ctrl_handler, ...);
+	if (ctrl)
+		ctrl->flags |= V4L2_CTRL_FLAG_VOLATILE;
+
+For try/s_ctrl the new values (i.e. as passed by the user) are filled in and
+you can modify them in try_ctrl or set them in s_ctrl. The 'cur' union
+contains the current value, which you can use (but not change!) as well.
+try / s_ctrl의 경우 새 값 (예 : 사용자가 전달한 값)이 채워지고 try_ctrl에서 값을 수정하거나 s_ctrl에서 값을 설정할 수 있습니다. 'cur'union에는 현재 값이 포함되어 있으며, 그것을 사용할 수 있습니다 (변경할 수는 없지만).
+
+If s_ctrl returns 0 (OK), then the control framework will copy the new final
+values to the 'cur' union.
+s_ctrl이 0 (OK)을 반환하면 컨트롤 프레임 워크는 새로운 최종 값을 'cur'union에 복사합니다.
+
+While in g_volatile/s/try_ctrl you can access the value of all controls owned
+by the same handler since the handler's lock is held. If you need to access
+the value of controls owned by other handlers, then you have to be very careful
+not to introduce deadlocks.
+g_volatile / s / try_ctrl에서 핸들러의 잠금이 유지 된 이후 동일한 핸들러가 소유 한 모든 컨트롤의 값에 액세스 할 수 있습니다. 
+다른 핸들러가 소유 한 컨트롤의 값에 액세스해야하는 경우 교착 상태가 발생하지 않도록 매우주의해야합니다.
+
+Outside of the control ops you have to go through to helper functions to get
+or set a single control value safely in your driver:
+컨트롤 작업 외부에서는 드라이버에서 하나의 컨트롤 값을 안전하게 얻거나 설정하기 위해 도우미 함수를 사용해야합니다.
+
+	s32 v4l2_ctrl_g_ctrl(struct v4l2_ctrl *ctrl);
+	int v4l2_ctrl_s_ctrl(struct v4l2_ctrl *ctrl, s32 val);
+
+These functions go through the control framework just as VIDIOC_G/S_CTRL ioctls
+do. Don't use these inside the control ops g_volatile/s/try_ctrl, though, that
+will result in a deadlock since these helpers lock the handler as well.
+이러한 함수는 VIDIOC_G / S_CTRL ioctls처럼 제어 프레임 워크를 통과합니다. 이들을 컨트롤 ops g_volatile/s/try_ctrl 내부에서 사용하지 마십시오. 이러한 도우미가 핸들러를 잠그기 때문에 교착 상태가 발생합니다.
+
+You can also take the handler lock yourself:
+핸들러를 스스로 잠글 수도 있습니다.
+
+	mutex_lock(&state->ctrl_handler.lock);
+	pr_info("String value is '%s'\n", ctrl1->p_cur.p_char);
+	pr_info("Integer value is '%s'\n", ctrl2->cur.val);
+	mutex_unlock(&state->ctrl_handler.lock);
+
+
+Menu Controls
+=============
+메뉴 컨트롤
+
+The v4l2_ctrl struct contains this union:
+v4l2_ctrl 구조체는 이 union를 포함합니다 :
+
+	union {
+		u32 step;
+		u32 menu_skip_mask;
+	};
+
+For menu controls menu_skip_mask is used. What it does is that it allows you
+to easily exclude certain menu items. This is used in the VIDIOC_QUERYMENU
+implementation where you can return -EINVAL if a certain menu item is not
+present. Note that VIDIOC_QUERYCTRL always returns a step value of 1 for
+menu controls.
+메뉴 컨트롤의 경우 menu_skip_mask가 사용됩니다. 그것이하는 일은 특정 메뉴 아이템을 쉽게 제외시킬 수 있다는 것입니다. 
+이것은 VIDIOC_QUERYMENU 구현에서 사용되며, 특정 메뉴 항목이 없으면 -EINVAL을 반환 할 수 있습니다. VIDIOC_QUERYCTRL은 항상 메뉴 컨트롤에 대해 단계 값 1을 반환합니다.
+
+A good example is the MPEG Audio Layer II Bitrate menu control where the
+menu is a list of standardized possible bitrates. But in practice hardware
+implementations will only support a subset of those. By setting the skip
+mask you can tell the framework which menu items should be skipped. Setting
+it to 0 means that all menu items are supported.
+좋은 예가 표준화 된 가능한 비트 전송률 목록 인 MPEG 오디오 레이어 II 비트 전송률 메뉴 컨트롤입니다. 그러나 실제로 하드웨어 구현은 그 중 일부만을 지원합니다. 
+건너 뛰기 마스크를 설정하면 어떤 메뉴 항목을 생략해야하는지 프레임 워크에 알릴 수 있습니다. 0으로 설정하면 모든 메뉴 항목이 지원됩니다.
+
+You set this mask either through the v4l2_ctrl_config struct for a custom
+control, or by calling v4l2_ctrl_new_std_menu().
+이 마스크는 사용자 정의 컨트롤의 v4l2_ctrl_config 구조체를 통해 설정하거나 v4l2_ctrl_new_std_menu ()를 호출하여 설정할 수 있습니다.
+
+
+Custom Controls
+===============
+사용자 정의 컨트롤
+
+
+Driver specific controls can be created using v4l2_ctrl_new_custom():
+드라이버 관련 컨트롤은 v4l2_ctrl_new_custom ()을 사용하여 만들 수 있습니다.
+
+	static const struct v4l2_ctrl_config ctrl_filter = {
+		.ops = &ctrl_custom_ops,
+		.id = V4L2_CID_MPEG_CX2341X_VIDEO_SPATIAL_FILTER,
+		.name = "Spatial Filter",
+		.type = V4L2_CTRL_TYPE_INTEGER,
+		.flags = V4L2_CTRL_FLAG_SLIDER,
+		.max = 15,
+		.step = 1,
+	};
+
+	ctrl = v4l2_ctrl_new_custom(&foo->ctrl_handler, &ctrl_filter, NULL);
+
+The last argument is the priv pointer which can be set to driver-specific
+private data.
+마지막 인수는 드라이버 관련 개인 데이터로 설정할 수있는 priv 포인터입니다.
+
+The v4l2_ctrl_config struct also has a field to set the is_private flag.
+v4l2_ctrl_config 구조체에는 is_private 플래그를 설정하는 필드도 있습니다.
+
+If the name field is not set, then the framework will assume this is a standard
+control and will fill in the name, type and flags fields accordingly.
+이름 필드가 설정되어 있지 않은 경우, 프레임 워크는 이것이 표준 컨트롤이라고 가정하고 그에 따라 이름, 유형 및 플래그 필드를 채웁니다.
+
+
+Active and Grabbed Controls
+===========================
+활성 및 가져온 컨트롤
+
+If you get more complex relationships between controls, then you may have to
+activate and deactivate controls. For example, if the Chroma AGC control is
+on, then the Chroma Gain control is inactive. That is, you may set it, but
+the value will not be used by the hardware as long as the automatic gain
+control is on. Typically user interfaces can disable such input fields.
+컨트롤 사이에 더 복잡한 관계가 있으면 컨트롤을 활성화 및 비활성화해야 할 수 있습니다. 예를 들어, 크로마 AGC 컨트롤이 켜져 있으면 크로마 게인 Gain 컨트롤이 비활성화됩니다. 
+즉, 자동 게인 컨트롤이 켜져있는 한 값을 하드웨어에서 사용하지 않을 수 있습니다. 일반적으로 사용자 인터페이스는 이러한 입력 필드를 비활성화 할 수 있습니다.
+
+You can set the 'active' status using v4l2_ctrl_activate(). By default all
+controls are active. Note that the framework does not check for this flag.
+It is meant purely for GUIs. The function is typically called from within
+s_ctrl.
+v4l2_ctrl_activate ()를 사용하여 '활성'상태를 설정할 수 있습니다. 기본적으로 모든 컨트롤이 활성화되어 있습니다. 프레임 워크는 이 플래그를 확인하지 않습니다. GUI 용입니다. 이 함수는 일반적으로 s_ctrl 내에서 호출됩니다.
+
+The other flag is the 'grabbed' flag. A grabbed control means that you cannot
+change it because it is in use by some resource. Typical examples are MPEG
+bitrate controls that cannot be changed while capturing is in progress.
+다른 플래그는 'grabbed'플래그입니다. grabbed 컨트롤은 일부 리소스에서 사용 중이기 때문에 변경할 수 없음을 의미합니다. 일반적인 예는 캡처가 진행되는 동안 변경할 수없는 MPEG 비트 레이트 컨트롤입니다.
+
+If a control is set to 'grabbed' using v4l2_ctrl_grab(), then the framework
+will return -EBUSY if an attempt is made to set this control. The
+v4l2_ctrl_grab() function is typically called from the driver when it
+starts or stops streaming.
+v4l2_ctrl_grab ()을 사용하여 컨트롤을 'grabbed'로 설정하면, 이 컨트롤을 설정하려고 하면 프레임 워크에서 -EBUSY를 반환합니다. 
+v4l2_ctrl_grab () 함수는 일반적으로 스트리밍을 시작하거나 중지 할 때 드라이버에서 호출됩니다.
+
+
+Control Clusters
+================
+제어 클러스터
+
+By default all controls are independent from the others. But in more
+complex scenarios you can get dependencies from one control to another.
+In that case you need to 'cluster' them:
+기본적으로 모든 컨트롤은 다른 컨트롤과 독립적입니다. 그러나 보다 복잡한 시나리오에서는 컨트롤간에 종속성을 가질 수 있습니다. 그럴 경우 '클러스터'해야합니다.
+
+	struct foo {
+		struct v4l2_ctrl_handler ctrl_handler;
+#define AUDIO_CL_VOLUME (0)
+#define AUDIO_CL_MUTE   (1)
+		struct v4l2_ctrl *audio_cluster[2];
+		...
+	};
+
+	state->audio_cluster[AUDIO_CL_VOLUME] =
+		v4l2_ctrl_new_std(&state->ctrl_handler, ...);
+	state->audio_cluster[AUDIO_CL_MUTE] =
+		v4l2_ctrl_new_std(&state->ctrl_handler, ...);
+	v4l2_ctrl_cluster(ARRAY_SIZE(state->audio_cluster), state->audio_cluster);
+
+From now on whenever one or more of the controls belonging to the same
+cluster is set (or 'gotten', or 'tried'), only the control ops of the first
+control ('volume' in this example) is called. You effectively create a new
+composite control. Similar to how a 'struct' works in C.
+이제부터는 같은 클러스터에 속한 하나 이상의 컨트롤이 설정 (또는 'gotten' 또는 '시도') 될 때마다 첫 번째 컨트롤 (이 예에서는 '볼륨')의 컨트롤 작업 만 호출됩니다. 효과적으로 새로운 복합 컨트롤을 만듭니다. 'struct'가 C에서 어떻게 작동하는지와 비슷합니다.
+
+So when s_ctrl is called with V4L2_CID_AUDIO_VOLUME as argument, you should set
+all two controls belonging to the audio_cluster:
+따라서 s_ctrl이 V4L2_CID_AUDIO_VOLUME과 함께 인수로 호출되면 audio_cluster에 속한 두 가지 컨트롤을 모두 설정해야합니다.
+	static int foo_s_ctrl(struct v4l2_ctrl *ctrl)
+	{
+		struct foo *state = container_of(ctrl->handler, struct foo, ctrl_handler);
+
+		switch (ctrl->id) {
+		case V4L2_CID_AUDIO_VOLUME: {
+			struct v4l2_ctrl *mute = ctrl->cluster[AUDIO_CL_MUTE];
+
+			write_reg(0x123, mute->val ? 0 : ctrl->val);
+			break;
+		}
+		case V4L2_CID_CONTRAST:
+			write_reg(0x456, ctrl->val);
+			break;
+		}
+		return 0;
+	}
+
+In the example above the following are equivalent for the VOLUME case:
+위의 예에서 다음은 VOLUME의 경우와 동일합니다.
+
+	ctrl == ctrl->cluster[AUDIO_CL_VOLUME] == state->audio_cluster[AUDIO_CL_VOLUME]
+	ctrl->cluster[AUDIO_CL_MUTE] == state->audio_cluster[AUDIO_CL_MUTE]
+
+In practice using cluster arrays like this becomes very tiresome. So instead
+the following equivalent method is used:
+실제로 이와 같은 클러스터 배열을 사용하는 것은 매우 귀찮습니다. 따라서 대신 다음과 같은 방법이 사용됩니다.
+
+	struct {
+		/* audio cluster */
+		struct v4l2_ctrl *volume;
+		struct v4l2_ctrl *mute;
+	};
+
+The anonymous struct is used to clearly 'cluster' these two control pointers,
+but it serves no other purpose. The effect is the same as creating an
+array with two control pointers. So you can just do:
+익명 구조체는이 두 제어 포인터를 명확하게 '클러스터링'하는 데 사용되지만 다른 용도로는 사용되지 않습니다. 이 효과는 두 개의 제어 포인터가있는 배열을 만드는 것과 같습니다. 그래서 다음과 같이 할 수 있습니다 :
+
+	state->volume = v4l2_ctrl_new_std(&state->ctrl_handler, ...);
+	state->mute = v4l2_ctrl_new_std(&state->ctrl_handler, ...);
+	v4l2_ctrl_cluster(2, &state->volume);
+
+And in foo_s_ctrl you can use these pointers directly: state->mute->val.
+
+Note that controls in a cluster may be NULL. For example, if for some
+reason mute was never added (because the hardware doesn't support that
+particular feature), then mute will be NULL. So in that case we have a
+cluster of 2 controls, of which only 1 is actually instantiated. The
+only restriction is that the first control of the cluster must always be
+present, since that is the 'master' control of the cluster. The master
+control is the one that identifies the cluster and that provides the
+pointer to the v4l2_ctrl_ops struct that is used for that cluster.
+클러스터의 컨트롤은 NULL 일 수 있습니다. 예를 들어 어떤 이유로 뮤트가 추가되지 않은 경우 (하드웨어가 특정 기능을 지원하지 않기 때문에) 음소거가 NULL이됩니다. 
+따라서 이 경우 우리는 2 개의 컨트롤로 구성된 클러스터를 가지며 그 중 하나만 실제로 인스턴스화됩니다. 유일한 제한 사항은 클러스터의 첫 번째 제어가 클러스터의 '마스터'제어이기 때문에 항상 존재해야한다는 것입니다.
+마스터 컨트롤은 클러스터를 식별하고 해당 클러스터에 사용되는 v4l2_ctrl_ops 구조체에 대한 포인터를 제공합니다.
+
+Obviously, all controls in the cluster array must be initialized to either
+a valid control or to NULL.
+분명히 클러스터 배열의 모든 컨트롤은 유효한 컨트롤이나 NULL로 초기화되어야합니다.
+
+In rare cases you might want to know which controls of a cluster actually
+were set explicitly by the user. For this you can check the 'is_new' flag of
+each control. For example, in the case of a volume/mute cluster the 'is_new'
+flag of the mute control would be set if the user called VIDIOC_S_CTRL for
+mute only. If the user would call VIDIOC_S_EXT_CTRLS for both mute and volume
+controls, then the 'is_new' flag would be 1 for both controls.
+드문 경우이지만 사용자가 실제로 명시 적으로 설정 한 클러스터의 컨트롤을 알고 싶을 수 있습니다. 이를 위해 각 컨트롤의 'is_new'플래그를 확인할 수 있습니다. 
+예를 들어 볼륨 / 뮤트 클러스터의 경우 사용자가 음소거 만 위해 VIDIOC_S_CTRL을 호출하면 음소거 컨트롤의 'is_new'플래그가 설정됩니다. 
+사용자가 음소거 및 볼륨 컨트롤 모두에 대해 VIDIOC_S_EXT_CTRLS를 호출하면 두 컨트롤에 대해 'is_new'플래그가 1이됩니다.
+
+The 'is_new' flag is always 1 when called from v4l2_ctrl_handler_setup().
+'is_new'플래그는 v4l2_ctrl_handler_setup ()에서 호출 할 때 항상 1입니다.
+
+
+Handling autogain/gain-type Controls with Auto Clusters
+=======================================================
+자동 클러스터로 자동 게인 / 게인 유형 제어 처리
+
+A common type of control cluster is one that handles 'auto-foo/foo'-type
+controls. Typical examples are autogain/gain, autoexposure/exposure,
+autowhitebalance/red balance/blue balance. In all cases you have one control
+that determines whether another control is handled automatically by the hardware,
+or whether it is under manual control from the user.
+공통 유형의 제어 클러스터는 'auto-foo / foo'유형 제어를 처리하는 유형입니다. 
+대표적인 예로는 오토 게인 / 게인, 자동 노출 / 노출, 자동 화이트 발란스 / 적색 밸런스 / 블루 밸런스가 있습니다. 
+모든 경우에 다른 컨트롤이 하드웨어에 의해 자동으로 처리되는지 또는 사용자가 수동으로 제어하는지 여부를 결정하는 컨트롤이 하나 있습니다.
+
+If the cluster is in automatic mode, then the manual controls should be
+marked inactive and volatile. When the volatile controls are read the
+g_volatile_ctrl operation should return the value that the hardware's automatic
+mode set up automatically.
+클러스터가 자동 모드 인 경우 수동 제어는 비활성 및 변동 가능으로 표시되어야합니다. 
+휘발성 컨트롤을 읽을 때 g_volatile_ctrl 작업은 하드웨어의 자동 모드가 자동으로 설정 한 값을 반환해야합니다.
+
+If the cluster is put in manual mode, then the manual controls should become
+active again and the volatile flag is cleared (so g_volatile_ctrl is no longer
+called while in manual mode). In addition just before switching to manual mode
+the current values as determined by the auto mode are copied as the new manual
+values.
+클러스터를 수동 모드로 설정하면 수동 컨트롤이 다시 활성화되고 휘발성 플래그가 지워집니다 (g_volatile_ctrl은 더 이상 수동 모드에서 호출되지 않습니다). 
+또한 수동 모드로 전환하기 직전에 자동 모드로 결정된 현재 값이 새로운 수동 값으로 복사됩니다.
+
+Finally the V4L2_CTRL_FLAG_UPDATE should be set for the auto control since
+changing that control affects the control flags of the manual controls.
+마지막으로 V4L2_CTRL_FLAG_UPDATE는 자동 컨트롤에 대해 설정되어야합니다.이 컨트롤을 변경하면 수동 컨트롤의 컨트롤 플래그에 영향을 미치기 때문입니다.
+
+In order to simplify this a special variation of v4l2_ctrl_cluster was
+introduced:
+이것을 단순화하기 위해 v4l2_ctrl_cluster의 특별한 변형이 도입되었습니다.
+
+void v4l2_ctrl_auto_cluster(unsigned ncontrols, struct v4l2_ctrl **controls,
+			u8 manual_val, bool set_volatile);
+
+The first two arguments are identical to v4l2_ctrl_cluster. The third argument
+tells the framework which value switches the cluster into manual mode. The
+last argument will optionally set V4L2_CTRL_FLAG_VOLATILE for the non-auto controls.
+If it is false, then the manual controls are never volatile. You would typically
+use that if the hardware does not give you the option to read back to values as
+determined by the auto mode (e.g. if autogain is on, the hardware doesn't allow
+you to obtain the current gain value).
+처음 두 인수는 v4l2_ctrl_cluster와 동일합니다. 세 번째 인수는 값이 클러스터를 수동 모드로 전환하는 프레임 워크를 알려줍니다.
+마지막 인수는 비 자동 제어를 위해 선택적으로 V4L2_CTRL_FLAG_VOLATILE을 설정합니다.
+false 인 경우 수동 컨트롤은 절대로 변하지 않습니다. 하드웨어가 자동 모드로 결정된 값으로 다시 읽는 옵션을 제공하지 않는 경우 
+일반적으로 이를 사용합니다 (예 : 자동 게인이 켜지면 하드웨어에서 현재 게인 값을 얻을 수 없음).
+
+The first control of the cluster is assumed to be the 'auto' control.
+클러스터의 첫 번째 제어는 '자동'제어라고 가정합니다.
+
+Using this function will ensure that you don't need to handle all the complex
+flag and volatile handling.
+이 함수를 사용하면 복잡한 플래그와 휘발성 처리를 모두 처리 할 필요가 없습니다.
+
+
+VIDIOC_LOG_STATUS Support
+=========================
+VIDIOC_LOG_STATUS 지원
+
+This ioctl allow you to dump the current status of a driver to the kernel log.
+The v4l2_ctrl_handler_log_status(ctrl_handler, prefix) can be used to dump the
+value of the controls owned by the given handler to the log. You can supply a
+prefix as well. If the prefix didn't end with a space, then ': ' will be added
+for you.
+이 ioctl을 사용하면 드라이버의 현재 상태를 커널 로그에 덤프 할 수 있습니다.
+v4l2_ctrl_handler_log_status (ctrl_handler, prefix)를 사용하여 주어진 핸들러가 소유 한 컨트롤의 값을 로그에 덤프 할 수 있습니다. 
+접두사도 제공 할 수 있습니다. 접두어가 공백으로 끝나지 않으면 ':'이 추가됩니다.
+
+
+Different Handlers for Different Video Nodes
+============================================
+다른 비디오 노드를위한 다른 핸들러
+
+Usually the V4L2 driver has just one control handler that is global for
+all video nodes. But you can also specify different control handlers for
+different video nodes. You can do that by manually setting the ctrl_handler
+field of struct video_device.
+일반적으로 V4L2 드라이버에는 모든 비디오 노드에 대해 전역 인 제어 핸들러가 하나만 있습니다. 
+그러나 다른 비디오 노드에 대해 다른 제어 처리기를 지정할 수도 있습니다. 
+struct video_device의 ctrl_handler 필드를 수동으로 설정하여이를 수행 할 수 있습니다.
+
+That is no problem if there are no subdevs involved but if there are, then
+you need to block the automatic merging of subdev controls to the global
+control handler. You do that by simply setting the ctrl_handler field in
+struct v4l2_device to NULL. Now v4l2_device_register_subdev() will no longer
+merge subdev controls.
+관련된 subdev가없는 경우에는 아무런 문제가 없습니다. 그렇다면 하위 컨트롤의 전역 컨트롤 핸들러로의 자동 병합을 차단해야합니다. 
+struct v4l2_device의 ctrl_handler 필드를 NULL로 설정하면됩니다. 이제 v4l2_device_register_subdev ()는 더 이상 하위 컨트롤을 병합하지 않습니다.
+
+After each subdev was added, you will then have to call v4l2_ctrl_add_handler
+manually to add the subdev's control handler (sd->ctrl_handler) to the desired
+control handler. This control handler may be specific to the video_device or
+for a subset of video_device's. For example: the radio device nodes only have
+audio controls, while the video and vbi device nodes share the same control
+handler for the audio and video controls.
+각 subdev가 추가 된 후 v4l2_ctrl_add_handler를 수동으로 호출하여 하위 컨트롤의 컨트롤 핸들러 (sd-> ctrl_handler)를 원하는 컨트롤 핸들러에 추가해야합니다. 
+이 컨트롤 핸들러는 video_device 또는 video_device의 하위 세트에만 적용될 수 있습니다. 예를 들어, 무선 장치 노드에는 오디오 제어 기능 만 있고 비디오 및 
+vbi 장치 노드는 오디오 및 비디오 제어 기능과 동일한 제어 처리기를 공유합니다.
+
+If you want to have one handler (e.g. for a radio device node) have a subset
+of another handler (e.g. for a video device node), then you should first add
+the controls to the first handler, add the other controls to the second
+handler and finally add the first handler to the second. For example:
+하나의 핸들러 (예 : 라디오 디바이스 노드)에 다른 핸들러 (예 : 비디오 디바이스 노드)의 서브 세트가 있어야하는 경우 먼저 컨트롤을 첫 번째 핸들러에 추가하고 다른 컨트롤을 두 번째 핸들러에 추가해야합니다.
+마지막으로 첫 번째 핸들러를 두 번째 핸들러에 추가하십시오. 예 :
+
+	v4l2_ctrl_new_std(&radio_ctrl_handler, &radio_ops, V4L2_CID_AUDIO_VOLUME, ...);
+	v4l2_ctrl_new_std(&radio_ctrl_handler, &radio_ops, V4L2_CID_AUDIO_MUTE, ...);
+	v4l2_ctrl_new_std(&video_ctrl_handler, &video_ops, V4L2_CID_BRIGHTNESS, ...);
+	v4l2_ctrl_new_std(&video_ctrl_handler, &video_ops, V4L2_CID_CONTRAST, ...);
+	v4l2_ctrl_add_handler(&video_ctrl_handler, &radio_ctrl_handler, NULL);
+
+The last argument to v4l2_ctrl_add_handler() is a filter function that allows
+you to filter which controls will be added. Set it to NULL if you want to add
+all controls.
+v4l2_ctrl_add_handler ()의 마지막 인수는 추가 할 컨트롤을 필터링 할 수있는 필터 함수입니다. 모든 컨트롤을 추가하려면 NULL로 설정하십시오.
+
+Or you can add specific controls to a handler:
+또는 특정 컨트롤을 처리기에 추가 할 수 있습니다.
+
+	volume = v4l2_ctrl_new_std(&video_ctrl_handler, &ops, V4L2_CID_AUDIO_VOLUME, ...);
+	v4l2_ctrl_new_std(&video_ctrl_handler, &ops, V4L2_CID_BRIGHTNESS, ...);
+	v4l2_ctrl_new_std(&video_ctrl_handler, &ops, V4L2_CID_CONTRAST, ...);
+	v4l2_ctrl_add_ctrl(&radio_ctrl_handler, volume);
+
+What you should not do is make two identical controls for two handlers.
+For example:
+당신이하지 말아야 할 것은 두 핸들러에 대해 두 개의 동일한 컨트롤을 만드는 것입니다.
+예 :
+
+	v4l2_ctrl_new_std(&radio_ctrl_handler, &radio_ops, V4L2_CID_AUDIO_MUTE, ...);
+	v4l2_ctrl_new_std(&video_ctrl_handler, &video_ops, V4L2_CID_AUDIO_MUTE, ...);
+
+This would be bad since muting the radio would not change the video mute
+control. The rule is to have one control for each hardware 'knob' that you
+can twiddle.
+라디오를 뮤트해도 비디오 뮤트 컨트롤은 바뀌지 않기 때문에 이것은 나쁠 것입니다. 
+이 규칙은 각 하드웨어 '노브'에 대해 하나의 컨트롤을 사용하여 회전 할 수 있도록하는 것입니다.
+
+
+Finding Controls
+================
+컨트롤 찾기
+
+Normally you have created the controls yourself and you can store the struct
+v4l2_ctrl pointer into your own struct.
+일반적으로 컨트롤을 직접 만들었고 구조체에 struct v4l2_ctrl 포인터를 저장할 수 있습니다.
+
+But sometimes you need to find a control from another handler that you do
+not own. For example, if you have to find a volume control from a subdev.
+그러나 때로는 소유하지 않은 다른 핸들러에서 컨트롤을 찾아야합니다. 예를 들어, subdev에서 볼륨 컨트롤을 찾아야하는 경우.
+
+You can do that by calling v4l2_ctrl_find:
+v4l2_ctrl_find를 호출하여이를 수행 할 수 있습니다.
+
+	struct v4l2_ctrl *volume;
+
+	volume = v4l2_ctrl_find(sd->ctrl_handler, V4L2_CID_AUDIO_VOLUME);
+
+Since v4l2_ctrl_find will lock the handler you have to be careful where you
+use it. For example, this is not a good idea:
+v4l2_ctrl_find는 핸들러를 잠글 것이기 때문에 핸들러를 사용할 때 조심해야합니다. 예를 들어, 이것은 좋은 생각이 아닙니다.
+
+	struct v4l2_ctrl_handler ctrl_handler;
+
+	v4l2_ctrl_new_std(&ctrl_handler, &video_ops, V4L2_CID_BRIGHTNESS, ...);
+	v4l2_ctrl_new_std(&ctrl_handler, &video_ops, V4L2_CID_CONTRAST, ...);
+
+...and in video_ops.s_ctrl:
+
+	case V4L2_CID_BRIGHTNESS:
+		contrast = v4l2_find_ctrl(&ctrl_handler, V4L2_CID_CONTRAST);
+		...
+
+When s_ctrl is called by the framework the ctrl_handler.lock is already taken, so
+attempting to find another control from the same handler will deadlock.
+프레임 워크가 s_ctrl을 호출하면 ctrl_handler.lock이 이미 사용되므로 동일한 핸들러에서 다른 컨트롤을 찾으려고 하면 교착 상태가됩니다.
+
+It is recommended not to use this function from inside the control ops.
+Control ops 내부에서이 기능을 사용하지 않는 것이 좋습니다.
+
+
+Inheriting Controls
+===================
+상속 컨트롤
+
+When one control handler is added to another using v4l2_ctrl_add_handler, then
+by default all controls from one are merged to the other. But a subdev might
+have low-level controls that make sense for some advanced embedded system, but
+not when it is used in consumer-level hardware. In that case you want to keep
+those low-level controls local to the subdev. You can do this by simply
+setting the 'is_private' flag of the control to 1:
+하나의 제어 처리기가 v4l2_ctrl_add_handler를 사용하여 다른 제어 처리기에 추가되면 기본적으로 한 제어 장치의 모든 제어가 다른 제어 장치와 병합됩니다. 
+그러나 subdev는 고급 수준의 임베디드 시스템에 적합한 저레벨 컨트롤을 가질 수 있지만 소비자 수준의 하드웨어에는 사용되지 않습니다. 
+이 경우 하위 수준의 컨트롤을 하위 위치에 유지해야합니다. 컨트롤의 'is_private'플래그를 1로 설정하면됩니다.
+
+	static const struct v4l2_ctrl_config ctrl_private = {
+		.ops = &ctrl_custom_ops,
+		.id = V4L2_CID_...,
+		.name = "Some Private Control",
+		.type = V4L2_CTRL_TYPE_INTEGER,
+		.max = 15,
+		.step = 1,
+		.is_private = 1,
+	};
+
+	ctrl = v4l2_ctrl_new_custom(&foo->ctrl_handler, &ctrl_private, NULL);
+
+These controls will now be skipped when v4l2_ctrl_add_handler is called.
+v4l2_ctrl_add_handler를 호출하면 이러한 컨트롤이 이제 건너 뜁니다.
+
+
+V4L2_CTRL_TYPE_CTRL_CLASS Controls
+==================================
+
+Controls of this type can be used by GUIs to get the name of the control class.
+A fully featured GUI can make a dialog with multiple tabs with each tab
+containing the controls belonging to a particular control class. The name of
+each tab can be found by querying a special control with ID <control class | 1>.
+이 유형의 컨트롤은 GUI에서 컨트롤 클래스의 이름을 가져올 때 사용할 수 있습니다.
+모든 기능을 갖춘 GUI는 특정 컨트롤 클래스에 속한 컨트롤을 포함하는 각 탭이있는 여러 탭이있는 대화 상자를 만들 수 있습니다. 
+각 탭의 이름은 ID가 <control class | 1> 인 특수 컨트롤을 쿼리하여 찾을 수 있습니다. 
+
+Drivers do not have to care about this. The framework will automatically add
+a control of this type whenever the first control belonging to a new control
+class is added.
+드라이버는 이것에 신경 쓸 필요가 없습니다. 프레임 워크는 새 컨트롤 클래스에 속한 첫 번째 컨트롤이 추가 될 때마다이 유형의 컨트롤을 자동으로 추가합니다.
+
+
+Adding Notify Callbacks
+=======================
+알림 콜백 추가
+
+Sometimes the platform or bridge driver needs to be notified when a control
+from a sub-device driver changes. You can set a notify callback by calling
+this function:
+때로는 하위 장치 드라이버의 제어가 변경 될 때 플랫폼 또는 브리지 드라이버에 알릴 필요가 있습니다. 이 함수를 호출하여 알림 콜백을 설정할 수 있습니다.
+
+void v4l2_ctrl_notify(struct v4l2_ctrl *ctrl,
+	void (*notify)(struct v4l2_ctrl *ctrl, void *priv), void *priv);
+
+Whenever the give control changes value the notify callback will be called
+with a pointer to the control and the priv pointer that was passed with
+v4l2_ctrl_notify. Note that the control's handler lock is held when the
+notify function is called.
+제어권 부여 값이 변경 될 때마다 v4l2_ctrl_notify와 함께 전달 된 제어 및 포인터에 대한 포인터로 통지 콜백이 호출됩니다. 알림 함수가 호출되면 컨트롤의 핸들러 잠금이 유지됩니다.
+
+There can be only one notify function per control handler. Any attempt
+to set another notify function will cause a WARN_ON.
+제어 핸들러 당 하나의 알림 기능 만있을 수 있습니다. 다른 알림 기능을 설정하려고하면 WARN_ON이 발생합니다.

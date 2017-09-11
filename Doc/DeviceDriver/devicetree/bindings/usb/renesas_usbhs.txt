@@ -1,0 +1,47 @@
+Renesas Electronics USBHS driver
+
+Required properties:
+  - compatible: Must contain one of the following:
+	- "renesas,usbhs-r8a7790"
+	- "renesas,usbhs-r8a7791"
+	- "renesas,usbhs-r8a7794"
+	- "renesas,usbhs-r8a7795"
+  - reg: Base address and length of the register for the USBHS
+  - interrupts: Interrupt specifier for the USBHS
+  - clocks: A list of phandle + clock specifier pairs
+
+필수 속성 :
+   - 호환 : 다음 중 하나를 포함해야합니다.
+- "renesas, usbhs-r8a7790"
+- "renesas, usbhs-r8a7791"
+- "renesas, usbhs-r8a7794"
+- "renesas, usbhs-r8a7795"
+   - reg : USBHS 용 레지스터의 기본 주소 및 길이
+   - 인터럽트 : USBHS의 인터럽트 지정자
+   - clocks : phandle + clock 지정자 쌍 목록
+
+
+Optional properties:
+  - renesas,buswait: Integer to use BUSWAIT register
+  - renesas,enable-gpio: A gpio specifier to check GPIO determining if USB
+			 function should be enabled
+  - phys: phandle + phy specifier pair
+  - phy-names: must be "usb"
+  - dmas: Must contain a list of references to DMA specifiers.
+  - dma-names : named "ch%d", where %d is the channel number ranging from zero
+                to the number of channels (DnFIFOs) minus one.
+선택적 속성 :
+   - renesas, buswait : BUSWAIT 레지스터를 사용하는 정수
+   - renesas, enable-gpio : GPIO가 USB 기능을 활성화해야하는지 확인하는 gpio 지정자
+   - phys : phandle + phy 지정자 쌍
+   - phy-names : "usb"여야합니다.
+   - dmas : DMA 지정자에 대한 참조 목록을 포함해야합니다.
+   - dma-names : "ch % d"로 명명되며, 여기서 % d는 0에서 채널 수 (DnFIFOs) - 1까지의 채널 번호입니다.
+
+Example:
+	usbhs: usb@e6590000 {
+		compatible = "renesas,usbhs-r8a7790";
+		reg = <0 0xe6590000 0 0x100>;
+		interrupts = <0 107 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&mstp7_clks R8A7790_CLK_HSUSB>;
+	};

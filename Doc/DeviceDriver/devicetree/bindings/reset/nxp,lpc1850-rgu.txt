@@ -1,0 +1,96 @@
+NXP LPC1850  Reset Generation Unit (RGU)
+========================================
+
+Please also refer to reset.txt in this directory for common reset
+controller binding usage.
+
+Required properties:
+- compatible: Should be "nxp,lpc1850-rgu"
+- reg: register base and length
+- clocks: phandle and clock specifier to RGU clocks
+- clock-names: should contain "delay" and "reg"
+- #reset-cells: should be 1
+
+See table below for valid peripheral reset numbers. Numbers not
+in the table below are either reserved or not applicable for
+normal operation.
+
+common reset controller binding 사용에 대해서는이 디렉토리의 reset.txt를 참조하십시오.
+
+필수 속성 :
+- 호환 가능 : "nxp, lpc1850-rgu"여야합니다.
+- 등록 : 기본 및 길이 등록
+- clocks : RGU 클럭에 대한 phandle 및 clock 지정자
+- clock-names : "지연"과 "reg"를 포함해야합니다.
+- # reset-cells : 1이어야합니다.
+
+유효한 주변 장치 재설정 번호는 아래 표를 참조하십시오. 아래 표에없는 번호는 예약되었거나 정상 작동에 적용되지 않습니다.
+
+Reset	Peripheral
+  9	System control unit (SCU)
+ 12	ARM Cortex-M0 subsystem core (LPC43xx only)
+ 13	CPU core
+ 16	LCD controller
+ 17	USB0
+ 18	USB1
+ 19	DMA
+ 20	SDIO
+ 21	External memory controller (EMC)
+ 22	Ethernet
+ 25	Flash bank A
+ 27	EEPROM
+ 28	GPIO
+ 29	Flash bank B
+ 32	Timer0
+ 33	Timer1
+ 34	Timer2
+ 35	Timer3
+ 36	Repetitive Interrupt timer (RIT)
+ 37	State Configurable Timer (SCT)
+ 38	Motor control PWM (MCPWM)
+ 39	QEI
+ 40	ADC0
+ 41	ADC1
+ 42	DAC
+ 44	USART0
+ 45	UART1
+ 46	USART2
+ 47	USART3
+ 48	I2C0
+ 49	I2C1
+ 50	SSP0
+ 51	SSP1
+ 52	I2S0 and I2S1
+ 53	Serial Flash Interface (SPIFI)
+ 54	C_CAN1
+ 55	C_CAN0
+ 56	ARM Cortex-M0 application core (LPC4370 only)
+ 57	SGPIO (LPC43xx only)
+ 58	SPI (LPC43xx only)
+ 60	ADCHS (12-bit ADC) (LPC4370 only)
+
+Refer to NXP LPC18xx or LPC43xx user manual for more details about
+the reset signals and the connected block/peripheral.
+리셋 신호 및 연결된 블록 / 주변 장치에 대한 자세한 내용은 NXP LPC18xx 또는 LPC43xx 사용자 매뉴얼을 참조하십시오.
+
+Reset provider example:
+rgu: reset-controller@40053000 {
+	compatible = "nxp,lpc1850-rgu";
+	reg = <0x40053000 0x1000>;
+	clocks = <&cgu BASE_SAFE_CLK>, <&ccu1 CLK_CPU_BUS>;
+	clock-names = "delay", "reg";
+	#reset-cells = <1>;
+};
+
+Reset consumer example:
+mac: ethernet@40010000 {
+	compatible = "nxp,lpc1850-dwmac", "snps,dwmac-3.611", "snps,dwmac";
+	reg = <0x40010000 0x2000>;
+	interrupts = <5>;
+	interrupt-names = "macirq";
+	clocks = <&ccu1 CLK_CPU_ETHERNET>;
+	clock-names = "stmmaceth";
+	resets = <&rgu 22>;
+	reset-names = "stmmaceth";
+	status = "disabled";
+};
